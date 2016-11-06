@@ -2,13 +2,13 @@
 {
   "modid": "je_characters",
   "name": "Just Enough Characters",
-  "description": "A tweak to JEI to search in Chinese Pinyin",
-  "version": "${version}",
-  "mcversion": "${mcversion}",
+  "description": "Pinyin search for JEI and more",
+  "version": "0.1.0",
+  "mcversion": "1.10.2",
   "url": "",
   "updateUrl": "",
   "authorList": ["Towdium"],
-  "credits": "Thanks to pinyin4j dev group.",
+  "credits": "To all the tutorial makers",
   "logoFile": "",
   "screenshots": [],
   "dependencies": []

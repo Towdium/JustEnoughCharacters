@@ -39,13 +39,20 @@ class ChineseToPinyinResource
     private Properties unicodeToHanyuPinyinTable = null;
 
     /**
-     * @param unicodeToHanyuPinyinTable
-     *            The unicodeToHanyuPinyinTable to set.
+     * Private constructor as part of the singleton pattern.
      */
-    private void setUnicodeToHanyuPinyinTable(
-            Properties unicodeToHanyuPinyinTable)
+    private ChineseToPinyinResource()
     {
-        this.unicodeToHanyuPinyinTable = unicodeToHanyuPinyinTable;
+        initializeResource();
+    }
+
+    /**
+     * Singleton factory method.
+     *
+     * @return the one and only MySingleton.
+     */
+    static ChineseToPinyinResource getInstance() {
+        return ChineseToPinyinResourceHolder.theInstance;
     }
 
     /**
@@ -57,11 +64,13 @@ class ChineseToPinyinResource
     }
 
     /**
-     * Private constructor as part of the singleton pattern.
+     * @param unicodeToHanyuPinyinTable
+     *            The unicodeToHanyuPinyinTable to set.
      */
-    private ChineseToPinyinResource()
+    private void setUnicodeToHanyuPinyinTable(
+            Properties unicodeToHanyuPinyinTable)
     {
-        initializeResource();
+        this.unicodeToHanyuPinyinTable = unicodeToHanyuPinyinTable;
     }
 
     /**
@@ -71,7 +80,7 @@ class ChineseToPinyinResource
     {
         try
         {
-            final String resourceName = "/pinyindb/unicode_to_hanyu_pinyin.txt";
+            final String resourceName = "/assets/je_characters/unicode_to_hanyu_pinyin.txt";
 
             setUnicodeToHanyuPinyinTable(new Properties());
             getUnicodeToHanyuPinyinTable().load(ResourceHelper.getResourceInputStream(resourceName));
@@ -88,7 +97,7 @@ class ChineseToPinyinResource
     /**
      * Get the unformatted Hanyu Pinyin representations of the given Chinese
      * character in array format.
-     * 
+     *
      * @param ch
      *            given Chinese character in Unicode
      * @return The Hanyu Pinyin strings of the given Chinese character in array
@@ -150,16 +159,6 @@ class ChineseToPinyinResource
         String foundRecord = getUnicodeToHanyuPinyinTable().getProperty(codepointHexStr);
 
         return isValidRecord(foundRecord) ? foundRecord : null;
-    }
-
-    /**
-     * Singleton factory method.
-     * 
-     * @return the one and only MySingleton.
-     */
-    static ChineseToPinyinResource getInstance()
-    {
-        return ChineseToPinyinResourceHolder.theInstance;
     }
 
     /**

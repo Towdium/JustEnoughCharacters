@@ -4,7 +4,6 @@ import net.sourceforge.pinyin4j.PinyinHelper;
 import net.sourceforge.pinyin4j.format.HanyuPinyinOutputFormat;
 import net.sourceforge.pinyin4j.format.HanyuPinyinToneType;
 import net.sourceforge.pinyin4j.format.exception.BadHanyuPinyinOutputFormatCombination;
-import scala.Int;
 
 import java.util.HashSet;
 
@@ -16,8 +15,6 @@ public class CheckHelper {
     static final HanyuPinyinOutputFormat FORMAT;
     static final int[] ZERO = new int[] {0};
     static final int[] ONE = new int[] {1};
-    static final int[] TWO = new int[] {2};
-    static final int[] ONE_TWO = new int[] {1, 2};
 
     static {
         FORMAT = new HanyuPinyinOutputFormat();
@@ -116,6 +113,7 @@ public class CheckHelper {
                 return ch;
             }
             HashSet<String> ret = new HashSet<String>();
+            if (pinyin == null) return ch;
             for(String s : pinyin) {
                 ret.add(getConsonant(s));
                 //ret.add(s.substring(0,1));
