@@ -21,11 +21,16 @@ public class ClassTransformer implements IClassTransformer {
     static boolean flag = false;
 
     static void transformStr(MethodNode methodNode) {
-        transform(methodNode, "java/lang/String", "contains", "towdium/je_characters/CheckHelper", "checkStr", "(Ljava/lang/String;Ljava/lang/String;)Z", false, Opcodes.INVOKESTATIC);
+        transform(
+                methodNode, "java/lang/String", "contains", "towdium/je_characters/CheckHelper", "checkStr",
+                "(Ljava/lang/String;Ljava/lang/String;)Z", false, Opcodes.INVOKESTATIC
+        );
     }
 
     static void transformReg(MethodNode methodNode) {
-        transform(methodNode, "java/util/regex/Pattern", "matcher", "towdium/je_characters/CheckHelper", "checkReg", "(Ljava/util/regex/Pattern;Ljava/lang/CharSequence;)Ljava/util/regex/Matcher;", false, Opcodes.INVOKESTATIC);
+        transform(methodNode, "java/util/regex/Pattern", "matcher", "towdium/je_characters/CheckHelper", "checkReg",
+                "(Ljava/util/regex/Pattern;Ljava/lang/CharSequence;)Ljava/util/regex/Matcher;", false, Opcodes.INVOKESTATIC
+        );
     }
 
     static void transform(MethodNode methodNode, String owner, String name, String newOwner, String newName, String id, boolean isInterface, int op) {
