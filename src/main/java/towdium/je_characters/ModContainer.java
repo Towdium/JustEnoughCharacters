@@ -17,10 +17,10 @@ public class ModContainer extends DummyModContainer {
         ModMetadata meta = getMetadata();
         meta.modId = "je_characters";
         meta.name = "Just Enough Characters";
-        meta.version = "0.1.0";
+        meta.version = "@VERSION@";
         meta.authorList = Collections.singletonList("Towdium");
         meta.description = "Help JEI read Pinyin";
-        //meta.url = "http://www.hahathisisareallycooldomainnamebuthowitberemembered.com/";
+        meta.url = "https://minecraft.curseforge.com/projects/just-enough-characters";
     }
 
     @Override

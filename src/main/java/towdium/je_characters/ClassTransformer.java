@@ -11,37 +11,21 @@ import org.objectweb.asm.tree.MethodNode;
 
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.function.Consumer;
+import java.util.Map;
 
 /**
  * Author: Towdium
  * Date:   2016/9/4.
  */
 public class ClassTransformer implements IClassTransformer {
-    HashMap<String, String> classToMod;
-    HashMap<String, String> modToMethod;
-    HashMap<String, Consumer<MethodNode>> modToConsumer;
-    Consumer<MethodNode> consStr = ClassTransformer::transformStr;
-    Consumer<MethodNode> consReg = ClassTransformer::transformReg;
-
-    {
-        classToMod = new HashMap<>();
-        classToMod.put("mezz.jei.ItemFilter$FilterPredicate", "JEI");
-        classToMod.put("appeng.client.me.ItemRepo", "AE2");
-        modToMethod = new HashMap<>();
-        modToMethod.put("JEI", "stringContainsTokens");
-        modToMethod.put("AE2", "updateView");
-        modToConsumer = new HashMap<>();
-        modToConsumer.put("JEI", consStr);
-        modToConsumer.put("AE2", consReg);
-    }
+    public static Map<String, MethodWrapper> m = new HashMap<>();
 
     static void transformStr(MethodNode methodNode) {
-        transform(methodNode, "java/lang/String", "contains", "towdium/je_characters/CheckHelper", "check", "(Ljava/lang/String;Ljava/lang/String;)Z", false, Opcodes.INVOKESTATIC);
+        transform(methodNode, "java/lang/String", "contains", "towdium/je_characters/CheckHelper", "checkStr", "(Ljava/lang/String;Ljava/lang/String;)Z", false, Opcodes.INVOKESTATIC);
     }
 
     static void transformReg(MethodNode methodNode) {
-        transform(methodNode, "java/util/regex/Pattern", "matcher", "towdium/je_characters/CheckHelperAdditions", "checkReg", "(Ljava/util/regex/Pattern;Ljava/lang/CharSequence;)Ljava/util/regex/Matcher;", false, Opcodes.INVOKESTATIC);
+        transform(methodNode, "java/util/regex/Pattern", "matcher", "towdium/je_characters/CheckHelper", "checkReg", "(Ljava/util/regex/Pattern;Ljava/lang/CharSequence;)Ljava/util/regex/Matcher;", false, Opcodes.INVOKESTATIC);
 
     }
 
@@ -60,17 +44,23 @@ public class ClassTransformer implements IClassTransformer {
 
     @Override
     public byte[] transform(String s, String s1, byte[] bytes) {
-        String mod = classToMod.get(s1);
-        if (mod != null) {
-            ClassNode classNode = new ClassNode();
-            ClassReader classReader = new ClassReader(bytes);
-            classReader.accept(classNode, 0);
-            classNode.methods.stream().filter(methodNode -> methodNode.name.equals(modToMethod.get(mod))).
-                    forEach(methodNode -> modToConsumer.get(mod).accept(methodNode));
-            ClassWriter classWriter = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
-            classNode.accept(classWriter);
-            return classWriter.toByteArray();
+        if (LoadingPlugin.initialized) {
+            MethodWrapper mw = m.get(s1);
+            if (mw != null) {
+                ClassNode classNode = new ClassNode();
+                ClassReader classReader = new ClassReader(bytes);
+                classReader.accept(classNode, 0);
+                classNode.methods.stream().filter(methodNode -> methodNode.name.equals(mw.methodName)).
+                        forEach(methodNode -> mw.transformer.accept(methodNode));
+                ClassWriter classWriter = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
+                classNode.accept(classWriter);
+                return classWriter.toByteArray();
+            }
+            return bytes;
+        } else {
+            return bytes;
         }
-        return bytes;
+
+
     }
 }
