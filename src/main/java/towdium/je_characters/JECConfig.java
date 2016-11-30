@@ -23,7 +23,6 @@ public class JECConfig {
         setValue();
         initTransformer();
         config.save();
-
     }
 
     public static void setValue() {
@@ -52,6 +51,10 @@ public class JECConfig {
         putList.accept(EnumItems.ListAdditionalStringMatch, MethodWrapper.EnumMatchType.STR);
         putList.accept(EnumItems.ListDefaultRegExpMatch, MethodWrapper.EnumMatchType.REG);
         putList.accept(EnumItems.ListDefaultStringMatch, MethodWrapper.EnumMatchType.STR);
+
+        for (String s : EnumItems.ListDumpClass.getProperty().getStringList()) {
+            ClassTransformer.s.add(s);
+        }
     }
 
     public static void handleFormerVersion() {
@@ -72,6 +75,7 @@ public class JECConfig {
         ListAdditionalRegExpMatch,
         ListDefaultStringMatch,
         ListDefaultRegExpMatch,
+        ListDumpClass,
         ListMethodBlacklist;
 
 
@@ -89,6 +93,8 @@ public class JECConfig {
                 case ListDefaultRegExpMatch:
                     return "Default list of methods to transform, of which uses regular expression to match strings.\n" +
                             "This list is maintained by the mod and will have no effect if you change it.";
+                case ListDumpClass:
+                    return "Dump all the methods in this class into log.";
                 case ListMethodBlacklist:
                     return "Put the strings in default list here to disable transform for certain method";
             }
@@ -104,6 +110,8 @@ public class JECConfig {
                 case ListDefaultStringMatch:
                     return EnumCategory.General.toString();
                 case ListDefaultRegExpMatch:
+                    return EnumCategory.General.toString();
+                case ListDumpClass:
                     return EnumCategory.General.toString();
                 case ListMethodBlacklist:
                     return EnumCategory.General.toString();
@@ -121,6 +129,8 @@ public class JECConfig {
                     return EnumType.ListString;
                 case ListDefaultRegExpMatch:
                     return EnumType.ListString;
+                case ListDumpClass:
+                    return EnumType.ListString;
                 case ListMethodBlacklist:
                     return EnumType.ListString;
             }
@@ -137,10 +147,13 @@ public class JECConfig {
                     return new String[]{
                             "mezz.jei.ItemFilter$FilterPredicate:stringContainsTokens",
                             "com.raoulvdberge.refinedstorage.gui.grid.filtering.GridFilterName:accepts",
-                            "com.raoulvdberge.refinedstorage.gui.grid.filtering.GridFilterTooltip:accepts"
+                            "com.raoulvdberge.refinedstorage.gui.grid.filtering.GridFilterTooltip:accepts",
+                            "com.rwtema.extrautils2.transfernodes.TileIndexer$ContainerIndexer$WidgetItemRefButton:lambda$getRef$0"
                     };
                 case ListDefaultRegExpMatch:
                     return new String[]{"appeng.client.me.ItemRepo:updateView"};
+                case ListDumpClass:
+                    return new String[0];
                 case ListMethodBlacklist:
                     return new String[0];
             }

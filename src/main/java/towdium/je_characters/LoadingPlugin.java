@@ -1,6 +1,8 @@
 package towdium.je_characters;
 
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.util.Map;
@@ -10,6 +12,7 @@ import java.util.Map;
  * Date:   2016/9/4.
  */
 public class LoadingPlugin implements IFMLLoadingPlugin {
+    public static Logger log = LogManager.getLogger("je_characters");
     static boolean initialized = false;
 
     @Override
