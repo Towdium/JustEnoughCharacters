@@ -13,7 +13,7 @@ import java.util.Map;
  */
 public class LoadingPlugin implements IFMLLoadingPlugin {
     public static Logger log = LogManager.getLogger("je_characters");
-    static boolean initialized = false;
+    public static boolean initialized = false;
 
     @Override
     public String[] getASMTransformerClass() {
@@ -33,7 +33,6 @@ public class LoadingPlugin implements IFMLLoadingPlugin {
     @Override
     public void injectData(Map<String, Object> data) {
         JECConfig.preInit(((File) data.get("mcLocation")));
-        initialized = true;
     }
 
     @Override

@@ -4,7 +4,6 @@ import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
 
 import java.io.File;
-import java.util.function.BiConsumer;
 
 /**
  * Author:  Towdium
@@ -21,40 +20,14 @@ public class JECConfig {
         handleFormerVersion();
         initProperties();
         setValue();
-        initTransformer();
+        ClassTransformer.init();
         config.save();
+        LoadingPlugin.initialized = true;
     }
 
     public static void setValue() {
         EnumItems.ListDefaultRegExpMatch.getProperty().set(((String[]) EnumItems.ListDefaultRegExpMatch.getDefault()));
         EnumItems.ListDefaultStringMatch.getProperty().set(((String[]) EnumItems.ListDefaultStringMatch.getDefault()));
-    }
-
-    public static void initTransformer() {
-        String[] blackList = EnumItems.ListMethodBlacklist.getProperty().getStringList();
-
-        BiConsumer<String, MethodWrapper.EnumMatchType> putEntry = (s, t) -> {
-            for (String bl : blackList) {
-                if (bl.equals(s))
-                    return;
-            }
-            MethodWrapper mw = MethodWrapper.GenMethodWrapper(t, s);
-            ClassTransformer.m.put(mw.className, mw);
-        };
-        BiConsumer<EnumItems, MethodWrapper.EnumMatchType> putList = (l, t) -> {
-            for (String str : l.getProperty().getStringList()) {
-                putEntry.accept(str, t);
-            }
-        };
-
-        putList.accept(EnumItems.ListAdditionalRegExpMatch, MethodWrapper.EnumMatchType.REG);
-        putList.accept(EnumItems.ListAdditionalStringMatch, MethodWrapper.EnumMatchType.STR);
-        putList.accept(EnumItems.ListDefaultRegExpMatch, MethodWrapper.EnumMatchType.REG);
-        putList.accept(EnumItems.ListDefaultStringMatch, MethodWrapper.EnumMatchType.STR);
-
-        for (String s : EnumItems.ListDumpClass.getProperty().getStringList()) {
-            ClassTransformer.s.add(s);
-        }
     }
 
     public static void handleFormerVersion() {
@@ -150,7 +123,8 @@ public class JECConfig {
                             "com.raoulvdberge.refinedstorage.gui.grid.filtering.GridFilterTooltip:accepts",
                             "com.rwtema.extrautils2.transfernodes.TileIndexer$ContainerIndexer$WidgetItemRefButton:lambda$getRef$0",
                             "crazypants.enderio.machine.invpanel.client.ItemFilter$ModFilter:matches",
-                            "crazypants.enderio.machine.invpanel.client.ItemFilter$NameFilter:matches"
+                            "crazypants.enderio.machine.invpanel.client.ItemFilter$NameFilter:matches",
+                            "vazkii.psi.client.gui.GuiProgrammer:shouldShow"
                     };
                 case ListDefaultRegExpMatch:
                     return new String[]{"appeng.client.me.ItemRepo:updateView"};

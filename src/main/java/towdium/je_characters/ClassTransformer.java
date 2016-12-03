@@ -1,15 +1,12 @@
 package towdium.je_characters;
 
 import net.minecraft.launchwrapper.IClassTransformer;
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.tree.AbstractInsnNode;
-import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.MethodInsnNode;
-import org.objectweb.asm.tree.MethodNode;
+import org.objectweb.asm.*;
+import org.objectweb.asm.tree.*;
 
 import java.util.*;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 /**
  * Author: Towdium
@@ -19,6 +16,38 @@ public class ClassTransformer implements IClassTransformer {
     public static Map<String, MethodWrapper> m = new HashMap<>();
     public static Set<String> s = new HashSet<>();
     static boolean flag = false;
+    static Object[] args = new Object[]{
+            Type.getType("(Ljava/lang/Object;)Z"),
+            new Handle(6, "towdium/je_characters/CheckHelper", "checkStr", "(Ljava/lang/String;Ljava/lang/String;)Z"),
+            Type.getType("(Ljava/lang/String;)Z")
+    };
+
+    public static void init() {
+        String[] blackList = JECConfig.EnumItems.ListMethodBlacklist.getProperty().getStringList();
+
+        BiConsumer<String, MethodWrapper.EnumMatchType> putEntry = (s, t) -> {
+            for (String bl : blackList) {
+                if (bl.equals(s))
+                    return;
+            }
+            MethodWrapper mw = MethodWrapper.GenMethodWrapper(t, s);
+            m.put(mw.className, mw);
+        };
+        BiConsumer<JECConfig.EnumItems, MethodWrapper.EnumMatchType> putList = (l, t) -> {
+            for (String str : l.getProperty().getStringList()) {
+                putEntry.accept(str, t);
+            }
+        };
+
+        putList.accept(JECConfig.EnumItems.ListAdditionalRegExpMatch, MethodWrapper.EnumMatchType.REG);
+        putList.accept(JECConfig.EnumItems.ListAdditionalStringMatch, MethodWrapper.EnumMatchType.STR);
+        putList.accept(JECConfig.EnumItems.ListDefaultRegExpMatch, MethodWrapper.EnumMatchType.REG);
+        putList.accept(JECConfig.EnumItems.ListDefaultStringMatch, MethodWrapper.EnumMatchType.STR);
+
+        for (String s : JECConfig.EnumItems.ListDumpClass.getProperty().getStringList()) {
+            ClassTransformer.s.add(s);
+        }
+    }
 
     static void transformStr(MethodNode methodNode) {
         transform(
@@ -34,13 +63,20 @@ public class ClassTransformer implements IClassTransformer {
     }
 
     static void transform(MethodNode methodNode, String owner, String name, String newOwner, String newName, String id, boolean isInterface, int op) {
-        Iterator<AbstractInsnNode> i2 = methodNode.instructions.iterator();
-        while (i2.hasNext()) {
-            AbstractInsnNode node = i2.next();
+        Iterator<AbstractInsnNode> iterator = methodNode.instructions.iterator();
+        while (iterator.hasNext()) {
+            AbstractInsnNode node = iterator.next();
             if (node instanceof MethodInsnNode && node.getOpcode() == Opcodes.INVOKEVIRTUAL) {
                 MethodInsnNode insnNode = ((MethodInsnNode) node);
                 if (insnNode.owner.equals(owner) && insnNode.name.equals(name)) {
                     methodNode.instructions.set(insnNode, new MethodInsnNode(op, newOwner, newName, id, isInterface));
+                }
+            }
+            if (node instanceof InvokeDynamicInsnNode && node.getOpcode() == Opcodes.INVOKEDYNAMIC) {
+                InvokeDynamicInsnNode insnNode = ((InvokeDynamicInsnNode) node);
+                if (insnNode.bsmArgs[0].toString().equals("(Ljava/lang/Object;)Z") &&
+                        insnNode.bsmArgs[1].toString().equals("java/lang/String.contains(Ljava/lang/CharSequence;)Z (5)")) {
+                    methodNode.instructions.set(insnNode, new InvokeDynamicInsnNode(insnNode.name, insnNode.desc, insnNode.bsm, args));
                 }
             }
         }
@@ -65,17 +101,52 @@ public class ClassTransformer implements IClassTransformer {
                 LoadingPlugin.log.info("[je_characters] Transforming class \"" + mw.className + "\".");
                 classNode.methods.stream().filter(methodNode -> methodNode.name.equals(mw.methodName)).
                         forEach(methodNode -> {
+                            LoadingPlugin.log.info("[je_characters] Transforming method \"" + methodNode.name + "\".");
                             mw.transformer.accept(methodNode);
                             flag = true;
                         });
                 LoadingPlugin.log.info("[je_characters] " + (flag ? "Succeeded." : ("Method \"") + mw.methodName + "\" not found."));
-                ClassWriter classWriter = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
+                ClassWriter classWriter = new ClassWriter(ClassWriter.COMPUTE_MAXS);
                 classNode.accept(classWriter);
                 return classWriter.toByteArray();
             }
             return bytes;
         } else {
             return bytes;
+        }
+    }
+
+    public static class MethodWrapper {
+        public String className;
+        public String methodName;
+        public Consumer<MethodNode> transformer;
+
+        private MethodWrapper() {
+        }
+
+        public static MethodWrapper GenMethodWrapper(EnumMatchType t, String identifier) {
+            String[] buf = identifier.split(":");
+            MethodWrapper mw = new MethodWrapper();
+            mw.className = buf[0];
+            mw.methodName = buf[1];
+            mw.transformer = t.getTransformer();
+            return mw;
+        }
+
+        public enum EnumMatchType {
+            STR, REG;
+
+            public Consumer<MethodNode> getTransformer() {
+                switch (this) {
+                    case STR:
+                        return ClassTransformer::transformStr;
+                    case REG:
+                        return ClassTransformer::transformReg;
+                    default:
+                        return methodNode -> {
+                        };
+                }
+            }
         }
     }
 }
