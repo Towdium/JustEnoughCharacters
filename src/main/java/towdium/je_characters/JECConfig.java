@@ -125,7 +125,10 @@ public class JECConfig {
                             "crazypants.enderio.machine.invpanel.client.ItemFilter$ModFilter:matches",
                             "crazypants.enderio.machine.invpanel.client.ItemFilter$NameFilter:matches",
                             "vazkii.psi.client.gui.GuiProgrammer:shouldShow",
-                            "vazkii.botania.client.gui.lexicon.GuiLexiconIndex:matchesSearch"
+                            "vazkii.botania.client.gui.lexicon.GuiLexiconIndex:matchesSearch",
+                            "de.ellpeck.actuallyadditions.mod.booklet.entry.BookletEntry:fitsFilter",
+                            "de.ellpeck.actuallyadditions.mod.booklet.entry.BookletEntry:getChaptersForDisplay",
+                            "com.zerofall.ezstorage.gui.client.GuiStorageCore:updateFilteredItems"
                     };
                 case ListDefaultRegExpMatch:
                     return new String[]{"appeng.client.me.ItemRepo:updateView"};

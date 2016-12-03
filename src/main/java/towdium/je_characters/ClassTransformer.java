@@ -1,10 +1,14 @@
 package towdium.je_characters;
 
+import com.google.common.collect.ArrayListMultimap;
 import net.minecraft.launchwrapper.IClassTransformer;
 import org.objectweb.asm.*;
 import org.objectweb.asm.tree.*;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -13,7 +17,7 @@ import java.util.function.Consumer;
  * Date:   2016/9/4.
  */
 public class ClassTransformer implements IClassTransformer {
-    public static Map<String, MethodWrapper> m = new HashMap<>();
+    public static ArrayListMultimap<String, MethodWrapper> m = ArrayListMultimap.create();
     public static Set<String> s = new HashSet<>();
     static boolean flag = false;
     static Object[] args = new Object[]{
@@ -92,20 +96,22 @@ public class ClassTransformer implements IClassTransformer {
                 LoadingPlugin.log.info("[je_characters] Dump methods in class \"" + s1 + "\".");
                 classNode.methods.forEach(methodNode -> LoadingPlugin.log.info("[je_characters]\t" + methodNode.name));
             }
-
-            MethodWrapper mw = m.get(s1);
-            if (mw != null) {
+            List<MethodWrapper> mws = m.get(s1);
+            if (mws.size() != 0) {
                 ClassNode classNode = new ClassNode();
                 ClassReader classReader = new ClassReader(bytes);
                 classReader.accept(classNode, 0);
-                LoadingPlugin.log.info("[je_characters] Transforming class \"" + mw.className + "\".");
-                classNode.methods.stream().filter(methodNode -> methodNode.name.equals(mw.methodName)).
-                        forEach(methodNode -> {
-                            LoadingPlugin.log.info("[je_characters] Transforming method \"" + methodNode.name + "\".");
-                            mw.transformer.accept(methodNode);
-                            flag = true;
-                        });
-                LoadingPlugin.log.info("[je_characters] " + (flag ? "Succeeded." : ("Method \"") + mw.methodName + "\" not found."));
+                LoadingPlugin.log.info("[je_characters] Transforming class \"" + s1 + "\".");
+                mws.forEach(mw -> {
+                    classNode.methods.stream().filter(methodNode -> methodNode.name.equals(mw.methodName)).
+                            forEach(methodNode -> {
+                                LoadingPlugin.log.info("[je_characters] Transforming method \"" + methodNode.name + "\".");
+                                mw.transformer.accept(methodNode);
+                                flag = true;
+                            });
+                    LoadingPlugin.log.info("[je_characters] " + (flag ? "Succeeded." : ("Method \"") + mw.methodName + "\" not found."));
+                    flag = false;
+                });
                 ClassWriter classWriter = new ClassWriter(ClassWriter.COMPUTE_MAXS);
                 classNode.accept(classWriter);
                 return classWriter.toByteArray();
@@ -143,8 +149,7 @@ public class ClassTransformer implements IClassTransformer {
                     case REG:
                         return ClassTransformer::transformReg;
                     default:
-                        return methodNode -> {
-                        };
+                        throw new RuntimeException("Illegal Position.");
                 }
             }
         }
