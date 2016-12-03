@@ -128,7 +128,9 @@ public class JECConfig {
                             "vazkii.botania.client.gui.lexicon.GuiLexiconIndex:matchesSearch",
                             "de.ellpeck.actuallyadditions.mod.booklet.entry.BookletEntry:fitsFilter",
                             "de.ellpeck.actuallyadditions.mod.booklet.entry.BookletEntry:getChaptersForDisplay",
-                            "com.zerofall.ezstorage.gui.client.GuiStorageCore:updateFilteredItems"
+                            "com.zerofall.ezstorage.gui.client.GuiStorageCore:updateFilteredItems",
+                            "io.github.elytra.copo.inventory.ContainerVT:updateSlots",
+                            "io.github.elytra.copo.inventory.ContainerTerminal:updateSlots"
                     };
                 case ListDefaultRegExpMatch:
                     return new String[]{"appeng.client.me.ItemRepo:updateView"};
