@@ -34,8 +34,12 @@ public class ClassTransformer implements IClassTransformer {
                 if (bl.equals(s))
                     return;
             }
-            MethodWrapper mw = MethodWrapper.GenMethodWrapper(t, s);
-            m.put(mw.className, mw);
+            try {
+                MethodWrapper mw = MethodWrapper.GenMethodWrapper(t, s);
+                m.put(mw.className, mw);
+            } catch (IllegalArgumentException e) {
+                LoadingPlugin.log.warn("[je_character] The identifier \"" + s + "\" is not in acceptable format, ignore it.");
+            }
         };
         BiConsumer<JECConfig.EnumItems, MethodWrapper.EnumMatchType> putList = (l, t) -> {
             for (String str : l.getProperty().getStringList()) {
@@ -131,12 +135,17 @@ public class ClassTransformer implements IClassTransformer {
         }
 
         public static MethodWrapper GenMethodWrapper(EnumMatchType t, String identifier) {
-            String[] buf = identifier.split(":");
-            MethodWrapper mw = new MethodWrapper();
-            mw.className = buf[0];
-            mw.methodName = buf[1];
-            mw.transformer = t.getTransformer();
-            return mw;
+            try {
+                String[] buf = identifier.split(":");
+                MethodWrapper mw = new MethodWrapper();
+                mw.className = buf[0];
+                mw.methodName = buf[1];
+                mw.transformer = t.getTransformer();
+                return mw;
+            } catch (IndexOutOfBoundsException e) {
+                throw new IllegalArgumentException("Incorrect format.");
+            }
+
         }
 
         public enum EnumMatchType {
