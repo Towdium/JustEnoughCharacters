@@ -124,7 +124,8 @@ public class JECConfig {
                             "com.rwtema.extrautils2.transfernodes.TileIndexer$ContainerIndexer$WidgetItemRefButton:lambda$getRef$0",
                             "crazypants.enderio.machine.invpanel.client.ItemFilter$ModFilter:matches",
                             "crazypants.enderio.machine.invpanel.client.ItemFilter$NameFilter:matches",
-                            "vazkii.psi.client.gui.GuiProgrammer:shouldShow"
+                            "vazkii.psi.client.gui.GuiProgrammer:shouldShow",
+                            "vazkii.botania.client.gui.lexicon.GuiLexiconIndex:matchesSearch"
                     };
                 case ListDefaultRegExpMatch:
                     return new String[]{"appeng.client.me.ItemRepo:updateView"};
