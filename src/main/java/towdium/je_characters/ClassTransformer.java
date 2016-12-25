@@ -5,10 +5,7 @@ import net.minecraft.launchwrapper.IClassTransformer;
 import org.objectweb.asm.*;
 import org.objectweb.asm.tree.*;
 
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -52,9 +49,7 @@ public class ClassTransformer implements IClassTransformer {
         putList.accept(JECConfig.EnumItems.ListDefaultRegExpMatch, MethodWrapper.EnumMatchType.REG);
         putList.accept(JECConfig.EnumItems.ListDefaultStringMatch, MethodWrapper.EnumMatchType.STR);
 
-        for (String s : JECConfig.EnumItems.ListDumpClass.getProperty().getStringList()) {
-            ClassTransformer.s.add(s);
-        }
+        Collections.addAll(ClassTransformer.s, JECConfig.EnumItems.ListDumpClass.getProperty().getStringList());
     }
 
     static void transformStr(MethodNode methodNode) {

@@ -130,7 +130,9 @@ public class JECConfig {
                             "de.ellpeck.actuallyadditions.mod.booklet.entry.BookletEntry:getChaptersForDisplay",
                             "com.zerofall.ezstorage.gui.client.GuiStorageCore:updateFilteredItems",
                             "io.github.elytra.copo.inventory.ContainerVT:updateSlots",
-                            "io.github.elytra.copo.inventory.ContainerTerminal:updateSlots"
+                            "io.github.elytra.copo.inventory.ContainerTerminal:updateSlots",
+                            "mcjty.rftools.blocks.storage.GuiModularStorage:updateList",
+                            "net.minecraft.client.gui.inventory.GuiContainerCreative:updateFilteredItems"
                     };
                 case ListDefaultRegExpMatch:
                     return new String[]{"appeng.client.me.ItemRepo:updateView"};

@@ -78,7 +78,7 @@ public class CheckHelper {
             return str.charAt(index) == ((Integer) rep) ? ONE : ZERO;
         } else if (rep instanceof Object[]) {
             Object[] strs = (Object[]) rep;
-            HashSet<Integer> ret = new HashSet<Integer>();
+            HashSet<Integer> ret = new HashSet<>();
             int extra = str.length() - index;
             for (Object obj : strs) {
                 String astr = (String) obj;
@@ -129,15 +129,14 @@ public class CheckHelper {
                 badHanyuPinyinOutputFormatCombination.printStackTrace();
                 return ch;
             }
-            HashSet<String> ret = new HashSet<String>();
+            HashSet<String> ret = new HashSet<>();
             if (pinyin == null) return ch;
             for (String s : pinyin) {
                 ret.add(getConsonant(s));
-                //ret.add(s.substring(0,1));
                 ret.add(s);
             }
+            ret.add(Character.toString(((char) ch)));
             return ret.toArray();
-
         } else {
             return ch;
         }
