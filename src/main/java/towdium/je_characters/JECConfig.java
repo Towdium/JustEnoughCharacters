@@ -135,7 +135,10 @@ public class JECConfig {
                             "net.minecraft.client.gui.inventory.GuiContainerCreative:updateFilteredItems"
                     };
                 case ListDefaultRegExpMatch:
-                    return new String[]{"appeng.client.me.ItemRepo:updateView"};
+                    return new String[]{
+                            "appeng.client.me.ItemRepo:updateView",
+                            "codechicken.nei.ItemList$PatternItemFilter:matches"
+                    };
                 case ListDumpClass:
                     return new String[0];
                 case ListMethodBlacklist:
