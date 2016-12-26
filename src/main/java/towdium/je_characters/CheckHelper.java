@@ -107,7 +107,7 @@ public class CheckHelper {
     }
 
     public static boolean isCharacter(int i) {
-        return 19968 <= i && i < 40623;
+        return 0x3007 <= i && i < 0x9FA5;
     }
 
     public static Object[] getFormat(String s) {
