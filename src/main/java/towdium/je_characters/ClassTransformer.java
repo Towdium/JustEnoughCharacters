@@ -4,6 +4,7 @@ import com.google.common.collect.ArrayListMultimap;
 import net.minecraft.launchwrapper.IClassTransformer;
 import org.objectweb.asm.*;
 import org.objectweb.asm.tree.*;
+import towdium.je_characters.jei.TransformHelper;
 
 import java.util.*;
 import java.util.function.BiConsumer;
@@ -114,6 +115,9 @@ public class ClassTransformer implements IClassTransformer {
                 ClassWriter classWriter = new ClassWriter(ClassWriter.COMPUTE_MAXS);
                 classNode.accept(classWriter);
                 return classWriter.toByteArray();
+            }
+            if (s1.equals(TransformHelper.getClassName())) {
+                return TransformHelper.transform(bytes);
             }
             return bytes;
         } else {

@@ -35,15 +35,26 @@ compileJava {
 }
 
 minecraft {
-    version = "1.10.2-12.18.2.2166"
+    version = "1.11.2-13.20.0.2206"
     runDir = "run"
     mappings = "snapshot_20161111"
 
     replace '@VERSION@', project.version
 }
 
-dependencies {
+repositories {
+    maven {
+        // location of the maven that hosts JEI files
+        url = "http://dvs1.progwml6.com/files/maven"
+    }
+}
 
+
+dependencies {
+    // compile against the JEI API
+    //deobfCompile "mezz.jei:jei_1.11.2:4.2.2.215"
+    // at runtime, use the full JEI jar
+    compile "mezz.jei:jei_1.11.2:4.2.2.215"
 }
 
 jar {
