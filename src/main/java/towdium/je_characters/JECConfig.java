@@ -22,6 +22,7 @@ public class JECConfig {
         initProperties();
         setValue();
         ClassTransformer.init();
+        CheckHelper.class.getClass();
         TransformHelper.class.getClass();
         config.save();
         LoadingPlugin.initialized = true;
@@ -52,6 +53,7 @@ public class JECConfig {
         ListDefaultRegExpMatch,
         ListDumpClass,
         ListMethodBlacklist,
+        EnableRadicalMode,
         EnableJEI;
 
 
@@ -73,6 +75,11 @@ public class JECConfig {
                     return "Dump all the methods in this class into log.";
                 case ListMethodBlacklist:
                     return "Put the strings in default list here to disable transform for certain method";
+                case EnableRadicalMode:
+                    return "Set to false to disable radical mode transform.\n" +
+                            "When in radical mode, this mod will try to change every instance of \"contains\",\n" +
+                            "so every mod using this method will be supported, while this could lead to\n" +
+                            "unexpected problems and slow down the launching speed.";
                 case EnableJEI:
                     return "In the 1.11 version of JEI, the test filtering mechanics has been changed to a prefix tree, \n" +
                             "which is incompatible with Chinese pinyin system. So I have to entirely change the behavior.\n" +
@@ -100,6 +107,8 @@ public class JECConfig {
                     return EnumCategory.General.toString();
                 case ListMethodBlacklist:
                     return EnumCategory.General.toString();
+                case EnableRadicalMode:
+                    return EnumCategory.General.toString();
                 case EnableJEI:
                     return EnumCategory.General.toString();
             }
@@ -120,6 +129,8 @@ public class JECConfig {
                     return EnumType.ListString;
                 case ListMethodBlacklist:
                     return EnumType.ListString;
+                case EnableRadicalMode:
+                    return EnumType.Boolean;
                 case EnableJEI:
                     return EnumType.Boolean;
             }
@@ -137,6 +148,8 @@ public class JECConfig {
                             "mezz.jei.ItemFilter$FilterPredicate:stringContainsTokens",
                             "com.raoulvdberge.refinedstorage.gui.grid.filtering.GridFilterName:accepts",
                             "com.raoulvdberge.refinedstorage.gui.grid.filtering.GridFilterTooltip:accepts",
+                            "com.raoulvdberge.refinedstorage.gui.grid.filtering.GridFilterName:test",
+                            "com.raoulvdberge.refinedstorage.gui.grid.filtering.GridFilterTooltip:test",
                             "com.rwtema.extrautils2.transfernodes.TileIndexer$ContainerIndexer$WidgetItemRefButton:lambda$getRef$0",
                             "crazypants.enderio.machine.invpanel.client.ItemFilter$ModFilter:matches",
                             "crazypants.enderio.machine.invpanel.client.ItemFilter$NameFilter:matches",
@@ -159,8 +172,10 @@ public class JECConfig {
                     return new String[0];
                 case ListMethodBlacklist:
                     return new String[0];
-                case EnableJEI:
+                case EnableRadicalMode:
                     return true;
+                case EnableJEI:
+                    return false;
             }
             return JECConfig.empty;
         }

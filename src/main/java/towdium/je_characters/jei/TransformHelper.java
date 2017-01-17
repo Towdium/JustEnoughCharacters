@@ -1,5 +1,6 @@
 package towdium.je_characters.jei;
 
+import mezz.jei.ItemFilter;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
@@ -8,6 +9,7 @@ import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.TypeInsnNode;
 import towdium.je_characters.JECConfig;
+import towdium.je_characters.LoadingPlugin;
 
 import java.util.Iterator;
 
@@ -23,6 +25,11 @@ public class TransformHelper {
     }
 
     public static byte[] transform(byte[] code) {
+        try {
+            ItemFilter.class.getConstructor();
+        } catch (NoSuchMethodException r) {
+            return code;
+        }
         if (!JECConfig.EnumItems.EnableJEI.getProperty().getBoolean()) {
             return code;
         }
@@ -30,6 +37,7 @@ public class TransformHelper {
         ClassReader classReader = new ClassReader(code);
         classReader.accept(classNode, 0);
         classNode.methods.stream().filter(methodNode -> methodNode.name.equals("start")).forEach(methodNode -> {
+            LoadingPlugin.log.info("[je_characters] Transforming JEI.");
             Iterator<AbstractInsnNode> i = methodNode.instructions.iterator();
             while (i.hasNext()) {
                 AbstractInsnNode node = i.next();

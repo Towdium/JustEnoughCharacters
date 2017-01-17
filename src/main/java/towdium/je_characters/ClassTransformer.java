@@ -97,11 +97,16 @@ public class ClassTransformer implements IClassTransformer {
                 classNode.methods.forEach(methodNode -> LoadingPlugin.log.info("[je_characters]\t" + methodNode.name));
             }
             List<MethodWrapper> mws = m.get(s1);
-            if (mws.size() != 0) {
+            if (JECConfig.EnumItems.EnableJEI.getProperty().getBoolean() && s1.equals(TransformHelper.getClassName())) {
+                return TransformHelper.transform(bytes);
+            }
+            if (mws.size() != 0 || JECConfig.EnumItems.EnableRadicalMode.getProperty().getBoolean()) {
                 ClassNode classNode = new ClassNode();
                 ClassReader classReader = new ClassReader(bytes);
                 classReader.accept(classNode, 0);
-                LoadingPlugin.log.info("[je_characters] Transforming class \"" + s1 + "\".");
+                if (mws.size() != 0) {
+                    LoadingPlugin.log.info("[je_characters] Transforming class \"" + s1 + "\".");
+                }
                 mws.forEach(mw -> {
                     classNode.methods.stream().filter(methodNode -> methodNode.name.equals(mw.methodName)).
                             forEach(methodNode -> {
@@ -112,13 +117,14 @@ public class ClassTransformer implements IClassTransformer {
                     LoadingPlugin.log.info("[je_characters] " + (flag ? "Succeeded." : ("Method \"") + mw.methodName + "\" not found."));
                     flag = false;
                 });
+                if (JECConfig.EnumItems.EnableRadicalMode.getProperty().getBoolean()) {
+                    classNode.methods.forEach(ClassTransformer::transformStr);
+                }
                 ClassWriter classWriter = new ClassWriter(ClassWriter.COMPUTE_MAXS);
                 classNode.accept(classWriter);
                 return classWriter.toByteArray();
             }
-            if (s1.equals(TransformHelper.getClassName())) {
-                return TransformHelper.transform(bytes);
-            }
+
             return bytes;
         } else {
             return bytes;
