@@ -6,6 +6,7 @@ import org.objectweb.asm.*;
 import org.objectweb.asm.tree.*;
 import towdium.je_characters.jei.TransformHelper;
 
+import javax.annotation.Nullable;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -18,11 +19,6 @@ public class ClassTransformer implements IClassTransformer {
     public static ArrayListMultimap<String, MethodWrapper> m = ArrayListMultimap.create();
     public static Set<String> s = new HashSet<>();
     static boolean flag = false;
-    static Object[] args = new Object[]{
-            Type.getType("(Ljava/lang/Object;)Z"),
-            new Handle(6, "towdium/je_characters/CheckHelper", "checkStr", "(Ljava/lang/String;Ljava/lang/String;)Z"),
-            Type.getType("(Ljava/lang/String;)Z")
-    };
 
     public static void init() {
         String[] blackList = JECConfig.EnumItems.ListMethodBlacklist.getProperty().getStringList();
@@ -56,17 +52,20 @@ public class ClassTransformer implements IClassTransformer {
     static void transformStr(MethodNode methodNode) {
         transform(
                 methodNode, "java/lang/String", "contains", "towdium/je_characters/CheckHelper", "checkStr",
-                "(Ljava/lang/String;Ljava/lang/String;)Z", false, Opcodes.INVOKESTATIC
+                "(Ljava/lang/String;Ljava/lang/String;)Z", false, Opcodes.INVOKESTATIC,
+                "(Ljava/lang/Object;)Z", "(Ljava/lang/String;)Z"
+
         );
     }
 
     static void transformReg(MethodNode methodNode) {
         transform(methodNode, "java/util/regex/Pattern", "matcher", "towdium/je_characters/CheckHelper", "checkReg",
-                "(Ljava/util/regex/Pattern;Ljava/lang/CharSequence;)Ljava/util/regex/Matcher;", false, Opcodes.INVOKESTATIC
+                "(Ljava/util/regex/Pattern;Ljava/lang/CharSequence;)Ljava/util/regex/Matcher;", false, Opcodes.INVOKESTATIC,
+                null, null
         );
     }
 
-    static void transform(MethodNode methodNode, String owner, String name, String newOwner, String newName, String id, boolean isInterface, int op) {
+    public static void transform(MethodNode methodNode, String owner, String name, String newOwner, String newName, String id, boolean isInterface, int op, @Nullable String arg1, @Nullable String arg2) {
         Iterator<AbstractInsnNode> iterator = methodNode.instructions.iterator();
         while (iterator.hasNext()) {
             AbstractInsnNode node = iterator.next();
@@ -76,11 +75,14 @@ public class ClassTransformer implements IClassTransformer {
                     methodNode.instructions.set(insnNode, new MethodInsnNode(op, newOwner, newName, id, isInterface));
                 }
             }
-            if (node instanceof InvokeDynamicInsnNode && node.getOpcode() == Opcodes.INVOKEDYNAMIC) {
+            if (node instanceof InvokeDynamicInsnNode && node.getOpcode() == Opcodes.INVOKEDYNAMIC && arg1 != null && arg2 != null) {
                 InvokeDynamicInsnNode insnNode = ((InvokeDynamicInsnNode) node);
-                if (insnNode.bsmArgs[0].toString().equals("(Ljava/lang/Object;)Z") &&
-                        insnNode.bsmArgs[1].toString().equals("java/lang/String.contains(Ljava/lang/CharSequence;)Z (5)")) {
-                    methodNode.instructions.set(insnNode, new InvokeDynamicInsnNode(insnNode.name, insnNode.desc, insnNode.bsm, args));
+                if (insnNode.bsmArgs[1] instanceof Handle) {
+                    Handle h = ((Handle) insnNode.bsmArgs[1]);
+                    if (h.getOwner().equals(owner) && h.getName().equals(name)) {
+                        Object[] args = {Type.getType(arg1), new Handle(6, newOwner, newName, id), Type.getType(arg2)};
+                        methodNode.instructions.set(insnNode, new InvokeDynamicInsnNode(insnNode.name, insnNode.desc, insnNode.bsm, args));
+                    }
                 }
             }
         }

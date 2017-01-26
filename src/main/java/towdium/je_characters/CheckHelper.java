@@ -15,6 +15,7 @@ import java.util.regex.Pattern;
  */
 public class CheckHelper {
     static final HanyuPinyinOutputFormat FORMAT;
+    static final String[] EMPTY = new String[0];
     static final int[] ZERO = new int[]{0};
     static final int[] ONE = new int[]{1};
     static final Pattern p = Pattern.compile("a");
@@ -136,7 +137,7 @@ public class CheckHelper {
                 ret.add(s);
             }
             ret.add(Character.toString(((char) ch)));
-            return ret.toArray();
+            return ret.toArray(EMPTY);
         } else {
             return ch;
         }
