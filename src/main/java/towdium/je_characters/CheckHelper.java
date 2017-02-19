@@ -41,9 +41,9 @@ public class CheckHelper {
             return test.matcher(name);
     }
 
-    public static boolean checkStr(String s1, String s2) {
+    public static boolean checkStr(String s1, CharSequence s2) {
         if (containsChinese(s1))
-            return checkChinese(s1, s2);
+            return checkChinese(s1, s2.toString());
         else
             return s1.contains(s2);
     }

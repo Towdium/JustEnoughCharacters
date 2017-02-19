@@ -175,7 +175,7 @@ public class JECConfig {
                 case EnableRadicalMode:
                     return true;
                 case EnableJEI:
-                    return false;
+                    return true;
             }
             return JECConfig.empty;
         }

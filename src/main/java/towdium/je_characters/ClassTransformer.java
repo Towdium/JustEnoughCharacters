@@ -52,7 +52,7 @@ public class ClassTransformer implements IClassTransformer {
     static void transformStr(MethodNode methodNode) {
         transform(
                 methodNode, "java/lang/String", "contains", "towdium/je_characters/CheckHelper", "checkStr",
-                "(Ljava/lang/String;Ljava/lang/String;)Z", false, Opcodes.INVOKESTATIC,
+                "(Ljava/lang/String;Ljava/lang/CharSequence;)Z", false, Opcodes.INVOKESTATIC,
                 "(Ljava/lang/Object;)Z", "(Ljava/lang/String;)Z"
 
         );
@@ -65,6 +65,7 @@ public class ClassTransformer implements IClassTransformer {
         );
     }
 
+    @SuppressWarnings("SameParameterValue")
     public static void transform(MethodNode methodNode, String owner, String name, String newOwner, String newName, String id, boolean isInterface, int op, @Nullable String arg1, @Nullable String arg2) {
         Iterator<AbstractInsnNode> iterator = methodNode.instructions.iterator();
         while (iterator.hasNext()) {
