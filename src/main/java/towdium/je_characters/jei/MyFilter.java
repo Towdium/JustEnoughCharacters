@@ -1,6 +1,6 @@
 package towdium.je_characters.jei;
 
-/**
+/*
  * Author: towdium
  * Date:   26/01/17
  */
@@ -14,6 +14,7 @@ import com.google.common.cache.Weigher;
 import com.google.common.collect.ImmutableList;
 import gnu.trove.set.TIntSet;
 import gnu.trove.set.hash.TIntHashSet;
+import towdium.je_characters.CheckCore;
 import towdium.je_characters.CheckHelper;
 
 import java.util.ArrayList;
@@ -21,7 +22,7 @@ import java.util.ArrayList;
 
 public class MyFilter extends GeneralizedSuffixTree {
 
-    ArrayList<Entry> fullList = new ArrayList<>();
+    private ArrayList<Entry> fullList = new ArrayList<>();
 
     private final LoadingCache<String, ImmutableList<Entry>> filteredItemMapsCache =
             CacheBuilder.newBuilder().maximumWeight(16).concurrencyLevel(1).
@@ -46,7 +47,7 @@ public class MyFilter extends GeneralizedSuffixTree {
     public TIntSet search(String word) {
         ImmutableList<Entry> list = filteredItemMapsCache.getUnchecked(word);
         TIntSet ret = new TIntHashSet(1000);
-        list.stream().forEachOrdered((entry -> ret.add(entry.index)));
+        list.forEach((entry -> ret.add(entry.index)));
         return ret;
     }
 

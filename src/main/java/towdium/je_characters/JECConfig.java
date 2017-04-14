@@ -21,11 +21,9 @@ public class JECConfig {
         handleFormerVersion();
         initProperties();
         setValue();
-        ClassTransformer.init();
-        CheckHelper.class.getClass();
-        TransformHelper.class.getClass();
+
         config.save();
-        LoadingPlugin.initialized = true;
+
     }
 
     public static void setValue() {
@@ -81,14 +79,10 @@ public class JECConfig {
                             "so every mod using this method will be supported, while this could lead to\n" +
                             "unexpected problems and slow down the launching speed.";
                 case EnableJEI:
-                    return "In the 1.11 version of JEI, the test filtering mechanics has been changed to a prefix tree, \n" +
+                    return "In the 1.11 version of JEI, the text filtering mechanics has been changed to a prefix tree, \n" +
                             "which is incompatible with Chinese pinyin system. So I have to entirely change the behavior.\n" +
-                            "Specifically, I have ported the original filtering mechanics in 1.10.\n" +
-                            "Therefore, I'm afraid new filtering features will not be implemented very soon and\n" +
-                            "this might easily be broken and lead to bugs when JEI is having major changes.\n" +
-                            "If you are enabling this feature and having some JEI related crashes, do provide the\n" +
-                            "crash report to me before providing to the JEI page since this is most possibly caused\n" +
-                            "by this mod.";
+                            "Specifically, I'm using the old JEI's cached filter and inject it in.\n" +
+                            "If anything wired happens, try to disable it.";
             }
             return "";
         }
@@ -180,6 +174,7 @@ public class JECConfig {
             return JECConfig.empty;
         }
 
+        @SuppressWarnings("UnusedReturnValue")
         public Property init() {
             EnumType type = this.getType();
             if (type != null) {
