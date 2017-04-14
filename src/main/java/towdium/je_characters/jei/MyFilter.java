@@ -14,13 +14,17 @@ import com.google.common.cache.Weigher;
 import com.google.common.collect.ImmutableList;
 import gnu.trove.set.TIntSet;
 import gnu.trove.set.hash.TIntHashSet;
-import towdium.je_characters.CheckCore;
 import towdium.je_characters.CheckHelper;
 
 import java.util.ArrayList;
+import java.util.function.Consumer;
+
+import static towdium.je_characters.CheckHelper.foreachChar;
 
 
 public class MyFilter extends GeneralizedSuffixTree {
+
+    static ArrayList<MyFilter> filters = new ArrayList<>();
 
     private ArrayList<Entry> fullList = new ArrayList<>();
 
@@ -44,6 +48,24 @@ public class MyFilter extends GeneralizedSuffixTree {
                         }
                     });
 
+    public MyFilter() {
+        if (filters.size() == 0) {
+            onBuildStarted();
+        }
+        filters.add(this);
+    }
+
+    static void onBuildStarted() {
+        CheckHelper.buildingMode(true);
+    }
+
+    static void onBuildFinished() {
+        filters.forEach(MyFilter::cache);
+        filters.forEach(myFilter -> myFilter.sendList(CheckHelper.addBase));
+        filters.clear();
+        CheckHelper.buildingMode(false);
+    }
+
     public TIntSet search(String word) {
         ImmutableList<Entry> list = filteredItemMapsCache.getUnchecked(word);
         TIntSet ret = new TIntHashSet(1000);
@@ -57,6 +79,18 @@ public class MyFilter extends GeneralizedSuffixTree {
 
     public int computeCount() {
         return fullList.size();
+    }
+
+    public void cache() {
+
+
+        StringBuilder stringBuilder = new StringBuilder();
+        foreachChar(c1 -> foreachChar(c2 ->
+                search(stringBuilder.delete(0, 2).append(c1).append(c2).toString())));
+    }
+
+    public void sendList(Consumer<String> consumer) {
+        fullList.forEach(entry -> consumer.accept(entry.str));
     }
 
     private class Entry {

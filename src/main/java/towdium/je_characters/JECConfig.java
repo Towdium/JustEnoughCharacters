@@ -2,7 +2,6 @@ package towdium.je_characters;
 
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
-import towdium.je_characters.jei.TransformHelper;
 
 import java.io.File;
 
@@ -21,7 +20,6 @@ public class JECConfig {
         handleFormerVersion();
         initProperties();
         setValue();
-
         config.save();
 
     }
@@ -29,6 +27,8 @@ public class JECConfig {
     public static void setValue() {
         EnumItems.ListDefaultRegExpMatch.getProperty().set(((String[]) EnumItems.ListDefaultRegExpMatch.getDefault()));
         EnumItems.ListDefaultStringMatch.getProperty().set(((String[]) EnumItems.ListDefaultStringMatch.getDefault()));
+        if (EnumItems.IntCleanThreshold.getProperty().getInt() < 2)
+            EnumItems.IntCleanThreshold.getProperty().set(2);
     }
 
     public static void handleFormerVersion() {
@@ -52,7 +52,8 @@ public class JECConfig {
         ListDumpClass,
         ListMethodBlacklist,
         EnableRadicalMode,
-        EnableJEI;
+        EnableJEI,
+        IntCleanThreshold;
 
 
         public String getComment() {
@@ -83,6 +84,9 @@ public class JECConfig {
                             "which is incompatible with Chinese pinyin system. So I have to entirely change the behavior.\n" +
                             "Specifically, I'm using the old JEI's cached filter and inject it in.\n" +
                             "If anything wired happens, try to disable it.";
+                case IntCleanThreshold:
+                    return "The threshold for memory clean, larger values can consume more memory\n" +
+                            "but provide better performance. Must be larger than 2, default is 4";
             }
             return "";
         }
@@ -104,6 +108,8 @@ public class JECConfig {
                 case EnableRadicalMode:
                     return EnumCategory.General.toString();
                 case EnableJEI:
+                    return EnumCategory.General.toString();
+                case IntCleanThreshold:
                     return EnumCategory.General.toString();
             }
             return "";
@@ -127,6 +133,8 @@ public class JECConfig {
                     return EnumType.Boolean;
                 case EnableJEI:
                     return EnumType.Boolean;
+                case IntCleanThreshold:
+                    return EnumType.Integer;
             }
             return EnumType.Error;
         }
@@ -170,6 +178,8 @@ public class JECConfig {
                     return true;
                 case EnableJEI:
                     return true;
+                case IntCleanThreshold:
+                    return 4;
             }
             return JECConfig.empty;
         }
@@ -183,6 +193,8 @@ public class JECConfig {
                         return config.get(this.getCategory(), this.toString(), (Boolean) this.getDefault(), this.getComment());
                     case ListString:
                         return config.get(this.getCategory(), this.toString(), (String[]) this.getDefault(), this.getComment());
+                    case Integer:
+                        return config.get(this.getCategory(), this.toString(), (Integer) this.getDefault(), this.getComment());
                 }
                 config.getCategory(EnumCategory.General.toString()).get(this.toString());
             }
@@ -208,6 +220,6 @@ public class JECConfig {
         }
     }
 
-    public enum EnumType {Boolean, ListString, Error}
+    public enum EnumType {Boolean, ListString, Integer, Error}
 }
 

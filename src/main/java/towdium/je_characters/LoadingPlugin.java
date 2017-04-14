@@ -20,6 +20,12 @@ public class LoadingPlugin implements IFMLLoadingPlugin {
         initClasses();
     }
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    static void initClasses() {
+        TransformHelper.class.getClass();
+        CheckHelper.checkStr("这是一条测试文本", "zheshiytcswb");
+    }
+
     @Override
     public String[] getASMTransformerClass() {
         return new String[]{"towdium.je_characters.ClassTransformer"};
@@ -45,14 +51,5 @@ public class LoadingPlugin implements IFMLLoadingPlugin {
     @Override
     public String getAccessTransformerClass() {
         return null;
-    }
-
-    @SuppressWarnings("ResultOfMethodCallIgnored")
-    static void initClasses() {
-        CheckCore.class.getClass();
-        CheckHelper.class.getClass();
-        CheckHelper.Cache.class.getClass();
-        CheckHelper.Cache.Entry.class.getClass();
-        TransformHelper.class.getClass();
     }
 }

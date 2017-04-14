@@ -6,7 +6,6 @@ import net.sourceforge.pinyin4j.format.HanyuPinyinToneType;
 import net.sourceforge.pinyin4j.format.exception.BadHanyuPinyinOutputFormatCombination;
 
 import java.util.HashSet;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -23,6 +22,15 @@ public class CheckCore {
     static {
         FORMAT = new HanyuPinyinOutputFormat();
         FORMAT.setToneType(HanyuPinyinToneType.WITHOUT_TONE);
+    }
+
+    public static boolean isPureChinese(CharSequence s) {
+        for (int i = s.length() - 1; i >= 0; i--) {
+            if (!isCharacter(s.charAt(i))) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public static boolean containsChinese(CharSequence s) {
