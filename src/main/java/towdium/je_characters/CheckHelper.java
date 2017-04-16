@@ -117,7 +117,6 @@ public class CheckHelper {
 
         static class Entry {
             int level;
-            int count = 0;
             Entry parent;
             TCharObjectHashMap<Entry> subEntries;
             TObjectByteMap<String> cached;
@@ -144,36 +143,30 @@ public class CheckHelper {
 
             // s1 chinese strings only, s2 english only
             public boolean check(String s1, String s2) {
-                ++count;
-                if (s2.length() == 0) {
-                    return true;
-                } else if (s2.length() == level) {
-                    byte b = cached.get(s1);
-                    if (b == TRUE)
-                        return true;
-                    else if (b == FALSE)
-                        return false;
-                    else {
-                        if (parent.fastCheck(s1) && checkChinese(s1, s2)) {
-                            cached.put(s1, TRUE);
-                            return true;
-                        } else {
-                            cached.put(s1, FALSE);
-                            return false;
-                        }
-                    }
-                } else {
-                    Entry entry = subEntries.get(s2.charAt(level));
-                    if (entry == null) {
-                        entry = new Entry(level + 1, this);
-                        subEntries.put(s2.charAt(level), entry);
-                    }
-                    return entry.check(s1, s2);
+                byte b = level == 0 ? TRUE : cached.get(s1);
+                if (b == Constants.DEFAULT_BYTE_NO_ENTRY_VALUE) {
+                    b = genResult(s1, s2) ? TRUE : FALSE;
                 }
+                return b == TRUE && (s2.length() == level || callSubEntry(s1, s2));
             }
 
-            private boolean fastCheck(String s) {
-                return level == 0 || cached.containsKey(s);
+            private boolean callSubEntry(String s1, String s2) {
+                Entry entry = subEntries.get(s2.charAt(level));
+                if (entry == null) {
+                    entry = new Entry(level + 1, this);
+                    subEntries.put(s2.charAt(level), entry);
+                }
+                return entry.check(s1, s2);
+            }
+
+            private boolean genResult(String s1, String s2) {
+                if (checkChinese(s1, s2)) {
+                    cached.put(s1, TRUE);
+                    return true;
+                } else {
+                    cached.put(s1, FALSE);
+                    return false;
+                }
             }
         }
     }
