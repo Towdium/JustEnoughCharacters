@@ -35,7 +35,7 @@ compileJava {
 }
 
 minecraft {
-    version = "1.11.2-13.20.0.2266"
+    version = "1.11.2-13.20.0.2282"
     runDir = "run"
     mappings = "snapshot_20161111"
 
@@ -57,7 +57,7 @@ dependencies {
     // compile against the JEI API
     //deobfCompile "mezz.jei:jei_1.11.2:4.2.2.215"
     // at runtime, use the full JEI jar
-    compile "mezz.jei:jei_1.11.2:4.2.2.215"
+    compile "mezz.jei:jei_1.11.2:4.3.3.270"
     compile group: "net.shadowfacts", name: "Forgelin", version: "1.4.1"
 }
 

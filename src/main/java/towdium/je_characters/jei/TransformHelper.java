@@ -14,10 +14,10 @@ import java.util.Iterator;
  * Date:   09/01/17
  */
 public class TransformHelper {
-    static final String CLASS_NAME = "mezz.jei.ItemFilterInternals";
+    static final String[] CLASS_NAME = new String[]{"mezz.jei.ItemFilterInternals", "mezz.jei.ingredients.IngredientFilterInternals"};
     public static boolean withJei = false;
 
-    public static String getClassName() {
+    public static String[] getClassName() {
         return CLASS_NAME;
     }
 

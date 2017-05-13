@@ -100,8 +100,10 @@ public class ClassTransformer implements IClassTransformer {
                 classNode.methods.forEach(methodNode -> LoadingPlugin.log.info("[je_characters]\t" + methodNode.name));
             }
             List<MethodWrapper> mws = m.get(s1);
-            if (JECConfig.EnumItems.EnableJEI.getProperty().getBoolean() && s1.equals(TransformHelper.getClassName())) {
-                return TransformHelper.transform(bytes);
+            for (String str : TransformHelper.getClassName()) {
+                if (JECConfig.EnumItems.EnableJEI.getProperty().getBoolean() && s1.equals(str)) {
+                    return TransformHelper.transform(bytes);
+                }
             }
             if (mws.size() != 0 || JECConfig.EnumItems.EnableRadicalMode.getProperty().getBoolean()) {
                 ClassNode classNode = new ClassNode();
