@@ -1,30 +1,38 @@
 package towdium.je_characters;
 
-import gnu.trove.impl.Constants;
-import gnu.trove.map.TObjectByteMap;
-import gnu.trove.map.hash.TCharObjectHashMap;
-import gnu.trove.map.hash.TObjectByteHashMap;
-import towdium.je_characters.jei.TransformHelper;
+import net.sourceforge.pinyin4j.PinyinHelper;
+import net.sourceforge.pinyin4j.format.HanyuPinyinOutputFormat;
+import net.sourceforge.pinyin4j.format.HanyuPinyinToneType;
+import net.sourceforge.pinyin4j.format.exception.BadHanyuPinyinOutputFormatCombination;
 
-import java.util.ArrayList;
-import java.util.function.Consumer;
+import java.util.HashSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static towdium.je_characters.CheckCore.*;
-
 /**
  * Author: Towdium
- * Date:   17-4-14.
+ * Date:   2016/9/4.
  */
 public class CheckHelper {
-    static final byte TRUE = (byte) (Constants.DEFAULT_BYTE_NO_ENTRY_VALUE + 1);
-    static final byte FALSE = (byte) (Constants.DEFAULT_BYTE_NO_ENTRY_VALUE + 2);
+    static final HanyuPinyinOutputFormat FORMAT;
+    static final String[] EMPTY = new String[0];
+    static final int[] ZERO = new int[]{0};
+    static final int[] ONE = new int[]{1};
+    static final Pattern p = Pattern.compile("a");
 
-    static Cache standard = new Cache();
-    static Cache cache = standard;
-    static ArrayList<String> base = new ArrayList<>();
-    public static Consumer<String> addBase = s -> base.add(s);
+    static {
+        FORMAT = new HanyuPinyinOutputFormat();
+        FORMAT.setToneType(HanyuPinyinToneType.WITHOUT_TONE);
+    }
+
+    public static boolean containsChinese(CharSequence s) {
+        for (int i = s.length() - 1; i >= 0; i--) {
+            if (isCharacter(s.charAt(i))) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     public static Matcher checkReg(Pattern test, CharSequence name) {
         if (containsChinese(name))
@@ -33,141 +41,115 @@ public class CheckHelper {
             return test.matcher(name);
     }
 
-    public static void foreachChar(Consumer<Character> func) {
-        for (char c = 'a'; c <= 'z'; c++) {
-            func.accept(c);
-        }
-    }
-
-    // s1.contains(s2)
     public static boolean checkStr(String s1, CharSequence s2) {
-        if (containsChinese(s1) && s2 instanceof String) {
-            if (containsChinese(s2)) {
-                if (isPureChinese(s2)) {
-                    return s1.contains(s2);
-                } else {
-                    return checkChinese(s1, s2.toString());
-                }
-            } else {
-                return cache.check(s1, s2.toString());
-            }
-        } else
+        if (containsChinese(s1))
+            return checkChinese(s1, s2.toString());
+        else
             return s1.contains(s2);
     }
 
-    public static void buildingMode(boolean b) {
-        if (b) {
-            cache = standard;
+    public static boolean checkChinese(String s1, String s2) {
+        Object[] format = getFormat(s1);
+        for (int i = 0; i < format.length; i++) {
+            if (checkChinese(format, s2, i, 0)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static boolean checkChinese(Object[] format, String str, int indexFormat, int indexStr) {
+        if (indexStr == str.length()) {
+            return true;
+        }
+        if (indexFormat == format.length) {
+            return false;
+        }
+        int[] result = checkRepresentation(format[indexFormat], str, indexStr);
+        for (int i : result) {
+            if (i != 0 && checkChinese(format, str, indexFormat + 1, indexStr + i)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static int[] checkRepresentation(Object rep, String str, int index) {
+        if (rep instanceof Integer) {
+            return str.charAt(index) == ((Integer) rep) ? ONE : ZERO;
+        } else if (rep instanceof Object[]) {
+            Object[] strs = (Object[]) rep;
+            HashSet<Integer> ret = new HashSet<>();
+            int extra = str.length() - index;
+            for (Object obj : strs) {
+                String astr = (String) obj;
+                if (astr.length() >= extra && astr.startsWith(str.substring(index))) {
+                    return new int[]{extra};
+                }
+                if (str.startsWith(astr, index)) {
+                    ret.add(astr.length());
+                }
+            }
+            return ret.isEmpty() ? ZERO : toArray(ret.toArray());
         } else {
-            cache = new Cache(standard);
+            return ZERO;
         }
     }
 
-    // s2 as tree, s1 as value
-    static class Cache {
-
-        Entry root;
-        int count = 0;
-
-        public Cache() {
-            root = new Entry(0, null);
-        }
-
-        public Cache(Cache c) {
-            root = new Entry(c.root, null);
-        }
-
-        public boolean check(String s1, String s2) {
-            clean();
-            return root.check(s1, s2.toLowerCase());
-        }
-
-        public void clean() {
-            count++;
-            if (count % 2048 == 1024) {
-                ArrayList<Character> toRemove = new ArrayList<>();
-
-                root.subEntries.forEachEntry((ch, entry) -> {
-                    if (TransformHelper.withJei) {
-                        Entry inStandard = standard.root.subEntries.get(ch);
-
-                        if (entry.cached.size() > (inStandard == null ? 0 : inStandard.cached.size() + 100) *
-                                JECConfig.EnumItems.IntCleanThreshold.getProperty().getInt()) {
-                            toRemove.add(ch);
-                        }
-                        return true;
-                    } else {
-                        if (entry.cached.size() > 30000)
-                            toRemove.add(ch);
-                        return true;
-                    }
-                });
-
-                toRemove.forEach(character -> {
-                    Entry inStandard = TransformHelper.withJei ? standard.root.subEntries.get(character) : null;
-                    if (inStandard == null) {
-                        root.subEntries.remove(character);
-                    } else {
-                        LoadingPlugin.log.info("Cleaning cache of " + character + ".");
-                        root.subEntries.put(character, new Entry(inStandard, root));
-                    }
-                });
+    public static int[] toArray(Object[] objs) {
+        int[] ret = new int[objs.length];
+        int count = -1;
+        for (Object o : objs) {
+            if (o instanceof Integer) {
+                ret[++count] = ((Integer) o);
             }
         }
+        return ret;
+    }
 
-        static class Entry {
-            int level;
-            Entry parent;
-            TCharObjectHashMap<Entry> subEntries;
-            TObjectByteMap<String> cached;
+    public static boolean isCharacter(int i) {
+        return 0x3007 <= i && i < 0x9FA5;
+    }
 
-            public Entry(Entry e, Entry parent) {
-                this.level = e.level;
-                this.parent = parent;
-                subEntries = new TCharObjectHashMap<>(60);
-                cached = new TObjectByteHashMap<>(e.cached.size());
-                cached.putAll(e.cached);
-                e.subEntries.forEachEntry((ch, entry) -> {
-                    subEntries.put(ch, new Entry(entry, this));
-                    return true;
-                });
+    public static Object[] getFormat(String s) {
+        int len = s.length();
+        Object[] ret = new Object[len];
+        for (int a = 0; a < len; a++) {
+            int ch = s.charAt(a);
+            ret[a] = getCharRepresentation(ch);
+        }
+        return ret;
+    }
+
+    public static Object getCharRepresentation(int ch) {
+        if (isCharacter(ch)) {
+            String[] pinyin;
+            try {
+                pinyin = PinyinHelper.toHanyuPinyinStringArray((char) ch, FORMAT);
+            } catch (BadHanyuPinyinOutputFormatCombination badHanyuPinyinOutputFormatCombination) {
+                badHanyuPinyinOutputFormatCombination.printStackTrace();
+                return ch;
             }
-
-            public Entry(int level, Entry parent) {
-                this.level = level;
-                this.parent = parent;
-                subEntries = new TCharObjectHashMap<>(60);
-                int len = 1024 >> level;
-                cached = new TObjectByteHashMap<>(len > Constants.DEFAULT_CAPACITY ? len : Constants.DEFAULT_CAPACITY);
+            HashSet<String> ret = new HashSet<>();
+            if (pinyin == null) return ch;
+            for (String s : pinyin) {
+                ret.add(getConsonant(s));
+                ret.add(s);
             }
+            ret.add(Character.toString(((char) ch)));
+            return ret.toArray(EMPTY);
+        } else {
+            return ch;
+        }
+    }
 
-            // s1 chinese strings only, s2 english only
-            public boolean check(String s1, String s2) {
-                byte b = level == 0 ? TRUE : cached.get(s1);
-                if (b == Constants.DEFAULT_BYTE_NO_ENTRY_VALUE) {
-                    b = genResult(s1, s2) ? TRUE : FALSE;
-                }
-                return b == TRUE && (s2.length() == level || callSubEntry(s1, s2));
-            }
-
-            private boolean callSubEntry(String s1, String s2) {
-                Entry entry = subEntries.get(s2.charAt(level));
-                if (entry == null) {
-                    entry = new Entry(level + 1, this);
-                    subEntries.put(s2.charAt(level), entry);
-                }
-                return entry.check(s1, s2);
-            }
-
-            private boolean genResult(String s1, String s2) {
-                if (checkChinese(s1, s2)) {
-                    cached.put(s1, TRUE);
-                    return true;
-                } else {
-                    cached.put(s1, FALSE);
-                    return false;
-                }
-            }
+    public static String getConsonant(String s) {
+        if (s.length() >= 2 && s.charAt(1) == 'h') {
+            return s.substring(0, 2);
+        } else if (s.length() > 1) {
+            return s.substring(0, 1);
+        } else {
+            return s;
         }
     }
 }
