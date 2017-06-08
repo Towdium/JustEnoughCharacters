@@ -13,6 +13,7 @@ import net.sourceforge.pinyin4j.format.exception.BadHanyuPinyinOutputFormatCombi
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -74,18 +75,18 @@ public class CheckHelper {
     }
 
     public static boolean checkChinese(String s1, int start1, String s2, int start2) {
+        b.b = false;
+
         if (start1 == s1.length()) {
             return true;
         }
 
         CharRep r = CharRep.get(s2.charAt(start2));
-        TIntSet s = r.match(s1, start1);
-
+        IndexSet s = r.match(s1, start1);
 
         if (start2 == s2.length() - 1) {
-            b.b = false;
             int i = s1.length() - start1;
-            s.forEach(j -> {
+            s.foreach(j -> {
                 if (i == j) {
                     b.b = true;
                     return false;
@@ -96,8 +97,7 @@ public class CheckHelper {
             return b.b;
         }
 
-        b.b = false;
-        s.forEach(i -> {
+        s.foreach(i -> {
             if (checkChinese(s1, start1 + i, s2, start2 + 1)) {
                 b.b = true;
                 return false;
@@ -118,17 +118,7 @@ public class CheckHelper {
     }
 
     public interface CharPattern {
-
-        TIntSet match(String str, int start);
-
-        class Constants {
-            static final TIntSet ZERO = new TIntHashSet();
-            static final TIntSet ONE = new TIntHashSet();
-
-            static {
-                ONE.add(1);
-            }
-        }
+        IndexSet match(String str, int start);
     }
 
     static class WrapBoolean {
@@ -179,9 +169,9 @@ public class CheckHelper {
             return p;
         }
 
-        public TIntSet match(String str, int start) {
-            TIntSet ret = new TIntHashSet();  // TODO
-            patterns.forEach(pat -> ret.addAll(pat.match(str, start)));
+        public IndexSet match(String str, int start) {
+            IndexSet ret = new IndexSet();
+            patterns.forEach(pat -> ret.merge(pat.match(str, start)));
             return ret;
         }
     }
@@ -221,18 +211,18 @@ public class CheckHelper {
         }
 
         @Override
-        public TIntSet match(String str, int start) {
+        public IndexSet match(String str, int start) {
             int match = strCmp(str, this.str, start);
-            TIntSet ret = new TIntHashSet(5); // TODO
+            IndexSet ret = new IndexSet();
 
             slices.forEach(value -> {
                 if (value <= match)
-                    ret.add(value);
+                    ret.set(value);
                 return true;
             });
 
             if (match == str.length() - start)
-                ret.add(match);
+                ret.set(match);
 
             return ret;
         }
@@ -246,8 +236,42 @@ public class CheckHelper {
         }
 
         @Override
-        public TIntSet match(String str, int start) {
-            return str.charAt(start) == ch ? Constants.ONE : Constants.ZERO;
+        public IndexSet match(String str, int start) {
+            return str.charAt(start) == ch ? IndexSet.ONE : IndexSet.ZERO;
+        }
+    }
+
+    public static class IndexSet {
+        static final IndexSet ONE = new IndexSet(0x1);
+        static final IndexSet ZERO = new IndexSet(0x0);
+
+        int value = 0x0;
+
+        public IndexSet() {
+        }
+
+        public IndexSet(int value) {
+            this.value = value;
+        }
+
+        public void set(int index) {
+            int i = 0x1 << index;
+            this.value |= i;
+        }
+
+        public void merge(IndexSet s) {
+            value |= s.value;
+        }
+
+        public void foreach(Predicate<Integer> p) {
+            int v = value >> 1;
+            for (int i = 1; i < 8; i++) {
+                if ((v & 0x1) == 0x1) {
+                    if (!p.test(i))
+                        break;
+                }
+                v >>= 1;
+            }
         }
     }
 }
