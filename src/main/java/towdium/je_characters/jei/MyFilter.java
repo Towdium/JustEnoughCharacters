@@ -20,8 +20,8 @@ import java.util.ArrayList;
 
 public class MyFilter extends GeneralizedSuffixTree {
 
+    static ArrayList<MyFilter> objs = new ArrayList<>();
     ArrayList<Entry> fullList = new ArrayList<>();
-
     private final LoadingCache<String, ImmutableList<Entry>> filteredItemMapsCache =
             CacheBuilder.newBuilder().maximumWeight(16).concurrencyLevel(1).
                     weigher((Weigher<String, ImmutableList<Entry>>) (key, value) -> 1).
@@ -41,6 +41,18 @@ public class MyFilter extends GeneralizedSuffixTree {
                             return builder.build();
                         }
                     });
+
+    public MyFilter() {
+        objs.add(this);
+    }
+
+    static void cache() {
+        objs.forEach(myFilter -> myFilter.fullList.forEach(entry -> {
+            for (int i = 0; i < entry.str.length(); i++) {
+                CheckHelper.CharRep.get(entry.str.charAt(i));
+            }
+        }));
+    }
 
     @NotNull
     public TIntSet search(String word) {

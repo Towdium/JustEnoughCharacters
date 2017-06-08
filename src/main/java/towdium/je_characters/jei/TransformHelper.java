@@ -3,10 +3,7 @@ package towdium.je_characters.jei;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.tree.AbstractInsnNode;
-import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.MethodInsnNode;
-import org.objectweb.asm.tree.TypeInsnNode;
+import org.objectweb.asm.tree.*;
 import towdium.je_characters.JECConfig;
 import towdium.je_characters.LoadingPlugin;
 
@@ -18,7 +15,6 @@ import java.util.Iterator;
  */
 public class TransformHelper {
     static final String[] CLASS_NAME = new String[]{"mezz.jei.ItemFilterInternals", "mezz.jei.ingredients.IngredientFilterInternals"};
-    public static boolean withJei = false;
 
     public static String[] getClassName() {
         return CLASS_NAME;
@@ -49,8 +45,23 @@ public class TransformHelper {
                 }
             }
         });
+        classNode.methods.stream().filter(method -> method.name.equals("buildSuffixTrees")).forEach(method -> {
+            LoadingPlugin.log.info("Transforming JEI. Applying cache hooks.");
+            Iterator<AbstractInsnNode> i = method.instructions.iterator();
+            while (i.hasNext()) {
+                AbstractInsnNode node = i.next();
+                if (node instanceof InsnNode && node.getOpcode() == Opcodes.RETURN) {
+                    method.instructions.insertBefore(node, new MethodInsnNode(Opcodes.INVOKESTATIC,
+                            "towdium/je_characters/jei/TransformHelper", "loadingHook", "()V", false));
+                }
+            }
+        });
         ClassWriter classWriter = new ClassWriter(ClassWriter.COMPUTE_MAXS);
         classNode.accept(classWriter);
         return classWriter.toByteArray();
+    }
+
+    public static void loadingHook() {
+        MyFilter.cache();
     }
 }
