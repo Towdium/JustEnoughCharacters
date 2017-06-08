@@ -121,6 +121,18 @@ public class CheckHelper {
         IndexSet match(String str, int start);
     }
 
+    public interface CharRep {
+        static CharRep get(Character ch) {
+            if (isCharacter(ch)) {
+                return CharRepMul.get(ch);
+            } else {
+                return CharRepSin.get(ch);
+            }
+        }
+
+        IndexSet match(String str, int start);
+    }
+
     static class WrapBoolean {
         public boolean b;
 
@@ -129,42 +141,60 @@ public class CheckHelper {
         }
     }
 
-    public static class CharRep {
-        static LoadingCache<Character, CharRep> cache = CacheBuilder.newBuilder().concurrencyLevel(1)
-                .maximumSize(20000).build(new CacheLoader<Character, CharRep>() {
-                    @Override
-                    public CharRep load(@NotNull Character ch) {
-                        return genRep(ch);
-                    }
-                });
+    public static class CharRepSin implements CharRep {
+        static final CharRepSin INSTANCE = new CharRepSin();
+        Character ch;
+
+        private CharRepSin() {
+        }
+
+        public static CharRepSin get(Character ch) {
+            INSTANCE.ch = ch;
+            return INSTANCE;
+        }
+
+        public IndexSet match(String str, int start) {
+            return str.charAt(start) == ch ? IndexSet.ONE : IndexSet.ZERO;
+        }
+    }
+
+    public static class CharRepMul implements CharRep {
+        static final CharRepMul[] CACHE = new CharRepMul[41000];
+        static final int START = 0x3007;
+        static final int END = 0x9FA5;
+
+        static {
+            for (int i = START; i <= END; i++) {
+                CACHE[i] = genRep((char) i);
+            }
+        }
+
         ArrayList<CharPattern> patterns = new ArrayList<>();
 
-        private CharRep() {
+        private CharRepMul() {
         }
 
-        public static CharRep get(Character ch) {
-            return cache.getUnchecked(ch);
+        public static CharRepMul get(Character ch) {
+            return CACHE[ch];
         }
 
-        private static CharRep genRep(Character ch) {
-            CharRep p = new CharRep();
+        private static CharRepMul genRep(Character ch) {
+            CharRepMul p = new CharRepMul();
             p.patterns.add(new RawPattern(ch));
-            if (isCharacter(ch)) {
-                String[] pinyin;
-                try {
-                    pinyin = PinyinHelper.toHanyuPinyinStringArray(ch, FORMAT);
-                } catch (BadHanyuPinyinOutputFormatCombination e) {
-                    LoadingPlugin.log.warn("Exception when generating pattern for \"" + ch + "\"");
-                    return p;
-                }
+            String[] pinyin;
+            try {
+                pinyin = PinyinHelper.toHanyuPinyinStringArray(ch, FORMAT);
+            } catch (BadHanyuPinyinOutputFormatCombination e) {
+                LoadingPlugin.log.warn("Exception when generating pattern for \"" + ch + "\"");
+                return p;
+            }
 
-                if (pinyin == null)
-                    return p;
+            if (pinyin == null)
+                return p;
 
-                for (String s : pinyin) {
-                    if (s != null)
-                        p.patterns.add(PinyinPattern.get(s));
-                }
+            for (String s : pinyin) {
+                if (s != null)
+                    p.patterns.add(PinyinPattern.get(s));
             }
             return p;
         }

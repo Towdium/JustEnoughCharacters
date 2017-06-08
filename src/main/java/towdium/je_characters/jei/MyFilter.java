@@ -47,11 +47,6 @@ public class MyFilter extends GeneralizedSuffixTree {
     }
 
     static void cache() {
-        objs.forEach(myFilter -> myFilter.fullList.forEach(entry -> {
-            for (int i = 0; i < entry.str.length(); i++) {
-                CheckHelper.CharRep.get(entry.str.charAt(i));
-            }
-        }));
     }
 
     @NotNull
