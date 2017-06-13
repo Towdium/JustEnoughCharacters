@@ -3,6 +3,7 @@ package towdium.je_characters.transform.transformers;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
 import towdium.je_characters.JECConfig;
+import towdium.je_characters.LoadingPlugin;
 import towdium.je_characters.transform.Transformer;
 
 /**
@@ -17,6 +18,7 @@ public class TransformerStringUniversal implements Transformer.Extended {
 
     @Override
     public void transform(ClassNode n) {
+        LoadingPlugin.log.info("Transforming class " + n.name + " for string contains in radical mode.");
         n.methods.forEach(methodNode -> Transformer.transformInvoke(
                 methodNode, "java/lang/String", "contains", "towdium/je_characters/CheckHelper", "checkStr",
                 "(Ljava/lang/String;Ljava/lang/CharSequence;)Z", false, Opcodes.INVOKESTATIC,
