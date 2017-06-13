@@ -1,6 +1,5 @@
 package towdium.je_characters.jei;
 
-import com.abahgat.suffixtree.GeneralizedSuffixTree;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -14,13 +13,11 @@ import towdium.je_characters.CheckHelper;
 import java.util.ArrayList;
 
 /**
- * Author: towdium
- * Date:   26/01/17
+ * Author: Towdium
+ * Date:   12/06/17
  */
-
-public class MyFilter extends GeneralizedSuffixTree {
-
-    static ArrayList<MyFilter> objs = new ArrayList<>();
+public class CachedFilter {
+    static ArrayList<CachedFilter> objs = new ArrayList<>();
     ArrayList<Entry> fullList = new ArrayList<>();
     private final LoadingCache<String, ImmutableList<Entry>> filteredItemMapsCache =
             CacheBuilder.newBuilder().maximumWeight(16).concurrencyLevel(1).
@@ -42,7 +39,7 @@ public class MyFilter extends GeneralizedSuffixTree {
                         }
                     });
 
-    public MyFilter() {
+    public CachedFilter() {
         objs.add(this);
     }
 

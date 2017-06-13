@@ -3,7 +3,7 @@ package towdium.je_characters;
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import towdium.je_characters.jei.TransformHelper;
+import towdium.je_characters.transform.TransformerRegistry;
 
 import java.io.File;
 import java.util.Map;
@@ -17,13 +17,9 @@ public class LoadingPlugin implements IFMLLoadingPlugin {
     public static boolean initialized = false;
 
     static {
-        initClasses();
-    }
-
-    @SuppressWarnings("ResultOfMethodCallIgnored")
-    static void initClasses() {
-        TransformHelper.class.getClass();
         CheckHelper.checkStr("这是一条测试文本", "zheshiytcswb");
+        //noinspection ResultOfMethodCallIgnored
+        TransformerRegistry.class.toString();
     }
 
     @Override
@@ -44,7 +40,6 @@ public class LoadingPlugin implements IFMLLoadingPlugin {
     @Override
     public void injectData(Map<String, Object> data) {
         JECConfig.preInit(((File) data.get("mcLocation")));
-        ClassTransformer.init();
         LoadingPlugin.initialized = true;
     }
 
