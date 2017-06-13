@@ -18,11 +18,14 @@ public class TransformerStringUniversal implements Transformer.Extended {
 
     @Override
     public void transform(ClassNode n) {
-        LoadingPlugin.log.info("Transforming class " + n.name + " for string contains in radical mode.");
-        n.methods.forEach(methodNode -> Transformer.transformInvoke(
-                methodNode, "java/lang/String", "contains", "towdium/je_characters/CheckHelper", "checkStr",
-                "(Ljava/lang/String;Ljava/lang/CharSequence;)Z", false, Opcodes.INVOKESTATIC,
-                "(Ljava/lang/Object;)Z", "(Ljava/lang/String;)Z"
-        ));
+        n.methods.forEach(methodNode -> {
+            if (Transformer.transformInvoke(
+                    methodNode, "java/lang/String", "contains", "towdium/je_characters/CheckHelper", "checkStr",
+                    "(Ljava/lang/String;Ljava/lang/CharSequence;)Z", false, Opcodes.INVOKESTATIC,
+                    "(Ljava/lang/Object;)Z", "(Ljava/lang/String;)Z"
+            )) {
+                LoadingPlugin.log.info("Transformed method " + n.name + ":" + methodNode.name + " in radical mode.");
+            }
+        });
     }
 }

@@ -27,16 +27,18 @@ public interface Transformer {
         return Optional.ofNullable(methodNode.v);
     }
 
-    static void transformInvoke(
+    static boolean transformInvoke(
             MethodNode methodNode, String owner, String name, String newOwner, String newName,
             String id, boolean isInterface, int op, @Nullable String arg1, @Nullable String arg2) {
         Iterator<AbstractInsnNode> iterator = methodNode.instructions.iterator();
+        boolean ret = false;
         while (iterator.hasNext()) {
             AbstractInsnNode node = iterator.next();
             if (node instanceof MethodInsnNode && node.getOpcode() == Opcodes.INVOKEVIRTUAL) {
                 MethodInsnNode insnNode = ((MethodInsnNode) node);
                 if (insnNode.owner.equals(owner) && insnNode.name.equals(name)) {
                     methodNode.instructions.set(insnNode, new MethodInsnNode(op, newOwner, newName, id, isInterface));
+                    ret = true;
                 }
             }
             if (node instanceof InvokeDynamicInsnNode && node.getOpcode() == Opcodes.INVOKEDYNAMIC
@@ -48,10 +50,12 @@ public interface Transformer {
                         Object[] args = {Type.getType(arg1), new Handle(6, newOwner, newName, id), Type.getType(arg2)};
                         methodNode.instructions.set(insnNode,
                                 new InvokeDynamicInsnNode(insnNode.name, insnNode.desc, insnNode.bsm, args));
+                        ret = true;
                     }
                 }
             }
         }
+        return ret;
     }
 
     static void transformConstruct(MethodNode methodNode, String desc, String destNew) {
