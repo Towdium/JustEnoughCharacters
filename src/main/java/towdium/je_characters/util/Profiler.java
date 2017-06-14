@@ -94,13 +94,17 @@ public class Profiler {
         }
     }
 
-    private static void scanClass(byte[] bytes, Consumer<String> callback) {
+    private static void scanClass(byte[] bytes, Consumer<String> callback) throws IOException {
         ClassNode classNode = new ClassNode();
         ClassReader classReader = new ClassReader(bytes);
         try {
             classReader.accept(classNode, 0);
         } catch (Exception e) {
-            e.printStackTrace();
+            if (classNode.name != null) {
+                JechCore.LOG.info("File decoding of class " + classNode.name + " failed. Try to continue.");
+            } else {
+                throw new IOException(e);
+            }
         }
 
 

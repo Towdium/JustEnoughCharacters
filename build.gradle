@@ -42,7 +42,7 @@ repositories {
 dependencies {
     compile "mezz.jei:jei_1.11.2:4.5.0.287"
     compile group: "net.shadowfacts", name: "Forgelin", version: "1.4.1"
-    compile files('lib/jei_1.11.2-4.3.3.270.jar')
+    compile files('lib/old_lib_1.jar')
 }
 
 jar {
