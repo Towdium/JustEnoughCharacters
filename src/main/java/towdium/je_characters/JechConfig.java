@@ -2,6 +2,7 @@ package towdium.je_characters;
 
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
+import towdium.je_characters.core.JechCore;
 
 import java.io.File;
 
@@ -10,16 +11,19 @@ import java.io.File;
  * Created: 2016/6/14.
  */
 
-public class JECConfig {
+public class JechConfig {
     public static Configuration config;
     public static Object empty;
 
     public static void preInit(File location) {
-        config = new Configuration(new File(location, "config/JustEnoughCharacters.cfg"), "@VERSION@");
+        config = new Configuration(new File(location, "config/JustEnoughCharacters.cfg"), JechCore.VERSION);
         config.load();
         handleFormerVersion();
         initProperties();
         setValue();
+        //if (VersionChecker.checkVersion(config.getDefinedConfigVersion(), "1.11.2-2.0.0").toInt() < 0) {
+        //    EnumItems.EnableRadicalMode.getProperty().set(false);
+        //}
         config.save();
 
     }
@@ -68,7 +72,7 @@ public class JECConfig {
                     return "Default list of methods to transform, of which uses regular expression to match strings.\n" +
                             "This list is maintained by the mod and will have no effect if you change it.";
                 case ListDumpClass:
-                    return "Dump all the methods in this class into log.";
+                    return "Dump all the methods in this class into LOG.";
                 case ListMethodBlacklist:
                     return "Put the strings in default list here to disable transform for certain method";
                 case EnableRadicalMode:
@@ -169,7 +173,7 @@ public class JECConfig {
                 case EnableJEI:
                     return true;
             }
-            return JECConfig.empty;
+            return JechConfig.empty;
         }
 
         @SuppressWarnings("UnusedReturnValue")

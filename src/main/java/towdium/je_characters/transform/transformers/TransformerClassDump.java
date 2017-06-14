@@ -1,7 +1,7 @@
 package towdium.je_characters.transform.transformers;
 
 import org.objectweb.asm.tree.ClassNode;
-import towdium.je_characters.JECConfig;
+import towdium.je_characters.JechConfig;
 import towdium.je_characters.core.JechCore;
 import towdium.je_characters.transform.Transformer;
 
@@ -17,7 +17,7 @@ public class TransformerClassDump implements Transformer.Extended {
     Set<String> names = new HashSet<>();
 
     public TransformerClassDump() {
-        Collections.addAll(names, JECConfig.EnumItems.ListDumpClass.getProperty().getStringList());
+        Collections.addAll(names, JechConfig.EnumItems.ListDumpClass.getProperty().getStringList());
     }
 
     @Override
@@ -27,7 +27,7 @@ public class TransformerClassDump implements Transformer.Extended {
 
     @Override
     public void transform(ClassNode n) {
-        JechCore.log.info("Dumping methods in class " + n.name);
-        n.methods.forEach(methodNode -> JechCore.log.info(methodNode.name));
+        JechCore.LOG.info("Dumping methods in class " + n.name);
+        n.methods.forEach(methodNode -> JechCore.LOG.info(methodNode.name));
     }
 }

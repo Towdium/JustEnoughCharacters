@@ -2,7 +2,7 @@ package towdium.je_characters.transform.transformers;
 
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
-import towdium.je_characters.JECConfig;
+import towdium.je_characters.JechConfig;
 import towdium.je_characters.core.JechCore;
 import towdium.je_characters.transform.Transformer;
 
@@ -16,9 +16,9 @@ public class TransformerStringUnique implements Transformer.Extended {
     MethodDecoder md = new MethodDecoder();
 
     public TransformerStringUnique() {
-        md.addAll(JECConfig.EnumItems.ListDefaultStringMatch.getProperty().getStringList(), MethodDecoder.LOGGER);
-        md.addAll(JECConfig.EnumItems.ListAdditionalStringMatch.getProperty().getStringList(), MethodDecoder.LOGGER);
-        md.removeAll(JECConfig.EnumItems.ListMethodBlacklist.getProperty().getStringList(), MethodDecoder.LOGGER);
+        md.addAll(JechConfig.EnumItems.ListDefaultStringMatch.getProperty().getStringList(), MethodDecoder.LOGGER);
+        md.addAll(JechConfig.EnumItems.ListAdditionalStringMatch.getProperty().getStringList(), MethodDecoder.LOGGER);
+        md.removeAll(JechConfig.EnumItems.ListMethodBlacklist.getProperty().getStringList(), MethodDecoder.LOGGER);
     }
 
     @Override
@@ -28,12 +28,12 @@ public class TransformerStringUnique implements Transformer.Extended {
 
     @Override
     public void transform(ClassNode n) {
-        JechCore.log.info("Transforming class " + n.name + " for string contains.");
+        JechCore.LOG.info("Transforming class " + n.name + " for string contains.");
         Set<String> methods = md.getMethodsForClass(n.name);
         if (!methods.isEmpty())
             n.methods.stream().filter(methodNode -> methods.contains(methodNode.name))
                     .forEach(methodNode -> Transformer.transformInvoke(
-                            methodNode, "java/lang/String", "contains", "towdium/je_characters/util/Checker", "checkStr",
+                            methodNode, "java/lang/String", "contains", "towdium/je_characters/util/StringMatcher", "checkStr",
                             "(Ljava/lang/String;Ljava/lang/CharSequence;)Z", false, Opcodes.INVOKESTATIC,
                             "(Ljava/lang/Object;)Z", "(Ljava/lang/String;)Z"
                     ));

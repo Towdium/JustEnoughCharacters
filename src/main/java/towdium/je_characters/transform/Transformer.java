@@ -106,7 +106,7 @@ public interface Transformer {
     }
 
     class MethodDecoder {
-        public final static Consumer<String> LOGGER = s -> JechCore.log.info("Invalid config syntax: " + s);
+        public final static Consumer<String> LOGGER = s -> JechCore.LOG.info("Invalid config syntax: " + s);
         HashMultimap<String, String> methods = HashMultimap.create();
 
         public void addAll(String[] names, Consumer<String> callback) {

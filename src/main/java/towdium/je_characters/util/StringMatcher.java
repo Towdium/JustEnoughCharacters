@@ -22,7 +22,7 @@ import java.util.regex.Pattern;
  * Author: Towdium
  * Date:   2016/9/4.
  */
-public class Checker {
+public class StringMatcher {
     static final HanyuPinyinOutputFormat FORMAT;
     static final Pattern p = Pattern.compile("a");
     static boolean b;
@@ -179,7 +179,7 @@ public class Checker {
             try {
                 pinyin = PinyinHelper.toHanyuPinyinStringArray(ch, FORMAT);
             } catch (BadHanyuPinyinOutputFormatCombination e) {
-                JechCore.log.warn("Exception when generating pattern for \"" + ch + "\"");
+                JechCore.LOG.warn("Exception when generating pattern for \"" + ch + "\"");
                 return p;
             }
 

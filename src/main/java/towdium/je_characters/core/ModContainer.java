@@ -6,7 +6,7 @@ import net.minecraftforge.fml.common.DummyModContainer;
 import net.minecraftforge.fml.common.LoadController;
 import net.minecraftforge.fml.common.ModMetadata;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
-import towdium.je_characters.JECCommand;
+import towdium.je_characters.JechCommand;
 
 import java.util.Collections;
 
@@ -34,6 +34,6 @@ public class ModContainer extends DummyModContainer {
 
     @Subscribe
     public void onServerStart(FMLServerStartingEvent event) {
-        event.registerServerCommand(new JECCommand());
+        event.registerServerCommand(new JechCommand());
     }
 }

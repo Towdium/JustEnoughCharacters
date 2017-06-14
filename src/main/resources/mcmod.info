@@ -4,7 +4,7 @@
   "name": "Just Enough Characters",
   "description": "Pinyin search for JEI and more",
   "version": "${version}",
-  "mcversion": "1.10.2",
+  "mcversion": "${mcversion}",
   "url": "",
   "updateUrl": "",
   "authorList": ["Towdium"],

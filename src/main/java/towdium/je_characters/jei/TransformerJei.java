@@ -4,7 +4,8 @@ import gnu.trove.set.TIntSet;
 import mezz.jei.suffixtree.GeneralizedSuffixTree;
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.tree.ClassNode;
-import towdium.je_characters.JECConfig;
+import towdium.je_characters.JechConfig;
+import towdium.je_characters.core.JechCore;
 import towdium.je_characters.transform.Transformer;
 
 /**
@@ -17,7 +18,7 @@ public class TransformerJei implements Transformer.Extended {
 
     @Override
     public boolean accepts(String name) {
-        return JECConfig.EnumItems.EnableJEI.getProperty().getBoolean() && (
+        return JechConfig.EnumItems.EnableJEI.getProperty().getBoolean() && (
                 name.equals("mezz.jei.ItemFilterInternals")
                         || name.equals("mezz.jei.ingredients.IngredientFilterInternals")
                         || name.equals("mezz.jei.ingredients.IngredientFilter")
@@ -26,6 +27,7 @@ public class TransformerJei implements Transformer.Extended {
 
     @Override
     public void transform(ClassNode n) {
+        JechCore.LOG.info("Transforming class " + n.name + " for JEI integration.");
         Transformer.findMethod(n, "<init>").ifPresent(methodNode -> {
             Transformer.transformConstruct(methodNode, "mezz/jei/suffixtree/GeneralizedSuffixTree",
                     "towdium/je_characters/jei/TransformerJei$FakeTreeB");
