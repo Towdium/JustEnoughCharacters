@@ -3,7 +3,7 @@ package towdium.je_characters.transform.transformers;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
 import towdium.je_characters.JECConfig;
-import towdium.je_characters.LoadingPlugin;
+import towdium.je_characters.core.JechCore;
 import towdium.je_characters.transform.Transformer;
 
 import java.util.Set;
@@ -28,12 +28,12 @@ public class TransformerRegExpUnique implements Transformer.Extended {
 
     @Override
     public void transform(ClassNode n) {
-        LoadingPlugin.log.info("Transforming class " + n.name + " for regular expression.");
+        JechCore.log.info("Transforming class " + n.name + " for regular expression.");
         Set<String> methods = md.getMethodsForClass(n.name);
         if (!methods.isEmpty())
             n.methods.stream().filter(methodNode -> methods.contains(methodNode.name))
                     .forEach(methodNode -> Transformer.transformInvoke(
-                            methodNode, "java/util/regex/Pattern", "matcher", "towdium/je_characters/CheckHelper",
+                            methodNode, "java/util/regex/Pattern", "matcher", "towdium/je_characters/util/Checker",
                             "checkReg", "(Ljava/util/regex/Pattern;Ljava/lang/CharSequence;)Ljava/util/regex/Matcher;",
                             false, Opcodes.INVOKESTATIC, null, null
                     ));

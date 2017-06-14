@@ -47,7 +47,7 @@ dependencies {
 
 jar {
     manifest {
-        attributes 'FMLCorePlugin': 'towdium.je_characters.LoadingPlugin'
+        attributes 'FMLCorePlugin': 'towdium.je_characters.core.JechCore'
     }
 }
 

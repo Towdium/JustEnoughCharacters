@@ -1,4 +1,4 @@
-package towdium.je_characters;
+package towdium.je_characters.util;
 
 /**
  * Author: Towdium

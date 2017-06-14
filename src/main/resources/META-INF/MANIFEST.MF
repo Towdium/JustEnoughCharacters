@@ -1,2 +1,2 @@
 Manifest-Version: 1.0
-FMLCorePlugin: towdium.je_characters.LoadingPlugin
+FMLCorePlugin: towdium.je_characters.core.JechCore

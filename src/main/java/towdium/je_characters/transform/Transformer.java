@@ -3,8 +3,8 @@ package towdium.je_characters.transform;
 import com.google.common.collect.HashMultimap;
 import org.objectweb.asm.*;
 import org.objectweb.asm.tree.*;
-import towdium.je_characters.LoadingPlugin;
-import towdium.je_characters.Wrapper;
+import towdium.je_characters.core.JechCore;
+import towdium.je_characters.util.Wrapper;
 
 import javax.annotation.Nullable;
 import java.util.Iterator;
@@ -106,7 +106,7 @@ public interface Transformer {
     }
 
     class MethodDecoder {
-        public final static Consumer<String> LOGGER = s -> LoadingPlugin.log.info("Invalid config syntax: " + s);
+        public final static Consumer<String> LOGGER = s -> JechCore.log.info("Invalid config syntax: " + s);
         HashMultimap<String, String> methods = HashMultimap.create();
 
         public void addAll(String[] names, Consumer<String> callback) {

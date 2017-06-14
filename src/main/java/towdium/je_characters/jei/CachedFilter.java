@@ -8,7 +8,7 @@ import com.google.common.collect.ImmutableList;
 import gnu.trove.set.TIntSet;
 import gnu.trove.set.hash.TIntHashSet;
 import org.jetbrains.annotations.NotNull;
-import towdium.je_characters.CheckHelper;
+import towdium.je_characters.util.Checker;
 
 import java.util.ArrayList;
 
@@ -33,7 +33,7 @@ public class CachedFilter {
                             String prevFilterText = filterText.substring(0, filterText.length() - 1);
                             ImmutableList<Entry> baseItemSet = filteredItemMapsCache.get(prevFilterText);
                             ImmutableList.Builder<Entry> builder = ImmutableList.builder();
-                            baseItemSet.stream().filter(entry -> CheckHelper.checkStr(entry.str, filterText)).
+                            baseItemSet.stream().filter(entry -> Checker.checkStr(entry.str, filterText)).
                                     forEachOrdered(builder::add);
                             return builder.build();
                         }

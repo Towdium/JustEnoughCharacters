@@ -3,7 +3,7 @@ package towdium.je_characters.transform.transformers;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
 import towdium.je_characters.JECConfig;
-import towdium.je_characters.LoadingPlugin;
+import towdium.je_characters.core.JechCore;
 import towdium.je_characters.transform.Transformer;
 
 import java.util.Set;
@@ -28,12 +28,12 @@ public class TransformerStringUnique implements Transformer.Extended {
 
     @Override
     public void transform(ClassNode n) {
-        LoadingPlugin.log.info("Transforming class " + n.name + " for string contains.");
+        JechCore.log.info("Transforming class " + n.name + " for string contains.");
         Set<String> methods = md.getMethodsForClass(n.name);
         if (!methods.isEmpty())
             n.methods.stream().filter(methodNode -> methods.contains(methodNode.name))
                     .forEach(methodNode -> Transformer.transformInvoke(
-                            methodNode, "java/lang/String", "contains", "towdium/je_characters/CheckHelper", "checkStr",
+                            methodNode, "java/lang/String", "contains", "towdium/je_characters/util/Checker", "checkStr",
                             "(Ljava/lang/String;Ljava/lang/CharSequence;)Z", false, Opcodes.INVOKESTATIC,
                             "(Ljava/lang/Object;)Z", "(Ljava/lang/String;)Z"
                     ));

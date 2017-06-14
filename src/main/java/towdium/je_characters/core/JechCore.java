@@ -1,9 +1,11 @@
-package towdium.je_characters;
+package towdium.je_characters.core;
 
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import towdium.je_characters.JECConfig;
 import towdium.je_characters.transform.TransformerRegistry;
+import towdium.je_characters.util.Checker;
 
 import java.io.File;
 import java.util.Map;
@@ -12,24 +14,24 @@ import java.util.Map;
  * Author: Towdium
  * Date:   2016/9/4.
  */
-public class LoadingPlugin implements IFMLLoadingPlugin {
+public class JechCore implements IFMLLoadingPlugin {
     public static Logger log = LogManager.getLogger("je_characters");
     public static boolean initialized = false;
 
     static {
-        CheckHelper.checkStr("这是一条测试文本", "zheshiytcswb");
+        Checker.checkStr("这是一条测试文本", "zheshiytcswb");
         //noinspection ResultOfMethodCallIgnored
         TransformerRegistry.class.toString();
     }
 
     @Override
     public String[] getASMTransformerClass() {
-        return new String[]{"towdium.je_characters.ClassTransformer"};
+        return new String[]{"towdium.je_characters.core.ClassTransformer"};
     }
 
     @Override
     public String getModContainerClass() {
-        return "towdium.je_characters.ModContainer";
+        return "towdium.je_characters.core.ModContainer";
     }
 
     @Override
@@ -40,7 +42,7 @@ public class LoadingPlugin implements IFMLLoadingPlugin {
     @Override
     public void injectData(Map<String, Object> data) {
         JECConfig.preInit(((File) data.get("mcLocation")));
-        LoadingPlugin.initialized = true;
+        JechCore.initialized = true;
     }
 
     @Override

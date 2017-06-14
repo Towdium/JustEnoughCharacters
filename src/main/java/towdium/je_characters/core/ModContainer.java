@@ -1,9 +1,12 @@
-package towdium.je_characters;
+package towdium.je_characters.core;
 
 import com.google.common.eventbus.EventBus;
+import com.google.common.eventbus.Subscribe;
 import net.minecraftforge.fml.common.DummyModContainer;
 import net.minecraftforge.fml.common.LoadController;
 import net.minecraftforge.fml.common.ModMetadata;
+import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
+import towdium.je_characters.JECCommand;
 
 import java.util.Collections;
 
@@ -27,5 +30,10 @@ public class ModContainer extends DummyModContainer {
     public boolean registerBus(EventBus bus, LoadController controller) {
         bus.register(this);
         return true;
+    }
+
+    @Subscribe
+    public void onServerStart(FMLServerStartingEvent event) {
+        event.registerServerCommand(new JECCommand());
     }
 }

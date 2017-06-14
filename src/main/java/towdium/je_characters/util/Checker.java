@@ -1,4 +1,4 @@
-package towdium.je_characters;
+package towdium.je_characters.util;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -11,6 +11,7 @@ import net.sourceforge.pinyin4j.format.HanyuPinyinOutputFormat;
 import net.sourceforge.pinyin4j.format.HanyuPinyinToneType;
 import net.sourceforge.pinyin4j.format.exception.BadHanyuPinyinOutputFormatCombination;
 import org.jetbrains.annotations.NotNull;
+import towdium.je_characters.core.JechCore;
 
 import java.util.ArrayList;
 import java.util.function.Predicate;
@@ -21,7 +22,7 @@ import java.util.regex.Pattern;
  * Author: Towdium
  * Date:   2016/9/4.
  */
-public class CheckHelper {
+public class Checker {
     static final HanyuPinyinOutputFormat FORMAT;
     static final Pattern p = Pattern.compile("a");
     static boolean b;
@@ -178,7 +179,7 @@ public class CheckHelper {
             try {
                 pinyin = PinyinHelper.toHanyuPinyinStringArray(ch, FORMAT);
             } catch (BadHanyuPinyinOutputFormatCombination e) {
-                LoadingPlugin.log.warn("Exception when generating pattern for \"" + ch + "\"");
+                JechCore.log.warn("Exception when generating pattern for \"" + ch + "\"");
                 return p;
             }
 
