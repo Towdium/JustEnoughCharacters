@@ -1,0 +1,6 @@
+chat.start=Start profiling.
+chat.saved=Done! Output saved to logs/je_characters-profiler.txt.
+chat.saveError=Oops! An error occurred when writing the file.
+chat.sent=Report sent to author! Thanks for your feedback!
+chat.sendError=Oops! An error occurs when sending report.
+chat.sendNot=If you want to send it to author, use '/jech profiler -s'.

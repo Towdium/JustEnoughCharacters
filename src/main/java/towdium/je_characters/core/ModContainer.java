@@ -8,6 +8,7 @@ import net.minecraftforge.fml.common.ModMetadata;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import towdium.je_characters.JechCommand;
 
+import java.io.File;
 import java.util.Collections;
 
 /**
@@ -30,6 +31,20 @@ public class ModContainer extends DummyModContainer {
     public boolean registerBus(EventBus bus, LoadController controller) {
         bus.register(this);
         return true;
+    }
+
+    @Override
+    public File getSource() {
+        return JechCore.source;
+    }
+
+    @Override
+    public Class<?> getCustomResourcePackClass() {
+        try {
+            return getSource().isDirectory() ? Class.forName("net.minecraftforge.fml.client.FMLFolderResourcePack", true, getClass().getClassLoader()) : Class.forName("net.minecraftforge.fml.client.FMLFileResourcePack", true, getClass().getClassLoader());
+        } catch (ClassNotFoundException e) {
+            return null;
+        }
     }
 
     @Subscribe

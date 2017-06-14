@@ -23,7 +23,7 @@ public class MailSender {
             socket = new Socket("smtp.163.com", 25);
             BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             OutputStream os = socket.getOutputStream();
-            socket.setSoTimeout(50000);
+            socket.setSoTimeout(10000);
             br.readLine();
 
             SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);

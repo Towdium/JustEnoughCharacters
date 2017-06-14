@@ -17,6 +17,7 @@ import java.util.Map;
 public class JechCore implements IFMLLoadingPlugin {
     public static final Logger LOG = LogManager.getLogger("je_characters");
     public static final String VERSION = "@VERSION@";
+    public static File source;
     public static boolean INITIALIZED = false;
 
     static {
@@ -43,6 +44,7 @@ public class JechCore implements IFMLLoadingPlugin {
     @Override
     public void injectData(Map<String, Object> data) {
         JechConfig.preInit(((File) data.get("mcLocation")));
+        source = (File) data.get("coremodLocation");
         JechCore.INITIALIZED = true;
     }
 

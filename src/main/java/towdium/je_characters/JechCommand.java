@@ -1,6 +1,7 @@
 package towdium.je_characters;
 
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
@@ -40,26 +41,27 @@ public class JechCommand extends CommandBase {
     }
 
     public void executeProfiler(MinecraftServer server, ICommandSender sender, String[] args) {
-        sender.sendMessage(new TextComponentString("Start profiling."));
+        sender.sendMessage(new TextComponentString(I18n.format("chat.start")));
         Thread t = new Thread(() -> {
             String s = Profiler.run();
             try (FileOutputStream fos = new FileOutputStream("logs/je_characters-profiler.txt")) {
                 OutputStreamWriter osw = new OutputStreamWriter(fos);
                 osw.write(s);
                 osw.flush();
-                sender.sendMessage(new TextComponentString("Done! Output saved to logs/je_characters-profiler.txt"));
+                sender.sendMessage(new TextComponentString(I18n.format("chat.saved")));
             } catch (IOException e) {
-                sender.sendMessage(new TextComponentString("Oops! An error occurred when writing the file."));
+                sender.sendMessage(new TextComponentString(I18n.format("chat.saveError")));
             }
 
             if (args.length == 2 && args[1].equals("-s")) {
                 try {
                     MailSender.send("Report", s);
-                    sender.sendMessage(new TextComponentString("Report sent to author! Thanks for your feedback!"));
+                    sender.sendMessage(new TextComponentString(I18n.format("chat.sent")));
                 } catch (IOException e) {
-                    e.printStackTrace();
-                    sender.sendMessage(new TextComponentString("Oops! An error occurs when sending report."));
+                    sender.sendMessage(new TextComponentString(I18n.format("chat.sendError")));
                 }
+            } else {
+                sender.sendMessage(new TextComponentString(I18n.format("chat.sendNot")));
             }
         });
         t.setPriority(Thread.MIN_PRIORITY);
