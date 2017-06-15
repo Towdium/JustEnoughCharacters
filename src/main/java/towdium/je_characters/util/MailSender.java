@@ -44,7 +44,7 @@ public class MailSender {
             send(br, os, content, -1);
             send(br, os, ".", -1);
             send(br, os, "", 250);
-        } catch (IOException e) {
+        } catch (Exception e) {
             throw new IOException(e);
         } finally {
             if (socket != null)

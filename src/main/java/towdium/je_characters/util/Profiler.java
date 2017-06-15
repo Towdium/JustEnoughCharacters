@@ -1,7 +1,6 @@
 package towdium.je_characters.util;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import net.minecraftforge.common.MinecraftForge;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Opcodes;
@@ -28,12 +27,12 @@ public class Profiler {
     private static final JarContainer[] EMPTY_JC = new JarContainer[]{};
     private static final String[] EMPTY_STR = new String[]{};
 
-    public static String run() {
+    public static Report run() {
         File modDirectory = new File("mods");
         JarContainer[] jcs = scanDirectory(modDirectory).toArray(EMPTY_JC);
         Report r = new Report();
         r.jars = jcs;
-        return new GsonBuilder().setPrettyPrinting().create().toJson(r);
+        return r;
     }
 
     private static ArrayList<JarContainer> scanDirectory(File f) {
@@ -68,10 +67,7 @@ public class Profiler {
                         JechCore.LOG.info("Class file " + entry.getName()
                                 + " in jar file " + f.getName() + " is too large, skip.");
                     } else {
-                        byte[] buf = new byte[(int) size];
-                        //noinspection ResultOfMethodCallIgnored
-                        is.read(buf);
-                        scanClass(buf, cbkMethod);
+                        scanClass(is, cbkMethod);
                     }
                 } catch (IOException e) {
                     JechCore.LOG.info("Fail to read file " + entry.getName()
@@ -80,8 +76,12 @@ public class Profiler {
             } else if (entry.getName().equals("mcmod.info")) {
                 Gson gson = new Gson();
                 try (InputStream is = f.getInputStream(entry)) {
-                    mods.v = gson.fromJson(new InputStreamReader(is), ModContainer[].class);
-                } catch (IOException e) {
+                    try {
+                        mods.v = gson.fromJson(new InputStreamReader(is), ModContainer[].class);
+                    } catch (Exception e) {
+                        mods.v = new ModContainer[]{gson.fromJson(new InputStreamReader(is), ModContainer.class)};
+                    }
+                } catch (Exception e) {
                     JechCore.LOG.info("Fail to read mod info in jar file " + f.getName() + ", skip.");
                 }
             }
@@ -94,9 +94,9 @@ public class Profiler {
         }
     }
 
-    private static void scanClass(byte[] bytes, Consumer<String> callback) throws IOException {
+    private static void scanClass(InputStream is, Consumer<String> callback) throws IOException {
         ClassNode classNode = new ClassNode();
-        ClassReader classReader = new ClassReader(bytes);
+        ClassReader classReader = new ClassReader(is);
         try {
             classReader.accept(classNode, 0);
         } catch (Exception e) {
@@ -125,7 +125,7 @@ public class Profiler {
     }
 
     @SuppressWarnings("unused")
-    private static class Report {
+    public static class Report {
         String version = "@VERSION@";
         String mcversion = MinecraftForge.MC_VERSION;
         String date;
