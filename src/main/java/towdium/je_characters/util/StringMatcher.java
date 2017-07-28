@@ -42,7 +42,8 @@ public class StringMatcher {
 
     public static Matcher checkReg(Pattern test, CharSequence name) {
         if (containsChinese(name)) {
-            JechCore.LOG.info("RegExp:");
+            if (JechCore.DEBUG)
+                JechCore.LOG.info("RegExp:");
             return checkChinese(name.toString(), test.toString()) ? p.matcher("a") : p.matcher("");
         } else
             return test.matcher(name);
@@ -51,7 +52,8 @@ public class StringMatcher {
     // s1.contains(s2)
     public static boolean checkStr(String s1, CharSequence s2) {
         if (containsChinese(s1)) {
-            JechCore.LOG.info("String:");
+            if (JechCore.DEBUG)
+                JechCore.LOG.info("String:");
             return checkChinese(s1, s2.toString());
         } else
             return s1.contains(s2);
