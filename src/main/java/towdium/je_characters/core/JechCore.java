@@ -19,6 +19,8 @@ public class JechCore implements IFMLLoadingPlugin {
     public static final String VERSION = "@VERSION@";
     public static File source;
     public static boolean INITIALIZED = false;
+    public static boolean DEBUG = false;
+
 
     static {
         StringMatcher.checkStr("这是一条测试文本", "zheshiytcswb");

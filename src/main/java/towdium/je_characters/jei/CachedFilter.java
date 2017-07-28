@@ -7,7 +7,6 @@ import com.google.common.cache.Weigher;
 import com.google.common.collect.ImmutableList;
 import gnu.trove.set.TIntSet;
 import gnu.trove.set.hash.TIntHashSet;
-import org.jetbrains.annotations.NotNull;
 import towdium.je_characters.util.StringMatcher;
 
 import java.util.ArrayList;
@@ -24,7 +23,7 @@ public class CachedFilter {
                     weigher((Weigher<String, ImmutableList<Entry>>) (key, value) -> 1).
                     build(new CacheLoader<String, ImmutableList<Entry>>() {
                         @Override
-                        public ImmutableList<Entry> load(@NotNull String filterText) throws Exception {
+                        public ImmutableList<Entry> load(String filterText) throws Exception {
                             if (filterText.length() == 0) {
                                 ImmutableList.Builder<Entry> builder = ImmutableList.builder();
                                 builder.addAll(fullList);
@@ -46,7 +45,6 @@ public class CachedFilter {
     static void cache() {
     }
 
-    @NotNull
     public TIntSet search(String word) {
         ImmutableList<Entry> list = filteredItemMapsCache.getUnchecked(word);
         TIntSet ret = new TIntHashSet(1000);

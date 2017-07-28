@@ -56,9 +56,9 @@ public class Profiler {
     }
 
     private static void scanJar(ZipFile f, Consumer<JarContainer> cbkJar) {
-        ArrayList<String> methods = new ArrayList<>();
+        ArrayList<String> methodsString = new ArrayList<>();
+        ArrayList<String> methodsRegExp = new ArrayList<>();
         Wrapper<ModContainer[]> mods = new Wrapper<>(null);
-        Consumer<String> cbkMethod = methods::add;
         f.stream().forEach(entry -> {
             if (entry.getName().endsWith(".class")) {
                 try (InputStream is = f.getInputStream(entry)) {
@@ -67,7 +67,7 @@ public class Profiler {
                         JechCore.LOG.info("Class file " + entry.getName()
                                 + " in jar file " + f.getName() + " is too large, skip.");
                     } else {
-                        scanClass(is, cbkMethod);
+                        scanClass(is, methodsString::add, methodsRegExp::add);
                     }
                 } catch (IOException e) {
                     JechCore.LOG.info("Fail to read file " + entry.getName()
@@ -86,15 +86,17 @@ public class Profiler {
                 }
             }
         });
-        if (!methods.isEmpty()) {
+        if (!methodsString.isEmpty() || !methodsRegExp.isEmpty()) {
             JarContainer ret = new JarContainer();
-            ret.methods = methods.toArray(EMPTY_STR);
+            ret.methodsString = methodsString.toArray(EMPTY_STR);
+            ret.methodsRegExp = methodsRegExp.toArray(EMPTY_STR);
             ret.mods = mods.v;
             cbkJar.accept(ret);
         }
     }
 
-    private static void scanClass(InputStream is, Consumer<String> callback) throws IOException {
+    private static void scanClass(InputStream is, Consumer<String> callbackString, Consumer<String> callbackRegExp
+    ) throws IOException {
         ClassNode classNode = new ClassNode();
         ClassReader classReader = new ClassReader(is);
         try {
@@ -107,7 +109,6 @@ public class Profiler {
             }
         }
 
-
         classNode.methods.forEach(methodNode -> {
             Iterator<AbstractInsnNode> it = methodNode.instructions.iterator();
             while (it.hasNext()) {
@@ -116,7 +117,13 @@ public class Profiler {
                     MethodInsnNode mNode = ((MethodInsnNode) node);
                     if (mNode.getOpcode() == Opcodes.INVOKEVIRTUAL && mNode.owner.equals("java/lang/String")
                             && mNode.name.equals("contains") && mNode.desc.equals("(Ljava/lang/CharSequence;)Z")) {
-                        callback.accept(classNode.name + ":" + methodNode.name + ":" + methodNode.desc);
+                        callbackString.accept(classNode.name + ":" + methodNode.name + ":" + methodNode.desc);
+                        break;
+                    }
+                    if (mNode.getOpcode() == Opcodes.INVOKEVIRTUAL && mNode.owner.equals("java/util/regex/Pattern")
+                            && mNode.name.equals("matcher")
+                            && mNode.desc.equals("(Ljava/lang/CharSequence;)Ljava/util/regex/Matcher;")) {
+                        callbackRegExp.accept(classNode.name + ":" + methodNode.name + ":" + methodNode.desc);
                         break;
                     }
                 }
@@ -140,7 +147,8 @@ public class Profiler {
 
     private static class JarContainer {
         ModContainer[] mods;
-        String[] methods;
+        String[] methodsString;
+        String[] methodsRegExp;
     }
 
     @SuppressWarnings("unused")

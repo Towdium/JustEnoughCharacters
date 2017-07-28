@@ -10,7 +10,6 @@ import net.sourceforge.pinyin4j.PinyinHelper;
 import net.sourceforge.pinyin4j.format.HanyuPinyinOutputFormat;
 import net.sourceforge.pinyin4j.format.HanyuPinyinToneType;
 import net.sourceforge.pinyin4j.format.exception.BadHanyuPinyinOutputFormatCombination;
-import org.jetbrains.annotations.NotNull;
 import towdium.je_characters.core.JechCore;
 
 import java.util.ArrayList;
@@ -42,17 +41,19 @@ public class StringMatcher {
     }
 
     public static Matcher checkReg(Pattern test, CharSequence name) {
-        if (containsChinese(name))
+        if (containsChinese(name)) {
+            JechCore.LOG.info("RegExp:");
             return checkChinese(name.toString(), test.toString()) ? p.matcher("a") : p.matcher("");
-        else
+        } else
             return test.matcher(name);
     }
 
     // s1.contains(s2)
     public static boolean checkStr(String s1, CharSequence s2) {
-        if (containsChinese(s1))
+        if (containsChinese(s1)) {
+            JechCore.LOG.info("String:");
             return checkChinese(s1, s2.toString());
-        else
+        } else
             return s1.contains(s2);
     }
 
@@ -61,18 +62,26 @@ public class StringMatcher {
     }
 
     private static boolean checkChinese(String s1, CharSequence s2) {
+        boolean b;
         if (s2 instanceof String && containsChinese(s1)) {
-            if (s2.toString().isEmpty())
-                return true;
-
-            for (int i = 0; i < s1.length(); i++) {
-                if (checkChinese(s2.toString(), 0, s1, i))
-                    return true;
+            if (s2.toString().isEmpty()) {
+                b = true;
+            } else {
+                b = false;
+                for (int i = 0; i < s1.length(); i++) {
+                    if (checkChinese(s2.toString(), 0, s1, i))
+                        b = true;
+                }
             }
-            return false;
         } else {
-            return s1.contains(s2);
+            b = s1.contains(s2);
         }
+
+        if (JechCore.DEBUG) {
+            JechCore.LOG.info("s1: " + s1 + ", s2: " + s2 + ", -> " + b + '.');
+        }
+
+        return b;
     }
 
     private static boolean checkChinese(String s1, int start1, String s2, int start2) {
@@ -206,7 +215,7 @@ public class StringMatcher {
                 .maximumWeight(16).weigher((Weigher<String, PinyinPattern>) (key, value) -> 1)
                 .build(new CacheLoader<String, PinyinPattern>() {
                     @Override
-                    public PinyinPattern load(@NotNull String str) {
+                    public PinyinPattern load(String str) {
                         return genPattern(str);
                     }
                 });

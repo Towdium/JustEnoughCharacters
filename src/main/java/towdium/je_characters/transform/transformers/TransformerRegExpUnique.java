@@ -29,7 +29,7 @@ public class TransformerRegExpUnique implements Transformer.Extended {
     @Override
     public void transform(ClassNode n) {
         JechCore.LOG.info("Transforming class " + n.name + " for regular expression.");
-        Set<String> methods = md.getMethodsForClass(n.name);
+        Set<String> methods = md.getMethodsForClass(n.name.replace('/', '.'));
         if (!methods.isEmpty())
             n.methods.stream().filter(methodNode -> methods.contains(methodNode.name))
                     .forEach(methodNode -> Transformer.transformInvoke(

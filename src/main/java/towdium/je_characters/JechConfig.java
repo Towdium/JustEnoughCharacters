@@ -157,7 +157,9 @@ public class JechConfig {
                             "io.github.elytra.copo.inventory.ContainerVT:updateSlots",
                             "io.github.elytra.copo.inventory.ContainerTerminal:updateSlots",
                             "mcjty.rftools.blocks.storage.GuiModularStorage:updateList",
-                            "net.minecraft.client.gui.inventory.GuiContainerCreative:updateFilteredItems"
+                            "net.minecraft.client.gui.inventory.GuiContainerCreative:updateFilteredItems",
+                            "appeng.client.gui.implementation.GuiInterfaceTerminal:refreshList",
+                            "appeng.client.gui.implementation.GuiInterfaceTerminal:itemStackMatchesSearchTerm"
                     };
                 case ListDefaultRegExpMatch:
                     return new String[]{

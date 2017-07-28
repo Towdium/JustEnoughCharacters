@@ -2,7 +2,6 @@ package towdium.je_characters.jei;
 
 import gnu.trove.set.TIntSet;
 import mezz.jei.suffixtree.GeneralizedSuffixTree;
-import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.tree.ClassNode;
 import towdium.je_characters.JechConfig;
 import towdium.je_characters.core.JechCore;
@@ -51,7 +50,6 @@ public class TransformerJei implements Transformer.Extended {
             cf = new CachedFilter();
         }
 
-        @NotNull
         public TIntSet search(String word) {
             return cf.search(word);
         }
@@ -72,7 +70,6 @@ public class TransformerJei implements Transformer.Extended {
             cf = new CachedFilter();
         }
 
-        @NotNull
         public TIntSet search(String word) {
             return cf.search(word);
         }

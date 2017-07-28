@@ -29,12 +29,14 @@ public class TransformerStringUnique implements Transformer.Extended {
     @Override
     public void transform(ClassNode n) {
         JechCore.LOG.info("Transforming class " + n.name + " for string contains.");
-        Set<String> methods = md.getMethodsForClass(n.name);
+        Set<String> methods = md.getMethodsForClass(n.name.replace('/', '.'));
         if (!methods.isEmpty())
-            n.methods.stream().filter(methodNode -> methods.contains(methodNode.name))
+            n.methods
+                    .stream()
+                    .filter(methodNode -> methods.contains(methodNode.name))
                     .forEach(methodNode -> Transformer.transformInvoke(
-                            methodNode, "java/lang/String", "contains", "towdium/je_characters/util/StringMatcher", "checkStr",
-                            "(Ljava/lang/String;Ljava/lang/CharSequence;)Z", false, Opcodes.INVOKESTATIC,
+                            methodNode, "java/lang/String", "contains", "towdium/je_characters/util/StringMatcher",
+                            "checkStr", "(Ljava/lang/String;Ljava/lang/CharSequence;)Z", false, Opcodes.INVOKESTATIC,
                             "(Ljava/lang/Object;)Z", "(Ljava/lang/String;)Z"
                     ));
     }
