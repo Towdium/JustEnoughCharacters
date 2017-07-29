@@ -41,21 +41,17 @@ public class StringMatcher {
     }
 
     public static Matcher checkReg(Pattern test, CharSequence name) {
-        if (containsChinese(name)) {
-            if (JechCore.DEBUG)
-                JechCore.LOG.info("RegExp:");
+        if (containsChinese(name))
             return checkChinese(name.toString(), test.toString()) ? p.matcher("a") : p.matcher("");
-        } else
+        else
             return test.matcher(name);
     }
 
     // s1.contains(s2)
     public static boolean checkStr(String s1, CharSequence s2) {
-        if (containsChinese(s1)) {
-            if (JechCore.DEBUG)
-                JechCore.LOG.info("String:");
+        if (containsChinese(s1))
             return checkChinese(s1, s2.toString());
-        } else
+        else
             return s1.contains(s2);
     }
 
@@ -65,23 +61,25 @@ public class StringMatcher {
 
     private static boolean checkChinese(String s1, CharSequence s2) {
         boolean b;
-        if (s2 instanceof String && containsChinese(s1)) {
+        if (s2 instanceof String) {
             if (s2.toString().isEmpty()) {
                 b = true;
             } else {
                 b = false;
                 for (int i = 0; i < s1.length(); i++) {
-                    if (checkChinese(s2.toString(), 0, s1, i))
+                    if (checkChinese(s2.toString(), 0, s1, i)) {
                         b = true;
+                        break;
+                    }
                 }
             }
         } else {
             b = s1.contains(s2);
         }
 
-        if (JechCore.DEBUG) {
-            JechCore.LOG.info("s1: " + s1 + ", s2: " + s2 + ", -> " + b + '.');
-        }
+        // if (JechCore.DEBUG) {
+        //     JechCore.LOG.info("s1: " + s1 + ", s2: " + s2 + ", -> " + b + '.');
+        // }
 
         return b;
     }
@@ -291,7 +289,7 @@ public class StringMatcher {
         }
 
         private void set(int index) {
-            int i = 0x1 << index;
+            int i = 0x1 << (index - 1);
             this.value |= i;
         }
 
@@ -300,7 +298,7 @@ public class StringMatcher {
         }
 
         private void foreach(Predicate<Integer> p) {
-            int v = value >> 1;
+            int v = value;
             for (int i = 1; i < 8; i++) {
                 if ((v & 0x1) == 0x1) {
                     if (!p.test(i))
