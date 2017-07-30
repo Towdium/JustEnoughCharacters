@@ -1,10 +1,6 @@
 package towdium.je_characters.transform;
 
-import towdium.je_characters.jei.TransformerJei;
-import towdium.je_characters.transform.transformers.TransformerClassDump;
-import towdium.je_characters.transform.transformers.TransformerRegExpUnique;
-import towdium.je_characters.transform.transformers.TransformerStringUnique;
-import towdium.je_characters.transform.transformers.TransformerStringUniversal;
+import towdium.je_characters.transform.transformers.*;
 
 import java.util.ArrayList;
 
@@ -23,6 +19,7 @@ public class TransformerRegistry {
         transformers.add(new TransformerRegExpUnique());
         transformers.add(new TransformerStringUniversal());
         transformers.add(new TransformerClassDump());
+        transformers.add(new TransformerVanilla());
     }
 
     public static ArrayList<Transformer> getTransformer(String name) {

@@ -27,6 +27,14 @@ public interface Transformer {
         return Optional.ofNullable(methodNode.v);
     }
 
+    static Optional<MethodNode> findMethod(ClassNode c, String name, String desc) {
+        methodNode.v = null;
+        c.methods.stream().filter(methodNode -> methodNode.name.equals(name))
+                .filter(methodNode -> methodNode.desc.equals(desc))
+                .forEach(methodNode -> Transformer.methodNode.v = methodNode);
+        return Optional.ofNullable(methodNode.v);
+    }
+
     static boolean transformInvoke(
             MethodNode methodNode, String owner, String name, String newOwner, String newName,
             String id, boolean isInterface, int op, @Nullable String arg1, @Nullable String arg2) {
@@ -47,7 +55,8 @@ public interface Transformer {
                 if (insnNode.bsmArgs[1] instanceof Handle) {
                     Handle h = ((Handle) insnNode.bsmArgs[1]);
                     if (h.getOwner().equals(owner) && h.getName().equals(name)) {
-                        Object[] args = {Type.getType(arg1), new Handle(6, newOwner, newName, id), Type.getType(arg2)};
+                        Object[] args = {Type.getType(arg1),
+                                new Handle(6, newOwner, newName, id, false), Type.getType(arg2)};
                         methodNode.instructions.set(insnNode,
                                 new InvokeDynamicInsnNode(insnNode.name, insnNode.desc, insnNode.bsm, args));
                         ret = true;
@@ -65,11 +74,13 @@ public interface Transformer {
             if (node.getOpcode() == Opcodes.NEW) {
                 TypeInsnNode nodeNew = ((TypeInsnNode) node);
                 if (nodeNew.desc.equals(desc)) {
+                    // JechCore.LOG.info("Transforming new " + desc);
                     nodeNew.desc = destNew;
                 }
             } else if (node.getOpcode() == Opcodes.INVOKESPECIAL) {
                 MethodInsnNode nodeNew = ((MethodInsnNode) node);
                 if (nodeNew.owner.equals(desc)) {
+                    // JechCore.LOG.info("Transforming constructor " + desc);
                     nodeNew.owner = destNew;
                 }
             }
