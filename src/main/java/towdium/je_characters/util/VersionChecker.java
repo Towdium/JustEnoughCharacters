@@ -12,10 +12,14 @@ public class VersionChecker {
     static final Pattern P = Pattern.compile("^(\\d+)\\.(\\d+)\\.(\\d+)-(\\d+)\\.(\\d+)\\.(\\d+)$");
 
     // HIGH: a > b
-    public static enumResult checkVersion(String a, String b) {
+    @SuppressWarnings("SameParameterValue")
+    public static enumResult checkVersion(String toCheck, String standard) {
+        if (toCheck.equals("@VERSION@"))
+            return enumResult.DEV;
+
         int[] ai = new int[6];
         int[] bi = new int[6];
-        Matcher m = P.matcher(a);
+        Matcher m = P.matcher(toCheck);
         if (m.matches()) {
             for (int i = 1; i <= 6; i++) {
                 ai[i - 1] = Integer.parseInt(m.group(i));
@@ -23,7 +27,7 @@ public class VersionChecker {
         } else {
             return enumResult.UNKNOWN;
         }
-        m = P.matcher(b);
+        m = P.matcher(standard);
         if (m.matches()) {
             for (int i = 1; i <= 6; i++) {
                 bi[i - 1] = Integer.parseInt(m.group(i));
@@ -42,7 +46,7 @@ public class VersionChecker {
     }
 
     public enum enumResult {
-        HIGH, SAME, LOW, UNKNOWN;
+        HIGH, SAME, LOW, UNKNOWN, DEV;
 
         public int toInt() {
             switch (this) {
@@ -54,6 +58,8 @@ public class VersionChecker {
                     return -1;
                 case UNKNOWN:
                     return Integer.MIN_VALUE;
+                case DEV:
+                    return Integer.MAX_VALUE;
                 default:
                     throw new RuntimeException("Internal error.");
             }

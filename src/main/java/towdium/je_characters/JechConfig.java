@@ -3,6 +3,7 @@ package towdium.je_characters;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
 import towdium.je_characters.core.JechCore;
+import towdium.je_characters.util.VersionChecker;
 
 import java.io.File;
 
@@ -34,6 +35,10 @@ public class JechConfig {
     }
 
     public static void handleFormerVersion() {
+        if (VersionChecker.checkVersion(config.getLoadedConfigVersion(), "1.12.0-1.10.0").toInt() < 0) {
+            JechCore.LOG.info("Low version detected. Disabling radical.");
+            EnumItems.EnableRadicalMode.getProperty().set(false);
+        }
     }
 
     public static void initProperties() {
@@ -171,7 +176,7 @@ public class JechConfig {
                 case ListMethodBlacklist:
                     return new String[0];
                 case EnableRadicalMode:
-                    return true;
+                    return false;
                 case EnableJEI:
                     return true;
             }
