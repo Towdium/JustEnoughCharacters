@@ -87,7 +87,7 @@ public class JechConfig {
             switch (this) {
                 case ListAdditionalStringMatch:
                     return "Give a list of methods to transform, of which uses \"String.contains\" to match.\n" +
-                            "The format is \"full.class.path$InnerClass:methodName\"\n" +
+                            "The format is \"full.class.Path$InnerClass:methodName\"\n" +
                             "This list will also contain data fetched from online record.";
                 case ListAdditionalRegExpMatch:
                     return "Give a list of methods to transform, of which uses regular expression to match.\n" +
@@ -100,7 +100,7 @@ public class JechConfig {
                     return "Default list of methods to transform, of which uses regular expression to match.\n" +
                             "This list is maintained by the mod and will have no effect if you change it.";
                 case ListDumpClass:
-                    return "Dump all the methods in this class into log. Format is \"full.class.path$InnerClass\".";
+                    return "Dump all the methods in this class into log. Format is \"full.class.Path$InnerClass\".";
                 case ListMethodBlacklist:
                     return "Put the strings in default list here to disable transform for certain method";
                 case EnableRadicalMode:
@@ -182,7 +182,8 @@ public class JechConfig {
                             "mcjty.rftools.blocks.storage.GuiModularStorage:updateList",
                             "net.minecraft.client.gui.inventory.GuiContainerCreative:updateFilteredItems",
                             "appeng.client.gui.implementation.GuiInterfaceTerminal:refreshList",
-                            "appeng.client.gui.implementation.GuiInterfaceTerminal:itemStackMatchesSearchTerm"
+                            "appeng.client.gui.implementation.GuiInterfaceTerminal:itemStackMatchesSearchTerm",
+                            "pers.towdium.just_enough_calculation.gui.guis.GuiPicker:updateLayout"
                     };
                 case ListDefaultRegExpMatch:
                     return new String[]{

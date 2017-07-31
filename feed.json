@@ -20,7 +20,8 @@
       "mcjty.rftools.blocks.storage.GuiModularStorage:updateList",
       "net.minecraft.client.gui.inventory.GuiContainerCreative:updateFilteredItems",
       "appeng.client.gui.implementation.GuiInterfaceTerminal:refreshList",
-      "appeng.client.gui.implementation.GuiInterfaceTerminal:itemStackMatchesSearchTerm"
+      "appeng.client.gui.implementation.GuiInterfaceTerminal:itemStackMatchesSearchTerm",
+      "pers.towdium.just_enough_calculation.gui.guis.GuiPicker:updateLayout"
     ],
     "regexp": [
       "appeng.client.me.ItemRepo:updateView",
