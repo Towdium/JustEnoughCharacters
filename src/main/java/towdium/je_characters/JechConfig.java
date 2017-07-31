@@ -3,9 +3,13 @@ package towdium.je_characters;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
 import towdium.je_characters.core.JechCore;
+import towdium.je_characters.util.FeedFetcher;
 import towdium.je_characters.util.VersionChecker;
 
 import java.io.File;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.stream.Collectors;
 
 /**
  * Author:  Towdium
@@ -22,12 +26,29 @@ public class JechConfig {
         handleFormerVersion();
         initProperties();
         setValue();
-        //if (VersionChecker.checkVersion(config.getDefinedConfigVersion(), "1.11.2-2.0.0").toInt() < 0) {
-        //    EnumItems.EnableRadicalMode.getProperty().set(false);
-        //}
         config.save();
-
+        fetchOnline();
     }
+
+    public static void fetchOnline() {
+        Thread t = new Thread(() ->
+                FeedFetcher.fetch((s, r) -> {
+                    HashSet<String> buf = new HashSet<>();
+                    Collections.addAll(buf, EnumItems.ListAdditionalStringMatch.getProperty().getStringList());
+                    buf.addAll(s);
+                    EnumItems.ListAdditionalStringMatch.getProperty()
+                            .set(buf.stream().sorted().collect(Collectors.toList()).toArray(new String[]{}));
+                    buf.clear();
+                    Collections.addAll(buf, EnumItems.ListAdditionalRegExpMatch.getProperty().getStringList());
+                    buf.addAll(r);
+                    EnumItems.ListAdditionalRegExpMatch.getProperty()
+                            .set(buf.stream().sorted().collect(Collectors.toList()).toArray(new String[]{}));
+                    config.save();
+                }));
+        t.setPriority(Thread.MIN_PRIORITY);
+        t.run();
+    }
+
 
     public static void setValue() {
         EnumItems.ListDefaultRegExpMatch.getProperty().set(((String[]) EnumItems.ListDefaultRegExpMatch.getDefault()));

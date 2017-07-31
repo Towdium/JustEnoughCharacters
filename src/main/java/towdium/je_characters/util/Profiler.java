@@ -117,13 +117,15 @@ public class Profiler {
                     MethodInsnNode mNode = ((MethodInsnNode) node);
                     if (mNode.getOpcode() == Opcodes.INVOKEVIRTUAL && mNode.owner.equals("java/lang/String")
                             && mNode.name.equals("contains") && mNode.desc.equals("(Ljava/lang/CharSequence;)Z")) {
-                        callbackString.accept(classNode.name + ":" + methodNode.name + ":" + methodNode.desc);
+                        callbackString.accept((classNode.name + ":" + methodNode.name + ":" + methodNode.desc)
+                                .replace('/', '.'));
                         break;
                     }
                     if (mNode.getOpcode() == Opcodes.INVOKEVIRTUAL && mNode.owner.equals("java/util/regex/Pattern")
                             && mNode.name.equals("matcher")
                             && mNode.desc.equals("(Ljava/lang/CharSequence;)Ljava/util/regex/Matcher;")) {
-                        callbackRegExp.accept(classNode.name + ":" + methodNode.name + ":" + methodNode.desc);
+                        callbackRegExp.accept((classNode.name + ":" + methodNode.name + ":" + methodNode.desc)
+                                .replace('/', '.'));
                         break;
                     }
                 }
