@@ -2,6 +2,7 @@ package towdium.je_characters.core;
 
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
+import net.minecraft.command.ICommand;
 import net.minecraftforge.fml.common.DummyModContainer;
 import net.minecraftforge.fml.common.LoadController;
 import net.minecraftforge.fml.common.ModMetadata;
@@ -49,6 +50,7 @@ public class ModContainer extends DummyModContainer {
 
     @Subscribe
     public void onServerStart(FMLServerStartingEvent event) {
-        event.registerServerCommand(new JechCommand());
+        ICommand c = new JechCommand();
+        event.registerServerCommand(c);
     }
 }
