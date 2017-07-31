@@ -17,6 +17,8 @@
       "com.zerofall.ezstorage.gui.client.GuiStorageCore:updateFilteredItems",
       "io.github.elytra.copo.inventory.ContainerVT:updateSlots",
       "io.github.elytra.copo.inventory.ContainerTerminal:updateSlots",
+      "io.github.elytra.correlated.inventory.ContainerTerminal:updateSlots",
+      "com.elytradev.correlated.inventory.ContainerTerminal:updateSlots",
       "mcjty.rftools.blocks.storage.GuiModularStorage:updateList",
       "net.minecraft.client.gui.inventory.GuiContainerCreative:updateFilteredItems",
       "appeng.client.gui.implementation.GuiInterfaceTerminal:refreshList",

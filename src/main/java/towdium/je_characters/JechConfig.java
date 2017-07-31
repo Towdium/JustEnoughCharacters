@@ -183,7 +183,9 @@ public class JechConfig {
                             "net.minecraft.client.gui.inventory.GuiContainerCreative:updateFilteredItems",
                             "appeng.client.gui.implementation.GuiInterfaceTerminal:refreshList",
                             "appeng.client.gui.implementation.GuiInterfaceTerminal:itemStackMatchesSearchTerm",
-                            "pers.towdium.just_enough_calculation.gui.guis.GuiPicker:updateLayout"
+                            "pers.towdium.just_enough_calculation.gui.guis.GuiPicker:updateLayout",
+                            "io.github.elytra.correlated.inventory.ContainerTerminal:updateSlots",
+                            "com.elytradev.correlated.inventory.ContainerTerminal:updateSlots"
                     };
                 case ListDefaultRegExpMatch:
                     return new String[]{
