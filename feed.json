@@ -1,0 +1,30 @@
+[
+  {
+    "version": 1,
+    "string": [
+      "mezz.jei.ItemFilter$FilterPredicate:stringContainsTokens",
+      "com.raoulvdberge.refinedstorage.gui.grid.filtering.GridFilterName:accepts",
+      "com.raoulvdberge.refinedstorage.gui.grid.filtering.GridFilterTooltip:accepts",
+      "com.raoulvdberge.refinedstorage.gui.grid.filtering.GridFilterName:test",
+      "com.raoulvdberge.refinedstorage.gui.grid.filtering.GridFilterTooltip:test",
+      "com.rwtema.extrautils2.transfernodes.TileIndexer$ContainerIndexer$WidgetItemRefButton:lambda$getRef$0",
+      "crazypants.enderio.machine.invpanel.client.ItemFilter$ModFilter:matches",
+      "crazypants.enderio.machine.invpanel.client.ItemFilter$NameFilter:matches",
+      "vazkii.psi.client.gui.GuiProgrammer:shouldShow",
+      "vazkii.botania.client.gui.lexicon.GuiLexiconIndex:matchesSearch",
+      "de.ellpeck.actuallyadditions.mod.booklet.entry.BookletEntry:fitsFilter",
+      "de.ellpeck.actuallyadditions.mod.booklet.entry.BookletEntry:getChaptersForDisplay",
+      "com.zerofall.ezstorage.gui.client.GuiStorageCore:updateFilteredItems",
+      "io.github.elytra.copo.inventory.ContainerVT:updateSlots",
+      "io.github.elytra.copo.inventory.ContainerTerminal:updateSlots",
+      "mcjty.rftools.blocks.storage.GuiModularStorage:updateList",
+      "net.minecraft.client.gui.inventory.GuiContainerCreative:updateFilteredItems",
+      "appeng.client.gui.implementation.GuiInterfaceTerminal:refreshList",
+      "appeng.client.gui.implementation.GuiInterfaceTerminal:itemStackMatchesSearchTerm"
+    ],
+    "regexp": [
+      "appeng.client.me.ItemRepo:updateView",
+      "codechicken.nei.ItemList$PatternItemFilter:matches"
+    ]
+  }
+]

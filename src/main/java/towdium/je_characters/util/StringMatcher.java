@@ -77,9 +77,7 @@ public class StringMatcher {
             b = s1.contains(s2);
         }
 
-        // if (JechCore.DEBUG) {
-        //     JechCore.LOG.info("s1: " + s1 + ", s2: " + s2 + ", -> " + b + '.');
-        // }
+        // JechCore.LOG.info("s1: " + s1 + ", s2: " + s2 + ", -> " + b + '.');
 
         return b;
     }
