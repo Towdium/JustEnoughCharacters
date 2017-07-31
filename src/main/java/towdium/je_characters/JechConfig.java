@@ -86,31 +86,28 @@ public class JechConfig {
         public String getComment() {
             switch (this) {
                 case ListAdditionalStringMatch:
-                    return "Give a list of methods to transform, of which uses \"String.contains\" to match strings.\n" +
-                            "The format is \"full.class.path$InnerClass:methodName\"";
+                    return "Give a list of methods to transform, of which uses \"String.contains\" to match.\n" +
+                            "The format is \"full.class.path$InnerClass:methodName\"\n" +
+                            "This list will also contain data fetched from online record.";
                 case ListAdditionalRegExpMatch:
-                    return "Give a list of methods to transform, of which uses regular expression to match strings.\n" +
-                            "The format is \"full.class.path$InnerClass:methodName\"";
+                    return "Give a list of methods to transform, of which uses regular expression to match.\n" +
+                            "The format is \"full.class.path$InnerClass:methodName\"\n" +
+                            "This list will also contain data fetched from online record.";
                 case ListDefaultStringMatch:
-                    return "Default list of methods to transform, of which uses \"String.contains\" to match strings.\n" +
+                    return "Default list of methods to transform, of which uses \"String.contains\" to match.\n" +
                             "This list is maintained by the mod and will have no effect if you change it.";
                 case ListDefaultRegExpMatch:
-                    return "Default list of methods to transform, of which uses regular expression to match strings.\n" +
+                    return "Default list of methods to transform, of which uses regular expression to match.\n" +
                             "This list is maintained by the mod and will have no effect if you change it.";
                 case ListDumpClass:
-                    return "Dump all the methods in this class into LOG.";
+                    return "Dump all the methods in this class into log. Format is \"full.class.path$InnerClass\".";
                 case ListMethodBlacklist:
                     return "Put the strings in default list here to disable transform for certain method";
                 case EnableRadicalMode:
-                    return "Set to false to disable radical mode transform.\n" +
-                            "When in radical mode, this mod will try to change every instance of \"contains\",\n" +
-                            "so every mod using this method will be supported, while this could lead to\n" +
-                            "unexpected problems and slow down the launching speed.";
+                    return "Set to true to enable radical mode. Keep in mind this is DANGEROUS.\n" +
+                            "This could support more mods but could lead to some strange behavior as well.";
                 case EnableJEI:
-                    return "In the 1.11 version of JEI, the text filtering mechanics has been changed to a prefix tree, \n" +
-                            "which is incompatible with Chinese pinyin system. So I have to entirely change the behavior.\n" +
-                            "Specifically, I'm using the old JEI's cached filter and inject it in.\n" +
-                            "If anything wired happens, try to disable it.";
+                    return "Set to false to disable JEI support.";
             }
             return "";
         }
