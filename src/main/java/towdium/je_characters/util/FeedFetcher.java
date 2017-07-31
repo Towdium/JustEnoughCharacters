@@ -17,7 +17,7 @@ public class FeedFetcher {
     public static void fetch(BiConsumer<List<String>, List<String>> stringNRegexp) {
         try {
             String s = IOUtils.toString(new URL(
-                    "https://raw.githubusercontent.com/Towdium/JustEnoughCharacters/1.11.2/feed.json"), "UTF-8");
+                    "https://raw.githubusercontent.com/Towdium/JustEnoughCharacters/1.12.0/feed.json"), "UTF-8");
             JsonElement fullE = new JsonParser().parse(s);
             JsonArray fullA = fullE.getAsJsonArray();
             for (JsonElement feedE : fullA) {
