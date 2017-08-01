@@ -1,10 +1,10 @@
-package towdium.je_characters.transform.transformers;
+package me.towdium.jecharacters.transform.transformers;
 
+import me.towdium.jecharacters.JechConfig;
+import me.towdium.jecharacters.core.JechCore;
+import me.towdium.jecharacters.transform.Transformer;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
-import towdium.je_characters.JechConfig;
-import towdium.je_characters.core.JechCore;
-import towdium.je_characters.transform.Transformer;
 
 /**
  * Author: Towdium
@@ -20,7 +20,7 @@ public class TransformerStringUniversal implements Transformer.Extended {
     public void transform(ClassNode n) {
         n.methods.forEach(methodNode -> {
             if (Transformer.transformInvoke(
-                    methodNode, "java/lang/String", "contains", "towdium/je_characters/util/StringMatcher", "checkStr",
+                    methodNode, "java/lang/String", "contains", "me/towdium/jecharacters/util/StringMatcher", "checkStr",
                     "(Ljava/lang/String;Ljava/lang/CharSequence;)Z", false, Opcodes.INVOKESTATIC,
                     "(Ljava/lang/Object;)Z", "(Ljava/lang/String;)Z"
             )) {

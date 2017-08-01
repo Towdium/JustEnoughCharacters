@@ -1,8 +1,8 @@
-package towdium.je_characters.core;
+package me.towdium.jecharacters.core;
 
+import me.towdium.jecharacters.transform.Transformer;
+import me.towdium.jecharacters.transform.TransformerRegistry;
 import net.minecraft.launchwrapper.IClassTransformer;
-import towdium.je_characters.transform.Transformer;
-import towdium.je_characters.transform.TransformerRegistry;
 
 /**
  * Author: Towdium

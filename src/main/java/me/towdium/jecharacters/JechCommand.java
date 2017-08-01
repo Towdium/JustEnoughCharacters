@@ -1,7 +1,8 @@
-package towdium.je_characters;
+package me.towdium.jecharacters;
 
 import com.google.gson.GsonBuilder;
 import mcp.MethodsReturnNonnullByDefault;
+import me.towdium.jecharacters.util.Profiler;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
@@ -10,7 +11,6 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextComponentTranslation;
-import towdium.je_characters.util.Profiler;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -80,7 +80,7 @@ public class JechCommand extends CommandBase {
         if (args.length == 1 && args[0].equals("profile")) {
             Thread t = new Thread(() -> {
                 Profiler.Report r = Profiler.run();
-                try (FileOutputStream fos = new FileOutputStream("logs/je_characters-profiler.txt")) {
+                try (FileOutputStream fos = new FileOutputStream("logs/jecharacters-profiler.txt")) {
                     OutputStreamWriter osw = new OutputStreamWriter(fos);
                     osw.write(new GsonBuilder().setPrettyPrinting().create().toJson(r));
                     osw.flush();

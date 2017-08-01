@@ -1,13 +1,13 @@
-package towdium.je_characters.util;
+package me.towdium.jecharacters.util;
 
 import com.google.gson.Gson;
+import me.towdium.jecharacters.core.JechCore;
 import net.minecraftforge.common.MinecraftForge;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodInsnNode;
-import towdium.je_characters.core.JechCore;
 
 import java.io.File;
 import java.io.IOException;

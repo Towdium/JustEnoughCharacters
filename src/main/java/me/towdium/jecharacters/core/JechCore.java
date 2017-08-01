@@ -1,11 +1,11 @@
-package towdium.je_characters.core;
+package me.towdium.jecharacters.core;
 
+import me.towdium.jecharacters.JechConfig;
+import me.towdium.jecharacters.transform.TransformerRegistry;
+import me.towdium.jecharacters.util.StringMatcher;
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import towdium.je_characters.JechConfig;
-import towdium.je_characters.transform.TransformerRegistry;
-import towdium.je_characters.util.StringMatcher;
 
 import java.io.File;
 import java.util.Map;
@@ -15,7 +15,7 @@ import java.util.Map;
  * Date:   2016/9/4.
  */
 public class JechCore implements IFMLLoadingPlugin {
-    public static final Logger LOG = LogManager.getLogger("je_characters");
+    public static final Logger LOG = LogManager.getLogger("jecharacters");
     public static final String VERSION = "@VERSION@";
     public static File source;
     public static boolean INITIALIZED = false;
@@ -29,12 +29,12 @@ public class JechCore implements IFMLLoadingPlugin {
 
     @Override
     public String[] getASMTransformerClass() {
-        return new String[]{"towdium.je_characters.core.ClassTransformer"};
+        return new String[]{"me.towdium.jecharacters.core.ClassTransformer"};
     }
 
     @Override
     public String getModContainerClass() {
-        return "towdium.je_characters.core.ModContainer";
+        return "me.towdium.jecharacters.core.ModContainer";
     }
 
     @Override

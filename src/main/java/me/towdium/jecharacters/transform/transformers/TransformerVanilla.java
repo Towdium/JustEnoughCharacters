@@ -1,10 +1,10 @@
-package towdium.je_characters.transform.transformers;
+package me.towdium.jecharacters.transform.transformers;
 
+import me.towdium.jecharacters.core.JechCore;
+import me.towdium.jecharacters.transform.Transformer;
+import me.towdium.jecharacters.util.CachedFilter;
 import net.minecraft.client.util.SuffixArray;
 import org.objectweb.asm.tree.ClassNode;
-import towdium.je_characters.core.JechCore;
-import towdium.je_characters.transform.Transformer;
-import towdium.je_characters.util.CachedFilter;
 
 import java.util.List;
 
@@ -22,16 +22,16 @@ public class TransformerVanilla implements Transformer.Extended {
         JechCore.LOG.info("Transforming vanilla SearchTree.");
         Transformer.findMethod(n, "<init>").ifPresent(m ->
                 Transformer.transformConstruct(m, "net/minecraft/client/util/SuffixArray",
-                        "towdium/je_characters/transform/transformers/TransformerVanilla$FakeSuffixArray"));
+                        "me/towdium/jecharacters/transform/transformers/TransformerVanilla$FakeSuffixArray"));
         Transformer.findMethod(n, "recalculate", "()V").ifPresent(m ->
                 Transformer.transformConstruct(m, "net/minecraft/client/util/SuffixArray",
-                        "towdium/je_characters/transform/transformers/TransformerVanilla$FakeSuffixArray"));
+                        "me/towdium/jecharacters/transform/transformers/TransformerVanilla$FakeSuffixArray"));
         Transformer.findMethod(n, "<init>").ifPresent(m ->
                 Transformer.transformConstruct(m, "cgx",
-                        "towdium/je_characters/transform/transformers/TransformerVanilla$FakeSuffixArray"));
+                        "me/towdium/jecharacters/transform/transformers/TransformerVanilla$FakeSuffixArray"));
         Transformer.findMethod(n, "a", "()V").ifPresent(m ->
                 Transformer.transformConstruct(m, "cgx",
-                        "towdium/je_characters/transform/transformers/TransformerVanilla$FakeSuffixArray"));
+                        "me/towdium/jecharacters/transform/transformers/TransformerVanilla$FakeSuffixArray"));
     }
 
     public static class FakeSuffixArray<T> extends SuffixArray<T> {

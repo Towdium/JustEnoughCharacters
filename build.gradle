@@ -10,8 +10,8 @@ buildscript {
 apply plugin: 'net.minecraftforge.gradle.forge'
 
 version = "${mc_version}-${proj_version}"
-group= "towdium.je_characters"
-archivesBaseName = "je_characters"
+group= "me.towdium.jecharacters"
+archivesBaseName = "jecharacters"
 
 tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'
@@ -55,6 +55,6 @@ processResources {
 
 jar {
     manifest {
-        attributes 'FMLCorePlugin': 'towdium.je_characters.core.JechCore'
+        attributes 'FMLCorePlugin': 'me.towdium.jecharacters.core.JechCore'
     }
 }

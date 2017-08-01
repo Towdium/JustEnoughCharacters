@@ -1,13 +1,13 @@
-package towdium.je_characters.core;
+package me.towdium.jecharacters.core;
 
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
+import me.towdium.jecharacters.JechCommand;
 import net.minecraft.command.ICommand;
 import net.minecraftforge.fml.common.DummyModContainer;
 import net.minecraftforge.fml.common.LoadController;
 import net.minecraftforge.fml.common.ModMetadata;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
-import towdium.je_characters.JechCommand;
 
 import java.io.File;
 import java.util.Collections;
@@ -20,7 +20,7 @@ public class ModContainer extends DummyModContainer {
     public ModContainer() {
         super(new ModMetadata());
         ModMetadata meta = getMetadata();
-        meta.modId = "je_characters";
+        meta.modId = "jecharacters";
         meta.name = "Just Enough Characters";
         meta.version = "@VERSION@";
         meta.authorList = Collections.singletonList("Towdium");

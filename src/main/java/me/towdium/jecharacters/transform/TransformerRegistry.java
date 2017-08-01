@@ -1,6 +1,6 @@
-package towdium.je_characters.transform;
+package me.towdium.jecharacters.transform;
 
-import towdium.je_characters.transform.transformers.*;
+import me.towdium.jecharacters.transform.transformers.*;
 
 import java.util.ArrayList;
 

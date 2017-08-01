@@ -1,10 +1,10 @@
-package towdium.je_characters;
+package me.towdium.jecharacters;
 
+import me.towdium.jecharacters.core.JechCore;
+import me.towdium.jecharacters.util.FeedFetcher;
+import me.towdium.jecharacters.util.VersionChecker;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
-import towdium.je_characters.core.JechCore;
-import towdium.je_characters.util.FeedFetcher;
-import towdium.je_characters.util.VersionChecker;
 
 import java.io.File;
 import java.util.Collections;

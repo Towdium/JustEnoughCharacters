@@ -1,13 +1,13 @@
-package towdium.je_characters.transform.transformers;
+package me.towdium.jecharacters.transform.transformers;
 
 import gnu.trove.set.TIntSet;
 import gnu.trove.set.hash.TIntHashSet;
+import me.towdium.jecharacters.JechConfig;
+import me.towdium.jecharacters.core.JechCore;
+import me.towdium.jecharacters.transform.Transformer;
+import me.towdium.jecharacters.util.CachedFilter;
 import mezz.jei.suffixtree.GeneralizedSuffixTree;
 import org.objectweb.asm.tree.ClassNode;
-import towdium.je_characters.JechConfig;
-import towdium.je_characters.core.JechCore;
-import towdium.je_characters.transform.Transformer;
-import towdium.je_characters.util.CachedFilter;
 
 /**
  * Author: Towdium
@@ -31,17 +31,17 @@ public class TransformerJei implements Transformer.Extended {
         JechCore.LOG.info("Transforming class " + n.name + " for JEI integration.");
         Transformer.findMethod(n, "<init>").ifPresent(methodNode -> {
             Transformer.transformConstruct(methodNode, "mezz/jei/suffixtree/GeneralizedSuffixTree",
-                    "towdium/je_characters/transform/transformers/TransformerJei$FakeTreeB");
+                    "me/towdium/jecharacters/transform/transformers/TransformerJei$FakeTreeB");
             Transformer.transformConstruct(methodNode, "com/abahgat/suffixtree/GeneralizedSuffixTree",
-                    "towdium/je_characters/transform/transformers/TransformerJei$FakeTreeA");
-            Transformer.transformHook(methodNode, "towdium/je_characters/transform/transformers/TransformerJei",
+                    "me/towdium/jecharacters/transform/transformers/TransformerJei$FakeTreeA");
+            Transformer.transformHook(methodNode, "me/towdium/jecharacters/transform/transformers/TransformerJei",
                     "loadingHook", "()V");
         });
         Transformer.findMethod(n, "createPrefixedSearchTree").ifPresent(methodNode ->
                 Transformer.transformConstruct(methodNode, "mezz/jei/suffixtree/GeneralizedSuffixTree",
-                        "towdium/je_characters/transform/transformers/TransformerJei$FakeTreeB"));
+                        "me/towdium/jecharacters/transform/transformers/TransformerJei$FakeTreeB"));
         Transformer.findMethod(n, "buildSuffixTrees").ifPresent(methodNode ->
-                Transformer.transformHook(methodNode, "towdium/je_characters/transform/transformers/TransformerJei",
+                Transformer.transformHook(methodNode, "me/towdium/jecharacters/transform/transformers/TransformerJei",
                         "loadingHook", "()V"));
     }
 

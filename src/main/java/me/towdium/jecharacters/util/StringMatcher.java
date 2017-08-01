@@ -1,4 +1,4 @@
-package towdium.je_characters.util;
+package me.towdium.jecharacters.util;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -6,11 +6,11 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.cache.Weigher;
 import gnu.trove.set.TIntSet;
 import gnu.trove.set.hash.TIntHashSet;
+import me.towdium.jecharacters.core.JechCore;
 import net.sourceforge.pinyin4j.PinyinHelper;
 import net.sourceforge.pinyin4j.format.HanyuPinyinOutputFormat;
 import net.sourceforge.pinyin4j.format.HanyuPinyinToneType;
 import net.sourceforge.pinyin4j.format.exception.BadHanyuPinyinOutputFormatCombination;
-import towdium.je_characters.core.JechCore;
 
 import java.util.ArrayList;
 import java.util.function.Predicate;

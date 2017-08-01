@@ -1,8 +1,8 @@
-package towdium.je_characters.util;
+package me.towdium.jecharacters.util;
 
 import com.google.gson.*;
+import me.towdium.jecharacters.core.JechCore;
 import org.apache.commons.io.IOUtils;
-import towdium.je_characters.core.JechCore;
 
 import java.io.IOException;
 import java.net.URL;

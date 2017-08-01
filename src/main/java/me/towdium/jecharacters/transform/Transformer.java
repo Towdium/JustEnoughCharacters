@@ -1,10 +1,10 @@
-package towdium.je_characters.transform;
+package me.towdium.jecharacters.transform;
 
 import com.google.common.collect.HashMultimap;
+import me.towdium.jecharacters.core.JechCore;
+import me.towdium.jecharacters.util.Wrapper;
 import org.objectweb.asm.*;
 import org.objectweb.asm.tree.*;
-import towdium.je_characters.core.JechCore;
-import towdium.je_characters.util.Wrapper;
 
 import javax.annotation.Nullable;
 import java.util.Iterator;

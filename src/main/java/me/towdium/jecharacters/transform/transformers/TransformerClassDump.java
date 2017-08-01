@@ -1,9 +1,9 @@
-package towdium.je_characters.transform.transformers;
+package me.towdium.jecharacters.transform.transformers;
 
+import me.towdium.jecharacters.JechConfig;
+import me.towdium.jecharacters.core.JechCore;
+import me.towdium.jecharacters.transform.Transformer;
 import org.objectweb.asm.tree.ClassNode;
-import towdium.je_characters.JechConfig;
-import towdium.je_characters.core.JechCore;
-import towdium.je_characters.transform.Transformer;
 
 import java.util.Collections;
 import java.util.HashSet;
