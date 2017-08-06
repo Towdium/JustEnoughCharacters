@@ -55,8 +55,8 @@ public interface Transformer {
                 if (insnNode.bsmArgs[1] instanceof Handle) {
                     Handle h = ((Handle) insnNode.bsmArgs[1]);
                     if (h.getOwner().equals(owner) && h.getName().equals(name)) {
-                        Object[] args = {Type.getType(arg1),
-                                new Handle(6, newOwner, newName, id, false), Type.getType(arg2)};
+                        @SuppressWarnings("deprecation") Object[] args = {Type.getType(arg1),
+                                new Handle(6, newOwner, newName, id), Type.getType(arg2)};
                         methodNode.instructions.set(insnNode,
                                 new InvokeDynamicInsnNode(insnNode.name, insnNode.desc, insnNode.bsm, args));
                         ret = true;
