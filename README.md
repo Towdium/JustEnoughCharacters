@@ -1,8 +1,18 @@
 # Just Enough Characters Mod
 
+<a href="https://minecraft.curseforge.com/projects/just-enough-characters">
+<img src="http://cf.way2muchnoise.eu/full_just-enough-characters_downloads.svg" />
+</a>
+<a href="https://minecraft.curseforge.com/projects/just-enough-characters">
+<img src="http://cf.way2muchnoise.eu/versions/just-enough-characters.svg" />
+</a>
+
+<br />
 This is a little mod to help JEI search by pinyin in a Chinese environment. 
+
 The developer uses simplified Chinese
 but it should also work for traditional Chinese (not tested).
+
 With this mod, you can search by full pinyin, 
 consonant or any combination of both (全拼，声母或两者的任意组合).
 
