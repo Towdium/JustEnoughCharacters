@@ -23,7 +23,11 @@
       "net.minecraft.client.gui.inventory.GuiContainerCreative:updateFilteredItems",
       "appeng.client.gui.implementation.GuiInterfaceTerminal:refreshList",
       "appeng.client.gui.implementation.GuiInterfaceTerminal:itemStackMatchesSearchTerm",
-      "pers.towdium.just_enough_calculation.gui.guis.GuiPicker:updateLayout"
+      "pers.towdium.just_enough_calculation.gui.guis.GuiPicker:updateLayout",
+      "sonar.logistics.client.gui.GuiFluidReader:getGridList",
+      "sonar.logistics.client.gui.GuiGuide:updateSearchList",
+      "sonar.logistics.client.gui.GuiInventoryReader:getGridList",
+      "sonar.logistics.client.gui.GuiWirelessStorageReader:getGridList"
     ],
     "regexp": [
       "appeng.client.me.ItemRepo:updateView",

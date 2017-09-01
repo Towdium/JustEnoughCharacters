@@ -185,7 +185,11 @@ public class JechConfig {
                             "appeng.client.gui.implementation.GuiInterfaceTerminal:itemStackMatchesSearchTerm",
                             "pers.towdium.just_enough_calculation.gui.guis.GuiPicker:updateLayout",
                             "io.github.elytra.correlated.inventory.ContainerTerminal:updateSlots",
-                            "com.elytradev.correlated.inventory.ContainerTerminal:updateSlots"
+                            "com.elytradev.correlated.inventory.ContainerTerminal:updateSlots",
+                            "sonar.logistics.client.gui.GuiFluidReader:getGridList",
+                            "sonar.logistics.client.gui.GuiGuide:updateSearchList",
+                            "sonar.logistics.client.gui.GuiInventoryReader:getGridList",
+                            "sonar.logistics.client.gui.GuiWirelessStorageReader:getGridList"
                     };
                 case ListDefaultRegExpMatch:
                     return new String[]{
