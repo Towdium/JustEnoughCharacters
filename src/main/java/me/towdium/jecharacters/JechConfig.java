@@ -189,7 +189,8 @@ public class JechConfig {
                             "sonar.logistics.client.gui.GuiFluidReader:getGridList",
                             "sonar.logistics.client.gui.GuiGuide:updateSearchList",
                             "sonar.logistics.client.gui.GuiInventoryReader:getGridList",
-                            "sonar.logistics.client.gui.GuiWirelessStorageReader:getGridList"
+                            "sonar.logistics.client.gui.GuiWirelessStorageReader:getGridList",
+                            "binnie.core.machines.storage.SearchDialog:updateSearch"
                     };
                 case ListDefaultRegExpMatch:
                     return new String[]{
