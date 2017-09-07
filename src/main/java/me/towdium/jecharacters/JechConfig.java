@@ -1,12 +1,14 @@
 package me.towdium.jecharacters;
 
 import me.towdium.jecharacters.core.JechCore;
+import me.towdium.jecharacters.transform.TransformerRegistry;
 import me.towdium.jecharacters.util.FeedFetcher;
 import me.towdium.jecharacters.util.VersionChecker;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.stream.Collectors;
@@ -36,14 +38,18 @@ public class JechConfig {
                     HashSet<String> buf = new HashSet<>();
                     Collections.addAll(buf, EnumItems.ListAdditionalStringMatch.getProperty().getStringList());
                     buf.addAll(s);
+                    buf.removeAll(Arrays.asList(EnumItems.ListDefaultStringMatch.getProperty().getStringList()));
                     EnumItems.ListAdditionalStringMatch.getProperty()
                             .set(buf.stream().sorted().collect(Collectors.toList()).toArray(new String[]{}));
                     buf.clear();
                     Collections.addAll(buf, EnumItems.ListAdditionalRegExpMatch.getProperty().getStringList());
                     buf.addAll(r);
+                    buf.removeAll(Arrays.asList(EnumItems.ListDefaultRegExpMatch.getProperty().getStringList()));
                     EnumItems.ListAdditionalRegExpMatch.getProperty()
                             .set(buf.stream().sorted().collect(Collectors.toList()).toArray(new String[]{}));
                     config.save();
+                    TransformerRegistry.transformerRegExp.reload();
+                    TransformerRegistry.transformerString.reload();
                 }));
         t.setPriority(Thread.MIN_PRIORITY);
         t.run();
@@ -188,9 +194,7 @@ public class JechConfig {
                             "com.elytradev.correlated.inventory.ContainerTerminal:updateSlots",
                             "sonar.logistics.client.gui.GuiFluidReader:getGridList",
                             "sonar.logistics.client.gui.GuiGuide:updateSearchList",
-                            "sonar.logistics.client.gui.GuiInventoryReader:getGridList",
-                            "sonar.logistics.client.gui.GuiWirelessStorageReader:getGridList",
-                            "binnie.core.machines.storage.SearchDialog:updateSearch"
+                            "sonar.logistics.client.gui.GuiInventoryReader:getGridList"
                     };
                 case ListDefaultRegExpMatch:
                     return new String[]{

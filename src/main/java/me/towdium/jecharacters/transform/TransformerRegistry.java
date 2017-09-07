@@ -9,28 +9,28 @@ import java.util.ArrayList;
  * Date:   12/06/17
  */
 public class TransformerRegistry {
-    static final ArrayList<Transformer> NONE = new ArrayList<>();
+    public static TransformerStringUnique transformerString;
+    public static TransformerRegExpUnique transformerRegExp;
 
     static ArrayList<Transformer> transformers = new ArrayList<>();
 
     static {
+        transformerString = new TransformerStringUnique();
+        transformerRegExp = new TransformerRegExpUnique();
+
+        transformers.add(transformerRegExp);
+        transformers.add(transformerString);
         transformers.add(new TransformerJei());
-        transformers.add(new TransformerStringUnique());
-        transformers.add(new TransformerRegExpUnique());
         transformers.add(new TransformerStringUniversal());
         transformers.add(new TransformerClassDump());
         transformers.add(new TransformerVanilla());
     }
 
     public static ArrayList<Transformer> getTransformer(String name) {
-        ArrayList<Transformer> ret = NONE;
+        ArrayList<Transformer> ret = new ArrayList<>();
         for (Transformer t : transformers) {
-            if (t.accepts(name)) {
-                if (ret == NONE)
-                    ret = new ArrayList<>();
-
+            if (t.accepts(name))
                 ret.add(t);
-            }
         }
         return ret;
     }

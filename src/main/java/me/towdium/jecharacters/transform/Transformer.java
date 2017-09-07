@@ -10,7 +10,6 @@ import javax.annotation.Nullable;
 import java.util.Iterator;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Consumer;
 
 /**
  * Author: Towdium
@@ -117,26 +116,29 @@ public interface Transformer {
     }
 
     class MethodDecoder {
-        public final static Consumer<String> LOGGER = s -> JechCore.LOG.info("Invalid config syntax: " + s);
         HashMultimap<String, String> methods = HashMultimap.create();
 
-        public void addAll(String[] names, Consumer<String> callback) {
+        public static void logError(String s) {
+            JechCore.LOG.info("Invalid config syntax: " + s);
+        }
+
+        public void addAll(String[] names) {
             for (String s : names) {
                 String[] ss = s.split(":");
                 if (ss.length == 2)
                     methods.put(ss[0], ss[1]);
                 else
-                    callback.accept(s);
+                    logError(s);
             }
         }
 
-        public void removeAll(String[] names, Consumer<String> callback) {
+        public void removeAll(String[] names) {
             for (String s : names) {
                 String[] ss = s.split(":");
                 if (ss.length == 2)
                     methods.remove(ss[0], ss[1]);
                 else
-                    callback.accept(s);
+                    logError(s);
             }
         }
 

@@ -16,9 +16,17 @@ public class TransformerRegExpUnique implements Transformer.Extended {
     MethodDecoder md = new MethodDecoder();
 
     public TransformerRegExpUnique() {
-        md.addAll(JechConfig.EnumItems.ListDefaultRegExpMatch.getProperty().getStringList(), MethodDecoder.LOGGER);
-        md.addAll(JechConfig.EnumItems.ListAdditionalRegExpMatch.getProperty().getStringList(), MethodDecoder.LOGGER);
-        md.removeAll(JechConfig.EnumItems.ListMethodBlacklist.getProperty().getStringList(), MethodDecoder.LOGGER);
+        md.addAll(JechConfig.EnumItems.ListDefaultRegExpMatch.getProperty().getStringList());
+        md.addAll(JechConfig.EnumItems.ListAdditionalRegExpMatch.getProperty().getStringList());
+        md.removeAll(JechConfig.EnumItems.ListMethodBlacklist.getProperty().getStringList());
+    }
+
+    public void reload() {
+        MethodDecoder mdt = new MethodDecoder();
+        mdt.addAll(JechConfig.EnumItems.ListDefaultStringMatch.getProperty().getStringList());
+        mdt.addAll(JechConfig.EnumItems.ListAdditionalStringMatch.getProperty().getStringList());
+        mdt.removeAll(JechConfig.EnumItems.ListMethodBlacklist.getProperty().getStringList());
+        md = mdt;
     }
 
     @Override
