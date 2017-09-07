@@ -86,7 +86,13 @@ public class JechConfig {
         ListDumpClass,
         ListMethodBlacklist,
         EnableRadicalMode,
-        EnableJEI;
+        EnableJEI,
+        EnableFuzzyInitialZhToZ,
+        EnableFuzzyInitialShToS,
+        EnableFuzzyInitialChToC,
+        EnableFuzzyFinalAngToAn,
+        EnableFuzzyFinalIngToIn,
+        EnableFuzzyFinalEngToEn;
 
 
         public String getComment() {
@@ -114,30 +120,24 @@ public class JechConfig {
                             "This could support more mods but could lead to some strange behavior as well.";
                 case EnableJEI:
                     return "Set to false to disable JEI support.";
+                case EnableFuzzyInitialZhToZ:
+                    return "Set to true to enable fuzzy Zh <=> Z";
+                case EnableFuzzyInitialShToS:
+                    return "Set to true to enable fuzzy Sh <=> S";
+                case EnableFuzzyInitialChToC:
+                    return "Set to true to enable fuzzy Ch <=> C";
+                case EnableFuzzyFinalAngToAn:
+                    return "Set to true to enable fuzzy Ang <=> An";
+                case EnableFuzzyFinalIngToIn:
+                    return "Set to true to enable fuzzy Ing <=> In";
+                case EnableFuzzyFinalEngToEn:
+                    return "Set to true to enable fuzzy Eng <=> En";
             }
             return "";
         }
 
         public String getCategory() {
-            switch (this) {
-                case ListAdditionalStringMatch:
-                    return EnumCategory.General.toString();
-                case ListAdditionalRegExpMatch:
-                    return EnumCategory.General.toString();
-                case ListDefaultStringMatch:
-                    return EnumCategory.General.toString();
-                case ListDefaultRegExpMatch:
-                    return EnumCategory.General.toString();
-                case ListDumpClass:
-                    return EnumCategory.General.toString();
-                case ListMethodBlacklist:
-                    return EnumCategory.General.toString();
-                case EnableRadicalMode:
-                    return EnumCategory.General.toString();
-                case EnableJEI:
-                    return EnumCategory.General.toString();
-            }
-            return "";
+            return EnumCategory.General.toString();
         }
 
         public EnumType getType() {
@@ -157,6 +157,18 @@ public class JechConfig {
                 case EnableRadicalMode:
                     return EnumType.Boolean;
                 case EnableJEI:
+                    return EnumType.Boolean;
+                case EnableFuzzyInitialZhToZ:
+                    return EnumType.Boolean;
+                case EnableFuzzyInitialShToS:
+                    return EnumType.Boolean;
+                case EnableFuzzyInitialChToC:
+                    return EnumType.Boolean;
+                case EnableFuzzyFinalAngToAn:
+                    return EnumType.Boolean;
+                case EnableFuzzyFinalIngToIn:
+                    return EnumType.Boolean;
+                case EnableFuzzyFinalEngToEn:
                     return EnumType.Boolean;
             }
             return EnumType.Error;
@@ -209,6 +221,18 @@ public class JechConfig {
                     return false;
                 case EnableJEI:
                     return true;
+                case EnableFuzzyInitialZhToZ:
+                    return false;
+                case EnableFuzzyInitialShToS:
+                    return false;
+                case EnableFuzzyInitialChToC:
+                    return false;
+                case EnableFuzzyFinalAngToAn:
+                    return false;
+                case EnableFuzzyFinalIngToIn:
+                    return false;
+                case EnableFuzzyFinalEngToEn:
+                    return false;
             }
             return JechConfig.empty;
         }

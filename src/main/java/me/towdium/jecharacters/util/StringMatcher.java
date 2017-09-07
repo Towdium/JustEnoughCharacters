@@ -4,8 +4,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.cache.Weigher;
-import gnu.trove.set.TIntSet;
-import gnu.trove.set.hash.TIntHashSet;
+import me.towdium.jecharacters.JechConfig;
 import me.towdium.jecharacters.core.JechCore;
 import net.sourceforge.pinyin4j.PinyinHelper;
 import net.sourceforge.pinyin4j.format.HanyuPinyinOutputFormat;
@@ -13,6 +12,8 @@ import net.sourceforge.pinyin4j.format.HanyuPinyinToneType;
 import net.sourceforge.pinyin4j.format.exception.BadHanyuPinyinOutputFormatCombination;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -40,6 +41,7 @@ public class StringMatcher {
         return false;
     }
 
+    @SuppressWarnings("unused")
     public static Matcher checkReg(Pattern test, CharSequence name) {
         if (containsChinese(name))
             return checkChinese(name.toString(), test.toString()) ? p.matcher("a") : p.matcher("");
@@ -48,6 +50,7 @@ public class StringMatcher {
     }
 
     // s1.contains(s2)
+    @SuppressWarnings("unused")
     public static boolean checkStr(String s1, CharSequence s2) {
         if (containsChinese(s1))
             return checkChinese(s1, s2.toString());
@@ -142,8 +145,8 @@ public class StringMatcher {
     }
 
     private static class CharRepSin implements CharRep {
-        static final CharRepSin INSTANCE = new CharRepSin();
-        Character ch;
+        private static final CharRepSin INSTANCE = new CharRepSin();
+        private Character ch;
 
         private CharRepSin() {
         }
@@ -159,10 +162,10 @@ public class StringMatcher {
         }
     }
 
-    public static class CharRepMul implements CharRep {
-        static final CharRepMul[] CACHE = new CharRepMul[41000];
-        static final int START = 0x3007;
-        static final int END = 0x9FA5;
+    private static class CharRepMul implements CharRep {
+        private static final CharRepMul[] CACHE = new CharRepMul[41000];
+        private static final int START = 0x3007;
+        private static final int END = 0x9FA5;
 
         static {
             for (int i = START; i <= END; i++) {
@@ -170,12 +173,12 @@ public class StringMatcher {
             }
         }
 
-        ArrayList<CharPattern> patterns = new ArrayList<>();
+        private ArrayList<CharPattern> patterns = new ArrayList<>();
 
         private CharRepMul() {
         }
 
-        private static CharRepMul get(Character ch) {
+        static CharRepMul get(Character ch) {
             return CACHE[ch];
         }
 
@@ -193,7 +196,10 @@ public class StringMatcher {
             if (pinyin == null)
                 return p;
 
-            for (String s : pinyin) {
+            HashSet<String> set = new HashSet<>();
+            Collections.addAll(set, pinyin);
+
+            for (String s : set) {
                 if (s != null)
                     p.patterns.add(PinyinPattern.get(s));
             }
@@ -208,60 +214,99 @@ public class StringMatcher {
         }
     }
 
-    public static class PinyinPattern implements CharPattern {
-        static LoadingCache<String, PinyinPattern> cache = CacheBuilder.newBuilder().concurrencyLevel(1)
+    private static class PinyinPattern implements CharPattern {
+        private static LoadingCache<String, PinyinPattern> cache = CacheBuilder.newBuilder().concurrencyLevel(1)
                 .maximumWeight(16).weigher((Weigher<String, PinyinPattern>) (key, value) -> 1)
                 .build(new CacheLoader<String, PinyinPattern>() {
                     @Override
                     public PinyinPattern load(String str) {
-                        return genPattern(str);
+                        return new PinyinPattern(str);
                     }
                 });
-        String str;
-        TIntSet slices = new TIntHashSet(5);
+        private FuzzyMatcher fInitial;
+        private FuzzyMatcher fFinal;
 
-        private PinyinPattern() {
+        private PinyinPattern(String str) {
+            int size = str.length() >= 2 && str.charAt(1) == 'h' ? 2 : 1;
+
+            fInitial = FuzzyMatcher.get(str.substring(0, size));
+            fFinal = FuzzyMatcher.get(str.substring(size));
         }
 
-        private static PinyinPattern get(String str) {
+        static PinyinPattern get(String str) {
             return cache.getUnchecked(str);
-        }
-
-        private static PinyinPattern genPattern(String str) {
-            PinyinPattern p = new PinyinPattern();
-            p.str = str;
-            if (str.isEmpty())
-                return p;
-            else
-                p.slices.add(1);
-
-            if (str.length() > 1 && str.charAt(1) == 'h')
-                p.slices.add(2);
-
-            p.slices.add(str.length());
-            return p;
         }
 
         @Override
         public IndexSet match(String str, int start) {
-            int match = strCmp(str, this.str, start);
-            IndexSet ret = new IndexSet();
+            IndexSet ret = fInitial.match(str, start);
+            new IndexSet(ret.value).foreach(i -> {
 
-            slices.forEach(value -> {
-                if (value <= match)
-                    ret.set(value);
+                fFinal.match(str, start + i).foreach(j -> {
+                    ret.set(i + j);
+                    return true;
+                });
                 return true;
             });
-
-            if (match == str.length() - start)
-                ret.set(match);
-
             return ret;
+        }
+
+        private static class FuzzyMatcher {
+            private static boolean zh2z = JechConfig.EnumItems.EnableFuzzyInitialZhToZ.getProperty().getBoolean();
+            private static boolean sh2s = JechConfig.EnumItems.EnableFuzzyInitialShToS.getProperty().getBoolean();
+            private static boolean ch2c = JechConfig.EnumItems.EnableFuzzyInitialChToC.getProperty().getBoolean();
+            private static boolean ing2in = JechConfig.EnumItems.EnableFuzzyFinalIngToIn.getProperty().getBoolean();
+            private static boolean ang2an = JechConfig.EnumItems.EnableFuzzyFinalAngToAn.getProperty().getBoolean();
+            private static boolean eng2en = JechConfig.EnumItems.EnableFuzzyFinalEngToEn.getProperty().getBoolean();
+
+            private static LoadingCache<String, FuzzyMatcher> cache =
+                    CacheBuilder.newBuilder().concurrencyLevel(1).maximumWeight(16)
+                            .weigher((Weigher<String, FuzzyMatcher>) (key, value) -> 1)
+                            .build(new CacheLoader<String, FuzzyMatcher>() {
+                                @Override
+                                public FuzzyMatcher load(String str) {
+                                    return new FuzzyMatcher(str);
+                                }
+                            });
+
+            private HashSet<String> set = new HashSet<>();
+
+            private FuzzyMatcher(String s) {
+                set.add(s);
+
+                if (s.startsWith("c") && ch2c) Collections.addAll(set, "c", "ch");
+                if (s.startsWith("s") && sh2s) Collections.addAll(set, "s", "sh");
+                if (s.startsWith("z") && zh2z) Collections.addAll(set, "z", "zh");
+                if ((s.endsWith("ang") && ang2an)
+                        || (s.endsWith("eng") && eng2en)
+                        || (s.endsWith("ing") && ing2in))
+                    set.add(s.substring(0, s.length() - 1));
+                if ((s.endsWith("an") && ang2an)
+                        || (s.endsWith("en") && eng2en)
+                        || (s.endsWith("in") && ing2in))
+                    set.add(s + 'g');
+            }
+
+            static FuzzyMatcher get(String s) {
+                return cache.getUnchecked(s);
+            }
+
+            IndexSet match(String s, int i) {
+                IndexSet ret = new IndexSet();
+                for (String str : set) {
+                    int size = strCmp(s, str, i);
+                    if (i + size == s.length())
+                        ret.set(size);
+                    if (size == str.length())
+                        ret.set(size);
+                }
+                return ret;
+            }
         }
     }
 
     private static class RawPattern implements CharPattern {
-        Character ch;
+        private Character ch;
 
         RawPattern(Character ch) {
             this.ch = ch;

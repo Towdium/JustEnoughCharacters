@@ -1,7 +1,6 @@
 package me.towdium.jecharacters.core;
 
 import me.towdium.jecharacters.JechConfig;
-import me.towdium.jecharacters.transform.TransformerRegistry;
 import me.towdium.jecharacters.util.StringMatcher;
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
 import org.apache.logging.log4j.LogManager;
@@ -19,13 +18,6 @@ public class JechCore implements IFMLLoadingPlugin {
     public static final String VERSION = "@VERSION@";
     public static File source;
     public static boolean INITIALIZED = false;
-
-
-    static {
-        StringMatcher.checkStr("Test 这是一条测试文本", "Test zheshiytcswb");
-        //noinspection ResultOfMethodCallIgnored
-        TransformerRegistry.class.toString();
-    }
 
     @Override
     public String[] getASMTransformerClass() {
@@ -46,6 +38,7 @@ public class JechCore implements IFMLLoadingPlugin {
     public void injectData(Map<String, Object> data) {
         JechConfig.preInit(((File) data.get("mcLocation")));
         source = (File) data.get("coremodLocation");
+        StringMatcher.checkStr("Test 这是一条测试文本", "Test zheshiytcswb");
         JechCore.INITIALIZED = true;
     }
 
