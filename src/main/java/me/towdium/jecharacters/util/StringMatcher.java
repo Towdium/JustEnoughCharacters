@@ -9,6 +9,7 @@ import me.towdium.jecharacters.core.JechCore;
 import net.sourceforge.pinyin4j.PinyinHelper;
 import net.sourceforge.pinyin4j.format.HanyuPinyinOutputFormat;
 import net.sourceforge.pinyin4j.format.HanyuPinyinToneType;
+import net.sourceforge.pinyin4j.format.HanyuPinyinVCharType;
 import net.sourceforge.pinyin4j.format.exception.BadHanyuPinyinOutputFormatCombination;
 
 import java.util.ArrayList;
@@ -31,6 +32,7 @@ public class StringMatcher {
     static {
         FORMAT = new HanyuPinyinOutputFormat();
         FORMAT.setToneType(HanyuPinyinToneType.WITHOUT_TONE);
+        FORMAT.setVCharType(HanyuPinyinVCharType.WITH_V);
     }
 
     private static boolean containsChinese(CharSequence s) {
@@ -115,17 +117,17 @@ public class StringMatcher {
                 }
             });
             return sharedBoolean;
+        } else {
+            s.foreach(i -> {
+                if (checkChinese(s1, start1 + i, s2, start2 + 1)) {
+                    sharedBoolean = true;
+                    return false;
+                } else {
+                    return true;
+                }
+            });
+            return sharedBoolean;
         }
-
-        s.foreach(i -> {
-            if (checkChinese(s1, start1 + i, s2, start2 + 1)) {
-                sharedBoolean = true;
-                return false;
-            } else {
-                return true;
-            }
-        });
-        return sharedBoolean;
     }
 
     private static int strCmp(String a, String b, int aStart) {
@@ -267,6 +269,7 @@ public class StringMatcher {
             private static boolean ing2in = JechConfig.EnumItems.EnableFuzzyFinalIngToIn.getProperty().getBoolean();
             private static boolean ang2an = JechConfig.EnumItems.EnableFuzzyFinalAngToAn.getProperty().getBoolean();
             private static boolean eng2en = JechConfig.EnumItems.EnableFuzzyFinalEngToEn.getProperty().getBoolean();
+            private static boolean v2u = JechConfig.EnumItems.EnableFuzzyFinalUToV.getProperty().getBoolean();
 
             private static LoadingCache<String, FuzzyMatcher> cache =
                     CacheBuilder.newBuilder().concurrencyLevel(1).maximumWeight(16)
@@ -283,14 +286,16 @@ public class StringMatcher {
             private FuzzyMatcher(String s) {
                 set.add(s);
 
-                if (s.startsWith("c") && ch2c) Collections.addAll(set, "c", "ch");
-                if (s.startsWith("s") && sh2s) Collections.addAll(set, "s", "sh");
-                if (s.startsWith("z") && zh2z) Collections.addAll(set, "z", "zh");
-                if ((s.endsWith("ang") && ang2an)
-                        || (s.endsWith("eng") && eng2en)
-                        || (s.endsWith("ing") && ing2in))
+                if (ch2c && s.startsWith("c")) Collections.addAll(set, "c", "ch");
+                if (sh2s && s.startsWith("s")) Collections.addAll(set, "s", "sh");
+                if (zh2z && s.startsWith("z")) Collections.addAll(set, "z", "zh");
+                if (v2u && s.startsWith("v"))
+                    set.add("u" + s.substring(1));
+                if ((ang2an && s.endsWith("ang"))
+                        || (eng2en && s.endsWith("eng"))
+                        || (ing2in && s.endsWith("ing")))
                     set.add(s.substring(0, s.length() - 1));
-                if ((s.endsWith("an") && ang2an)
+                if ((ang2an && s.endsWith("an"))
                         || (s.endsWith("en") && eng2en)
                         || (s.endsWith("in") && ing2in))
                     set.add(s + 'g');

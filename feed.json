@@ -40,7 +40,12 @@
       "blusunrize.lib.manual.ManualPages$Crafting:listForSearch",
       "blusunrize.lib.manual.ManualPages$CraftingMulti:listForSearch",
       "blusunrize.lib.manual.ManualPages$ItemDisplay:listForSearch",
-      "blusunrize.lib.manual.gui.GuiManual:func_73869_a"
+      "blusunrize.lib.manual.gui.GuiManual:func_73869_a",
+      "betterquesting.client.gui.editors.GuiPrerequisiteEditor:RefreshSearch",
+      "betterquesting.client.gui.editors.GuiQuestLineEditorB:RefreshSearch",
+      "betterquesting.client.gui.editors.json.GuiJsonEntitySelection:updateSearch",
+      "betterquesting.client.gui.editors.json.GuiJsonFluidSelection:doSearch",
+      "betterquesting.client.gui.editors.json.GuiJsonItemSelection:doSearch"
     ],
     "regexp": [
       "appeng.client.me.ItemRepo:updateView",

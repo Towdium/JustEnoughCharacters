@@ -92,7 +92,8 @@ public class JechConfig {
         EnableFuzzyInitialChToC,
         EnableFuzzyFinalAngToAn,
         EnableFuzzyFinalIngToIn,
-        EnableFuzzyFinalEngToEn;
+        EnableFuzzyFinalEngToEn,
+        EnableFuzzyFinalUToV;
 
 
         public String getComment() {
@@ -132,6 +133,8 @@ public class JechConfig {
                     return "Set to true to enable fuzzy Ing <=> In";
                 case EnableFuzzyFinalEngToEn:
                     return "Set to true to enable fuzzy Eng <=> En";
+                case EnableFuzzyFinalUToV:
+                    return "Set to true to enable fuzzy U <=> V";
             }
             return "";
         }
@@ -169,6 +172,8 @@ public class JechConfig {
                 case EnableFuzzyFinalIngToIn:
                     return EnumType.Boolean;
                 case EnableFuzzyFinalEngToEn:
+                    return EnumType.Boolean;
+                case EnableFuzzyFinalUToV:
                     return EnumType.Boolean;
             }
             return EnumType.Error;
@@ -218,7 +223,12 @@ public class JechConfig {
                             "blusunrize.lib.manual.ManualPages$Crafting:listForSearch",
                             "blusunrize.lib.manual.ManualPages$CraftingMulti:listForSearch",
                             "blusunrize.lib.manual.ManualPages$ItemDisplay:listForSearch",
-                            "blusunrize.lib.manual.gui.GuiManual:func_73869_a"
+                            "blusunrize.lib.manual.gui.GuiManual:func_73869_a",
+                            "betterquesting.client.gui.editors.GuiPrerequisiteEditor:RefreshSearch",
+                            "betterquesting.client.gui.editors.GuiQuestLineEditorB:RefreshSearch",
+                            "betterquesting.client.gui.editors.json.GuiJsonEntitySelection:updateSearch",
+                            "betterquesting.client.gui.editors.json.GuiJsonFluidSelection:doSearch",
+                            "betterquesting.client.gui.editors.json.GuiJsonItemSelection:doSearch"
                     };
                 case ListDefaultRegExpMatch:
                     return new String[]{
@@ -247,6 +257,8 @@ public class JechConfig {
                 case EnableFuzzyFinalIngToIn:
                     return false;
                 case EnableFuzzyFinalEngToEn:
+                    return false;
+                case EnableFuzzyFinalUToV:
                     return false;
             }
             return JechConfig.empty;
