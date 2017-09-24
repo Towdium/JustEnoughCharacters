@@ -43,8 +43,15 @@ public class StringMatcher {
 
     @SuppressWarnings("unused")
     public static Matcher checkReg(Pattern test, CharSequence name) {
-        if (containsChinese(name))
-            return checkChinese(name.toString(), test.toString()) ? p.matcher("a") : p.matcher("");
+        if (containsChinese(name)) {
+            String testS = test.toString();
+            String nameS = name.toString();
+            if (testS.startsWith(".*") && testS.endsWith(".*"))
+                testS = testS.substring(2, testS.length() - 2);
+            boolean ret = checkChinese(nameS, testS);
+            // JechCore.LOG.info("Test: " + testS + ", Name: " + nameS + ", Result: " + ret);
+            return ret ? p.matcher("a") : p.matcher("");
+        }
         else
             return test.matcher(name);
     }
