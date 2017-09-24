@@ -29,7 +29,11 @@
       "sonar.logistics.client.gui.GuiInventoryReader:getGridList",
       "sonar.logistics.client.gui.GuiWirelessStorageReader:getGridList",
       "binnie.core.machines.storage.SearchDialog:updateSearch",
-      "net.blay09.mods.cookingforblockheads.container.ContainerRecipeBook:search"
+      "net.blay09.mods.cookingforblockheads.container.ContainerRecipeBook:search",
+      "mcjty.rftools.blocks.storagemonitor.GuiStorageScanner:updateContentsList",
+      "mcjty.rftools.blocks.storagemonitor.StorageScannerTileEntity:lambda$null$20",
+      "mcjty.rftools.blocks.storagemonitor.StorageScannerTileEntity:lambda$makeSearchPredicate$24",
+      "mcjty.rftools.items.netmonitor.GuiNetworkMonitor:populateList"
     ],
     "regexp": [
       "appeng.client.me.ItemRepo:updateView",

@@ -197,7 +197,6 @@ public class JechConfig {
                             "com.zerofall.ezstorage.gui.client.GuiStorageCore:updateFilteredItems",
                             "io.github.elytra.copo.inventory.ContainerVT:updateSlots",
                             "io.github.elytra.copo.inventory.ContainerTerminal:updateSlots",
-                            "mcjty.rftools.blocks.storage.GuiModularStorage:updateList",
                             "net.minecraft.client.gui.inventory.GuiContainerCreative:updateFilteredItems",
                             "appeng.client.gui.implementation.GuiInterfaceTerminal:refreshList",
                             "appeng.client.gui.implementation.GuiInterfaceTerminal:itemStackMatchesSearchTerm",
@@ -207,7 +206,12 @@ public class JechConfig {
                             "sonar.logistics.client.gui.GuiFluidReader:getGridList",
                             "sonar.logistics.client.gui.GuiGuide:updateSearchList",
                             "sonar.logistics.client.gui.GuiInventoryReader:getGridList",
-                            "net.blay09.mods.cookingforblockheads.container.ContainerRecipeBook:search"
+                            "net.blay09.mods.cookingforblockheads.container.ContainerRecipeBook:search",
+                            "mcjty.rftools.blocks.storagemonitor.GuiStorageScanner:updateContentsList",
+                            "mcjty.rftools.blocks.storagemonitor.StorageScannerTileEntity:lambda$null$20",
+                            "mcjty.rftools.blocks.storagemonitor.StorageScannerTileEntity:lambda$makeSearchPredicate$24",
+                            "mcjty.rftools.items.netmonitor.GuiNetworkMonitor:populateList",
+                            "mcjty.rftools.blocks.storage.GuiModularStorage:updateList"
                     };
                 case ListDefaultRegExpMatch:
                     return new String[]{
