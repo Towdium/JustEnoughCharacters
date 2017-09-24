@@ -211,7 +211,8 @@ public class JechConfig {
                             "mcjty.rftools.blocks.storagemonitor.StorageScannerTileEntity:lambda$null$20",
                             "mcjty.rftools.blocks.storagemonitor.StorageScannerTileEntity:lambda$makeSearchPredicate$24",
                             "mcjty.rftools.items.netmonitor.GuiNetworkMonitor:populateList",
-                            "mcjty.rftools.blocks.storage.GuiModularStorage:updateList"
+                            "mcjty.rftools.blocks.storage.GuiModularStorage:updateList",
+                            "moze_intel.projecte.utils.ItemSearchHelper$DefaultSearch:doesItemMatchFilter_"
                     };
                 case ListDefaultRegExpMatch:
                     return new String[]{

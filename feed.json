@@ -33,7 +33,8 @@
       "mcjty.rftools.blocks.storagemonitor.GuiStorageScanner:updateContentsList",
       "mcjty.rftools.blocks.storagemonitor.StorageScannerTileEntity:lambda$null$20",
       "mcjty.rftools.blocks.storagemonitor.StorageScannerTileEntity:lambda$makeSearchPredicate$24",
-      "mcjty.rftools.items.netmonitor.GuiNetworkMonitor:populateList"
+      "mcjty.rftools.items.netmonitor.GuiNetworkMonitor:populateList",
+      "moze_intel.projecte.utils.ItemSearchHelper$DefaultSearch:doesItemMatchFilter_"
     ],
     "regexp": [
       "appeng.client.me.ItemRepo:updateView",
