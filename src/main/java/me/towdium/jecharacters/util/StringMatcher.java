@@ -25,7 +25,8 @@ import java.util.regex.Pattern;
 public class StringMatcher {
     static final HanyuPinyinOutputFormat FORMAT;
     static final Pattern p = Pattern.compile("a");
-    static boolean b;
+    public static boolean verbose = false;
+    static boolean sharedBoolean;
 
     static {
         FORMAT = new HanyuPinyinOutputFormat();
@@ -49,7 +50,6 @@ public class StringMatcher {
             if (testS.startsWith(".*") && testS.endsWith(".*"))
                 testS = testS.substring(2, testS.length() - 2);
             boolean ret = checkChinese(nameS, testS);
-            // JechCore.LOG.info("Test: " + testS + ", Name: " + nameS + ", Result: " + ret);
             return ret ? p.matcher("a") : p.matcher("");
         }
         else
@@ -59,10 +59,14 @@ public class StringMatcher {
     // s1.contains(s2)
     @SuppressWarnings("unused")
     public static boolean checkStr(String s1, CharSequence s2) {
-        if (containsChinese(s1))
-            return checkChinese(s1, s2.toString());
-        else
-            return s1.contains(s2);
+        boolean ret;
+
+        if (containsChinese(s1)) ret = checkChinese(s1, s2.toString());
+        else ret = s1.contains(s2);
+
+        if (verbose) JechCore.LOG.info("Full: " + s1 + ", Test: " + s2.toString() + ", -> " + sharedBoolean + '.');
+
+        return ret;
     }
 
     private static boolean isCharacter(int i) {
@@ -87,13 +91,11 @@ public class StringMatcher {
             b = s1.contains(s2);
         }
 
-        // JechCore.LOG.info("s1: " + s1 + ", s2: " + s2 + ", -> " + b + '.');
-
         return b;
     }
 
     private static boolean checkChinese(String s1, int start1, String s2, int start2) {
-        b = false;
+        sharedBoolean = false;
 
         if (start1 == s1.length()) {
             return true;
@@ -106,24 +108,24 @@ public class StringMatcher {
             int i = s1.length() - start1;
             s.foreach(j -> {
                 if (i == j) {
-                    b = true;
+                    sharedBoolean = true;
                     return false;
                 } else {
                     return true;
                 }
             });
-            return b;
+            return sharedBoolean;
         }
 
         s.foreach(i -> {
             if (checkChinese(s1, start1 + i, s2, start2 + 1)) {
-                b = true;
+                sharedBoolean = true;
                 return false;
             } else {
                 return true;
             }
         });
-        return b;
+        return sharedBoolean;
     }
 
     private static int strCmp(String a, String b, int aStart) {

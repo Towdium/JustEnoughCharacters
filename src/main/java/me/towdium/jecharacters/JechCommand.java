@@ -3,6 +3,7 @@ package me.towdium.jecharacters;
 import com.google.gson.GsonBuilder;
 import mcp.MethodsReturnNonnullByDefault;
 import me.towdium.jecharacters.util.Profiler;
+import me.towdium.jecharacters.util.StringMatcher;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
@@ -17,7 +18,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -91,6 +91,12 @@ public class JechCommand extends CommandBase {
             });
             t.setPriority(Thread.MIN_PRIORITY);
             t.run();
+        } else if (args.length == 2 && args[0].equals("verbose")) {
+            if (args[1].toLowerCase().equals("true"))
+                StringMatcher.verbose = true;
+            else if (args[1].toLowerCase().equals("true"))
+                StringMatcher.verbose = false;
+            else sender.sendMessage(new TextComponentTranslation("command.unknown"));
         } else {
             sender.sendMessage(new TextComponentTranslation("command.unknown"));
         }
@@ -99,13 +105,12 @@ public class JechCommand extends CommandBase {
     @Override
     public List<String> getTabCompletions(
             MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos targetPos) {
-        if (args.length == 1 && "profile".startsWith(args[0])) {
-            ArrayList<String> a = new ArrayList<>();
-            a.add("profile");
-            return a;
-        } else {
+        if (args.length == 1)
+            return getListOfStringsMatchingLastWord(args, "profile", "verbose");
+        else if (args.length == 2 && args[0].equals("verbose"))
+            return getListOfStringsMatchingLastWord(args, "true", "false");
+        else
             return Collections.emptyList();
-        }
     }
 
     @Override
