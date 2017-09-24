@@ -213,7 +213,12 @@ public class JechConfig {
                             "mcjty.rftools.items.netmonitor.GuiNetworkMonitor:populateList",
                             "mcjty.rftools.blocks.storage.GuiModularStorage:updateList",
                             "moze_intel.projecte.utils.ItemSearchHelper$DefaultSearch:doesItemMatchFilter_",
-                            "org.cyclops.integrateddynamics.core.client.gui.GuiTextFieldDropdown:func_146201_a"
+                            "org.cyclops.integrateddynamics.core.client.gui.GuiTextFieldDropdown:func_146201_a",
+                            "blusunrize.immersiveengineering.api.ManualPageBlueprint:listForSearch",
+                            "blusunrize.lib.manual.ManualPages$Crafting:listForSearch",
+                            "blusunrize.lib.manual.ManualPages$CraftingMulti:listForSearch",
+                            "blusunrize.lib.manual.ManualPages$ItemDisplay:listForSearch",
+                            "blusunrize.lib.manual.gui.GuiManual:func_73869_a"
                     };
                 case ListDefaultRegExpMatch:
                     return new String[]{
