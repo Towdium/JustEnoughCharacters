@@ -206,7 +206,8 @@ public class JechConfig {
                             "com.elytradev.correlated.inventory.ContainerTerminal:updateSlots",
                             "sonar.logistics.client.gui.GuiFluidReader:getGridList",
                             "sonar.logistics.client.gui.GuiGuide:updateSearchList",
-                            "sonar.logistics.client.gui.GuiInventoryReader:getGridList"
+                            "sonar.logistics.client.gui.GuiInventoryReader:getGridList",
+                            "net.blay09.mods.cookingforblockheads.container.ContainerRecipeBook:search"
                     };
                 case ListDefaultRegExpMatch:
                     return new String[]{

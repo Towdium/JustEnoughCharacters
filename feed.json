@@ -28,7 +28,8 @@
       "sonar.logistics.client.gui.GuiGuide:updateSearchList",
       "sonar.logistics.client.gui.GuiInventoryReader:getGridList",
       "sonar.logistics.client.gui.GuiWirelessStorageReader:getGridList",
-      "binnie.core.machines.storage.SearchDialog:updateSearch"
+      "binnie.core.machines.storage.SearchDialog:updateSearch",
+      "net.blay09.mods.cookingforblockheads.container.ContainerRecipeBook:search"
     ],
     "regexp": [
       "appeng.client.me.ItemRepo:updateView",
