@@ -212,12 +212,16 @@ public class JechConfig {
                             "mcjty.rftools.blocks.storagemonitor.StorageScannerTileEntity:lambda$makeSearchPredicate$24",
                             "mcjty.rftools.items.netmonitor.GuiNetworkMonitor:populateList",
                             "mcjty.rftools.blocks.storage.GuiModularStorage:updateList",
-                            "moze_intel.projecte.utils.ItemSearchHelper$DefaultSearch:doesItemMatchFilter_"
+                            "moze_intel.projecte.utils.ItemSearchHelper$DefaultSearch:doesItemMatchFilter_",
+                            "org.cyclops.integrateddynamics.core.client.gui.GuiTextFieldDropdown:func_146201_a"
                     };
                 case ListDefaultRegExpMatch:
                     return new String[]{
                             "appeng.client.me.ItemRepo:updateView",
-                            "codechicken.nei.ItemList$PatternItemFilter:matches"
+                            "codechicken.nei.ItemList$PatternItemFilter:matches",
+                            "org.cyclops.integrateddynamics.core.inventory.container.ContainerMultipartAspects$1:apply",
+                            "org.cyclops.integrateddynamics.inventory.container.ContainerLogicProgrammerBase$1:apply",
+                            "p455w0rd.wct.client.me.ItemRepo:updateView"
                     };
                 case ListDumpClass:
                     return new String[0];
