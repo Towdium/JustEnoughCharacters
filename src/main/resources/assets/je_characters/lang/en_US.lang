@@ -2,6 +2,6 @@ chat.start=Start profiling.
 chat.saved=Done! Output saved to logs/je_characters-profiler.txt.
 chat.saveError=Oops! An error occurred when writing the file.
 
-command.desc=/jech profile
+command.desc=/jech [profile] / [verbose true/false]
 command.unknown=Unknown command.
 command.syntaxError=Syntax error.

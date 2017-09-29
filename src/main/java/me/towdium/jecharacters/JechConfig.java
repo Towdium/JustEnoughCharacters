@@ -25,8 +25,8 @@ public class JechConfig {
     public static void preInit(File location) {
         config = new Configuration(new File(location, "config/JustEnoughCharacters.cfg"), JechCore.VERSION);
         config.load();
-        handleFormerVersion();
         initProperties();
+        handleFormerVersion();
         setValue();
         config.save();
         fetchOnline();
