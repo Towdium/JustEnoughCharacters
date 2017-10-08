@@ -62,6 +62,33 @@ call. If you are an experienced programmer, you can easily support other
 mods that is not currently supported. You are welcomed to notify me of
 these information.
 
+### For developers
+
+This mod provides no API currently, but there will be if there is need
+for this. I think most of people will do things in a `contains` way.
+So make your mod supported, all you need to do is letting me know the
+location of your `contains` call, then the method call will be transformed
+to my implementation that supports Chinese. Everything is done.
+
+To keep better compatibility, I would suggest not to let me transform
+`contains` called in lambda functions because this mod distinguish methods
+by function names and, as you know, the lambda functions have no name.
+More specifically, they have automatically generated names which could
+change at any time you modify the class. So a suggested way is wrap the
+calls into a static method, or whatever with a stable name. A good 
+example can be found in [code of Correlated][5], the method `contains`.
+
+If you want to know my implementation of `contains`, here is some words.
+It can handle any mixture of English and Chinese, nearly all of the 
+circumstances you could meet. For English-only strings, it will work 99%
+the same as the original implementation in JRE. If it's not the same,
+it should be considered a bug. 
+
+For performance, it has several times the cost of the original one
+for English-only strings, and even more time for strings containing
+Chinese characters. But after testing, it does not generate significant
+lag when used in JEI, so I it should be fine for most of the developers.
+
 ### Credits
 
 This repository contains a simplified version of pinyin4j as pinyin
@@ -78,3 +105,4 @@ Have fun!
 [2]: http://cf.way2muchnoise.eu/full_just-enough-characters_downloads.svg
 [3]: http://cf.way2muchnoise.eu/versions/just-enough-characters.svg
 [4]: https://github.com/Towdium/JustEnoughCharacters/blob/1.12.0/feed.json
+[5]: https://github.com/elytra/Correlated/blob/1.12.1/src/main/java/com/elytradev/correlated/C28n.java
