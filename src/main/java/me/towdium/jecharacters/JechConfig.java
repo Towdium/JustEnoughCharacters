@@ -228,7 +228,8 @@ public class JechConfig {
                             "betterquesting.client.gui.editors.GuiQuestLineEditorB:RefreshSearch",
                             "betterquesting.client.gui.editors.json.GuiJsonEntitySelection:updateSearch",
                             "betterquesting.client.gui.editors.json.GuiJsonFluidSelection:doSearch",
-                            "betterquesting.client.gui.editors.json.GuiJsonItemSelection:doSearch"
+                            "betterquesting.client.gui.editors.json.GuiJsonItemSelection:doSearch",
+                            "com.elytradev.correlated.C28n:contains"
                     };
                 case ListDefaultRegExpMatch:
                     return new String[]{
