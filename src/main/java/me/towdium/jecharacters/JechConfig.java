@@ -211,6 +211,8 @@ public class JechConfig {
                             "sonar.logistics.client.gui.GuiFluidReader:getGridList",
                             "sonar.logistics.client.gui.GuiGuide:updateSearchList",
                             "sonar.logistics.client.gui.GuiInventoryReader:getGridList",
+                            "sonar.logistics.client.gui.GuiWirelessStorageReader:getGridList",
+                            "binnie.core.machines.storage.SearchDialog:updateSearch",
                             "net.blay09.mods.cookingforblockheads.container.ContainerRecipeBook:search",
                             "mcjty.rftools.blocks.storagemonitor.GuiStorageScanner:updateContentsList",
                             "mcjty.rftools.blocks.storagemonitor.StorageScannerTileEntity:lambda$null$20",
@@ -229,7 +231,11 @@ public class JechConfig {
                             "betterquesting.client.gui.editors.json.GuiJsonEntitySelection:updateSearch",
                             "betterquesting.client.gui.editors.json.GuiJsonFluidSelection:doSearch",
                             "betterquesting.client.gui.editors.json.GuiJsonItemSelection:doSearch",
-                            "com.elytradev.correlated.C28n:contains"
+                            "com.elytradev.correlated.C28n:contains",
+                            "vswe.stevesfactory.components.ComponentMenuContainer$2:updateSearch",
+                            "vswe.stevesfactory.components.ComponentMenuFluid:updateSearch",
+                            "vswe.stevesfactory.components.ComponentMenuItem:updateSearch",
+                            "com.mia.props.client.container.GuiDecobench:refreshButtons"
                     };
                 case ListDefaultRegExpMatch:
                     return new String[]{

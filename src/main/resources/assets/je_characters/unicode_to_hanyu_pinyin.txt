@@ -3587,7 +3587,7 @@
 5C01 (feng1)
 5C02 (zhuan1)
 5C03 (fu1)
-5C04 (she4,shi2,ye4)
+5C04 (she4,ye4,yi4)
 5C05 (ke4)
 5C06 (jiang1,jiang4,qiang1)
 5C07 (jiang1,jiang4,qiang1)

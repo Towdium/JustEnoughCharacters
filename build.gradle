@@ -13,30 +13,31 @@ version = "${mc_version}-${proj_version}"
 group= "me.towdium.jecharacters"
 archivesBaseName = "jecharacters"
 
+//noinspection GroovyAssignabilityCheck
 tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'
 }
+
 compileJava {
     sourceCompatibility = targetCompatibility = '1.8'
 }
 
 minecraft {
-    version = "1.12.1-14.22.0.2474"
+    version = "1.12.2-14.23.1.2585"
     runDir = "run"
-    mappings = "snapshot_20170624"
+    mappings = "snapshot_20180101"
 
     replace '@VERSION@', project.version
 }
 
 dependencies {
-    compile "mezz.jei:jei_1.12:4.7.2.77"
+    compile "mezz.jei:jei_1.12.2:4.8.5.138"
     compile files('libs/old_lib_1.jar')
 }
 
 repositories {
-    maven {
-        url = "http://dvs1.progwml6.com/files/maven"
-    }
+    maven { url = "http://dvs1.progwml6.com/files/maven" }
+    maven { url = "modmaven.k-4u.nl" }
 }
 
 processResources {

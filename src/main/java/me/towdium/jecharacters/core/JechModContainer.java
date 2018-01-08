@@ -16,8 +16,8 @@ import java.util.Collections;
  * Author: Towdium
  * Date:   2016/9/4.
  */
-public class ModContainer extends DummyModContainer {
-    public ModContainer() {
+public class JechModContainer extends DummyModContainer {
+    public JechModContainer() {
         super(new ModMetadata());
         ModMetadata meta = getMetadata();
         meta.modId = "jecharacters";
@@ -42,7 +42,11 @@ public class ModContainer extends DummyModContainer {
     @Override
     public Class<?> getCustomResourcePackClass() {
         try {
-            return getSource().isDirectory() ? Class.forName("net.minecraftforge.fml.client.FMLFolderResourcePack", true, getClass().getClassLoader()) : Class.forName("net.minecraftforge.fml.client.FMLFileResourcePack", true, getClass().getClassLoader());
+            return getSource().isDirectory() ?
+                    Class.forName("net.minecraftforge.fml.client.FMLFolderResourcePack",
+                            true, getClass().getClassLoader()) :
+                    Class.forName("net.minecraftforge.fml.client.FMLFileResourcePack",
+                            true, getClass().getClassLoader());
         } catch (ClassNotFoundException e) {
             return null;
         }
