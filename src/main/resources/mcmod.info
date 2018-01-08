@@ -1,6 +1,6 @@
 [
 {
-  "modid": "je_characters",
+  "modid": "jecharacters",
   "name": "Just Enough Characters",
   "description": "Pinyin search for JEI and more",
   "version": "${version}",

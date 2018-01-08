@@ -1,23 +1,19 @@
-/**
- * This file is part of pinyin4j (http://sourceforge.net/projects/pinyin4j/) 
- * and distributed under GNU GENERAL PUBLIC LICENSE (GPL).
- * 
- * pinyin4j is free software; you can redistribute it and/or modify 
- * it under the terms of the GNU General Public License as published by 
- * the Free Software Foundation; either version 2 of the License, or 
- * (at your option) any later version. 
- * 
- * pinyin4j is distributed in the hope that it will be useful, 
- * but WITHOUT ANY WARRANTY; without even the implied warranty of 
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
- * GNU General Public License for more details. 
- * 
- * You should have received a copy of the GNU General Public License 
- * along with pinyin4j.
- */
+/*
+  This file is part of pinyin4j (http://sourceforge.net/projects/pinyin4j/)
+  and distributed under GNU GENERAL PUBLIC LICENSE (GPL).
 
-/**
- * 
+  pinyin4j is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  pinyin4j is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with pinyin4j.
  */
 package net.sourceforge.pinyin4j;
 
@@ -31,6 +27,7 @@ import java.util.Properties;
  * @author Li Min (xmlerlimin@gmail.com)
  * 
  */
+@SuppressWarnings("ALL")
 class ChineseToPinyinResource
 {
     /**
@@ -80,7 +77,7 @@ class ChineseToPinyinResource
     {
         try
         {
-            final String resourceName = "/assets/je_characters/unicode_to_hanyu_pinyin.txt";
+            final String resourceName = "/assets/jecharacters/unicode_to_hanyu_pinyin.txt";
 
             setUnicodeToHanyuPinyinTable(new Properties());
             getUnicodeToHanyuPinyinTable().load(ResourceHelper.getResourceInputStream(resourceName));
@@ -131,13 +128,9 @@ class ChineseToPinyinResource
     {
         final String noneStr = "(none0)";
 
-        if ((null != record) && !record.equals(noneStr)
+        return (null != record) && !record.equals(noneStr)
                 && record.startsWith(Field.LEFT_BRACKET)
-                && record.endsWith(Field.RIGHT_BRACKET))
-        {
-            return true;
-        } else
-            return false;
+                && record.endsWith(Field.RIGHT_BRACKET);
     }
 
     /**

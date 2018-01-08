@@ -12,6 +12,7 @@ import net.sourceforge.pinyin4j.format.HanyuPinyinToneType;
 import net.sourceforge.pinyin4j.format.HanyuPinyinVCharType;
 import net.sourceforge.pinyin4j.format.exception.BadHanyuPinyinOutputFormatCombination;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -27,7 +28,6 @@ public class StringMatcher {
     static final HanyuPinyinOutputFormat FORMAT;
     static final Pattern p = Pattern.compile("a");
     public static boolean verbose = false;
-    static boolean sharedBoolean;
 
     static {
         FORMAT = new HanyuPinyinOutputFormat();
@@ -53,8 +53,7 @@ public class StringMatcher {
                 testS = testS.substring(2, testS.length() - 2);
             boolean ret = checkChinese(nameS, testS);
             return ret ? p.matcher("a") : p.matcher("");
-        }
-        else
+        } else
             return test.matcher(name);
     }
 
@@ -66,7 +65,7 @@ public class StringMatcher {
         if (containsChinese(s1)) ret = checkChinese(s1, s2.toString());
         else ret = s1.contains(s2);
 
-        if (verbose) JechCore.LOG.info("Full: " + s1 + ", Test: " + s2.toString() + ", -> " + sharedBoolean + '.');
+        if (verbose) JechCore.LOG.info("Full: " + s1 + ", Test: " + s2.toString() + ", -> " + ret + '.');
 
         return ret;
     }
@@ -97,45 +96,21 @@ public class StringMatcher {
     }
 
     private static boolean checkChinese(String s1, int start1, String s2, int start2) {
-        sharedBoolean = false;
-
-        if (start1 == s1.length()) {
-            return true;
-        }
+        if (start1 == s1.length()) return true;
 
         CharRep r = CharRep.get(s2.charAt(start2));
         IndexSet s = r.match(s1, start1);
 
         if (start2 == s2.length() - 1) {
             int i = s1.length() - start1;
-            s.foreach(j -> {
-                if (i == j) {
-                    sharedBoolean = true;
-                    return false;
-                } else {
-                    return true;
-                }
-            });
-            return sharedBoolean;
-        } else {
-            s.foreach(i -> {
-                if (checkChinese(s1, start1 + i, s2, start2 + 1)) {
-                    sharedBoolean = true;
-                    return false;
-                } else {
-                    return true;
-                }
-            });
-            return sharedBoolean;
-        }
+            return !s.foreach(j -> i != j);
+        } else return !s.foreach(i -> !checkChinese(s1, start1 + i, s2, start2 + 1));
     }
 
     private static int strCmp(String a, String b, int aStart) {
         int len = Math.min(a.length() - aStart, b.length());
-        for (int i = 0; i < len; i++) {
-            if (a.charAt(i + aStart) != b.charAt(i))
-                return i;
-        }
+        for (int i = 0; i < len; i++)
+            if (a.charAt(i + aStart) != b.charAt(i)) return i;
         return len;
     }
 
@@ -145,11 +120,8 @@ public class StringMatcher {
 
     private interface CharRep {
         static CharRep get(Character ch) {
-            if (isCharacter(ch)) {
-                return CharRepMul.get(ch);
-            } else {
-                return CharRepSin.get(ch);
-            }
+            if (isCharacter(ch)) return CharRepMul.get(ch);
+            else return CharRepSin.get(ch);
         }
 
         IndexSet match(String str, int start);
@@ -204,8 +176,9 @@ public class StringMatcher {
                 return p;
             }
 
-            if (pinyin == null)
-                return p;
+            if (pinyin == null) return p;
+            for (String s : pinyin)
+                if (s == null) return p;
 
             HashSet<String> set = new HashSet<>();
             Collections.addAll(set, pinyin);
@@ -230,6 +203,7 @@ public class StringMatcher {
                 .maximumWeight(16).weigher((Weigher<String, PinyinPattern>) (key, value) -> 1)
                 .build(new CacheLoader<String, PinyinPattern>() {
                     @Override
+                    @ParametersAreNonnullByDefault
                     public PinyinPattern load(String str) {
                         return new PinyinPattern(str);
                     }
@@ -252,7 +226,6 @@ public class StringMatcher {
         public IndexSet match(String str, int start) {
             IndexSet ret = fInitial.match(str, start);
             new IndexSet(ret.value).foreach(i -> {
-
                 fFinal.match(str, start + i).foreach(j -> {
                     ret.set(i + j);
                     return true;
@@ -276,6 +249,7 @@ public class StringMatcher {
                             .weigher((Weigher<String, FuzzyMatcher>) (key, value) -> 1)
                             .build(new CacheLoader<String, FuzzyMatcher>() {
                                 @Override
+                                @ParametersAreNonnullByDefault
                                 public FuzzyMatcher load(String str) {
                                     return new FuzzyMatcher(str);
                                 }
@@ -309,10 +283,8 @@ public class StringMatcher {
                 IndexSet ret = new IndexSet();
                 for (String str : set) {
                     int size = strCmp(s, str, i);
-                    if (i + size == s.length())
-                        ret.set(size);
-                    if (size == str.length())
-                        ret.set(size);
+                    if (i + size == s.length()) ret.set(size);  // ending match
+                    else if (size == str.length()) ret.set(size);  // full match
                 }
                 return ret;
             }
@@ -354,15 +326,13 @@ public class StringMatcher {
             value |= s.value;
         }
 
-        private void foreach(Predicate<Integer> p) {
+        private boolean foreach(Predicate<Integer> p) {
             int v = value;
             for (int i = 1; i < 8; i++) {
-                if ((v & 0x1) == 0x1) {
-                    if (!p.test(i))
-                        break;
-                }
+                if ((v & 0x1) == 0x1 && !p.test(i)) return false;
                 v >>= 1;
             }
+            return true;
         }
     }
 }
