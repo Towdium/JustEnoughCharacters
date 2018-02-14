@@ -235,7 +235,8 @@ public class JechConfig {
                             "vswe.stevesfactory.components.ComponentMenuContainer$2:updateSearch",
                             "vswe.stevesfactory.components.ComponentMenuFluid:updateSearch",
                             "vswe.stevesfactory.components.ComponentMenuItem:updateSearch",
-                            "com.mia.props.client.container.GuiDecobench:refreshButtons"
+                            "com.mia.props.client.container.GuiDecobench:refreshButtons",
+                            "mrriegel.storagenetwork.gui.GuiRequest:match"
                     };
                 case ListDefaultRegExpMatch:
                     return new String[]{
