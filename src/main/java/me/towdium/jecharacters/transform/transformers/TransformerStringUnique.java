@@ -44,19 +44,15 @@ public class TransformerStringUnique implements Transformer.Extended {
         if (!methods.isEmpty()) {
             List<MethodNode> s = n.methods.stream().filter(methodNode -> methods.contains(methodNode.name))
                     .collect(Collectors.toList());
-
-            if (s.isEmpty()) {
+            if (!s.isEmpty())
                 s.forEach(methodNode ->
                         Transformer.transformInvoke(
                                 methodNode, "java/lang/String", "contains", "me/towdium/jecharacters/util/StringMatcher",
                                 "checkStr", "(Ljava/lang/String;Ljava/lang/CharSequence;)Z", false, Opcodes.INVOKESTATIC,
                                 "(Ljava/lang/Object;)Z", "(Ljava/lang/String;)Z"
-                        )
-                );
-            } else {
+                        ));
+            else
                 JechCore.LOG.info("No function matched in class " + n.name);
-            }
-
         }
     }
 }
