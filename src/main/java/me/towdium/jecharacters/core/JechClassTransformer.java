@@ -14,7 +14,7 @@ public class JechClassTransformer implements IClassTransformer {
     @Override
     public byte[] transform(String s, String s1, byte[] bytes) {
         if (JechCore.INITIALIZED) {
-            for (Transformer t : TransformerRegistry.getTransformer(s1))
+            for (Transformer t : TransformerRegistry.getTransformer(s))
                 bytes = t.transform(bytes);
             return bytes;
         } else {

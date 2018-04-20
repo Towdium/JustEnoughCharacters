@@ -21,6 +21,7 @@
       "com.elytradev.correlated.inventory.ContainerTerminal:updateSlots",
       "mcjty.rftools.blocks.storage.GuiModularStorage:updateList",
       "net.minecraft.client.gui.inventory.GuiContainerCreative:updateFilteredItems",
+      "bmp:updateFilteredItems",
       "appeng.client.gui.implementation.GuiInterfaceTerminal:refreshList",
       "appeng.client.gui.implementation.GuiInterfaceTerminal:itemStackMatchesSearchTerm",
       "pers.towdium.just_enough_calculation.gui.guis.GuiPicker:updateLayout",

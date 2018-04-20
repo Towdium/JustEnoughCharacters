@@ -23,15 +23,15 @@ compileJava {
 }
 
 minecraft {
-    version = "1.12.2-14.23.1.2585"
+    version = "1.12.2-14.23.3.2669"
     runDir = "run"
-    mappings = "snapshot_20180101"
+    mappings = "snapshot_20180410"
 
     replace '@VERSION@', project.version
 }
 
 dependencies {
-    compile "mezz.jei:jei_1.12.2:4.8.5.138"
+    compile "mezz.jei:jei_1.12.2:4.8.6.162"
     compile files('libs/old_lib_1.jar')
 }
 

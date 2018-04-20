@@ -2,7 +2,6 @@ package me.towdium.jecharacters.transform;
 
 import com.google.common.collect.HashMultimap;
 import me.towdium.jecharacters.core.JechCore;
-import me.towdium.jecharacters.util.Wrapper;
 import org.objectweb.asm.*;
 import org.objectweb.asm.tree.*;
 
@@ -17,27 +16,31 @@ import java.util.Set;
  */
 @SuppressWarnings("SameParameterValue")
 public interface Transformer {
-    Wrapper<MethodNode> methodNode = new Wrapper<>(null);
 
     static Optional<MethodNode> findMethod(ClassNode c, String name) {
-        methodNode.v = null;
-        c.methods.stream().filter(methodNode -> methodNode.name.equals(name))
-                .forEach(methodNode -> Transformer.methodNode.v = methodNode);
-        return Optional.ofNullable(methodNode.v);
+        Optional<MethodNode> ret = c.methods.stream().filter(methodNode -> methodNode.name.equals(name))
+                .findFirst();
+        String s = ret.isPresent() ? "," : ", not";
+        JechCore.LOG.info("Finding method " + name + " in class " + c.name + s + " found.");
+        return ret;
     }
 
     static Optional<MethodNode> findMethod(ClassNode c, String name, String desc) {
-        methodNode.v = null;
-        c.methods.stream().filter(methodNode -> methodNode.name.equals(name))
-                .filter(methodNode -> methodNode.desc.equals(desc))
-                .forEach(methodNode -> Transformer.methodNode.v = methodNode);
-        return Optional.ofNullable(methodNode.v);
+        Optional<MethodNode> ret = c.methods.stream().filter(methodNode -> methodNode.name.equals(name))
+                .filter(methodNode -> methodNode.desc.equals(desc)).findFirst();
+        String s = ret.isPresent() ? "," : ", not";
+        JechCore.LOG.info("Finding method " + name + desc + " in class " + c.name + s + " found.");
+        return ret;
     }
 
     static boolean transformInvoke(
             MethodNode methodNode, String owner, String name, String newOwner, String newName,
             String id, boolean isInterface, int op, @Nullable String arg1, @Nullable String arg2) {
+        JechCore.LOG.info("Transforming invoke of " + owner + "." + name +
+                " to " + newOwner + "." + newName + " in method " + methodNode.name + ".");
+
         Iterator<AbstractInsnNode> iterator = methodNode.instructions.iterator();
+
         boolean ret = false;
         while (iterator.hasNext()) {
             AbstractInsnNode node = iterator.next();
@@ -67,7 +70,10 @@ public interface Transformer {
     }
 
     static void transformConstruct(MethodNode methodNode, String desc, String destNew) {
+        JechCore.LOG.info("Transforming constructor of " + desc +
+                " to " + destNew + " in method " + methodNode.name + ".");
         Iterator<AbstractInsnNode> i = methodNode.instructions.iterator();
+        int cnt = 0;
         while (i.hasNext()) {
             AbstractInsnNode node = i.next();
             if (node.getOpcode() == Opcodes.NEW) {
@@ -75,6 +81,7 @@ public interface Transformer {
                 if (nodeNew.desc.equals(desc)) {
                     // JechCore.LOG.info("Transforming new " + desc);
                     nodeNew.desc = destNew;
+                    cnt++;
                 }
             } else if (node.getOpcode() == Opcodes.INVOKESPECIAL) {
                 MethodInsnNode nodeNew = ((MethodInsnNode) node);
@@ -84,6 +91,7 @@ public interface Transformer {
                 }
             }
         }
+        JechCore.LOG.info("Transformed " + cnt + " occurrences.");
     }
 
     static void transformHook(MethodNode methodNode, String owner, String name, String id) {

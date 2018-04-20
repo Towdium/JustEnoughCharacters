@@ -156,7 +156,7 @@ public class StringMatcher {
             }
         }
 
-        private ArrayList<CharPattern> patterns = new ArrayList<>();
+        private CharPattern[] patterns = new CharPattern[0];
 
         private CharRepMul() {
         }
@@ -167,7 +167,8 @@ public class StringMatcher {
 
         private static CharRepMul genRep(Character ch) {
             CharRepMul p = new CharRepMul();
-            p.patterns.add(new RawPattern(ch));
+            ArrayList<CharPattern> patterns = new ArrayList<>();
+            patterns.add(new RawPattern(ch));
             String[] pinyin;
             try {
                 pinyin = PinyinHelper.toHanyuPinyinStringArray(ch, FORMAT);
@@ -185,15 +186,17 @@ public class StringMatcher {
 
             for (String s : set) {
                 if (s != null)
-                    p.patterns.add(PinyinPattern.get(s));
+                    patterns.add(PinyinPattern.get(s));
             }
+            p.patterns = patterns.toArray(p.patterns);
             return p;
         }
 
         @Override
         public IndexSet match(String str, int start) {
             IndexSet ret = new IndexSet();
-            patterns.forEach(pat -> ret.merge(pat.match(str, start)));
+            for (CharPattern p : patterns)
+                ret.merge(p.match(str, start));
             return ret;
         }
     }

@@ -203,6 +203,7 @@ public class JechConfig {
                             "io.github.elytra.copo.inventory.ContainerVT:updateSlots",
                             "io.github.elytra.copo.inventory.ContainerTerminal:updateSlots",
                             "net.minecraft.client.gui.inventory.GuiContainerCreative:updateFilteredItems",
+                            "bmp:updateFilteredItems",
                             "appeng.client.gui.implementation.GuiInterfaceTerminal:refreshList",
                             "appeng.client.gui.implementation.GuiInterfaceTerminal:itemStackMatchesSearchTerm",
                             "pers.towdium.just_enough_calculation.gui.guis.GuiPicker:updateLayout",

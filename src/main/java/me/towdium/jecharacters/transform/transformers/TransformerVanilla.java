@@ -1,12 +1,17 @@
 package me.towdium.jecharacters.transform.transformers;
 
+import mcp.MethodsReturnNonnullByDefault;
 import me.towdium.jecharacters.core.JechCore;
 import me.towdium.jecharacters.transform.Transformer;
 import me.towdium.jecharacters.util.CachedFilter;
 import net.minecraft.client.util.SuffixArray;
 import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.MethodNode;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.Consumer;
 
 /**
  * Author: towdium
@@ -20,20 +25,23 @@ public class TransformerVanilla implements Transformer.Extended {
     @Override
     public void transform(ClassNode n) {
         JechCore.LOG.info("Transforming vanilla SearchTree.");
-        Transformer.findMethod(n, "<init>").ifPresent(m ->
-                Transformer.transformConstruct(m, "net/minecraft/client/util/SuffixArray",
-                        "me/towdium/jecharacters/transform/transformers/TransformerVanilla$FakeSuffixArray"));
-        Transformer.findMethod(n, "recalculate", "()V").ifPresent(m ->
-                Transformer.transformConstruct(m, "net/minecraft/client/util/SuffixArray",
-                        "me/towdium/jecharacters/transform/transformers/TransformerVanilla$FakeSuffixArray"));
-        Transformer.findMethod(n, "<init>").ifPresent(m ->
-                Transformer.transformConstruct(m, "cgx",
-                        "me/towdium/jecharacters/transform/transformers/TransformerVanilla$FakeSuffixArray"));
-        Transformer.findMethod(n, "a", "()V").ifPresent(m ->
-                Transformer.transformConstruct(m, "cgx",
-                        "me/towdium/jecharacters/transform/transformers/TransformerVanilla$FakeSuffixArray"));
+        Optional<MethodNode> n1 = Transformer.findMethod(n, "<init>");
+        Optional<MethodNode> n2 = Transformer.findMethod(n, "recalculate", "()V").map(Optional::of)
+                .orElseGet(() -> Transformer.findMethod(n, "a", "()V"));
+        Consumer<MethodNode> c = m -> {
+            Transformer.transformConstruct(m, "net/minecraft/client/util/SuffixArray",
+                    "me/towdium/jecharacters/transform/transformers/TransformerVanilla$FakeSuffixArray");
+            Transformer.transformConstruct(m, "cgx",
+                    "me/towdium/jecharacters/transform/transformers/TransformerVanilla$FakeSuffixArray");
+            Transformer.transformConstruct(m, "cgz",
+                    "me/towdium/jecharacters/transform/transformers/TransformerVanilla$FakeSuffixArray");
+        };
+        n1.ifPresent(c);
+        n2.ifPresent(c);
     }
 
+    @ParametersAreNonnullByDefault
+    @MethodsReturnNonnullByDefault
     public static class FakeSuffixArray<T> extends SuffixArray<T> {
         CachedFilter<T> filter;
 
