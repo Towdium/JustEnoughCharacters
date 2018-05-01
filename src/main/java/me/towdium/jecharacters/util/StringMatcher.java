@@ -103,7 +103,7 @@ public class StringMatcher {
 
         if (start2 == s2.length() - 1) {
             int i = s1.length() - start1;
-            return !s.foreach(j -> i != j);
+            return s.get(i);
         } else return !s.foreach(i -> !checkChinese(s1, start1 + i, s2, start2 + 1));
     }
 
@@ -169,6 +169,7 @@ public class StringMatcher {
             CharRepMul p = new CharRepMul();
             ArrayList<CharPattern> patterns = new ArrayList<>();
             patterns.add(new RawPattern(ch));
+            p.patterns = patterns.toArray(p.patterns);
             String[] pinyin;
             try {
                 pinyin = PinyinHelper.toHanyuPinyinStringArray(ch, FORMAT);
@@ -176,13 +177,11 @@ public class StringMatcher {
                 JechCore.LOG.warn("Exception when generating pattern for \"" + ch + "\"");
                 return p;
             }
-
             if (pinyin == null) return p;
-            for (String s : pinyin)
-                if (s == null) return p;
 
             HashSet<String> set = new HashSet<>();
-            Collections.addAll(set, pinyin);
+            for (String s : pinyin)
+                if (s != null) set.add(s);
 
             for (String s : set) {
                 if (s != null)
@@ -258,9 +257,10 @@ public class StringMatcher {
                                 }
                             });
 
-            private HashSet<String> set = new HashSet<>();
+            private String[] set;
 
             private FuzzyMatcher(String s) {
+                HashSet<String> set = new HashSet<>();
                 set.add(s);
 
                 if (ch2c && s.startsWith("c")) Collections.addAll(set, "c", "ch");
@@ -276,6 +276,7 @@ public class StringMatcher {
                         || (s.endsWith("en") && eng2en)
                         || (s.endsWith("in") && ing2in))
                     set.add(s + 'g');
+                this.set = set.toArray(new String[0]);
             }
 
             static FuzzyMatcher get(String s) {
@@ -320,16 +321,21 @@ public class StringMatcher {
             this.value = value;
         }
 
-        private void set(int index) {
+        public void set(int index) {
             int i = 0x1 << (index - 1);
             this.value |= i;
         }
 
-        private void merge(IndexSet s) {
+        public boolean get(int index) {
+            int i = 0x1 << (index - 1);
+            return (value & i) != 0;
+        }
+
+        public void merge(IndexSet s) {
             value |= s.value;
         }
 
-        private boolean foreach(Predicate<Integer> p) {
+        public boolean foreach(Predicate<Integer> p) {
             int v = value;
             for (int i = 1; i < 8; i++) {
                 if ((v & 0x1) == 0x1 && !p.test(i)) return false;
