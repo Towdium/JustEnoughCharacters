@@ -53,9 +53,9 @@ public class TransformerJei implements Transformer.Extended {
         public TIntSet search(String word) {
             StackTraceElement[] t = Thread.currentThread().getStackTrace();
             String func = t[2].getMethodName();
-            //JechCore.LOG.info("Searching: " + word + ", from trace: " + func);
-            return func.equals("findMatchingElements") || func.equals("removeIngredient") ?
-                    super.search(word) : new TIntHashSet(cf.search(word));
+            // JechCore.LOG.info("Searching: " + word + ", from trace: " + func);
+            return func.equals("getSearchResults") || func.equals("search") ?
+                    new TIntHashSet(cf.search(word)) : super.search(word);
         }
 
         public void put(String key, int index) throws IllegalStateException {
