@@ -40,6 +40,7 @@ public class CachedFilter<T> {
                     });
 
     public ArrayList<T> search(String word) {
+        //JechCore.LOG.info("Searching iterate: " + word);
         ImmutableList<Entry> list = filteredItemMapsCache.getUnchecked(word.toLowerCase());
         ArrayList<T> ret = new ArrayList<>(1000);
         list.forEach((entry -> ret.add(entry.value)));

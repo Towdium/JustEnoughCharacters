@@ -52,7 +52,9 @@ public class TransformerJei implements Transformer.Extended {
 
         public TIntSet search(String word) {
             StackTraceElement[] t = Thread.currentThread().getStackTrace();
-            return t[2].getMethodName().equals("findMatchingElements") ?
+            String func = t[2].getMethodName();
+            //JechCore.LOG.info("Searching: " + word + ", from trace: " + func);
+            return func.equals("findMatchingElements") || func.equals("removeIngredient") ?
                     super.search(word) : new TIntHashSet(cf.search(word));
         }
 
