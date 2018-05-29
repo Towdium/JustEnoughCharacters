@@ -8,9 +8,13 @@ import net.minecraftforge.fml.common.DummyModContainer;
 import net.minecraftforge.fml.common.LoadController;
 import net.minecraftforge.fml.common.ModMetadata;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
+import net.minecraftforge.fml.common.versioning.ArtifactVersion;
+import net.minecraftforge.fml.common.versioning.DefaultArtifactVersion;
+import net.minecraftforge.fml.common.versioning.VersionParser;
 
 import java.io.File;
 import java.util.Collections;
+import java.util.List;
 
 /**
  * Author: Towdium
@@ -26,6 +30,11 @@ public class JechModContainer extends DummyModContainer {
         meta.authorList = Collections.singletonList("Towdium");
         meta.description = "Help JEI read Pinyin";
         meta.url = "https://minecraft.curseforge.com/projects/just-enough-characters";
+    }
+
+    @Override
+    public List<ArtifactVersion> getDependencies() {
+        return Collections.singletonList(new DefaultArtifactVersion("jei", VersionParser.parseRange("[4.9.2,)")));
     }
 
     @Override
