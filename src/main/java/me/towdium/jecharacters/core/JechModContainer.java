@@ -9,7 +9,6 @@ import net.minecraftforge.fml.common.LoadController;
 import net.minecraftforge.fml.common.ModMetadata;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import net.minecraftforge.fml.common.versioning.ArtifactVersion;
-import net.minecraftforge.fml.common.versioning.DefaultArtifactVersion;
 import net.minecraftforge.fml.common.versioning.VersionParser;
 
 import java.io.File;
@@ -34,7 +33,7 @@ public class JechModContainer extends DummyModContainer {
 
     @Override
     public List<ArtifactVersion> getDependencies() {
-        return Collections.singletonList(new DefaultArtifactVersion("jei", VersionParser.parseRange("[4.9.2,)")));
+        return Collections.singletonList(VersionParser.parseVersionReference("jei@[4.9.2,)"));
     }
 
     @Override
