@@ -3,7 +3,6 @@ package me.towdium.jecharacters.util;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.google.common.cache.Weigher;
 import me.towdium.jecharacters.JechConfig;
 import me.towdium.jecharacters.core.JechCore;
 import net.sourceforge.pinyin4j.PinyinHelper;
@@ -202,7 +201,6 @@ public class StringMatcher {
 
     private static class PinyinPattern implements CharPattern {
         private static LoadingCache<String, PinyinPattern> cache = CacheBuilder.newBuilder().concurrencyLevel(1)
-                .maximumWeight(16).weigher((Weigher<String, PinyinPattern>) (key, value) -> 1)
                 .build(new CacheLoader<String, PinyinPattern>() {
                     @Override
                     @ParametersAreNonnullByDefault
@@ -246,16 +244,14 @@ public class StringMatcher {
             private static boolean eng2en = JechConfig.EnumItems.EnableFuzzyFinalEngToEn.getProperty().getBoolean();
             private static boolean v2u = JechConfig.EnumItems.EnableFuzzyFinalUToV.getProperty().getBoolean();
 
-            private static LoadingCache<String, FuzzyMatcher> cache =
-                    CacheBuilder.newBuilder().concurrencyLevel(1).maximumWeight(16)
-                            .weigher((Weigher<String, FuzzyMatcher>) (key, value) -> 1)
-                            .build(new CacheLoader<String, FuzzyMatcher>() {
-                                @Override
-                                @ParametersAreNonnullByDefault
-                                public FuzzyMatcher load(String str) {
-                                    return new FuzzyMatcher(str);
-                                }
-                            });
+            private static LoadingCache<String, FuzzyMatcher> cache = CacheBuilder.newBuilder().concurrencyLevel(1)
+                    .build(new CacheLoader<String, FuzzyMatcher>() {
+                        @Override
+                        @ParametersAreNonnullByDefault
+                        public FuzzyMatcher load(String str) {
+                            return new FuzzyMatcher(str);
+                        }
+                    });
 
             private String[] set;
 
