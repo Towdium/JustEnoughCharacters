@@ -3,7 +3,6 @@ package me.towdium.jecharacters.util;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import me.towdium.jecharacters.JechConfig;
 import me.towdium.jecharacters.core.JechCore;
 import net.sourceforge.pinyin4j.PinyinHelper;
 import net.sourceforge.pinyin4j.format.HanyuPinyinOutputFormat;
@@ -27,6 +26,15 @@ public class StringMatcher {
     static final HanyuPinyinOutputFormat FORMAT;
     static final Pattern p = Pattern.compile("a");
     public static boolean verbose = false;
+
+    private static enumKeyboard keyboard = enumKeyboard.DAQIAN;
+    private static boolean zh2z = false;
+    private static boolean sh2s = false;
+    private static boolean ch2c = false;
+    private static boolean ing2in = false;
+    private static boolean ang2an = false;
+    private static boolean eng2en = false;
+    private static boolean v2u = false;
 
     static {
         FORMAT = new HanyuPinyinOutputFormat();
@@ -67,6 +75,38 @@ public class StringMatcher {
         if (verbose) JechCore.LOG.info("Full: " + s1 + ", Test: " + s2.toString() + ", -> " + ret + '.');
 
         return ret;
+    }
+
+    public static void setKeyboard(enumKeyboard keyboard) {
+        StringMatcher.keyboard = keyboard;
+    }
+
+    public static void setZh2z(boolean zh2z) {
+        StringMatcher.zh2z = zh2z;
+    }
+
+    public static void setSh2s(boolean sh2s) {
+        StringMatcher.sh2s = sh2s;
+    }
+
+    public static void setCh2c(boolean ch2c) {
+        StringMatcher.ch2c = ch2c;
+    }
+
+    public static void setIng2in(boolean ing2in) {
+        StringMatcher.ing2in = ing2in;
+    }
+
+    public static void setAng2an(boolean ang2an) {
+        StringMatcher.ang2an = ang2an;
+    }
+
+    public static void setEng2en(boolean eng2en) {
+        StringMatcher.eng2en = eng2en;
+    }
+
+    public static void setV2u(boolean v2u) {
+        StringMatcher.v2u = v2u;
     }
 
     private static boolean isCharacter(int i) {
@@ -117,6 +157,37 @@ public class StringMatcher {
         IndexSet match(String str, int start);
     }
 
+    public enum enumKeyboard {
+        QUANPIN, DAQIAN;
+
+        String[] separate(String s) {
+            if (this == DAQIAN) {
+                String str = Mappings.PHONETIC_SPELL.get(s);
+                if (str != null) s = str;
+            }
+
+            if (s.startsWith("a") || s.startsWith("e") || s.startsWith("i")
+                    || s.startsWith("o") || s.startsWith("u")) {
+                return new String[]{"", s, ""};
+            } else {
+                int i = s.length() > 2 && s.charAt(1) == 'h' ? 2 : 1;
+                return new String[]{s.substring(0, i), s.substring(i), ""};
+            }
+        }
+
+        String keys(String s) {
+            if (this == QUANPIN) return s;
+            else {
+                String symbol = Mappings.PHONETIC_SYMBOL.get(s);
+                if (symbol == null)
+                    throw new RuntimeException("Unrecognized element: " + s);
+                StringBuilder builder = new StringBuilder();
+                for (char c : symbol.toCharArray()) builder.append(Mappings.KEYBOARD_DAQIAN.get(c));
+                return builder.toString();
+            }
+        }
+    }
+
     private interface CharRep {
         static CharRep get(Character ch) {
             if (isCharacter(ch)) return CharRepMul.get(ch);
@@ -140,7 +211,7 @@ public class StringMatcher {
 
         @Override
         public IndexSet match(String str, int start) {
-            return str.charAt(start) == ch ? IndexSet.ONE : IndexSet.ZERO;
+            return str.charAt(start) == ch ? IndexSet.ONE : IndexSet.NONE;
         }
     }
 
@@ -208,84 +279,77 @@ public class StringMatcher {
                         return new PinyinPattern(str);
                     }
                 });
-        private FuzzyMatcher fInitial;
-        private FuzzyMatcher fFinal;
 
-        private PinyinPattern(String str) {
-            int size = str.length() >= 2 && str.charAt(1) == 'h' ? 2 : 1;
-
-            fInitial = FuzzyMatcher.get(str.substring(0, size));
-            fFinal = FuzzyMatcher.get(str.substring(size));
-        }
+        private ElementPattern initial;
+        private ElementPattern finale;
+        private ElementPattern tone;
 
         static PinyinPattern get(String str) {
             return cache.getUnchecked(str);
         }
 
+        public PinyinPattern(String str) {
+            String[] elements = keyboard.separate(str);
+            initial = ElementPattern.get(elements[0]);
+            finale = ElementPattern.get(elements[1]);
+            tone = ElementPattern.get(elements[2]);
+        }
+
         @Override
         public IndexSet match(String str, int start) {
-            IndexSet ret = fInitial.match(str, start);
-            new IndexSet(ret.value).foreach(i -> {
-                fFinal.match(str, start + i).foreach(j -> {
-                    ret.set(i + j);
-                    return true;
-                });
-                return true;
-            });
+            IndexSet ret = new IndexSet(0x1);
+            ret = initial.match(str, ret, start);
+            ret.merge(finale.match(str, ret, start));
+            ret = tone.match(str, ret, start);
             return ret;
         }
 
-        private static class FuzzyMatcher {
-            private static boolean zh2z = JechConfig.EnumItems.EnableFuzzyInitialZhToZ.getProperty().getBoolean();
-            private static boolean sh2s = JechConfig.EnumItems.EnableFuzzyInitialShToS.getProperty().getBoolean();
-            private static boolean ch2c = JechConfig.EnumItems.EnableFuzzyInitialChToC.getProperty().getBoolean();
-            private static boolean ing2in = JechConfig.EnumItems.EnableFuzzyFinalIngToIn.getProperty().getBoolean();
-            private static boolean ang2an = JechConfig.EnumItems.EnableFuzzyFinalAngToAn.getProperty().getBoolean();
-            private static boolean eng2en = JechConfig.EnumItems.EnableFuzzyFinalEngToEn.getProperty().getBoolean();
-            private static boolean v2u = JechConfig.EnumItems.EnableFuzzyFinalUToV.getProperty().getBoolean();
-
-            private static LoadingCache<String, FuzzyMatcher> cache = CacheBuilder.newBuilder().concurrencyLevel(1)
-                    .build(new CacheLoader<String, FuzzyMatcher>() {
+        static private class ElementPattern {
+            private static LoadingCache<String, ElementPattern> cache = CacheBuilder.newBuilder().concurrencyLevel(1)
+                    .build(new CacheLoader<String, ElementPattern>() {
                         @Override
                         @ParametersAreNonnullByDefault
-                        public FuzzyMatcher load(String str) {
-                            return new FuzzyMatcher(str);
+                        public ElementPattern load(String str) {
+                            return new ElementPattern(str);
                         }
                     });
 
-            private String[] set;
+            String[] strs;
 
-            private FuzzyMatcher(String s) {
-                HashSet<String> set = new HashSet<>();
-                set.add(s);
+            public ElementPattern(String s) {
+                HashSet<String> ret = new HashSet<>();
+                ret.add(s);
 
-                if (ch2c && s.startsWith("c")) Collections.addAll(set, "c", "ch");
-                if (sh2s && s.startsWith("s")) Collections.addAll(set, "s", "sh");
-                if (zh2z && s.startsWith("z")) Collections.addAll(set, "z", "zh");
+                if (ch2c && s.startsWith("c")) Collections.addAll(ret, "c", "ch");
+                if (sh2s && s.startsWith("s")) Collections.addAll(ret, "s", "sh");
+                if (zh2z && s.startsWith("z")) Collections.addAll(ret, "z", "zh");
                 if (v2u && s.startsWith("v"))
-                    set.add("u" + s.substring(1));
+                    ret.add("u" + s.substring(1));
                 if ((ang2an && s.endsWith("ang"))
                         || (eng2en && s.endsWith("eng"))
                         || (ing2in && s.endsWith("ing")))
-                    set.add(s.substring(0, s.length() - 1));
+                    ret.add(s.substring(0, s.length() - 1));
                 if ((ang2an && s.endsWith("an"))
                         || (s.endsWith("en") && eng2en)
                         || (s.endsWith("in") && ing2in))
-                    set.add(s + 'g');
-                this.set = set.toArray(new String[0]);
+                    ret.add(s + 'g');
+                strs = ret.stream().map(keyboard::keys).toArray(String[]::new);
             }
 
-            static FuzzyMatcher get(String s) {
-                return cache.getUnchecked(s);
+            static ElementPattern get(String str) {
+                return cache.getUnchecked(str);
             }
 
-            IndexSet match(String s, int i) {
+            IndexSet match(String source, IndexSet idx, int start) {
                 IndexSet ret = new IndexSet();
-                for (String str : set) {
-                    int size = strCmp(s, str, i);
-                    if (i + size == s.length()) ret.set(size);  // ending match
-                    else if (size == str.length()) ret.set(size);  // full match
-                }
+                idx.foreach(i -> {
+                    for (String str : strs) {
+                        int size = strCmp(source, str, i + start);
+                        if (i + start + size == source.length()) ret.set(i + size);  // ending match
+                        else if (size == str.length()) ret.set(i + size);  // full match
+                    }
+                    return true;
+                });
                 return ret;
             }
         }
@@ -300,13 +364,13 @@ public class StringMatcher {
 
         @Override
         public IndexSet match(String str, int start) {
-            return str.charAt(start) == ch ? IndexSet.ONE : IndexSet.ZERO;
+            return str.charAt(start) == ch ? IndexSet.ONE : IndexSet.NONE;
         }
     }
 
     private static class IndexSet {
-        static final IndexSet ONE = new IndexSet(0x1);
-        static final IndexSet ZERO = new IndexSet(0x0);
+        static final IndexSet ONE = new IndexSet(0x2);
+        static final IndexSet NONE = new IndexSet(0x0);
 
         int value = 0x0;
 
@@ -318,12 +382,12 @@ public class StringMatcher {
         }
 
         public void set(int index) {
-            int i = 0x1 << (index - 1);
+            int i = 0x1 << index;
             this.value |= i;
         }
 
         public boolean get(int index) {
-            int i = 0x1 << (index - 1);
+            int i = 0x1 << index;
             return (value & i) != 0;
         }
 
@@ -333,11 +397,25 @@ public class StringMatcher {
 
         public boolean foreach(Predicate<Integer> p) {
             int v = value;
-            for (int i = 1; i < 8; i++) {
+            for (int i = 0; i < 7; i++) {
                 if ((v & 0x1) == 0x1 && !p.test(i)) return false;
                 v >>= 1;
             }
             return true;
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder builder = new StringBuilder();
+            foreach(i -> {
+                builder.append(i);
+                builder.append(", ");
+                return true;
+            });
+            if (builder.length() != 0) {
+                builder.delete(builder.length() - 2, builder.length());
+                return builder.toString();
+            } else return "0";
         }
     }
 }
