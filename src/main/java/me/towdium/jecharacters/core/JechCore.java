@@ -13,7 +13,8 @@ import java.util.Map;
  * Date:   2016/9/4.
  */
 public class JechCore implements IFMLLoadingPlugin {
-    public static final Logger LOG = LogManager.getLogger("jecharacters");
+    public static final String MODID = "jecharacters";
+    public static final Logger LOG = LogManager.getLogger(MODID);
     public static final String VERSION = "@VERSION@";
     public static File source;
     public static boolean INITIALIZED = false;
@@ -43,4 +44,6 @@ public class JechCore implements IFMLLoadingPlugin {
     public String getAccessTransformerClass() {
         return null;
     }
+
+
 }

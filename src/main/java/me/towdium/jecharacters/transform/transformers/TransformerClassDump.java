@@ -17,7 +17,7 @@ public class TransformerClassDump implements Transformer.Extended {
     Set<String> names = new HashSet<>();
 
     public TransformerClassDump() {
-        Collections.addAll(names, JechConfig.EnumItems.ListDumpClass.getProperty().getStringList());
+        Collections.addAll(names, JechConfig.Item.LIST_DUMP_CLASS.getProperty().getStringList());
     }
 
     @Override

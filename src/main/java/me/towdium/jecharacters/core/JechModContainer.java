@@ -3,10 +3,13 @@ package me.towdium.jecharacters.core;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import me.towdium.jecharacters.JechCommand;
+import me.towdium.jecharacters.JechGuiFactory;
 import net.minecraft.command.ICommand;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.DummyModContainer;
 import net.minecraftforge.fml.common.LoadController;
 import net.minecraftforge.fml.common.ModMetadata;
+import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import net.minecraftforge.fml.common.versioning.ArtifactVersion;
 import net.minecraftforge.fml.common.versioning.VersionParser;
@@ -64,5 +67,15 @@ public class JechModContainer extends DummyModContainer {
     public void onServerStart(FMLServerStartingEvent event) {
         ICommand c = new JechCommand();
         event.registerServerCommand(c);
+    }
+
+    @Subscribe
+    public static void initPost(FMLPostInitializationEvent event) {
+        MinecraftForge.EVENT_BUS.register(JechGuiFactory.ConfigHandler.class);
+    }
+
+    @Override
+    public String getGuiClassName() {
+        return "me.towdium.jecharacters.JechGuiFactory";
     }
 }

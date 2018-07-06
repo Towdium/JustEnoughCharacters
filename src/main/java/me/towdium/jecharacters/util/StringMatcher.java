@@ -3,12 +3,8 @@ package me.towdium.jecharacters.util;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import me.towdium.jecharacters.JechConfig;
 import me.towdium.jecharacters.core.JechCore;
-import net.sourceforge.pinyin4j.PinyinHelper;
-import net.sourceforge.pinyin4j.format.HanyuPinyinOutputFormat;
-import net.sourceforge.pinyin4j.format.HanyuPinyinToneType;
-import net.sourceforge.pinyin4j.format.HanyuPinyinVCharType;
-import net.sourceforge.pinyin4j.format.exception.BadHanyuPinyinOutputFormatCombination;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
@@ -23,24 +19,8 @@ import java.util.regex.Pattern;
  * Date:   2016/9/4.
  */
 public class StringMatcher {
-    static final HanyuPinyinOutputFormat FORMAT;
     static final Pattern p = Pattern.compile("a");
     public static boolean verbose = false;
-
-    private static enumKeyboard keyboard = enumKeyboard.DAQIAN;
-    private static boolean zh2z = false;
-    private static boolean sh2s = false;
-    private static boolean ch2c = false;
-    private static boolean ing2in = false;
-    private static boolean ang2an = false;
-    private static boolean eng2en = false;
-    private static boolean v2u = false;
-
-    static {
-        FORMAT = new HanyuPinyinOutputFormat();
-        FORMAT.setToneType(HanyuPinyinToneType.WITHOUT_TONE);
-        FORMAT.setVCharType(HanyuPinyinVCharType.WITH_V);
-    }
 
     private static boolean containsChinese(CharSequence s) {
         for (int i = s.length() - 1; i >= 0; i--) {
@@ -77,36 +57,8 @@ public class StringMatcher {
         return ret;
     }
 
-    public static void setKeyboard(enumKeyboard keyboard) {
-        StringMatcher.keyboard = keyboard;
-    }
-
-    public static void setZh2z(boolean zh2z) {
-        StringMatcher.zh2z = zh2z;
-    }
-
-    public static void setSh2s(boolean sh2s) {
-        StringMatcher.sh2s = sh2s;
-    }
-
-    public static void setCh2c(boolean ch2c) {
-        StringMatcher.ch2c = ch2c;
-    }
-
-    public static void setIng2in(boolean ing2in) {
-        StringMatcher.ing2in = ing2in;
-    }
-
-    public static void setAng2an(boolean ang2an) {
-        StringMatcher.ang2an = ang2an;
-    }
-
-    public static void setEng2en(boolean eng2en) {
-        StringMatcher.eng2en = eng2en;
-    }
-
-    public static void setV2u(boolean v2u) {
-        StringMatcher.v2u = v2u;
+    public static void refresh() {
+        CharacterMul.refresh();
     }
 
     private static boolean isCharacter(int i) {
@@ -127,17 +79,14 @@ public class StringMatcher {
                     }
                 }
             }
-        } else {
-            b = s1.contains(s2);
-        }
-
+        } else b = s1.contains(s2);
         return b;
     }
 
     private static boolean checkChinese(String s1, int start1, String s2, int start2) {
         if (start1 == s1.length()) return true;
 
-        CharRep r = CharRep.get(s2.charAt(start2));
+        Character r = Character.get(s2.charAt(start2));
         IndexSet s = r.match(s1, start1);
 
         if (start2 == s2.length() - 1) {
@@ -153,58 +102,23 @@ public class StringMatcher {
         return len;
     }
 
-    private interface CharPattern {
-        IndexSet match(String str, int start);
-    }
-
-    public enum enumKeyboard {
-        QUANPIN, DAQIAN;
-
-        String[] separate(String s) {
-            if (this == DAQIAN) {
-                String str = Mappings.PHONETIC_SPELL.get(s);
-                if (str != null) s = str;
-            }
-
-            if (s.startsWith("a") || s.startsWith("e") || s.startsWith("i")
-                    || s.startsWith("o") || s.startsWith("u")) {
-                return new String[]{"", s, ""};
-            } else {
-                int i = s.length() > 2 && s.charAt(1) == 'h' ? 2 : 1;
-                return new String[]{s.substring(0, i), s.substring(i), ""};
-            }
-        }
-
-        String keys(String s) {
-            if (this == QUANPIN) return s;
-            else {
-                String symbol = Mappings.PHONETIC_SYMBOL.get(s);
-                if (symbol == null)
-                    throw new RuntimeException("Unrecognized element: " + s);
-                StringBuilder builder = new StringBuilder();
-                for (char c : symbol.toCharArray()) builder.append(Mappings.KEYBOARD_DAQIAN.get(c));
-                return builder.toString();
-            }
-        }
-    }
-
-    private interface CharRep {
-        static CharRep get(Character ch) {
-            if (isCharacter(ch)) return CharRepMul.get(ch);
-            else return CharRepSin.get(ch);
+    private interface Character {
+        static Character get(char ch) {
+            if (isCharacter(ch)) return CharacterMul.get(ch);
+            else return CharacterSin.get(ch);
         }
 
         IndexSet match(String str, int start);
     }
 
-    private static class CharRepSin implements CharRep {
-        private static final CharRepSin INSTANCE = new CharRepSin();
-        private Character ch;
+    private static class CharacterSin implements Character {
+        private static final CharacterSin INSTANCE = new CharacterSin();
+        private char ch;
 
-        private CharRepSin() {
+        private CharacterSin() {
         }
 
-        private static CharRepSin get(Character ch) {
+        private static CharacterSin get(char ch) {
             INSTANCE.ch = ch;
             return INSTANCE;
         }
@@ -215,8 +129,8 @@ public class StringMatcher {
         }
     }
 
-    private static class CharRepMul implements CharRep {
-        private static final CharRepMul[] CACHE = new CharRepMul[41000];
+    private static class CharacterMul implements Character {
+        private static final CharacterMul[] CACHE = new CharacterMul[41000];
         private static final int START = 0x3007;
         private static final int END = 0x9FA5;
 
@@ -226,145 +140,158 @@ public class StringMatcher {
             }
         }
 
-        private CharPattern[] patterns = new CharPattern[0];
+        private Instance[] patterns = new Instance[0];
 
-        private CharRepMul() {
+        private CharacterMul() {
         }
 
-        static CharRepMul get(Character ch) {
+        static CharacterMul get(char ch) {
             return CACHE[ch];
         }
 
-        private static CharRepMul genRep(Character ch) {
-            CharRepMul p = new CharRepMul();
-            ArrayList<CharPattern> patterns = new ArrayList<>();
-            patterns.add(new RawPattern(ch));
+        private static CharacterMul genRep(char ch) {
+            CharacterMul p = new CharacterMul();
+            ArrayList<Instance> patterns = new ArrayList<>();
+            patterns.add(new InstanceRaw(ch));
             p.patterns = patterns.toArray(p.patterns);
-            String[] pinyin;
-            try {
-                pinyin = PinyinHelper.toHanyuPinyinStringArray(ch, FORMAT);
-            } catch (BadHanyuPinyinOutputFormatCombination e) {
-                JechCore.LOG.warn("Exception when generating pattern for \"" + ch + "\"");
-                return p;
-            }
-            if (pinyin == null) return p;
-
-            HashSet<String> set = new HashSet<>();
-            for (String s : pinyin)
-                if (s != null) set.add(s);
-
-            for (String s : set) {
-                if (s != null)
-                    patterns.add(PinyinPattern.get(s));
-            }
+            String[] pinyin = PinyinData.get(ch);
+            for (String s : pinyin) patterns.add(InstancePinyin.get(s));
             p.patterns = patterns.toArray(p.patterns);
             return p;
+        }
+
+        public static void refresh() {
+            InstancePinyin.refresh();
         }
 
         @Override
         public IndexSet match(String str, int start) {
             IndexSet ret = new IndexSet();
-            for (CharPattern p : patterns)
+            for (Instance p : patterns)
                 ret.merge(p.match(str, start));
             return ret;
         }
-    }
 
-    private static class PinyinPattern implements CharPattern {
-        private static LoadingCache<String, PinyinPattern> cache = CacheBuilder.newBuilder().concurrencyLevel(1)
-                .build(new CacheLoader<String, PinyinPattern>() {
-                    @Override
-                    @ParametersAreNonnullByDefault
-                    public PinyinPattern load(String str) {
-                        return new PinyinPattern(str);
-                    }
-                });
-
-        private ElementPattern initial;
-        private ElementPattern finale;
-        private ElementPattern tone;
-
-        static PinyinPattern get(String str) {
-            return cache.getUnchecked(str);
+        private interface Instance {
+            IndexSet match(String str, int start);
         }
 
-        public PinyinPattern(String str) {
-            String[] elements = keyboard.separate(str);
-            initial = ElementPattern.get(elements[0]);
-            finale = ElementPattern.get(elements[1]);
-            tone = ElementPattern.get(elements[2]);
+        private static class InstanceRaw implements Instance {
+            private char ch;
+
+            InstanceRaw(char ch) {
+                this.ch = ch;
+            }
+
+            @Override
+            public IndexSet match(String str, int start) {
+                return str.charAt(start) == ch ? IndexSet.ONE : IndexSet.NONE;
+            }
         }
 
-        @Override
-        public IndexSet match(String str, int start) {
-            IndexSet ret = new IndexSet(0x1);
-            ret = initial.match(str, ret, start);
-            ret.merge(finale.match(str, ret, start));
-            ret = tone.match(str, ret, start);
-            return ret;
-        }
-
-        static private class ElementPattern {
-            private static LoadingCache<String, ElementPattern> cache = CacheBuilder.newBuilder().concurrencyLevel(1)
-                    .build(new CacheLoader<String, ElementPattern>() {
+        private static class InstancePinyin implements Instance {
+            private static LoadingCache<String, InstancePinyin> cache = CacheBuilder.newBuilder().concurrencyLevel(1)
+                    .build(new CacheLoader<String, InstancePinyin>() {
                         @Override
                         @ParametersAreNonnullByDefault
-                        public ElementPattern load(String str) {
-                            return new ElementPattern(str);
+                        public InstancePinyin load(String str) {
+                            return new InstancePinyin(str);
                         }
                     });
 
-            String[] strs;
+            private Phoneme initial;
+            private Phoneme finale;
+            private Phoneme tone;
 
-            public ElementPattern(String s) {
-                HashSet<String> ret = new HashSet<>();
-                ret.add(s);
-
-                if (ch2c && s.startsWith("c")) Collections.addAll(ret, "c", "ch");
-                if (sh2s && s.startsWith("s")) Collections.addAll(ret, "s", "sh");
-                if (zh2z && s.startsWith("z")) Collections.addAll(ret, "z", "zh");
-                if (v2u && s.startsWith("v"))
-                    ret.add("u" + s.substring(1));
-                if ((ang2an && s.endsWith("ang"))
-                        || (eng2en && s.endsWith("eng"))
-                        || (ing2in && s.endsWith("ing")))
-                    ret.add(s.substring(0, s.length() - 1));
-                if ((ang2an && s.endsWith("an"))
-                        || (s.endsWith("en") && eng2en)
-                        || (s.endsWith("in") && ing2in))
-                    ret.add(s + 'g');
-                strs = ret.stream().map(keyboard::keys).toArray(String[]::new);
+            public InstancePinyin(String str) {
+                set(str);
             }
 
-            static ElementPattern get(String str) {
+            static InstancePinyin get(String str) {
                 return cache.getUnchecked(str);
             }
 
-            IndexSet match(String source, IndexSet idx, int start) {
-                IndexSet ret = new IndexSet();
-                idx.foreach(i -> {
-                    for (String str : strs) {
-                        int size = strCmp(source, str, i + start);
-                        if (i + start + size == source.length()) ret.set(i + size);  // ending match
-                        else if (size == str.length()) ret.set(i + size);  // full match
-                    }
-                    return true;
-                });
+            public static void refresh() {
+                Phoneme.refresh();
+                cache.asMap().forEach((s, p) -> p.set(s));
+            }
+
+            private void set(String str) {
+                String[] elements = JechConfig.keyboard.separate(str);
+                initial = Phoneme.get(elements[0]);
+                finale = Phoneme.get(elements[1]);
+                tone = Phoneme.get(elements[2]);
+            }
+
+            @Override
+            public IndexSet match(String str, int start) {
+                IndexSet ret = new IndexSet(0x1);
+                ret = initial.match(str, ret, start);
+                ret.merge(finale.match(str, ret, start));
+                ret.merge(tone.match(str, ret, start));
                 return ret;
             }
-        }
-    }
 
-    private static class RawPattern implements CharPattern {
-        private Character ch;
+            private static class Phoneme {
+                private static LoadingCache<String, Phoneme> cache = buildCache();
 
-        RawPattern(Character ch) {
-            this.ch = ch;
-        }
+                String[] strs;
 
-        @Override
-        public IndexSet match(String str, int start) {
-            return str.charAt(start) == ch ? IndexSet.ONE : IndexSet.NONE;
+                public Phoneme(String str) {
+                    HashSet<String> ret = new HashSet<>();
+                    ret.add(str);
+
+                    if (JechConfig.enableFuzzyCh2c && str.startsWith("c")) Collections.addAll(ret, "c", "ch");
+                    if (JechConfig.enableFuzzySh2s && str.startsWith("s")) Collections.addAll(ret, "s", "sh");
+                    if (JechConfig.enableFuzzyZh2z && str.startsWith("z")) Collections.addAll(ret, "z", "zh");
+                    if (JechConfig.enableFuzzyU2v && str.startsWith("v"))
+                        ret.add("u" + str.substring(1));
+                    if ((JechConfig.enableFuzzyAng2an && str.endsWith("ang"))
+                            || (JechConfig.enableFuzzyEng2en && str.endsWith("eng"))
+                            || (JechConfig.enableFuzzyIng2in && str.endsWith("ing")))
+                        ret.add(str.substring(0, str.length() - 1));
+                    if ((JechConfig.enableFuzzyAng2an && str.endsWith("an"))
+                            || (str.endsWith("en") && JechConfig.enableFuzzyEng2en)
+                            || (str.endsWith("in") && JechConfig.enableFuzzyIng2in))
+                        ret.add(str + 'g');
+                    strs = ret.stream().map(JechConfig.keyboard::keys).toArray(String[]::new);
+                }
+
+                public static Phoneme get(String str) {
+                    return cache.getUnchecked(str);
+                }
+
+                public static void refresh() {
+                    cache = buildCache();
+                }
+
+                private static LoadingCache<String, Phoneme> buildCache() {
+                    return CacheBuilder.newBuilder().concurrencyLevel(1)
+                            .build(new CacheLoader<String, Phoneme>() {
+                                @Override
+                                @ParametersAreNonnullByDefault
+                                public Phoneme load(String str) {
+                                    return new Phoneme(str);
+                                }
+                            });
+                }
+
+                IndexSet match(String source, IndexSet idx, int start) {
+                    if (strs.length == 1 && strs[0].isEmpty()) return new IndexSet(idx.value);
+                    else {
+                        IndexSet ret = new IndexSet();
+                        idx.foreach(i -> {
+                            for (String str : strs) {
+                                int size = strCmp(source, str, i + start);
+                                if (i + start + size == source.length()) ret.set(i + size);  // ending match
+                                else if (size == str.length()) ret.set(i + size);  // full match
+                            }
+                            return true;
+                        });
+                        return ret;
+                    }
+                }
+            }
         }
     }
 

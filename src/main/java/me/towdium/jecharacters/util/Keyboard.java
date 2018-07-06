@@ -2,8 +2,11 @@ package me.towdium.jecharacters.util;
 
 import java.util.HashMap;
 
-public class Mappings {
-    static HashMap<String, String> PHONETIC_SYMBOL = new HashMap<String, String>() {{
+public enum Keyboard {
+
+    QUANPIN, DAQIAN;
+
+    private static HashMap<String, String> PHONETIC_SYMBOL = new java.util.HashMap<String, String>() {{
         put("a", "ㄚ");
         put("o", "ㄛ");
         put("e", "ㄜ");
@@ -63,10 +66,14 @@ public class Mappings {
         put("s", "ㄙ");
         put("w", "ㄨ");
         put("y", "ㄧ");
+        put("1", "1");
+        put("2", "2");
+        put("3", "3");
+        put("4", "4");
+        put("0", "");
         put("", "");
     }};
-
-    static HashMap<String, String> PHONETIC_SPELL = new HashMap<String, String>() {{
+    private static HashMap<String, String> PHONETIC_SPELL = new HashMap<String, String>() {{
         put("yi", "i");
         put("you", "iu");
         put("yin", "in");
@@ -89,13 +96,14 @@ public class Mappings {
         put("xue", "xve");
         put("xuan", "xvan");
         put("xun", "xvn");
-        // TODO check spell
-        put("hng", "heng");
-        put("e^", "e");
-        put("lue", "lve");
+        put("shi", "sh");
+        put("si", "s");
+        put("chi", "ch");
+        put("ci", "c");
+        put("zhi", "zh");
+        put("zi", "z");
     }};
-
-    static HashMap<Character, String> KEYBOARD_DAQIAN = new HashMap<Character, String>() {{
+    private static HashMap<Character, String> KEYBOARD_DAQIAN = new HashMap<Character, String>() {{
         put('ㄇ', "a");
         put('ㄖ', "b");
         put('ㄏ', "c");
@@ -133,5 +141,47 @@ public class Mappings {
         put('ㄝ', ",");
         put('ㄡ', ".");
         put('ㄥ', "/");
+        put('1', " ");
+        put('2', "6");
+        put('3', "3");
+        put('4', "4");
     }};
+
+    public static Keyboard get(int n) {
+        switch (n) {
+            case 0:
+                return QUANPIN;
+            case 1:
+                return DAQIAN;
+            default:
+                throw new RuntimeException("Unacceptable identifier: " + n + ".");
+        }
+    }
+
+    String[] separate(String s) {
+        if (this == DAQIAN) {
+            String str = PHONETIC_SPELL.get(s.substring(0, s.length() - 1));
+            if (str != null) s = str + s.charAt(s.length() - 1);
+        }
+
+        if (s.startsWith("a") || s.startsWith("e") || s.startsWith("i")
+                || s.startsWith("o") || s.startsWith("u")) {
+            return new String[]{"", s.substring(0, s.length() - 1), s.substring(s.length() - 1)};
+        } else {
+            int i = s.length() > 2 && s.charAt(1) == 'h' ? 2 : 1;
+            return new String[]{s.substring(0, i), s.substring(i, s.length() - 1), s.substring(s.length() - 1)};
+        }
+    }
+
+    String keys(String s) {
+        if (this == QUANPIN) return s;
+        else {
+            String symbol = PHONETIC_SYMBOL.get(s);
+            if (symbol == null)
+                throw new RuntimeException("Unrecognized element: " + s);
+            StringBuilder builder = new StringBuilder();
+            for (char c : symbol.toCharArray()) builder.append(KEYBOARD_DAQIAN.get(c));
+            return builder.toString();
+        }
+    }
 }

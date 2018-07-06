@@ -13,7 +13,7 @@ import org.objectweb.asm.tree.ClassNode;
 public class TransformerStringUniversal implements Transformer.Extended {
     @Override
     public boolean accepts(String name) {
-        return JechConfig.EnumItems.EnableRadicalMode.getProperty().getBoolean();
+        return JechConfig.Item.ENABLE_RADICAL_MODE.getProperty().getBoolean();
     }
 
     @Override

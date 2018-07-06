@@ -1,8 +1,10 @@
 package me.towdium.jecharacters;
 
+import com.google.common.base.CaseFormat;
 import me.towdium.jecharacters.core.JechCore;
 import me.towdium.jecharacters.transform.TransformerRegistry;
 import me.towdium.jecharacters.util.FeedFetcher;
+import me.towdium.jecharacters.util.Keyboard;
 import me.towdium.jecharacters.util.VersionChecker;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
@@ -22,30 +24,52 @@ public class JechConfig {
     public static Configuration config;
     public static Object empty;
 
+    public static String[] listAdditionalStringMatch = new String[0];
+    public static String[] listAdditionalRegExpMatch = new String[0];
+    public static String[] listDefaultStringMatch = new String[0];
+    public static String[] listDefaultRegExpMatch = new String[0];
+    public static String[] listDumpClass = new String[0];
+    public static String[] listMethodBlacklist = new String[0];
+    public static boolean enableRadicalMode = false;
+    public static boolean enableJEI = true;
+    public static boolean enableFuzzyZh2z = false;
+    public static boolean enableFuzzySh2s = false;
+    public static boolean enableFuzzyCh2c = false;
+    public static boolean enableFuzzyAng2an = false;
+    public static boolean enableFuzzyIng2in = false;
+    public static boolean enableFuzzyEng2en = false;
+    public static boolean enableFuzzyU2v = false;
+    public static Keyboard keyboard = Keyboard.QUANPIN;
+
     public static void preInit(File location) {
         config = new Configuration(new File(location, "config/JustEnoughCharacters.cfg"), JechCore.VERSION);
         config.load();
         initProperties();
         handleFormerVersion();
         setValue();
+        sync();
         config.save();
         fetchOnline();
+    }
+
+    public static void sync() {
+        for (Item i : Item.values()) i.sync();
     }
 
     public static void fetchOnline() {
         Thread t = new Thread(() ->
                 FeedFetcher.fetch((s, r) -> {
                     HashSet<String> buf = new HashSet<>();
-                    Collections.addAll(buf, EnumItems.ListAdditionalStringMatch.getProperty().getStringList());
+                    Collections.addAll(buf, Item.LIST_ADDITIONAL_STRING_MATCH.getProperty().getStringList());
                     buf.addAll(s);
-                    buf.removeAll(Arrays.asList(EnumItems.ListDefaultStringMatch.getProperty().getStringList()));
-                    EnumItems.ListAdditionalStringMatch.getProperty()
+                    buf.removeAll(Arrays.asList(Item.LIST_DEFAULT_STRING_MATCH.getProperty().getStringList()));
+                    Item.LIST_ADDITIONAL_STRING_MATCH.getProperty()
                             .set(buf.stream().sorted().collect(Collectors.toList()).toArray(new String[]{}));
                     buf.clear();
-                    Collections.addAll(buf, EnumItems.ListAdditionalRegExpMatch.getProperty().getStringList());
+                    Collections.addAll(buf, Item.LIST_ADDITIONAL_REGEXP_MATCH.getProperty().getStringList());
                     buf.addAll(r);
-                    buf.removeAll(Arrays.asList(EnumItems.ListDefaultRegExpMatch.getProperty().getStringList()));
-                    EnumItems.ListAdditionalRegExpMatch.getProperty()
+                    buf.removeAll(Arrays.asList(Item.LIST_DEFAULT_REGEXP_MATCH.getProperty().getStringList()));
+                    Item.LIST_ADDITIONAL_REGEXP_MATCH.getProperty()
                             .set(buf.stream().sorted().collect(Collectors.toList()).toArray(new String[]{}));
                     config.save();
                     TransformerRegistry.transformerRegExp.reload();
@@ -55,137 +79,139 @@ public class JechConfig {
         t.run();
     }
 
-
     public static void setValue() {
-        EnumItems.ListDefaultRegExpMatch.getProperty().set(((String[]) EnumItems.ListDefaultRegExpMatch.getDefault()));
-        EnumItems.ListDefaultStringMatch.getProperty().set(((String[]) EnumItems.ListDefaultStringMatch.getDefault()));
+        Item.LIST_DEFAULT_REGEXP_MATCH.getProperty().set(((String[]) Item.LIST_DEFAULT_REGEXP_MATCH.getDefault()));
+        Item.LIST_DEFAULT_STRING_MATCH.getProperty().set(((String[]) Item.LIST_DEFAULT_STRING_MATCH.getDefault()));
     }
 
     public static void handleFormerVersion() {
         if (VersionChecker.checkVersion(config.getLoadedConfigVersion(), "1.12.0-1.10.0").toInt() < 0) {
             JechCore.LOG.info("Low version detected. Disabling radical.");
-            EnumItems.EnableRadicalMode.getProperty().set(false);
+            Item.ENABLE_RADICAL_MODE.getProperty().set(false);
         }
     }
 
     public static void initProperties() {
-        for (EnumItems item : EnumItems.values()) {
-            item.init();
-        }
+        for (Item item : Item.values()) item.init();
     }
 
     public static void save() {
         config.save();
     }
 
-    public enum EnumItems {
-        ListAdditionalStringMatch,
-        ListAdditionalRegExpMatch,
-        ListDefaultStringMatch,
-        ListDefaultRegExpMatch,
-        ListDumpClass,
-        ListMethodBlacklist,
-        EnableRadicalMode,
-        EnableJEI,
-        EnableFuzzyInitialZhToZ,
-        EnableFuzzyInitialShToS,
-        EnableFuzzyInitialChToC,
-        EnableFuzzyFinalAngToAn,
-        EnableFuzzyFinalIngToIn,
-        EnableFuzzyFinalEngToEn,
-        EnableFuzzyFinalUToV;
+    public enum Item {
+        LIST_ADDITIONAL_STRING_MATCH,
+        LIST_ADDITIONAL_REGEXP_MATCH,
+        LIST_DEFAULT_STRING_MATCH,
+        LIST_DEFAULT_REGEXP_MATCH,
+        LIST_DUMP_CLASS,
+        LIST_METHOD_BLACKLIST,
+        ENABLE_RADICAL_MODE,
+        ENABLE_JEI,
+        ENABLE_FUZZY_ZH2Z,
+        ENABLE_FUZZY_SH2S,
+        ENABLE_FUZZY_CH2C,
+        ENABLE_FUZZY_ANG2AN,
+        ENABLE_FUZZY_ING2IN,
+        ENABLE_FUZZY_ENG2EN,
+        ENABLE_FUZZY_U2V,
+        INT_KEYBOARD;
 
 
         public String getComment() {
             switch (this) {
-                case ListAdditionalStringMatch:
+                case LIST_ADDITIONAL_STRING_MATCH:
                     return "Give a list of methods to transform, of which uses \"String.contains\" to match.\n" +
                             "The format is \"full.class.Path$InnerClass:methodName\"\n" +
                             "This list will also contain data fetched from online record.";
-                case ListAdditionalRegExpMatch:
+                case LIST_ADDITIONAL_REGEXP_MATCH:
                     return "Give a list of methods to transform, of which uses regular expression to match.\n" +
                             "The format is \"full.class.path$InnerClass:methodName\"\n" +
                             "This list will also contain data fetched from online record.";
-                case ListDefaultStringMatch:
+                case LIST_DEFAULT_STRING_MATCH:
                     return "Default list of methods to transform, of which uses \"String.contains\" to match.\n" +
                             "This list is maintained by the mod and will have no effect if you change it.";
-                case ListDefaultRegExpMatch:
+                case LIST_DEFAULT_REGEXP_MATCH:
                     return "Default list of methods to transform, of which uses regular expression to match.\n" +
                             "This list is maintained by the mod and will have no effect if you change it.";
-                case ListDumpClass:
+                case LIST_DUMP_CLASS:
                     return "Dump all the methods in this class into log. Format is \"full.class.Path$InnerClass\".";
-                case ListMethodBlacklist:
+                case LIST_METHOD_BLACKLIST:
                     return "Put the strings in default list here to disable transform for certain method";
-                case EnableRadicalMode:
+                case ENABLE_RADICAL_MODE:
                     return "Set to true to enable radical mode. Keep in mind this is DANGEROUS.\n" +
                             "This could support more mods but could lead to some strange behavior as well.";
-                case EnableJEI:
+                case ENABLE_JEI:
                     return "Set to false to disable JEI support.";
-                case EnableFuzzyInitialZhToZ:
+                case ENABLE_FUZZY_ZH2Z:
                     return "Set to true to enable fuzzy Zh <=> Z";
-                case EnableFuzzyInitialShToS:
+                case ENABLE_FUZZY_SH2S:
                     return "Set to true to enable fuzzy Sh <=> S";
-                case EnableFuzzyInitialChToC:
+                case ENABLE_FUZZY_CH2C:
                     return "Set to true to enable fuzzy Ch <=> C";
-                case EnableFuzzyFinalAngToAn:
+                case ENABLE_FUZZY_ANG2AN:
                     return "Set to true to enable fuzzy Ang <=> An";
-                case EnableFuzzyFinalIngToIn:
+                case ENABLE_FUZZY_ING2IN:
                     return "Set to true to enable fuzzy Ing <=> In";
-                case EnableFuzzyFinalEngToEn:
+                case ENABLE_FUZZY_ENG2EN:
                     return "Set to true to enable fuzzy Eng <=> En";
-                case EnableFuzzyFinalUToV:
+                case ENABLE_FUZZY_U2V:
                     return "Set to true to enable fuzzy U <=> V";
+                case INT_KEYBOARD:
+                    return "Choose keyboard: 0 for quanpin, 1 for daqian (phonetic)";
             }
             return "";
         }
 
         public String getCategory() {
-            return EnumCategory.General.toString();
+            return Category.General.toString();
         }
 
-        public EnumType getType() {
+        public Type getType() {
             switch (this) {
-                case ListAdditionalStringMatch:
-                    return EnumType.ListString;
-                case ListAdditionalRegExpMatch:
-                    return EnumType.ListString;
-                case ListDefaultStringMatch:
-                    return EnumType.ListString;
-                case ListDefaultRegExpMatch:
-                    return EnumType.ListString;
-                case ListDumpClass:
-                    return EnumType.ListString;
-                case ListMethodBlacklist:
-                    return EnumType.ListString;
-                case EnableRadicalMode:
-                    return EnumType.Boolean;
-                case EnableJEI:
-                    return EnumType.Boolean;
-                case EnableFuzzyInitialZhToZ:
-                    return EnumType.Boolean;
-                case EnableFuzzyInitialShToS:
-                    return EnumType.Boolean;
-                case EnableFuzzyInitialChToC:
-                    return EnumType.Boolean;
-                case EnableFuzzyFinalAngToAn:
-                    return EnumType.Boolean;
-                case EnableFuzzyFinalIngToIn:
-                    return EnumType.Boolean;
-                case EnableFuzzyFinalEngToEn:
-                    return EnumType.Boolean;
-                case EnableFuzzyFinalUToV:
-                    return EnumType.Boolean;
+                case LIST_ADDITIONAL_STRING_MATCH:
+                    return Type.LIST_STRING;
+                case LIST_ADDITIONAL_REGEXP_MATCH:
+                    return Type.LIST_STRING;
+                case LIST_DEFAULT_STRING_MATCH:
+                    return Type.LIST_STRING;
+                case LIST_DEFAULT_REGEXP_MATCH:
+                    return Type.LIST_STRING;
+                case LIST_DUMP_CLASS:
+                    return Type.LIST_STRING;
+                case LIST_METHOD_BLACKLIST:
+                    return Type.LIST_STRING;
+                case ENABLE_RADICAL_MODE:
+                    return Type.BOOLEAN;
+                case ENABLE_JEI:
+                    return Type.BOOLEAN;
+                case ENABLE_FUZZY_ZH2Z:
+                    return Type.BOOLEAN;
+                case ENABLE_FUZZY_SH2S:
+                    return Type.BOOLEAN;
+                case ENABLE_FUZZY_CH2C:
+                    return Type.BOOLEAN;
+                case ENABLE_FUZZY_ANG2AN:
+                    return Type.BOOLEAN;
+                case ENABLE_FUZZY_ING2IN:
+                    return Type.BOOLEAN;
+                case ENABLE_FUZZY_ENG2EN:
+                    return Type.BOOLEAN;
+                case ENABLE_FUZZY_U2V:
+                    return Type.BOOLEAN;
+                case INT_KEYBOARD:
+                    return Type.INTEGER;
             }
-            return EnumType.Error;
+            return Type.ERROR;
         }
 
         public Object getDefault() {
             switch (this) {
-                case ListAdditionalStringMatch:
+                case LIST_ADDITIONAL_STRING_MATCH:
                     return new String[0];
-                case ListAdditionalRegExpMatch:
+                case LIST_ADDITIONAL_REGEXP_MATCH:
                     return new String[0];
-                case ListDefaultStringMatch:
+                case LIST_DEFAULT_STRING_MATCH:
                     return new String[]{
                             "mezz.jei.ItemFilter$FilterPredicate:stringContainsTokens",
                             "com.raoulvdberge.refinedstorage.gui.grid.filtering.GridFilterName:accepts",
@@ -241,7 +267,7 @@ public class JechConfig {
                             "com.mia.props.client.container.GuiDecobench:refreshButtons",
                             "mrriegel.storagenetwork.gui.GuiRequest:match"
                     };
-                case ListDefaultRegExpMatch:
+                case LIST_DEFAULT_REGEXP_MATCH:
                     return new String[]{
                             "appeng.client.me.ItemRepo:updateView",
                             "codechicken.nei.ItemList$PatternItemFilter:matches",
@@ -249,53 +275,114 @@ public class JechConfig {
                             "org.cyclops.integrateddynamics.inventory.container.ContainerLogicProgrammerBase$1:apply",
                             "p455w0rd.wct.client.me.ItemRepo:updateView"
                     };
-                case ListDumpClass:
+                case LIST_DUMP_CLASS:
                     return new String[0];
-                case ListMethodBlacklist:
+                case LIST_METHOD_BLACKLIST:
                     return new String[0];
-                case EnableRadicalMode:
+                case ENABLE_RADICAL_MODE:
                     return false;
-                case EnableJEI:
+                case ENABLE_JEI:
                     return true;
-                case EnableFuzzyInitialZhToZ:
+                case ENABLE_FUZZY_ZH2Z:
                     return false;
-                case EnableFuzzyInitialShToS:
+                case ENABLE_FUZZY_SH2S:
                     return false;
-                case EnableFuzzyInitialChToC:
+                case ENABLE_FUZZY_CH2C:
                     return false;
-                case EnableFuzzyFinalAngToAn:
+                case ENABLE_FUZZY_ANG2AN:
                     return false;
-                case EnableFuzzyFinalIngToIn:
+                case ENABLE_FUZZY_ING2IN:
                     return false;
-                case EnableFuzzyFinalEngToEn:
+                case ENABLE_FUZZY_ENG2EN:
                     return false;
-                case EnableFuzzyFinalUToV:
+                case ENABLE_FUZZY_U2V:
                     return false;
+                case INT_KEYBOARD:
+                    return 0;
             }
             return JechConfig.empty;
         }
 
+        public void sync() {
+            switch (this) {
+                case LIST_ADDITIONAL_STRING_MATCH:
+                    listAdditionalStringMatch = getProperty().getStringList();
+                    break;
+                case LIST_ADDITIONAL_REGEXP_MATCH:
+                    listAdditionalRegExpMatch = getProperty().getStringList();
+                    break;
+                case LIST_DEFAULT_STRING_MATCH:
+                    listDefaultStringMatch = getProperty().getStringList();
+                    break;
+                case LIST_DEFAULT_REGEXP_MATCH:
+                    listDefaultRegExpMatch = getProperty().getStringList();
+                    break;
+                case LIST_DUMP_CLASS:
+                    listDumpClass = getProperty().getStringList();
+                    break;
+                case LIST_METHOD_BLACKLIST:
+                    listMethodBlacklist = getProperty().getStringList();
+                    break;
+                case ENABLE_RADICAL_MODE:
+                    enableRadicalMode = getProperty().getBoolean();
+                    break;
+                case ENABLE_JEI:
+                    enableJEI = getProperty().getBoolean();
+                    break;
+                case ENABLE_FUZZY_ZH2Z:
+                    enableFuzzyZh2z = getProperty().getBoolean();
+                    break;
+                case ENABLE_FUZZY_SH2S:
+                    enableFuzzySh2s = getProperty().getBoolean();
+                    break;
+                case ENABLE_FUZZY_CH2C:
+                    enableFuzzyCh2c = getProperty().getBoolean();
+                    break;
+                case ENABLE_FUZZY_ANG2AN:
+                    enableFuzzyAng2an = getProperty().getBoolean();
+                    break;
+                case ENABLE_FUZZY_ING2IN:
+                    enableFuzzyIng2in = getProperty().getBoolean();
+                    break;
+                case ENABLE_FUZZY_ENG2EN:
+                    enableFuzzyEng2en = getProperty().getBoolean();
+                    break;
+                case ENABLE_FUZZY_U2V:
+                    enableFuzzyU2v = getProperty().getBoolean();
+                    break;
+                case INT_KEYBOARD:
+                    keyboard = Keyboard.get(getProperty().getInt());
+            }
+        }
+
         @SuppressWarnings("UnusedReturnValue")
         public Property init() {
-            EnumType type = this.getType();
+            Type type = this.getType();
             if (type != null) {
                 switch (this.getType()) {
-                    case Boolean:
+                    case BOOLEAN:
                         return config.get(this.getCategory(), this.toString(), (Boolean) this.getDefault(), this.getComment());
-                    case ListString:
+                    case LIST_STRING:
                         return config.get(this.getCategory(), this.toString(), (String[]) this.getDefault(), this.getComment());
+                    case INTEGER:
+                        return config.get(this.getCategory(), this.toString(), (int) this.getDefault(), this.getComment());
                 }
-                config.getCategory(EnumCategory.General.toString()).get(this.toString());
+                config.getCategory(Category.General.toString()).get(this.toString());
             }
             return config.get(this.getCategory(), this.toString(), false, this.getComment());
         }
 
         public Property getProperty() {
-            return config.getCategory(EnumCategory.General.toString()).get(this.toString());
+            return config.getCategory(Category.General.toString()).get(this.toString());
+        }
+
+        @Override
+        public String toString() {
+            return CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, super.toString());
         }
     }
 
-    public enum EnumCategory {
+    public enum Category {
         General;
 
         @Override
@@ -309,6 +396,6 @@ public class JechConfig {
         }
     }
 
-    public enum EnumType {Boolean, ListString, Error}
+    public enum Type {BOOLEAN, LIST_STRING, INTEGER, ERROR}
 }
 

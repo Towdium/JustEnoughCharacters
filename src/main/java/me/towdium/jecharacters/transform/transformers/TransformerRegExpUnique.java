@@ -16,16 +16,16 @@ public class TransformerRegExpUnique implements Transformer.Extended {
     MethodDecoder md = new MethodDecoder();
 
     public TransformerRegExpUnique() {
-        md.addAll(JechConfig.EnumItems.ListDefaultRegExpMatch.getProperty().getStringList());
-        md.addAll(JechConfig.EnumItems.ListAdditionalRegExpMatch.getProperty().getStringList());
-        md.removeAll(JechConfig.EnumItems.ListMethodBlacklist.getProperty().getStringList());
+        md.addAll(JechConfig.Item.LIST_DEFAULT_REGEXP_MATCH.getProperty().getStringList());
+        md.addAll(JechConfig.Item.LIST_ADDITIONAL_REGEXP_MATCH.getProperty().getStringList());
+        md.removeAll(JechConfig.Item.LIST_METHOD_BLACKLIST.getProperty().getStringList());
     }
 
     public void reload() {
         MethodDecoder mdt = new MethodDecoder();
-        mdt.addAll(JechConfig.EnumItems.ListDefaultRegExpMatch.getProperty().getStringList());
-        mdt.addAll(JechConfig.EnumItems.ListAdditionalRegExpMatch.getProperty().getStringList());
-        mdt.removeAll(JechConfig.EnumItems.ListMethodBlacklist.getProperty().getStringList());
+        mdt.addAll(JechConfig.Item.LIST_DEFAULT_REGEXP_MATCH.getProperty().getStringList());
+        mdt.addAll(JechConfig.Item.LIST_ADDITIONAL_REGEXP_MATCH.getProperty().getStringList());
+        mdt.removeAll(JechConfig.Item.LIST_METHOD_BLACKLIST.getProperty().getStringList());
         md = mdt;
     }
 

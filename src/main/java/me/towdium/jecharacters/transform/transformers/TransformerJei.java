@@ -20,7 +20,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class TransformerJei implements Transformer.Extended {
     @Override
     public boolean accepts(String name) {
-        return JechConfig.EnumItems.EnableJEI.getProperty().getBoolean() && (
+        return JechConfig.Item.ENABLE_JEI.getProperty().getBoolean() && (
                 name.equals("mezz.jei.ingredients.IngredientFilter")
         );
     }
