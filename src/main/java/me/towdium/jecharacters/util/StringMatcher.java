@@ -233,7 +233,15 @@ public class StringMatcher {
             }
 
             private static class Phoneme {
-                private static LoadingCache<String, Phoneme> cache = buildCache();
+                private static LoadingCache<String, Phoneme> cache =
+                        CacheBuilder.newBuilder().concurrencyLevel(1)
+                                .build(new CacheLoader<String, Phoneme>() {
+                                    @Override
+                                    @ParametersAreNonnullByDefault
+                                    public Phoneme load(String str) {
+                                        return new Phoneme(str);
+                                    }
+                                });
 
                 String[] strs;
 
@@ -262,18 +270,7 @@ public class StringMatcher {
                 }
 
                 public static void refresh() {
-                    cache = buildCache();
-                }
-
-                private static LoadingCache<String, Phoneme> buildCache() {
-                    return CacheBuilder.newBuilder().concurrencyLevel(1)
-                            .build(new CacheLoader<String, Phoneme>() {
-                                @Override
-                                @ParametersAreNonnullByDefault
-                                public Phoneme load(String str) {
-                                    return new Phoneme(str);
-                                }
-                            });
+                    cache.invalidateAll();
                 }
 
                 IndexSet match(String source, IndexSet idx, int start) {

@@ -47,13 +47,13 @@ public class JechConfig {
         initProperties();
         handleFormerVersion();
         setValue();
-        sync();
-        config.save();
+        update();
         fetchOnline();
     }
 
-    public static void sync() {
+    public static void update() {
         for (Item i : Item.values()) i.sync();
+        config.save();
     }
 
     public static void fetchOnline() {

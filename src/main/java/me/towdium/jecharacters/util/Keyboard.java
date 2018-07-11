@@ -39,9 +39,11 @@ public enum Keyboard {
         put("un", "ㄨㄣ");
         put("uang", "ㄨㄤ");
         put("ueng", "ㄨㄥ");
+        put("uen", "ㄩㄣ");
         put("v", "ㄩ");
         put("ve", "ㄩㄝ");
         put("van", "ㄩㄢ");
+        put("vang", "ㄩㄤ");
         put("vn", "ㄩㄣ");
         put("b", "ㄅ");
         put("p", "ㄆ");
@@ -73,6 +75,7 @@ public enum Keyboard {
         put("0", "");
         put("", "");
     }};
+
     private static HashMap<String, String> PHONETIC_SPELL = new HashMap<String, String>() {{
         put("yi", "i");
         put("you", "iu");

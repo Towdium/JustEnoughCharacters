@@ -9,6 +9,9 @@ import mcp.MethodsReturnNonnullByDefault;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Set;
+import java.util.WeakHashMap;
 
 /**
  * Author: Towdium
@@ -18,8 +21,11 @@ import java.util.ArrayList;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class CachedFilter<T> {
+    static Set<CachedFilter> instances = Collections.newSetFromMap(
+            new WeakHashMap<>());
+
     ArrayList<Entry> fullList = new ArrayList<>();
-    private final LoadingCache<String, ImmutableList<Entry>> filteredItemMapsCache =
+    private final LoadingCache<String, ImmutableList<Entry>> cache =
             CacheBuilder.newBuilder().maximumWeight(16).concurrencyLevel(1).
                     weigher((Weigher<String, ImmutableList<Entry>>) (key, value) -> 1).
                     build(new CacheLoader<String, ImmutableList<Entry>>() {
@@ -31,7 +37,7 @@ public class CachedFilter<T> {
                                 return builder.build();
                             }
                             String prevFilterText = filterText.substring(0, filterText.length() - 1);
-                            ImmutableList<Entry> baseItemSet = filteredItemMapsCache.get(prevFilterText);
+                            ImmutableList<Entry> baseItemSet = cache.get(prevFilterText);
                             ImmutableList.Builder<Entry> builder = ImmutableList.builder();
                             baseItemSet.stream().parallel().filter(entry -> StringMatcher.checkStr(entry.key, filterText)).
                                     forEachOrdered(builder::add);
@@ -39,12 +45,12 @@ public class CachedFilter<T> {
                         }
                     });
 
-    public ArrayList<T> search(String word) {
-        //JechCore.LOG.info("Searching iterate: " + word);
-        ImmutableList<Entry> list = filteredItemMapsCache.getUnchecked(word.toLowerCase());
-        ArrayList<T> ret = new ArrayList<>(1000);
-        list.forEach((entry -> ret.add(entry.value)));
-        return ret;
+    public CachedFilter() {
+        instances.add(this);
+    }
+
+    public static void invalidate() {
+        instances.forEach(i -> i.cache.invalidateAll());
     }
 
     public void put(String key, T value) throws IllegalStateException {
@@ -53,6 +59,14 @@ public class CachedFilter<T> {
 
     public int computeCount() {
         return fullList.size();
+    }
+
+    public ArrayList<T> search(String word) {
+        //JechCore.LOG.info("Searching iterate: " + word);
+        ImmutableList<Entry> list = cache.getUnchecked(word.toLowerCase());
+        ArrayList<T> ret = new ArrayList<>(1000);
+        list.forEach((entry -> ret.add(entry.value)));
+        return ret;
     }
 
     private class Entry {

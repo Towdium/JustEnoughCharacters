@@ -30,6 +30,12 @@ public class JechTest {
     }
 
     @Test
+    public void quanpin6() {
+        assert !StringMatcher.checkStr("石台阶", "yj");
+    }
+
+
+    @Test
     public void daqian1() {
         JechConfig.keyboard = Keyboard.DAQIAN;
         StringMatcher.refresh();
@@ -41,5 +47,12 @@ public class JechTest {
         JechConfig.keyboard = Keyboard.DAQIAN;
         StringMatcher.refresh();
         assert StringMatcher.checkStr("测试文本", "hkgjp1");
+    }
+
+    @Test
+    public void daqian3() {
+        JechConfig.keyboard = Keyboard.DAQIAN;
+        StringMatcher.refresh();
+        assert StringMatcher.checkStr("红石", "cj/2g");
     }
 }
