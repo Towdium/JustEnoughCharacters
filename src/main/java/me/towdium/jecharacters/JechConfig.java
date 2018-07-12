@@ -41,7 +41,7 @@ public class JechConfig {
     public static boolean enableFuzzyU2v = false;
     public static Keyboard keyboard = Keyboard.QUANPIN;
 
-    public static void preInit(File location) {
+    public static void init(File location) {
         config = new Configuration(new File(location, "config/JustEnoughCharacters.cfg"), JechCore.VERSION);
         config.load();
         initProperties();
@@ -93,10 +93,6 @@ public class JechConfig {
 
     public static void initProperties() {
         for (Item item : Item.values()) item.init();
-    }
-
-    public static void save() {
-        config.save();
     }
 
     public enum Item {

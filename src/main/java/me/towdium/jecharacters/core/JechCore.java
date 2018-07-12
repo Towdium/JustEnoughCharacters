@@ -36,7 +36,7 @@ public class JechCore implements IFMLLoadingPlugin {
 
     @Override
     public void injectData(Map<String, Object> data) {
-        JechConfig.preInit(((File) data.get("mcLocation")));
+        JechConfig.init(((File) data.get("mcLocation")));
         source = (File) data.get("coremodLocation");
     }
 
