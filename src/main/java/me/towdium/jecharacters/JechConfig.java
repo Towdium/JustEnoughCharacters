@@ -39,6 +39,7 @@ public class JechConfig {
     public static boolean enableFuzzyIng2in = false;
     public static boolean enableFuzzyEng2en = false;
     public static boolean enableFuzzyU2v = false;
+    public static boolean enableForceQuote = false;
     public static Keyboard keyboard = Keyboard.QUANPIN;
 
     public static void init(File location) {
@@ -111,6 +112,7 @@ public class JechConfig {
         ENABLE_FUZZY_ING2IN,
         ENABLE_FUZZY_ENG2EN,
         ENABLE_FUZZY_U2V,
+        ENABLE_FORCE_QUOTE,
         INT_KEYBOARD;
 
 
@@ -153,6 +155,8 @@ public class JechConfig {
                     return "Set to true to enable fuzzy Eng <=> En";
                 case ENABLE_FUZZY_U2V:
                     return "Set to true to enable fuzzy U <=> V";
+                case ENABLE_FORCE_QUOTE:
+                    return "Set to true to disable JEI keyword separation";
                 case INT_KEYBOARD:
                     return "Choose keyboard: 0 for quanpin, 1 for daqian (phonetic)";
             }
@@ -194,6 +198,8 @@ public class JechConfig {
                 case ENABLE_FUZZY_ENG2EN:
                     return Type.BOOLEAN;
                 case ENABLE_FUZZY_U2V:
+                    return Type.BOOLEAN;
+                case ENABLE_FORCE_QUOTE:
                     return Type.BOOLEAN;
                 case INT_KEYBOARD:
                     return Type.INTEGER;
@@ -293,6 +299,8 @@ public class JechConfig {
                     return false;
                 case ENABLE_FUZZY_U2V:
                     return false;
+                case ENABLE_FORCE_QUOTE:
+                    return false;
                 case INT_KEYBOARD:
                     return 0;
             }
@@ -345,6 +353,9 @@ public class JechConfig {
                     break;
                 case ENABLE_FUZZY_U2V:
                     enableFuzzyU2v = getProperty().getBoolean();
+                    break;
+                case ENABLE_FORCE_QUOTE:
+                    enableForceQuote = getProperty().getBoolean();
                     break;
                 case INT_KEYBOARD:
                     keyboard = Keyboard.get(getProperty().getInt());

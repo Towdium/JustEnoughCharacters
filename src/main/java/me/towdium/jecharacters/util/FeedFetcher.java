@@ -34,7 +34,6 @@ public class FeedFetcher {
     }
 
     public static class Feed {
-        public int version;
         public List<String> string;
         public List<String> regexp;
     }

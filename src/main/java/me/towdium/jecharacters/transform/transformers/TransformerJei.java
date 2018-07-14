@@ -8,7 +8,10 @@ import me.towdium.jecharacters.core.JechCore;
 import me.towdium.jecharacters.transform.Transformer;
 import me.towdium.jecharacters.util.CachedFilter;
 import mezz.jei.suffixtree.GeneralizedSuffixTree;
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.InsnList;
+import org.objectweb.asm.tree.MethodInsnNode;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -18,29 +21,38 @@ import javax.annotation.ParametersAreNonnullByDefault;
  */
 
 public class TransformerJei implements Transformer.Extended {
+    @SuppressWarnings("unused")
+    public static String wrap(String s) {
+        return "\"" + s + "\"";
+    }
+
     @Override
     public boolean accepts(String name) {
-        return JechConfig.Item.ENABLE_JEI.getProperty().getBoolean() && (
-                name.equals("mezz.jei.ingredients.IngredientFilter")
-        );
+        return JechConfig.enableJEI && name.equals("mezz.jei.ingredients.IngredientFilter");
     }
 
     @Override
     public void transform(ClassNode n) {
         JechCore.LOG.info("Transforming class " + n.name + " for JEI integration.");
         Transformer.findMethod(n, "<init>").ifPresent(methodNode -> Transformer.transformConstruct(methodNode, "mezz/jei/suffixtree/GeneralizedSuffixTree",
-                "me/towdium/jecharacters/transform/transformers/TransformerJei$FakeTreeB"));
+                "me/towdium/jecharacters/transform/transformers/TransformerJei$FakeTree"));
         Transformer.findMethod(n, "createPrefixedSearchTree").ifPresent(methodNode ->
                 Transformer.transformConstruct(methodNode, "mezz/jei/suffixtree/GeneralizedSuffixTree",
-                        "me/towdium/jecharacters/transform/transformers/TransformerJei$FakeTreeB"));
+                        "me/towdium/jecharacters/transform/transformers/TransformerJei$FakeTree"));
+        if (JechConfig.enableForceQuote) Transformer.findMethod(n, "getElements").ifPresent(methodNode -> {
+            InsnList list = methodNode.instructions;
+            list.insert(list.get(3), new MethodInsnNode(Opcodes.INVOKESTATIC,
+                    "me/towdium/jecharacters/transform/transformers/TransformerJei", "wrap",
+                    "(Ljava/lang/String;)Ljava/lang/String;", false));
+        });
     }
 
     @ParametersAreNonnullByDefault
     @MethodsReturnNonnullByDefault
-    public static class FakeTreeB extends GeneralizedSuffixTree {
+    public static class FakeTree extends GeneralizedSuffixTree {
         CachedFilter<Integer> cf;
 
-        public FakeTreeB() {
+        public FakeTree() {
             cf = new CachedFilter<>();
         }
 

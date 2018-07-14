@@ -130,14 +130,14 @@ public class StringMatcher {
     }
 
     private static class CharacterMul implements Character {
-        private static final CharacterMul[] CACHE = new CharacterMul[41000];
+        private static CharacterMul[] cache = new CharacterMul[41000];
         private static final int START = 0x3007;
         private static final int END = 0x9FA5;
 
         static {
-            for (int i = START; i <= END; i++) {
-                CACHE[i] = genRep((char) i);
-            }
+            JechCore.LOG.info("Starting generating pattern");
+            for (int i = START; i <= END; i++) cache[i] = genRep((char) i);
+            JechCore.LOG.info("Finished generating pattern");
         }
 
         private Instance[] patterns = new Instance[0];
@@ -146,7 +146,7 @@ public class StringMatcher {
         }
 
         static CharacterMul get(char ch) {
-            return CACHE[ch];
+            return cache[ch];
         }
 
         private static CharacterMul genRep(char ch) {

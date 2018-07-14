@@ -21859,7 +21859,7 @@
 8CE7: tan4
 8CE8: cong2
 8CE9: cong2
-8CEA: zhi4
+8CEA: zhi4, zhi2
 8CEB: ji1
 8CEC: zhang4
 8CED: du3
