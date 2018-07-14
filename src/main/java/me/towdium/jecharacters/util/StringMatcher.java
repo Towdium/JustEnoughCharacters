@@ -36,8 +36,8 @@ public class StringMatcher {
         if (containsChinese(name)) {
             String testS = test.toString();
             String nameS = name.toString();
-            if (testS.startsWith(".*") && testS.endsWith(".*"))
-                testS = testS.substring(2, testS.length() - 2);
+            if (testS.startsWith(".*")) testS = testS.substring(2);
+            if (testS.endsWith(".*")) testS = testS.substring(0, testS.length() - 2);
             boolean ret = checkChinese(nameS, testS);
             return ret ? p.matcher("a") : p.matcher("");
         } else
@@ -307,7 +307,7 @@ public class StringMatcher {
 
         public void set(int index) {
             int i = 0x1 << index;
-            this.value |= i;
+            value |= i;
         }
 
         public boolean get(int index) {
@@ -316,7 +316,7 @@ public class StringMatcher {
         }
 
         public void merge(IndexSet s) {
-            value |= s.value;
+            value = value == 0x1 ? s.value : (value |= s.value);
         }
 
         public boolean foreach(Predicate<Integer> p) {

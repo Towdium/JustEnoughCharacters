@@ -52,4 +52,11 @@ public class JechTest {
         StringMatcher.refresh();
         assert StringMatcher.checkStr("测试文本", "hkgjp1");
     }
+
+    @Test
+    public void temp() {
+        JechConfig.keyboard = Keyboard.DAQIAN;
+        StringMatcher.refresh();
+        assert StringMatcher.checkStr("物资", "j");
+    }
 }
