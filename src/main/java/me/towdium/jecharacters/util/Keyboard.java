@@ -117,8 +117,8 @@ public enum Keyboard {
         put('ㄘ', "h");
         put('ㄛ', "i");
         put('ㄨ', "j");
-        put('ㄜ', ",");
-        put('ㄠ', "k");
+        put('ㄜ', "k");
+        put('ㄠ', "l");
         put('ㄩ', "m");
         put('ㄙ', "n");
         put('ㄟ', "o");

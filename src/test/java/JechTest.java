@@ -57,6 +57,6 @@ public class JechTest {
     public void temp() {
         JechConfig.keyboard = Keyboard.DAQIAN;
         StringMatcher.refresh();
-        assert StringMatcher.checkStr("物资", "j");
+        assert StringMatcher.checkStr("腳手架", "rul3g.3ru84");
     }
 }
