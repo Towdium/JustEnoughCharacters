@@ -80,6 +80,7 @@ public enum Keyboard {
         put("yi", "i");
         put("you", "iu");
         put("yin", "in");
+        put("ye", "ie");
         put("ying", "ing");
         put("wu", "u");
         put("wen", "un");
