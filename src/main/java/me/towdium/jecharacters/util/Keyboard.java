@@ -106,6 +106,7 @@ public enum Keyboard {
         put("ci", "c");
         put("zhi", "zh");
         put("zi", "z");
+        put("ri", "r");
     }};
     private static HashMap<Character, String> KEYBOARD_DAQIAN = new HashMap<Character, String>() {{
         put('ㄇ', "a");

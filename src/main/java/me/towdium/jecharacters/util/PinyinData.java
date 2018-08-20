@@ -19,9 +19,9 @@ public class PinyinData {
         try {
             String line;
             while ((line = br.readLine()) != null) {
-                String hex = line.substring(0, 4);
-                String sounds = line.substring(6);
-                data[Integer.parseInt(hex, 16)] = sounds.split(", ");
+                char ch = line.charAt(0);
+                String sounds = line.substring(3);
+                data[ch] = sounds.split(", ");
             }
         } catch (IOException e) {
             e.printStackTrace();

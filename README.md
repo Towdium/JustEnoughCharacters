@@ -91,13 +91,10 @@ lag when used in JEI, so I it should be fine for most of the developers.
 
 ### Credits
 
-This repository contains a simplified version of pinyin4j as pinyin
-database. Thanks a lot for their work. 
-
-By the way, since pinyin4j uses GPL as its license, I have to use 
-it in this project. Apologies for any inconvenience. Also, any 
-implementation of pinyin database with looser license is welcomed as
-pull requests. Them I can move to looser licenses (LGPL possibly).
+In versions before 3.0.0, this repository contained a simplified version 
+of pinyin4j as pinyin database. Thanks a lot for their work. In versions
+after 3.0.0, a new pinyin library is developed and used based on 
+[terra pinyin][6].
 
 Have fun!
 
@@ -106,3 +103,4 @@ Have fun!
 [3]: http://cf.way2muchnoise.eu/versions/just-enough-characters.svg
 [4]: https://github.com/Towdium/JustEnoughCharacters/blob/1.12.0/feed.json
 [5]: https://github.com/elytra/Correlated/blob/1.12.1/src/main/java/com/elytradev/correlated/C28n.java
+[6]: https://github.com/rime/rime-terra-pinyin
