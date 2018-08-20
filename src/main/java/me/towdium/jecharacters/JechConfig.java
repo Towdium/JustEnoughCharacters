@@ -40,6 +40,7 @@ public class JechConfig {
     public static boolean enableFuzzyEng2en = false;
     public static boolean enableFuzzyU2v = false;
     public static boolean enableForceQuote = false;
+    public static boolean enableChatHelp = true;
     public static Keyboard keyboard = Keyboard.QUANPIN;
 
     public static void init(File location) {
@@ -105,6 +106,7 @@ public class JechConfig {
         LIST_METHOD_BLACKLIST,
         ENABLE_RADICAL_MODE,
         ENABLE_JEI,
+        ENABLE_CHAT_HELP,
         ENABLE_FUZZY_ZH2Z,
         ENABLE_FUZZY_SH2S,
         ENABLE_FUZZY_CH2C,
@@ -157,14 +159,12 @@ public class JechConfig {
                     return "Set to true to enable fuzzy U <=> V";
                 case ENABLE_FORCE_QUOTE:
                     return "Set to true to disable JEI keyword separation";
+                case ENABLE_CHAT_HELP:
+                    return "Set to false to disable all the chat messages";
                 case INT_KEYBOARD:
-                    return "Choose keyboard: 0 for quanpin, 1 for daqian (phonetic)";
+                    return "Choose keyboard: 0 for quanpin, 1 for phonetic (Daqian)";
             }
             return "";
-        }
-
-        public String getCategory() {
-            return Category.General.toString();
         }
 
         public Type getType() {
@@ -203,6 +203,8 @@ public class JechConfig {
                     return Type.BOOLEAN;
                 case INT_KEYBOARD:
                     return Type.INTEGER;
+                case ENABLE_CHAT_HELP:
+                    return Type.BOOLEAN;
             }
             return Type.ERROR;
         }
@@ -303,6 +305,8 @@ public class JechConfig {
                     return false;
                 case INT_KEYBOARD:
                     return 0;
+                case ENABLE_CHAT_HELP:
+                    return true;
             }
             return JechConfig.empty;
         }
@@ -359,28 +363,55 @@ public class JechConfig {
                     break;
                 case INT_KEYBOARD:
                     keyboard = Keyboard.get(getProperty().getInt());
+                    break;
+                case ENABLE_CHAT_HELP:
+                    enableChatHelp = getProperty().getBoolean();
             }
+        }
+
+        public Category getCategory() {
+            switch (this) {
+                case LIST_ADDITIONAL_STRING_MATCH:
+                case LIST_ADDITIONAL_REGEXP_MATCH:
+                case LIST_DEFAULT_STRING_MATCH:
+                case LIST_DEFAULT_REGEXP_MATCH:
+                case LIST_METHOD_BLACKLIST:
+                    return Category.TRANSFORM;
+                case ENABLE_FUZZY_ZH2Z:
+                case ENABLE_FUZZY_SH2S:
+                case ENABLE_FUZZY_CH2C:
+                case ENABLE_FUZZY_ANG2AN:
+                case ENABLE_FUZZY_ING2IN:
+                case ENABLE_FUZZY_ENG2EN:
+                case ENABLE_FUZZY_U2V:
+                    return Category.FUZZY;
+                case LIST_DUMP_CLASS:
+                case ENABLE_RADICAL_MODE:
+                case ENABLE_JEI:
+                case ENABLE_FORCE_QUOTE:
+                case INT_KEYBOARD:
+                case ENABLE_CHAT_HELP:
+                    return Category.GENERAL;
+            }
+            throw new RuntimeException("Internal error.");
         }
 
         @SuppressWarnings("UnusedReturnValue")
         public Property init() {
-            Type type = this.getType();
-            if (type != null) {
+
                 switch (this.getType()) {
                     case BOOLEAN:
-                        return config.get(this.getCategory(), this.toString(), (Boolean) this.getDefault(), this.getComment());
+                        return config.get(getCategory().toString(), toString(), (Boolean) getDefault(), getComment());
                     case LIST_STRING:
-                        return config.get(this.getCategory(), this.toString(), (String[]) this.getDefault(), this.getComment());
+                        return config.get(getCategory().toString(), toString(), (String[]) getDefault(), getComment());
                     case INTEGER:
-                        return config.get(this.getCategory(), this.toString(), (int) this.getDefault(), this.getComment());
+                        return config.get(getCategory().toString(), toString(), (int) getDefault(), getComment());
                 }
-                config.getCategory(Category.General.toString()).get(this.toString());
-            }
-            return config.get(this.getCategory(), this.toString(), false, this.getComment());
+            throw new RuntimeException("Internal error.");
         }
 
         public Property getProperty() {
-            return config.getCategory(Category.General.toString()).get(this.toString());
+            return config.getCategory(getCategory().toString()).get(toString());
         }
 
         @Override
@@ -390,16 +421,19 @@ public class JechConfig {
     }
 
     public enum Category {
-        General;
+        GENERAL, FUZZY, TRANSFORM;
 
         @Override
         public String toString() {
             switch (this) {
-                case General:
+                case GENERAL:
                     return "general";
-                default:
-                    return "";
+                case FUZZY:
+                    return "fuzzy";
+                case TRANSFORM:
+                    return "transform";
             }
+            throw new RuntimeException("Runtime error.");
         }
     }
 

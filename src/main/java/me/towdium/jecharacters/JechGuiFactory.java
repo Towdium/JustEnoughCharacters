@@ -46,6 +46,7 @@ public class JechGuiFactory implements IModGuiFactory {
                 add(new ConfigElement(JechConfig.Item.ENABLE_FUZZY_ZH2Z.getProperty()));
                 add(new ConfigElement(JechConfig.Item.ENABLE_FUZZY_SH2S.getProperty()));
                 add(new ConfigElement(JechConfig.Item.ENABLE_FUZZY_U2V.getProperty()));
+                add(new ConfigElement(JechConfig.Item.ENABLE_CHAT_HELP.getProperty()));
             }}, JechCore.MODID, false, false, GuiConfig.getAbridgedConfigPath(JechConfig.config.toString()));
         }
     }

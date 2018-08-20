@@ -91,7 +91,8 @@ public class JechModContainer extends DummyModContainer {
 
         @SubscribeEvent
         public static void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
-            if (!messageSent && (JechConfig.keyboard == Keyboard.QUANPIN || !JechConfig.enableForceQuote)
+            if (JechConfig.enableChatHelp && !messageSent
+                    && (JechConfig.keyboard == Keyboard.QUANPIN || !JechConfig.enableForceQuote)
                     && Minecraft.getMinecraft().gameSettings.language.equals("zh_tw")) {
                 event.player.sendMessage(new TextComponentTranslation("chat.taiwan"));
                 messageSent = true;
