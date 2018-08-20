@@ -41,6 +41,7 @@ public class JechCommand extends CommandBase {
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) {
         if (args.length == 1 && args[0].equals("profile")) {
             Thread t = new Thread(() -> {
+                sender.sendMessage(new TextComponentString(I18n.format("chat.start")));
                 Profiler.Report r = Profiler.run();
                 try (FileOutputStream fos = new FileOutputStream("logs/jecharacters-profiler.txt")) {
                     OutputStreamWriter osw = new OutputStreamWriter(fos);
