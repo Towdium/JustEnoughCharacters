@@ -60,4 +60,15 @@ public class JechTest {
         assert StringMatcher.checkStr("錫", "vu6");
         assert StringMatcher.checkStr("物質", "j456");
     }
+
+    @Test
+    public void performance() {
+        for (int i = 1; i < 100; i++)
+            StringMatcher.checkStr("一段测试文本", "yidceshwenben");
+        long t0 = System.currentTimeMillis();
+        for (int i = 1; i < 3000000; i++)
+            StringMatcher.checkStr("一段测试文本", "yidceshwenben");
+        long td = System.currentTimeMillis() - t0;
+        System.out.println("Took " + td + " milliseconds.");
+    }
 }

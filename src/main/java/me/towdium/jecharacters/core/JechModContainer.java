@@ -8,15 +8,16 @@ import me.towdium.jecharacters.JechGuiFactory;
 import me.towdium.jecharacters.util.Keyboard;
 import net.minecraft.client.Minecraft;
 import net.minecraft.command.ICommand;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.fml.common.DummyModContainer;
 import net.minecraftforge.fml.common.LoadController;
 import net.minecraftforge.fml.common.ModMetadata;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.PlayerEvent;
 import net.minecraftforge.fml.common.versioning.ArtifactVersion;
 import net.minecraftforge.fml.common.versioning.VersionParser;
 
@@ -69,6 +70,7 @@ public class JechModContainer extends DummyModContainer {
         }
     }
 
+
     @Subscribe
     public void onServerStart(FMLServerStartingEvent event) {
         ICommand c = new JechCommand();
@@ -90,11 +92,12 @@ public class JechModContainer extends DummyModContainer {
         static boolean messageSent = false;
 
         @SubscribeEvent
-        public static void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
-            if (JechConfig.enableChatHelp && !messageSent
+        public static void onPlayerLogin(EntityJoinWorldEvent event) {
+            if (event.getEntity() instanceof EntityPlayer && event.getEntity().world.isRemote
+                    && JechConfig.enableChatHelp && !messageSent
                     && (JechConfig.keyboard == Keyboard.QUANPIN || !JechConfig.enableForceQuote)
                     && Minecraft.getMinecraft().gameSettings.language.equals("zh_tw")) {
-                event.player.sendMessage(new TextComponentTranslation("chat.taiwan"));
+                event.getEntity().sendMessage(new TextComponentTranslation("chat.taiwan"));
                 messageSent = true;
             }
         }
