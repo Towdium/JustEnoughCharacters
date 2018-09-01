@@ -23,7 +23,7 @@ compileJava {
 }
 
 minecraft {
-    version = "1.12.2-14.23.3.2669"
+    version = "1.12.2-14.23.4.2759"
     runDir = "run"
     mappings = "snapshot_20180410"
 
@@ -31,7 +31,7 @@ minecraft {
 }
 
 dependencies {
-    compile 'mezz.jei:jei_1.12.2:4.11.0.202'
+    compile 'mezz.jei:jei_1.12.2:4.12.0.215'
     testCompile 'org.junit.jupiter:junit-jupiter-api:5.2.0'
 }
 
