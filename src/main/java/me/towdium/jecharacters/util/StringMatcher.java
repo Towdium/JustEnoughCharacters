@@ -48,12 +48,8 @@ public class StringMatcher {
     @SuppressWarnings("unused")
     public static boolean checkStr(String s1, CharSequence s2) {
         boolean ret;
-
         if (containsChinese(s1)) ret = checkChinese(s1, s2.toString());
         else ret = s1.contains(s2);
-
-        if (verbose) JechCore.LOG.info("Full: " + s1 + ", Test: " + s2.toString() + ", -> " + ret + '.');
-
         return ret;
     }
 
@@ -80,6 +76,7 @@ public class StringMatcher {
                 }
             }
         } else b = s1.contains(s2);
+        if (verbose) JechCore.LOG.info("Full: " + s1 + ", Test: " + s2.toString() + ", -> " + b + '.');
         return b;
     }
 

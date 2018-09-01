@@ -275,6 +275,7 @@ public class JechConfig {
                     return new String[]{
                             "appeng.client.me.ItemRepo:updateView",
                             "codechicken.nei.ItemList$PatternItemFilter:matches",
+                            "codechicken.nei.util.ItemList$PatternItemFilter:matches",
                             "org.cyclops.integrateddynamics.core.inventory.container.ContainerMultipartAspects$1:apply",
                             "org.cyclops.integrateddynamics.inventory.container.ContainerLogicProgrammerBase$1:apply",
                             "p455w0rd.wct.client.me.ItemRepo:updateView"
