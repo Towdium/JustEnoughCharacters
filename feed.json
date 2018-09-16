@@ -64,6 +64,13 @@
       "org.cyclops.integrateddynamics.core.inventory.container.ContainerMultipartAspects$1:apply",
       "org.cyclops.integrateddynamics.inventory.container.ContainerLogicProgrammerBase$1:apply",
       "p455w0rd.wct.client.me.ItemRepo:updateView"
+    ],
+    "suffix": [
+      "net.minecraft.client.util.SearchTree:<init>",
+      "net.minecraft.client.util.SearchTree:recalculate",
+      "cgw:<init>",
+      "cgw:a",
+      "buildcraft.lib.client.guide.GuideManager:generateContentsPage"
     ]
   }
 ]
