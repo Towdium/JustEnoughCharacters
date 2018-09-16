@@ -12,20 +12,18 @@ import java.util.Set;
  * Author: Towdium
  * Date:   12/06/17
  */
-public class TransformerRegExpUnique implements Transformer.Extended {
-    MethodDecoder md = new MethodDecoder();
+public class TransformerRegExp implements Transformer.Extended {
+    MethodDecoder md;
 
-    public TransformerRegExpUnique() {
-        md.addAll(JechConfig.Item.LIST_DEFAULT_REGEXP_MATCH.getProperty().getStringList());
-        md.addAll(JechConfig.Item.LIST_ADDITIONAL_REGEXP_MATCH.getProperty().getStringList());
-        md.removeAll(JechConfig.Item.LIST_METHOD_BLACKLIST.getProperty().getStringList());
+    public TransformerRegExp() {
+        reload();
     }
 
     public void reload() {
         MethodDecoder mdt = new MethodDecoder();
-        mdt.addAll(JechConfig.Item.LIST_DEFAULT_REGEXP_MATCH.getProperty().getStringList());
-        mdt.addAll(JechConfig.Item.LIST_ADDITIONAL_REGEXP_MATCH.getProperty().getStringList());
-        mdt.removeAll(JechConfig.Item.LIST_METHOD_BLACKLIST.getProperty().getStringList());
+        mdt.addAll(JechConfig.listDefaultRegExp);
+        mdt.addAll(JechConfig.listAdditionalRegExp);
+        mdt.removeAll(JechConfig.listMethodBlacklist);
         md = mdt;
     }
 
@@ -45,5 +43,6 @@ public class TransformerRegExpUnique implements Transformer.Extended {
                             "checkReg", "(Ljava/util/regex/Pattern;Ljava/lang/CharSequence;)Ljava/util/regex/Matcher;",
                             false, Opcodes.INVOKESTATIC, null, null
                     ));
+        else JechCore.LOG.info("No function matched in class " + n.name);
     }
 }

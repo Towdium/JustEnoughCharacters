@@ -8,6 +8,7 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodInsnNode;
+import org.objectweb.asm.tree.TypeInsnNode;
 
 import java.io.File;
 import java.io.IOException;
@@ -58,6 +59,7 @@ public class Profiler {
     private static void scanJar(ZipFile f, Consumer<JarContainer> cbkJar) {
         ArrayList<String> methodsString = new ArrayList<>();
         ArrayList<String> methodsRegExp = new ArrayList<>();
+        ArrayList<String> methodsSuffix = new ArrayList<>();
         Wrapper<ModContainer[]> mods = new Wrapper<>(null);
         f.stream().forEach(entry -> {
             if (entry.getName().endsWith(".class")) {
@@ -67,7 +69,7 @@ public class Profiler {
                         JechCore.LOG.info("Class file " + entry.getName()
                                 + " in jar file " + f.getName() + " is too large, skip.");
                     } else {
-                        scanClass(is, methodsString::add, methodsRegExp::add);
+                        scanClass(is, methodsString::add, methodsRegExp::add, methodsSuffix::add);
                     }
                 } catch (IOException e) {
                     JechCore.LOG.info("Fail to read file " + entry.getName()
@@ -86,17 +88,18 @@ public class Profiler {
                 }
             }
         });
-        if (!methodsString.isEmpty() || !methodsRegExp.isEmpty()) {
+        if (!methodsString.isEmpty() || !methodsRegExp.isEmpty() || !methodsSuffix.isEmpty()) {
             JarContainer ret = new JarContainer();
             ret.methodsString = methodsString.toArray(EMPTY_STR);
             ret.methodsRegExp = methodsRegExp.toArray(EMPTY_STR);
+            ret.methodsSuffix = methodsSuffix.toArray(EMPTY_STR);
             ret.mods = mods.v;
             cbkJar.accept(ret);
         }
     }
 
-    private static void scanClass(InputStream is, Consumer<String> callbackString, Consumer<String> callbackRegExp
-    ) throws IOException {
+    private static void scanClass(InputStream is, Consumer<String> string, Consumer<String> regexp,
+                                  Consumer<String> suffix) throws IOException {
         ClassNode classNode = new ClassNode();
         ClassReader classReader = new ClassReader(is);
         try {
@@ -117,14 +120,23 @@ public class Profiler {
                     MethodInsnNode mNode = ((MethodInsnNode) node);
                     if (mNode.getOpcode() == Opcodes.INVOKEVIRTUAL && mNode.owner.equals("java/lang/String")
                             && mNode.name.equals("contains") && mNode.desc.equals("(Ljava/lang/CharSequence;)Z")) {
-                        callbackString.accept((classNode.name + ":" + methodNode.name + ":" + methodNode.desc)
+                        string.accept((classNode.name + ":" + methodNode.name + ":" + methodNode.desc)
                                 .replace('/', '.'));
                         break;
                     }
                     if (mNode.getOpcode() == Opcodes.INVOKEVIRTUAL && mNode.owner.equals("java/util/regex/Pattern")
                             && mNode.name.equals("matcher")
                             && mNode.desc.equals("(Ljava/lang/CharSequence;)Ljava/util/regex/Matcher;")) {
-                        callbackRegExp.accept((classNode.name + ":" + methodNode.name + ":" + methodNode.desc)
+                        regexp.accept((classNode.name + ":" + methodNode.name + ":" + methodNode.desc)
+                                .replace('/', '.'));
+                        break;
+                    }
+                } else if (node instanceof TypeInsnNode) {
+                    TypeInsnNode tNode = ((TypeInsnNode) node);
+                    if (tNode.getOpcode() == Opcodes.NEW && (
+                            tNode.desc.equals("net/minecraft/client/util/SuffixArray")
+                                    || tNode.desc.equals("cgx")) || tNode.desc.equals("cgz")) {
+                        suffix.accept((classNode.name + ":" + methodNode.name + ":" + methodNode.desc)
                                 .replace('/', '.'));
                         break;
                     }
@@ -151,6 +163,7 @@ public class Profiler {
         ModContainer[] mods;
         String[] methodsString;
         String[] methodsRegExp;
+        String[] methodsSuffix;
     }
 
     @SuppressWarnings("unused")

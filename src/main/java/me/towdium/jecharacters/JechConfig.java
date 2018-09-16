@@ -2,7 +2,6 @@ package me.towdium.jecharacters;
 
 import com.google.common.base.CaseFormat;
 import me.towdium.jecharacters.core.JechCore;
-import me.towdium.jecharacters.transform.TransformerRegistry;
 import me.towdium.jecharacters.util.FeedFetcher;
 import me.towdium.jecharacters.util.Keyboard;
 import me.towdium.jecharacters.util.VersionChecker;
@@ -10,10 +9,6 @@ import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
 
 import java.io.File;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.stream.Collectors;
 
 /**
  * Author:  Towdium
@@ -24,10 +19,12 @@ public class JechConfig {
     public static Configuration config;
     public static Object empty;
 
-    public static String[] listAdditionalStringMatch = new String[0];
-    public static String[] listAdditionalRegExpMatch = new String[0];
-    public static String[] listDefaultStringMatch = new String[0];
-    public static String[] listDefaultRegExpMatch = new String[0];
+    public static String[] listAdditionalString = new String[0];
+    public static String[] listAdditionalRegExp = new String[0];
+    public static String[] listAdditionalSuffix = new String[0];
+    public static String[] listDefaultString = new String[0];
+    public static String[] listDefaultRegExp = new String[0];
+    public static String[] listDefaultSuffix = new String[0];
     public static String[] listDumpClassFunc = new String[0];
     public static String[] listMethodBlacklist = new String[0];
     public static boolean enableRadicalMode = false;
@@ -60,31 +57,14 @@ public class JechConfig {
     }
 
     public static void fetchOnline() {
-        Thread t = new Thread(() ->
-                FeedFetcher.fetch((s, r) -> {
-                    HashSet<String> buf = new HashSet<>();
-                    Collections.addAll(buf, Item.LIST_ADDITIONAL_STRING_MATCH.getProperty().getStringList());
-                    buf.addAll(s);
-                    buf.removeAll(Arrays.asList(Item.LIST_DEFAULT_STRING_MATCH.getProperty().getStringList()));
-                    Item.LIST_ADDITIONAL_STRING_MATCH.getProperty()
-                            .set(buf.stream().sorted().collect(Collectors.toList()).toArray(new String[]{}));
-                    buf.clear();
-                    Collections.addAll(buf, Item.LIST_ADDITIONAL_REGEXP_MATCH.getProperty().getStringList());
-                    buf.addAll(r);
-                    buf.removeAll(Arrays.asList(Item.LIST_DEFAULT_REGEXP_MATCH.getProperty().getStringList()));
-                    Item.LIST_ADDITIONAL_REGEXP_MATCH.getProperty()
-                            .set(buf.stream().sorted().collect(Collectors.toList()).toArray(new String[]{}));
-                    config.save();
-                    TransformerRegistry.transformerRegExp.reload();
-                    TransformerRegistry.transformerString.reload();
-                }));
+        Thread t = new Thread(FeedFetcher::fetch);
         t.setPriority(Thread.MIN_PRIORITY);
         t.run();
     }
 
     public static void setValue() {
-        Item.LIST_DEFAULT_REGEXP_MATCH.getProperty().set(((String[]) Item.LIST_DEFAULT_REGEXP_MATCH.getDefault()));
-        Item.LIST_DEFAULT_STRING_MATCH.getProperty().set(((String[]) Item.LIST_DEFAULT_STRING_MATCH.getDefault()));
+        Item.LIST_DEFAULT_REGEXP.getProperty().set(((String[]) Item.LIST_DEFAULT_REGEXP.getDefault()));
+        Item.LIST_DEFAULT_STRING.getProperty().set(((String[]) Item.LIST_DEFAULT_STRING.getDefault()));
     }
 
     public static void handleFormerVersion() {
@@ -99,10 +79,12 @@ public class JechConfig {
     }
 
     public enum Item {
-        LIST_ADDITIONAL_STRING_MATCH,
-        LIST_ADDITIONAL_REGEXP_MATCH,
-        LIST_DEFAULT_STRING_MATCH,
-        LIST_DEFAULT_REGEXP_MATCH,
+        LIST_ADDITIONAL_STRING,
+        LIST_ADDITIONAL_REGEXP,
+        LIST_ADDITIONAL_SUFFIX,
+        LIST_DEFAULT_STRING,
+        LIST_DEFAULT_REGEXP,
+        LIST_DEFAULT_SUFFIX,
         LIST_DUMP_CLASS_FUNC,
         LIST_METHOD_BLACKLIST,
         ENABLE_RADICAL_MODE,
@@ -122,19 +104,26 @@ public class JechConfig {
 
         public String getComment() {
             switch (this) {
-                case LIST_ADDITIONAL_STRING_MATCH:
+                case LIST_ADDITIONAL_STRING:
                     return "Give a list of methods to transform, of which uses \"String.contains\" to match.\n" +
                             "The format is \"full.class.Path$InnerClass:methodName\"\n" +
                             "This list will also contain data fetched from online record.";
-                case LIST_ADDITIONAL_REGEXP_MATCH:
+                case LIST_ADDITIONAL_REGEXP:
                     return "Give a list of methods to transform, of which uses regular expression to match.\n" +
                             "The format is \"full.class.path$InnerClass:methodName\"\n" +
                             "This list will also contain data fetched from online record.";
-                case LIST_DEFAULT_STRING_MATCH:
+                case LIST_ADDITIONAL_SUFFIX:
+                    return "Give a list of methods to transform, of which uses vanilla SuffixArray to match.\n" +
+                            "The format is \"full.class.path$InnerClass:methodName\"\n" +
+                            "This list will also contain data fetched from online record.";
+                case LIST_DEFAULT_STRING:
                     return "Default list of methods to transform, of which uses \"String.contains\" to match.\n" +
                             "This list is maintained by the mod and will have no effect if you change it.";
-                case LIST_DEFAULT_REGEXP_MATCH:
+                case LIST_DEFAULT_REGEXP:
                     return "Default list of methods to transform, of which uses regular expression to match.\n" +
+                            "This list is maintained by the mod and will have no effect if you change it.";
+                case LIST_DEFAULT_SUFFIX:
+                    return "Default list of methods to transform, of which uses vanilla SuffixArray to match.\n" +
                             "This list is maintained by the mod and will have no effect if you change it.";
                 case LIST_DUMP_CLASS_FUNC:
                     return "Dump all the methods in this class into log. Format is \"full.class.Path$InnerClass\".";
@@ -173,13 +162,17 @@ public class JechConfig {
 
         public Type getType() {
             switch (this) {
-                case LIST_ADDITIONAL_STRING_MATCH:
+                case LIST_ADDITIONAL_STRING:
                     return Type.LIST_STRING;
-                case LIST_ADDITIONAL_REGEXP_MATCH:
+                case LIST_ADDITIONAL_REGEXP:
                     return Type.LIST_STRING;
-                case LIST_DEFAULT_STRING_MATCH:
+                case LIST_ADDITIONAL_SUFFIX:
                     return Type.LIST_STRING;
-                case LIST_DEFAULT_REGEXP_MATCH:
+                case LIST_DEFAULT_STRING:
+                    return Type.LIST_STRING;
+                case LIST_DEFAULT_REGEXP:
+                    return Type.LIST_STRING;
+                case LIST_DEFAULT_SUFFIX:
                     return Type.LIST_STRING;
                 case LIST_DUMP_CLASS_FUNC:
                     return Type.LIST_STRING;
@@ -217,11 +210,13 @@ public class JechConfig {
 
         public Object getDefault() {
             switch (this) {
-                case LIST_ADDITIONAL_STRING_MATCH:
+                case LIST_ADDITIONAL_STRING:
                     return new String[0];
-                case LIST_ADDITIONAL_REGEXP_MATCH:
+                case LIST_ADDITIONAL_REGEXP:
                     return new String[0];
-                case LIST_DEFAULT_STRING_MATCH:
+                case LIST_ADDITIONAL_SUFFIX:
+                    return new String[0];
+                case LIST_DEFAULT_STRING:
                     return new String[]{
                             "mezz.jei.ItemFilter$FilterPredicate:stringContainsTokens",
                             "com.raoulvdberge.refinedstorage.gui.grid.filtering.GridFilterName:accepts",
@@ -277,7 +272,7 @@ public class JechConfig {
                             "com.mia.props.client.container.GuiDecobench:refreshButtons",
                             "mrriegel.storagenetwork.gui.GuiRequest:match"
                     };
-                case LIST_DEFAULT_REGEXP_MATCH:
+                case LIST_DEFAULT_REGEXP:
                     return new String[]{
                             "appeng.client.me.ItemRepo:updateView",
                             "codechicken.nei.ItemList$PatternItemFilter:matches",
@@ -285,6 +280,14 @@ public class JechConfig {
                             "org.cyclops.integrateddynamics.core.inventory.container.ContainerMultipartAspects$1:apply",
                             "org.cyclops.integrateddynamics.inventory.container.ContainerLogicProgrammerBase$1:apply",
                             "p455w0rd.wct.client.me.ItemRepo:updateView"
+                    };
+                case LIST_DEFAULT_SUFFIX:
+                    return new String[]{
+                            "net.minecraft.client.util.SearchTree:<init>",
+                            "net.minecraft.client.util.SearchTree:recalculate",
+                            "cgw:<init>",
+                            "cgw:a",
+                            "buildcraft.lib.client.guide.GuideManager:generateContentsPage"
                     };
                 case LIST_DUMP_CLASS_FUNC:
                     return new String[0];
@@ -322,17 +325,23 @@ public class JechConfig {
 
         public void sync() {
             switch (this) {
-                case LIST_ADDITIONAL_STRING_MATCH:
-                    listAdditionalStringMatch = getProperty().getStringList();
+                case LIST_ADDITIONAL_STRING:
+                    listAdditionalString = getProperty().getStringList();
                     break;
-                case LIST_ADDITIONAL_REGEXP_MATCH:
-                    listAdditionalRegExpMatch = getProperty().getStringList();
+                case LIST_ADDITIONAL_REGEXP:
+                    listAdditionalRegExp = getProperty().getStringList();
                     break;
-                case LIST_DEFAULT_STRING_MATCH:
-                    listDefaultStringMatch = getProperty().getStringList();
+                case LIST_ADDITIONAL_SUFFIX:
+                    listAdditionalSuffix = getProperty().getStringList();
                     break;
-                case LIST_DEFAULT_REGEXP_MATCH:
-                    listDefaultRegExpMatch = getProperty().getStringList();
+                case LIST_DEFAULT_STRING:
+                    listDefaultString = getProperty().getStringList();
+                    break;
+                case LIST_DEFAULT_REGEXP:
+                    listDefaultRegExp = getProperty().getStringList();
+                    break;
+                case LIST_DEFAULT_SUFFIX:
+                    listDefaultSuffix = getProperty().getStringList();
                     break;
                 case LIST_DUMP_CLASS_FUNC:
                     listDumpClassFunc = getProperty().getStringList();
@@ -382,10 +391,12 @@ public class JechConfig {
 
         public Category getCategory() {
             switch (this) {
-                case LIST_ADDITIONAL_STRING_MATCH:
-                case LIST_ADDITIONAL_REGEXP_MATCH:
-                case LIST_DEFAULT_STRING_MATCH:
-                case LIST_DEFAULT_REGEXP_MATCH:
+                case LIST_ADDITIONAL_STRING:
+                case LIST_ADDITIONAL_REGEXP:
+                case LIST_ADDITIONAL_SUFFIX:
+                case LIST_DEFAULT_STRING:
+                case LIST_DEFAULT_REGEXP:
+                case LIST_DEFAULT_SUFFIX:
                 case LIST_METHOD_BLACKLIST:
                     return Category.TRANSFORM;
                 case ENABLE_FUZZY_ZH2Z:

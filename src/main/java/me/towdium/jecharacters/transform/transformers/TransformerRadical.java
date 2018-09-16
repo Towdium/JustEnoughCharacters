@@ -10,7 +10,9 @@ import org.objectweb.asm.tree.ClassNode;
  * Author: Towdium
  * Date:   12/06/17
  */
-public class TransformerStringUniversal implements Transformer.Extended {
+@Deprecated
+@SuppressWarnings("DeprecatedIsStillUsed")
+public class TransformerRadical implements Transformer.Extended {
     @Override
     public boolean accepts(String name) {
         return JechConfig.Item.ENABLE_RADICAL_MODE.getProperty().getBoolean();

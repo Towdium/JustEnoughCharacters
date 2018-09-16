@@ -15,20 +15,18 @@ import java.util.stream.Collectors;
  * Author: Towdium
  * Date:   12/06/17
  */
-public class TransformerStringUnique implements Transformer.Extended {
-    MethodDecoder md = new MethodDecoder();
+public class TransformerString implements Transformer.Extended {
+    MethodDecoder md;
 
-    public TransformerStringUnique() {
-        md.addAll(JechConfig.Item.LIST_DEFAULT_STRING_MATCH.getProperty().getStringList());
-        md.addAll(JechConfig.Item.LIST_ADDITIONAL_STRING_MATCH.getProperty().getStringList());
-        md.removeAll(JechConfig.Item.LIST_METHOD_BLACKLIST.getProperty().getStringList());
+    public TransformerString() {
+        reload();
     }
 
     public void reload() {
         MethodDecoder mdt = new MethodDecoder();
-        mdt.addAll(JechConfig.Item.LIST_DEFAULT_STRING_MATCH.getProperty().getStringList());
-        mdt.addAll(JechConfig.Item.LIST_ADDITIONAL_STRING_MATCH.getProperty().getStringList());
-        mdt.removeAll(JechConfig.Item.LIST_METHOD_BLACKLIST.getProperty().getStringList());
+        mdt.addAll(JechConfig.listDefaultString);
+        mdt.addAll(JechConfig.listAdditionalString);
+        mdt.removeAll(JechConfig.listMethodBlacklist);
         md = mdt;
     }
 
@@ -51,8 +49,7 @@ public class TransformerStringUnique implements Transformer.Extended {
                                 "checkStr", "(Ljava/lang/String;Ljava/lang/CharSequence;)Z", false, Opcodes.INVOKESTATIC,
                                 "(Ljava/lang/Object;)Z", "(Ljava/lang/String;)Z"
                         ));
-            else
-                JechCore.LOG.info("No function matched in class " + n.name);
+            else JechCore.LOG.info("No function matched in class " + n.name);
         }
     }
 }

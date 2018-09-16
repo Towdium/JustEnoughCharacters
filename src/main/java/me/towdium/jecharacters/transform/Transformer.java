@@ -133,20 +133,16 @@ public interface Transformer {
         public void addAll(String[] names) {
             for (String s : names) {
                 String[] ss = s.split(":");
-                if (ss.length == 2)
-                    methods.put(ss[0], ss[1]);
-                else
-                    logError(s);
+                if (ss.length == 2) methods.put(ss[0], ss[1]);
+                else logError(s);
             }
         }
 
         public void removeAll(String[] names) {
             for (String s : names) {
                 String[] ss = s.split(":");
-                if (ss.length == 2)
-                    methods.remove(ss[0], ss[1]);
-                else
-                    logError(s);
+                if (ss.length == 2) methods.remove(ss[0], ss[1]);
+                else logError(s);
             }
         }
 
