@@ -19,7 +19,7 @@ import java.util.function.Consumer;
  */
 public class TransformerVanilla implements Transformer.Extended {
     public boolean accepts(String name) {
-        return name.equals("net.minecraft.client.util.SearchTree");
+        return name.equals("net.minecraft.client.util.SearchTree") || name.equals("cgw");
     }
 
     @Override

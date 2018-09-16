@@ -28,7 +28,7 @@ public class JechConfig {
     public static String[] listAdditionalRegExpMatch = new String[0];
     public static String[] listDefaultStringMatch = new String[0];
     public static String[] listDefaultRegExpMatch = new String[0];
-    public static String[] listDumpClass = new String[0];
+    public static String[] listDumpClassFunc = new String[0];
     public static String[] listMethodBlacklist = new String[0];
     public static boolean enableRadicalMode = false;
     public static boolean enableJEI = true;
@@ -41,6 +41,7 @@ public class JechConfig {
     public static boolean enableFuzzyU2v = false;
     public static boolean enableForceQuote = false;
     public static boolean enableChatHelp = true;
+    public static boolean enableDumpClassName = false;
     public static Keyboard keyboard = Keyboard.QUANPIN;
 
     public static void init(File location) {
@@ -102,7 +103,7 @@ public class JechConfig {
         LIST_ADDITIONAL_REGEXP_MATCH,
         LIST_DEFAULT_STRING_MATCH,
         LIST_DEFAULT_REGEXP_MATCH,
-        LIST_DUMP_CLASS,
+        LIST_DUMP_CLASS_FUNC,
         LIST_METHOD_BLACKLIST,
         ENABLE_RADICAL_MODE,
         ENABLE_JEI,
@@ -115,6 +116,7 @@ public class JechConfig {
         ENABLE_FUZZY_ENG2EN,
         ENABLE_FUZZY_U2V,
         ENABLE_FORCE_QUOTE,
+        ENABLE_DUMP_CLASS_NAME,
         INT_KEYBOARD;
 
 
@@ -134,7 +136,7 @@ public class JechConfig {
                 case LIST_DEFAULT_REGEXP_MATCH:
                     return "Default list of methods to transform, of which uses regular expression to match.\n" +
                             "This list is maintained by the mod and will have no effect if you change it.";
-                case LIST_DUMP_CLASS:
+                case LIST_DUMP_CLASS_FUNC:
                     return "Dump all the methods in this class into log. Format is \"full.class.Path$InnerClass\".";
                 case LIST_METHOD_BLACKLIST:
                     return "Put the strings in default list here to disable transform for certain method";
@@ -161,6 +163,8 @@ public class JechConfig {
                     return "Set to true to disable JEI keyword separation";
                 case ENABLE_CHAT_HELP:
                     return "Set to false to disable all the chat messages";
+                case ENABLE_DUMP_CLASS_NAME:
+                    return "Set to true to dump all the class names";
                 case INT_KEYBOARD:
                     return "Choose keyboard: 0 for quanpin, 1 for phonetic (Daqian)";
             }
@@ -177,7 +181,7 @@ public class JechConfig {
                     return Type.LIST_STRING;
                 case LIST_DEFAULT_REGEXP_MATCH:
                     return Type.LIST_STRING;
-                case LIST_DUMP_CLASS:
+                case LIST_DUMP_CLASS_FUNC:
                     return Type.LIST_STRING;
                 case LIST_METHOD_BLACKLIST:
                     return Type.LIST_STRING;
@@ -204,6 +208,8 @@ public class JechConfig {
                 case INT_KEYBOARD:
                     return Type.INTEGER;
                 case ENABLE_CHAT_HELP:
+                    return Type.BOOLEAN;
+                case ENABLE_DUMP_CLASS_NAME:
                     return Type.BOOLEAN;
             }
             return Type.ERROR;
@@ -280,7 +286,7 @@ public class JechConfig {
                             "org.cyclops.integrateddynamics.inventory.container.ContainerLogicProgrammerBase$1:apply",
                             "p455w0rd.wct.client.me.ItemRepo:updateView"
                     };
-                case LIST_DUMP_CLASS:
+                case LIST_DUMP_CLASS_FUNC:
                     return new String[0];
                 case LIST_METHOD_BLACKLIST:
                     return new String[0];
@@ -308,6 +314,8 @@ public class JechConfig {
                     return 0;
                 case ENABLE_CHAT_HELP:
                     return true;
+                case ENABLE_DUMP_CLASS_NAME:
+                    return false;
             }
             return JechConfig.empty;
         }
@@ -326,8 +334,8 @@ public class JechConfig {
                 case LIST_DEFAULT_REGEXP_MATCH:
                     listDefaultRegExpMatch = getProperty().getStringList();
                     break;
-                case LIST_DUMP_CLASS:
-                    listDumpClass = getProperty().getStringList();
+                case LIST_DUMP_CLASS_FUNC:
+                    listDumpClassFunc = getProperty().getStringList();
                     break;
                 case LIST_METHOD_BLACKLIST:
                     listMethodBlacklist = getProperty().getStringList();
@@ -367,6 +375,8 @@ public class JechConfig {
                     break;
                 case ENABLE_CHAT_HELP:
                     enableChatHelp = getProperty().getBoolean();
+                case ENABLE_DUMP_CLASS_NAME:
+                    enableDumpClassName = getProperty().getBoolean();
             }
         }
 
@@ -386,7 +396,8 @@ public class JechConfig {
                 case ENABLE_FUZZY_ENG2EN:
                 case ENABLE_FUZZY_U2V:
                     return Category.FUZZY;
-                case LIST_DUMP_CLASS:
+                case LIST_DUMP_CLASS_FUNC:
+                case ENABLE_DUMP_CLASS_NAME:
                 case ENABLE_RADICAL_MODE:
                 case ENABLE_JEI:
                 case ENABLE_FORCE_QUOTE:
