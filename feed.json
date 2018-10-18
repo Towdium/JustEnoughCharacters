@@ -55,7 +55,8 @@
       "vswe.stevesfactory.components.ComponentMenuFluid:updateSearch",
       "vswe.stevesfactory.components.ComponentMenuItem:updateSearch",
       "com.mia.props.client.container.GuiDecobench:refreshButtons",
-      "mrriegel.storagenetwork.gui.GuiRequest:match"
+      "mrriegel.storagenetwork.gui.GuiRequest:match",
+      "vazkii.quark.client.feature.ChestSearchBar:lambda$namesMatch$0"
     ],
     "regexp": [
       "appeng.client.me.ItemRepo:updateView",
@@ -63,7 +64,8 @@
       "codechicken.nei.util.ItemList$PatternItemFilter:matches",
       "org.cyclops.integrateddynamics.core.inventory.container.ContainerMultipartAspects$1:apply",
       "org.cyclops.integrateddynamics.inventory.container.ContainerLogicProgrammerBase$1:apply",
-      "p455w0rd.wct.client.me.ItemRepo:updateView"
+      "p455w0rd.wct.client.me.ItemRepo:updateView",
+      "vazkii.quark.client.feature.ChestSearchBar:lambda$namesMatch$2"
     ],
     "suffix": [
       "net.minecraft.client.util.SearchTree:<init>",

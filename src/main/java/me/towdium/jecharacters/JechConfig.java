@@ -218,76 +218,79 @@ public class JechConfig {
                     return new String[0];
                 case LIST_DEFAULT_STRING:
                     return new String[]{
-                            "mezz.jei.ItemFilter$FilterPredicate:stringContainsTokens",
-                            "com.raoulvdberge.refinedstorage.gui.grid.filtering.GridFilterName:accepts",
-                            "com.raoulvdberge.refinedstorage.gui.grid.filtering.GridFilterTooltip:accepts",
-                            "com.raoulvdberge.refinedstorage.gui.grid.filtering.GridFilterName:test",
-                            "com.raoulvdberge.refinedstorage.gui.grid.filtering.GridFilterTooltip:test",
-                            "com.rwtema.extrautils2.transfernodes.TileIndexer$ContainerIndexer$WidgetItemRefButton:lambda$getRef$0",
-                            "crazypants.enderio.machine.invpanel.client.ItemFilter$ModFilter:matches",
-                            "crazypants.enderio.machine.invpanel.client.ItemFilter$NameFilter:matches",
-                            "vazkii.psi.client.gui.GuiProgrammer:shouldShow",
-                            "vazkii.botania.client.gui.lexicon.GuiLexiconIndex:matchesSearch",
-                            "de.ellpeck.actuallyadditions.mod.booklet.entry.BookletEntry:fitsFilter",
-                            "de.ellpeck.actuallyadditions.mod.booklet.entry.BookletEntry:getChaptersForDisplay",
-                            "com.zerofall.ezstorage.gui.client.GuiStorageCore:updateFilteredItems",
-                            "io.github.elytra.copo.inventory.ContainerVT:updateSlots",
-                            "io.github.elytra.copo.inventory.ContainerTerminal:updateSlots",
-                            "net.minecraft.client.gui.inventory.GuiContainerCreative:updateFilteredItems",
-                            "bmp:updateFilteredItems",
-                            "appeng.client.gui.implementation.GuiInterfaceTerminal:refreshList",
-                            "appeng.client.gui.implementation.GuiInterfaceTerminal:itemStackMatchesSearchTerm",
-                            "pers.towdium.just_enough_calculation.gui.guis.GuiPicker:updateLayout",
-                            "io.github.elytra.correlated.inventory.ContainerTerminal:updateSlots",
-                            "com.elytradev.correlated.inventory.ContainerTerminal:updateSlots",
-                            "sonar.logistics.client.gui.GuiFluidReader:getGridList",
-                            "sonar.logistics.client.gui.GuiGuide:updateSearchList",
-                            "sonar.logistics.client.gui.GuiInventoryReader:getGridList",
-                            "sonar.logistics.client.gui.GuiWirelessStorageReader:getGridList",
-                            "binnie.core.machines.storage.SearchDialog:updateSearch",
-                            "net.blay09.mods.cookingforblockheads.container.ContainerRecipeBook:search",
-                            "mcjty.rftools.blocks.storagemonitor.GuiStorageScanner:updateContentsList",
-                            "mcjty.rftools.blocks.storagemonitor.StorageScannerTileEntity:lambda$null$20",
-                            "mcjty.rftools.blocks.storagemonitor.StorageScannerTileEntity:lambda$makeSearchPredicate$24",
-                            "mcjty.rftools.blocks.storagemonitor.StorageScannerTileEntity:lambda$makeSearchPredicate$20",
-                            "mcjty.rftools.blocks.storage.GuiModularStorage:updateList",
-                            "mcjty.rftools.blocks.shaper.LocatorTileEntity:checkFilter",
-                            "mcjty.rftools.items.netmonitor.GuiNetworkMonitor:populateList",
-                            "moze_intel.projecte.utils.ItemSearchHelper$DefaultSearch:doesItemMatchFilter_",
+                            "mezz.jei.ItemFilter$FilterPredicate:stringContainsTokens",  // JEI legacy
+                            "com.raoulvdberge.refinedstorage.gui.grid.filtering.GridFilterName:accepts",  // Refined Storage legpacy
+                            "com.raoulvdberge.refinedstorage.gui.grid.filtering.GridFilterTooltip:accepts",  // Refined Storage legacy
+                            "com.raoulvdberge.refinedstorage.gui.grid.filtering.GridFilterName:test",  // Refined Storage item name
+                            "com.raoulvdberge.refinedstorage.gui.grid.filtering.GridFilterTooltip:test",  // Refined Storage item tooltip
+                            // TODO Refined Storage needs update
+                            "com.rwtema.extrautils2.transfernodes.TileIndexer$ContainerIndexer$WidgetItemRefButton:lambda$getRef$0",  // Extra Utilities indexer
+                            "crazypants.enderio.machine.invpanel.client.ItemFilter$ModFilter:matches",  // EnderIO inventory panel item mod
+                            "crazypants.enderio.machine.invpanel.client.ItemFilter$NameFilter:matches",  // EnderIO inventory panel item name
+                            "vazkii.psi.client.gui.GuiProgrammer:shouldShow",  // Psi programmer search
+                            "vazkii.botania.client.gui.lexicon.GuiLexiconIndex:matchesSearch",  // Botania manual
+                            "de.ellpeck.actuallyadditions.mod.booklet.entry.BookletEntry:fitsFilter",  // Actually Additions manual
+                            "de.ellpeck.actuallyadditions.mod.booklet.entry.BookletEntry:getChaptersForDisplay",  // Actually Additions manual
+                            "com.zerofall.ezstorage.gui.client.GuiStorageCore:updateFilteredItems",  // EZ Storage search
+                            "io.github.elytra.copo.inventory.ContainerVT:updateSlots",  // Correlated legacy
+                            "io.github.elytra.copo.inventory.ContainerTerminal:updateSlots",  // Correlated legacy
+                            "net.minecraft.client.gui.inventory.GuiContainerCreative:updateFilteredItems",  // vanilla creative search legacy
+                            "bmp:updateFilteredItems",  // vanilla creative search legacy
+                            "appeng.client.gui.implementation.GuiInterfaceTerminal:refreshList",  // Applied Energistics terminal interface
+                            "appeng.client.gui.implementation.GuiInterfaceTerminal:itemStackMatchesSearchTerm",  // Applied Energistics terminal interface
+                            "pers.towdium.just_enough_calculation.gui.guis.GuiPicker:updateLayout",  // JustEnoughCalculation legacy
+                            "io.github.elytra.correlated.inventory.ContainerTerminal:updateSlots",  // Correlated legacy
+                            "com.elytradev.correlated.inventory.ContainerTerminal:updateSlots",  // Correlated legacy
+                            "sonar.logistics.client.gui.GuiFluidReader:getGridList",  // Practical Logistics fluid search
+                            "sonar.logistics.client.gui.GuiGuide:updateSearchList",  // Practical Logistics manual
+                            "sonar.logistics.client.gui.GuiInventoryReader:getGridList",  // Practical Logistics item search
+                            "sonar.logistics.client.gui.GuiWirelessStorageReader:getGridList",  // Practical Logistics remote item search
+                            "binnie.core.machines.storage.SearchDialog:updateSearch",  // BinnieCore chest search
+                            "net.blay09.mods.cookingforblockheads.container.ContainerRecipeBook:search",  // Cooking for Blockheads workbench search
+                            "mcjty.rftools.blocks.storagemonitor.GuiStorageScanner:updateContentsList",  // RFTools unknown
+                            "mcjty.rftools.blocks.storagemonitor.StorageScannerTileEntity:lambda$null$20",  // RFTools unknown
+                            "mcjty.rftools.blocks.storagemonitor.StorageScannerTileEntity:lambda$makeSearchPredicate$24",  // RFTools unknown
+                            "mcjty.rftools.blocks.storagemonitor.StorageScannerTileEntity:lambda$makeSearchPredicate$20",  // RFTools unknown
+                            "mcjty.rftools.blocks.storage.GuiModularStorage:updateList",  // RFTools modular storage
+                            "mcjty.rftools.blocks.shaper.LocatorTileEntity:checkFilter",  // RFTools unknown
+                            "mcjty.rftools.items.netmonitor.GuiNetworkMonitor:populateList",  // RFTools network monitor
+                            "moze_intel.projecte.utils.ItemSearchHelper$DefaultSearch:doesItemMatchFilter_",  // ProjectE item search
                             "org.cyclops.integrateddynamics.core.client.gui.GuiTextFieldDropdown:func_146201_a",
-                            "blusunrize.immersiveengineering.api.ManualPageBlueprint:listForSearch",
-                            "blusunrize.lib.manual.ManualPages$Crafting:listForSearch",
-                            "blusunrize.lib.manual.ManualPages$CraftingMulti:listForSearch",
-                            "blusunrize.lib.manual.ManualPages$ItemDisplay:listForSearch",
-                            "blusunrize.lib.manual.gui.GuiManual:func_73869_a",
-                            "betterquesting.client.gui.editors.GuiPrerequisiteEditor:RefreshSearch",
+                            "blusunrize.immersiveengineering.api.ManualPageBlueprint:listForSearch",  // Immersive Engineering manual
+                            "blusunrize.lib.manual.ManualPages$Crafting:listForSearch",  // Immersive Engineering manual
+                            "blusunrize.lib.manual.ManualPages$CraftingMulti:listForSearch",  // Immersive Engineering manual
+                            "blusunrize.lib.manual.ManualPages$ItemDisplay:listForSearch",  // Immersive Engineering manual
+                            "blusunrize.lib.manual.gui.GuiManual:func_73869_a",  // Immersive Engineering manual
+                            "betterquesting.client.gui.editors.GuiPrerequisiteEditor:RefreshSearch",  // BetterQuesting prerequisite search
                             "betterquesting.client.gui.editors.GuiQuestLineEditorB:RefreshSearch",
-                            "betterquesting.client.gui.editors.json.GuiJsonEntitySelection:updateSearch",
-                            "betterquesting.client.gui.editors.json.GuiJsonFluidSelection:doSearch",
-                            "betterquesting.client.gui.editors.json.GuiJsonItemSelection:doSearch",
-                            "com.elytradev.correlated.C28n:contains",
-                            "vswe.stevesfactory.components.ComponentMenuContainer$2:updateSearch",
-                            "vswe.stevesfactory.components.ComponentMenuFluid:updateSearch",
-                            "vswe.stevesfactory.components.ComponentMenuItem:updateSearch",
-                            "com.mia.props.client.container.GuiDecobench:refreshButtons",
-                            "mrriegel.storagenetwork.gui.GuiRequest:match"
+                            "betterquesting.client.gui.editors.json.GuiJsonEntitySelection:updateSearch",  // BetterQuesting entity search
+                            "betterquesting.client.gui.editors.json.GuiJsonFluidSelection:doSearch",  // BetterQuesting fluid search
+                            "betterquesting.client.gui.editors.json.GuiJsonItemSelection:doSearch",  // BetterQuesting item search
+                            "com.elytradev.correlated.C28n:contains",  // Correlated
+                            "vswe.stevesfactory.components.ComponentMenuContainer$2:updateSearch",  // Steve's Factory Manager container search
+                            "vswe.stevesfactory.components.ComponentMenuFluid:updateSearch",  // Steve's Factory Manager fluid search
+                            "vswe.stevesfactory.components.ComponentMenuItem:updateSearch",  // Steve's Factory Manager item search
+                            "com.mia.props.client.container.GuiDecobench:refreshButtons",  // Decofraft workbench
+                            "mrriegel.storagenetwork.gui.GuiRequest:match",  // Storage Network
+                            "vazkii.quark.client.feature.ChestSearchBar:lambda$namesMatch$0"  // quark chest
                     };
                 case LIST_DEFAULT_REGEXP:
                     return new String[]{
-                            "appeng.client.me.ItemRepo:updateView",
-                            "codechicken.nei.ItemList$PatternItemFilter:matches",
-                            "codechicken.nei.util.ItemList$PatternItemFilter:matches",
+                            "appeng.client.me.ItemRepo:updateView",  // Applied Energistics
+                            "codechicken.nei.ItemList$PatternItemFilter:matches",  // NEI item list legacy
+                            "codechicken.nei.util.ItemList$PatternItemFilter:matches",  // NEI item list
                             "org.cyclops.integrateddynamics.core.inventory.container.ContainerMultipartAspects$1:apply",
-                            "org.cyclops.integrateddynamics.inventory.container.ContainerLogicProgrammerBase$1:apply",
-                            "p455w0rd.wct.client.me.ItemRepo:updateView"
+                            "org.cyclops.integrateddynamics.inventory.container.ContainerLogicProgrammerBase$1:apply",  // Integrated Dynamics programmer
+                            "p455w0rd.wct.client.me.ItemRepo:updateView",  // Wireless Crafting Terminal
+                            "vazkii.quark.client.feature.ChestSearchBar:lambda$namesMatch$2"  // quark chest
                     };
                 case LIST_DEFAULT_SUFFIX:
                     return new String[]{
-                            "net.minecraft.client.util.SearchTree:<init>",
-                            "net.minecraft.client.util.SearchTree:recalculate",
-                            "cgw:<init>",
-                            "cgw:a",
-                            "buildcraft.lib.client.guide.GuideManager:generateContentsPage"
+                            "net.minecraft.client.util.SearchTree:<init>",  // vanilla search
+                            "net.minecraft.client.util.SearchTree:recalculate",  // vanilla search
+                            "cgw:<init>",  // vanilla search notch name
+                            "cgw:a",  // vanilla search notch name
+                            "buildcraft.lib.client.guide.GuideManager:generateContentsPage"  // BuildCraft manual
                     };
                 case LIST_DUMP_CLASS_FUNC:
                     return new String[0];
