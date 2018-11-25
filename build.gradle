@@ -31,7 +31,7 @@ minecraft {
 }
 
 dependencies {
-    compile 'mezz.jei:jei_1.12.2:4.12.0.215'
+    compile 'mezz.jei:jei_1.12.2:4.13.1.225'
     testCompile 'org.junit.jupiter:junit-jupiter-api:5.2.0'
 }
 

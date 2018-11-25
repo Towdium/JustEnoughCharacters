@@ -5,58 +5,24 @@ import org.junit.jupiter.api.Test;
 
 public class JechTest {
     @Test
-    public void quanpin1() {
+    public void quanpin() {
         JechConfig.keyboard = Keyboard.QUANPIN;
         StringMatcher.refresh();
         assert StringMatcher.checkStr("测试文本", "ceshiwenben");
-    }
-
-    @Test
-    public void quanpin2() {
-        JechConfig.keyboard = Keyboard.QUANPIN;
-        StringMatcher.refresh();
         assert StringMatcher.checkStr("测试文本", "ceshiwenbe");
-    }
-
-    @Test
-    public void quanpin3() {
-        JechConfig.keyboard = Keyboard.QUANPIN;
-        StringMatcher.refresh();
         assert StringMatcher.checkStr("测试文本", "ceshiwben");
-    }
-
-    @Test
-    public void quanpin4() {
-        JechConfig.keyboard = Keyboard.QUANPIN;
-        StringMatcher.refresh();
         assert StringMatcher.checkStr("测试文本", "ce4shi4w2ben");
-    }
-
-    @Test
-    public void quanpin5() {
-        JechConfig.keyboard = Keyboard.QUANPIN;
-        StringMatcher.refresh();
         assert !StringMatcher.checkStr("测试文本", "ce2shi4w2ben");
+        assert StringMatcher.checkStr("合金炉", "hejinlu");
+        assert StringMatcher.checkStr("洗矿场", "xikuangchang");
     }
 
     @Test
-    public void daqian1() {
+    public void daqian() {
         JechConfig.keyboard = Keyboard.DAQIAN;
         StringMatcher.refresh();
         assert StringMatcher.checkStr("测试文本", "hk4g4jp61p3");
-    }
-
-    @Test
-    public void daqian2() {
-        JechConfig.keyboard = Keyboard.DAQIAN;
-        StringMatcher.refresh();
         assert StringMatcher.checkStr("测试文本", "hkgjp1");
-    }
-
-    @Test
-    public void daqian3() {
-        JechConfig.keyboard = Keyboard.DAQIAN;
-        StringMatcher.refresh();
         assert StringMatcher.checkStr("錫", "vu6");
         assert StringMatcher.checkStr("物質", "j456");
     }

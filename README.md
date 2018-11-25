@@ -93,8 +93,8 @@ lag when used in JEI, so I it should be fine for most of the developers.
 
 In versions before 3.0.0, this repository contained a simplified version 
 of pinyin4j as pinyin database. Thanks a lot for their work. In versions
-after 3.0.0, a new pinyin library is developed and used based on 
-[terra pinyin][6].
+after 3.0.0, a new pinyin library is developed and used based on a
+mixture of [terra pinyin][6] and [pinyin-data][7].
 
 Have fun!
 
@@ -104,3 +104,4 @@ Have fun!
 [4]: https://github.com/Towdium/JustEnoughCharacters/blob/1.12.0/feed.json
 [5]: https://github.com/elytra/Correlated/blob/1.12.1/src/main/java/com/elytradev/correlated/C28n.java
 [6]: https://github.com/rime/rime-terra-pinyin
+[7]: https://github.com/mozillazg/pinyin-data

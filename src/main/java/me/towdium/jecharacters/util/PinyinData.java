@@ -9,6 +9,7 @@ import java.nio.charset.StandardCharsets;
 
 public class PinyinData {
     private static String[][] data;
+    private static final String[] EMPTY = new String[0];
 
     static {
         JechCore.LOG.info("Starting loading pinyin data");
@@ -29,7 +30,7 @@ public class PinyinData {
         }
 
         for (int i = 0; i < 41000; i++)
-            if (data[i] == null) data[i] = new String[0];
+            if (data[i] == null) data[i] = EMPTY;
 
         JechCore.LOG.info("Finished loading pinyin data");
     }

@@ -38,6 +38,7 @@
       "mcjty.rftools.blocks.storage.GuiModularStorage:updateList",
       "mcjty.rftools.blocks.shaper.LocatorTileEntity:checkFilter",
       "mcjty.rftools.items.netmonitor.GuiNetworkMonitor:populateList",
+      "moze_intel.projecte.gameObjs.container.inventory.TransmutationInventory:doesItemMatchFilter",
       "moze_intel.projecte.utils.ItemSearchHelper$DefaultSearch:doesItemMatchFilter_",
       "org.cyclops.integrateddynamics.core.client.gui.GuiTextFieldDropdown:func_146201_a",
       "blusunrize.immersiveengineering.api.ManualPageBlueprint:listForSearch",

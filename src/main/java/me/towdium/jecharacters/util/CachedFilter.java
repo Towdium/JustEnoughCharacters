@@ -39,8 +39,8 @@ public class CachedFilter<T> {
                             String prevFilterText = filterText.substring(0, filterText.length() - 1);
                             ImmutableList<Entry> baseItemSet = cache.get(prevFilterText);
                             ImmutableList.Builder<Entry> builder = ImmutableList.builder();
-                            baseItemSet.stream().parallel().filter(entry -> StringMatcher.checkStr(entry.key, filterText)).
-                                    forEachOrdered(builder::add);
+                            baseItemSet.stream().parallel().filter(entry ->
+                                    StringMatcher.checkStr(entry.key, filterText)).forEachOrdered(builder::add);
                             return builder.build();
                         }
                     });
@@ -57,12 +57,7 @@ public class CachedFilter<T> {
         fullList.add(new Entry(value, key.toLowerCase()));
     }
 
-    public int computeCount() {
-        return fullList.size();
-    }
-
     public ArrayList<T> search(String word) {
-        //JechCore.LOG.info("Searching iterate: " + word);
         ImmutableList<Entry> list = cache.getUnchecked(word.toLowerCase());
         ArrayList<T> ret = new ArrayList<>(1000);
         list.forEach((entry -> ret.add(entry.value)));

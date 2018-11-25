@@ -67,9 +67,5 @@ public class TransformerJei implements Transformer.Extended {
             super.put(key, index);
             cf.put(key, index);
         }
-
-        public int getHighestIndex() {
-            return cf.computeCount();
-        }
     }
 }

@@ -254,7 +254,8 @@ public class JechConfig {
                             "mcjty.rftools.blocks.storage.GuiModularStorage:updateList",  // RFTools modular storage
                             "mcjty.rftools.blocks.shaper.LocatorTileEntity:checkFilter",  // RFTools unknown
                             "mcjty.rftools.items.netmonitor.GuiNetworkMonitor:populateList",  // RFTools network monitor
-                            "moze_intel.projecte.utils.ItemSearchHelper$DefaultSearch:doesItemMatchFilter_",  // ProjectE item search
+                            "moze_intel.projecte.gameObjs.container.inventory.TransmutationInventory:doesItemMatchFilter",  // ProjectE item search
+                            "moze_intel.projecte.utils.ItemSearchHelper$DefaultSearch:doesItemMatchFilter_",  // ProjectE legacy
                             "org.cyclops.integrateddynamics.core.client.gui.GuiTextFieldDropdown:func_146201_a",
                             "blusunrize.immersiveengineering.api.ManualPageBlueprint:listForSearch",  // Immersive Engineering manual
                             "blusunrize.lib.manual.ManualPages$Crafting:listForSearch",  // Immersive Engineering manual
@@ -425,14 +426,14 @@ public class JechConfig {
         @SuppressWarnings("UnusedReturnValue")
         public Property init() {
 
-                switch (this.getType()) {
-                    case BOOLEAN:
-                        return config.get(getCategory().toString(), toString(), (Boolean) getDefault(), getComment());
-                    case LIST_STRING:
-                        return config.get(getCategory().toString(), toString(), (String[]) getDefault(), getComment());
-                    case INTEGER:
-                        return config.get(getCategory().toString(), toString(), (int) getDefault(), getComment());
-                }
+            switch (this.getType()) {
+                case BOOLEAN:
+                    return config.get(getCategory().toString(), toString(), (Boolean) getDefault(), getComment());
+                case LIST_STRING:
+                    return config.get(getCategory().toString(), toString(), (String[]) getDefault(), getComment());
+                case INTEGER:
+                    return config.get(getCategory().toString(), toString(), (int) getDefault(), getComment());
+            }
             throw new RuntimeException("Internal error.");
         }
 
