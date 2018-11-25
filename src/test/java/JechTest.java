@@ -15,6 +15,7 @@ public class JechTest {
         assert !StringMatcher.checkStr("测试文本", "ce2shi4w2ben");
         assert StringMatcher.checkStr("合金炉", "hejinlu");
         assert StringMatcher.checkStr("洗矿场", "xikuangchang");
+        assert StringMatcher.checkStr("流体", "liuti");
     }
 
     @Test
