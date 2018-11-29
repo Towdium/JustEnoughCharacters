@@ -1,5 +1,6 @@
 [![][2]][1] 
 [![][3]][1]
+[![][8]][9]
 
 # Just Enough Characters Mod
 
@@ -105,3 +106,5 @@ Have fun!
 [5]: https://github.com/elytra/Correlated/blob/1.12.1/src/main/java/com/elytradev/correlated/C28n.java
 [6]: https://github.com/rime/rime-terra-pinyin
 [7]: https://github.com/mozillazg/pinyin-data
+[8]: https://img.shields.io/discord/517485644163973120.svg?logo=discord
+[9]: https://discord.gg/M3fNfTW
