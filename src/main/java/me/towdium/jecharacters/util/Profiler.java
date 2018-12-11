@@ -60,6 +60,7 @@ public class Profiler {
         ArrayList<String> methodsString = new ArrayList<>();
         ArrayList<String> methodsRegExp = new ArrayList<>();
         ArrayList<String> methodsSuffix = new ArrayList<>();
+        ArrayList<String> methodsStrsKt = new ArrayList<>();
         Wrapper<ModContainer[]> mods = new Wrapper<>(null);
         f.stream().forEach(entry -> {
             if (entry.getName().endsWith(".class")) {
@@ -69,7 +70,7 @@ public class Profiler {
                         JechCore.LOG.info("Class file " + entry.getName()
                                 + " in jar file " + f.getName() + " is too large, skip.");
                     } else {
-                        scanClass(is, methodsString::add, methodsRegExp::add, methodsSuffix::add);
+                        scanClass(is, methodsString::add, methodsRegExp::add, methodsSuffix::add, methodsStrsKt::add);
                     }
                 } catch (IOException e) {
                     JechCore.LOG.info("Fail to read file " + entry.getName()
@@ -88,18 +89,19 @@ public class Profiler {
                 }
             }
         });
-        if (!methodsString.isEmpty() || !methodsRegExp.isEmpty() || !methodsSuffix.isEmpty()) {
+        if (!methodsString.isEmpty() || !methodsRegExp.isEmpty() || !methodsSuffix.isEmpty() || !methodsStrsKt.isEmpty()) {
             JarContainer ret = new JarContainer();
             ret.methodsString = methodsString.toArray(EMPTY_STR);
             ret.methodsRegExp = methodsRegExp.toArray(EMPTY_STR);
             ret.methodsSuffix = methodsSuffix.toArray(EMPTY_STR);
+            ret.methodsStrsKt = methodsStrsKt.toArray(EMPTY_STR);
             ret.mods = mods.v;
             cbkJar.accept(ret);
         }
     }
 
     private static void scanClass(InputStream is, Consumer<String> string, Consumer<String> regexp,
-                                  Consumer<String> suffix) throws IOException {
+                                  Consumer<String> suffix, Consumer<String> strskt) throws IOException {
         ClassNode classNode = new ClassNode();
         ClassReader classReader = new ClassReader(is);
         try {
@@ -120,15 +122,16 @@ public class Profiler {
                     MethodInsnNode mNode = ((MethodInsnNode) node);
                     if (mNode.getOpcode() == Opcodes.INVOKEVIRTUAL && mNode.owner.equals("java/lang/String")
                             && mNode.name.equals("contains") && mNode.desc.equals("(Ljava/lang/CharSequence;)Z")) {
-                        string.accept((classNode.name + ":" + methodNode.name + ":" + methodNode.desc)
-                                .replace('/', '.'));
+                        string.accept((classNode.name + ":" + methodNode.name + ":" + methodNode.desc).replace('/', '.'));
                         break;
-                    }
-                    if (mNode.getOpcode() == Opcodes.INVOKEVIRTUAL && mNode.owner.equals("java/util/regex/Pattern")
+                    } else if (mNode.getOpcode() == Opcodes.INVOKEVIRTUAL && mNode.owner.equals("java/util/regex/Pattern")
                             && mNode.name.equals("matcher")
                             && mNode.desc.equals("(Ljava/lang/CharSequence;)Ljava/util/regex/Matcher;")) {
-                        regexp.accept((classNode.name + ":" + methodNode.name + ":" + methodNode.desc)
-                                .replace('/', '.'));
+                        regexp.accept((classNode.name + ":" + methodNode.name + ":" + methodNode.desc).replace('/', '.'));
+                        break;
+                    } else if (mNode.getOpcode() == Opcodes.INVOKESTATIC && mNode.owner.equals("kotlin/text/StringsKt")
+                            && mNode.name.equals("contains") && mNode.desc.equals("(Ljava/lang/CharSequence;Ljava/lang/CharSequence;Z)Z")) {
+                        strskt.accept((classNode.name + ":" + methodNode.name + ":" + methodNode.desc).replace('/', '.'));
                         break;
                     }
                 } else if (node instanceof TypeInsnNode) {
@@ -164,6 +167,7 @@ public class Profiler {
         String[] methodsString;
         String[] methodsRegExp;
         String[] methodsSuffix;
+        String[] methodsStrsKt;
     }
 
     @SuppressWarnings("unused")

@@ -74,6 +74,9 @@
       "cgw:<init>",
       "cgw:a",
       "buildcraft.lib.client.guide.GuideManager:generateContentsPage"
+    ],
+    "strskt": [
+      "com.cout970.magneticraft.features.multiblocks.ContainerShelvingUnit:filterSlots"
     ]
   }
 ]

@@ -22,9 +22,11 @@ public class JechConfig {
     public static String[] listAdditionalString = new String[0];
     public static String[] listAdditionalRegExp = new String[0];
     public static String[] listAdditionalSuffix = new String[0];
+    public static String[] listAdditionalStrsKt = new String[0];
     public static String[] listDefaultString = new String[0];
     public static String[] listDefaultRegExp = new String[0];
     public static String[] listDefaultSuffix = new String[0];
+    public static String[] listDefaultStrsKt = new String[0];
     public static String[] listDumpClassFunc = new String[0];
     public static String[] listMethodBlacklist = new String[0];
     public static boolean enableRadicalMode = false;
@@ -82,9 +84,11 @@ public class JechConfig {
         LIST_ADDITIONAL_STRING,
         LIST_ADDITIONAL_REGEXP,
         LIST_ADDITIONAL_SUFFIX,
+        LIST_ADDITIONAL_STRSKT,
         LIST_DEFAULT_STRING,
         LIST_DEFAULT_REGEXP,
         LIST_DEFAULT_SUFFIX,
+        LIST_DEFAULT_STRSKT,
         LIST_DUMP_CLASS_FUNC,
         LIST_METHOD_BLACKLIST,
         ENABLE_RADICAL_MODE,
@@ -116,6 +120,10 @@ public class JechConfig {
                     return "Give a list of methods to transform, of which uses vanilla SuffixArray to match.\n" +
                             "The format is \"full.class.path$InnerClass:methodName\"\n" +
                             "This list will also contain data fetched from online record.";
+                case LIST_ADDITIONAL_STRSKT:
+                    return "Give a list of methods to transform, of which uses Kotlin Strings to match.\n" +
+                            "The format is \"full.class.path$InnerClass:methodName\"\n" +
+                            "This list will also contain data fetched from online record.";
                 case LIST_DEFAULT_STRING:
                     return "Default list of methods to transform, of which uses \"String.contains\" to match.\n" +
                             "This list is maintained by the mod and will have no effect if you change it.";
@@ -124,6 +132,9 @@ public class JechConfig {
                             "This list is maintained by the mod and will have no effect if you change it.";
                 case LIST_DEFAULT_SUFFIX:
                     return "Default list of methods to transform, of which uses vanilla SuffixArray to match.\n" +
+                            "This list is maintained by the mod and will have no effect if you change it.";
+                case LIST_DEFAULT_STRSKT:
+                    return "Default list of methods to transform, of which uses Kotlin Strings to match.\n" +
                             "This list is maintained by the mod and will have no effect if you change it.";
                 case LIST_DUMP_CLASS_FUNC:
                     return "Dump all the methods in this class into log. Format is \"full.class.Path$InnerClass\".";
@@ -168,11 +179,15 @@ public class JechConfig {
                     return Type.LIST_STRING;
                 case LIST_ADDITIONAL_SUFFIX:
                     return Type.LIST_STRING;
+                case LIST_ADDITIONAL_STRSKT:
+                    return Type.LIST_STRING;
                 case LIST_DEFAULT_STRING:
                     return Type.LIST_STRING;
                 case LIST_DEFAULT_REGEXP:
                     return Type.LIST_STRING;
                 case LIST_DEFAULT_SUFFIX:
+                    return Type.LIST_STRING;
+                case LIST_DEFAULT_STRSKT:
                     return Type.LIST_STRING;
                 case LIST_DUMP_CLASS_FUNC:
                     return Type.LIST_STRING;
@@ -215,6 +230,8 @@ public class JechConfig {
                 case LIST_ADDITIONAL_REGEXP:
                     return new String[0];
                 case LIST_ADDITIONAL_SUFFIX:
+                    return new String[0];
+                case LIST_ADDITIONAL_STRSKT:
                     return new String[0];
                 case LIST_DEFAULT_STRING:
                     return new String[]{
@@ -293,6 +310,10 @@ public class JechConfig {
                             "cgw:a",  // vanilla search notch name
                             "buildcraft.lib.client.guide.GuideManager:generateContentsPage"  // BuildCraft manual
                     };
+                case LIST_DEFAULT_STRSKT:
+                    return new String[]{
+                            "com.cout970.magneticraft.features.multiblocks.ContainerShelvingUnit:filterSlots"  // Magneticraft shelving unit
+                    };
                 case LIST_DUMP_CLASS_FUNC:
                     return new String[0];
                 case LIST_METHOD_BLACKLIST:
@@ -338,6 +359,9 @@ public class JechConfig {
                 case LIST_ADDITIONAL_SUFFIX:
                     listAdditionalSuffix = getProperty().getStringList();
                     break;
+                case LIST_ADDITIONAL_STRSKT:
+                    listAdditionalStrsKt = getProperty().getStringList();
+                    break;
                 case LIST_DEFAULT_STRING:
                     listDefaultString = getProperty().getStringList();
                     break;
@@ -346,6 +370,9 @@ public class JechConfig {
                     break;
                 case LIST_DEFAULT_SUFFIX:
                     listDefaultSuffix = getProperty().getStringList();
+                    break;
+                case LIST_DEFAULT_STRSKT:
+                    listDefaultStrsKt = getProperty().getStringList();
                     break;
                 case LIST_DUMP_CLASS_FUNC:
                     listDumpClassFunc = getProperty().getStringList();
@@ -398,9 +425,11 @@ public class JechConfig {
                 case LIST_ADDITIONAL_STRING:
                 case LIST_ADDITIONAL_REGEXP:
                 case LIST_ADDITIONAL_SUFFIX:
+                case LIST_ADDITIONAL_STRSKT:
                 case LIST_DEFAULT_STRING:
                 case LIST_DEFAULT_REGEXP:
                 case LIST_DEFAULT_SUFFIX:
+                case LIST_DEFAULT_STRSKT:
                 case LIST_METHOD_BLACKLIST:
                     return Category.TRANSFORM;
                 case ENABLE_FUZZY_ZH2Z:

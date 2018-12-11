@@ -14,6 +14,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static me.towdium.jecharacters.JechConfig.Item.*;
+import static me.towdium.jecharacters.JechConfig.*;
+
 /**
  * Author: towdium
  * Date:   17-7-31.
@@ -34,36 +37,32 @@ public class FeedFetcher {
                 }
             }
             if (f == null) return;
-            HashSet<String> buf = new HashSet<>();
-            Collections.addAll(buf, JechConfig.listAdditionalString);
-            buf.addAll(f.string);
-            buf.removeAll(Arrays.asList(JechConfig.listDefaultString));
-            JechConfig.Item.LIST_ADDITIONAL_STRING.getProperty()
-                    .set(buf.stream().sorted().collect(Collectors.toList()).toArray(new String[]{}));
-            buf.clear();
-            Collections.addAll(buf, JechConfig.listAdditionalRegExp);
-            buf.addAll(f.regexp);
-            buf.removeAll(Arrays.asList(JechConfig.listDefaultRegExp));
-            JechConfig.Item.LIST_ADDITIONAL_REGEXP.getProperty()
-                    .set(buf.stream().sorted().collect(Collectors.toList()).toArray(new String[]{}));
-            buf.clear();
-            Collections.addAll(buf, JechConfig.listAdditionalSuffix);
-            buf.addAll(f.suffix);
-            buf.removeAll(Arrays.asList(JechConfig.listDefaultSuffix));
-            JechConfig.Item.LIST_ADDITIONAL_SUFFIX.getProperty()
-                    .set(buf.stream().sorted().collect(Collectors.toList()).toArray(new String[]{}));
+            update(listDefaultString, listAdditionalString, LIST_ADDITIONAL_STRING, f.string);
+            update(listDefaultRegExp, listAdditionalRegExp, LIST_ADDITIONAL_REGEXP, f.regexp);
+            update(listDefaultSuffix, listAdditionalSuffix, LIST_ADDITIONAL_SUFFIX, f.suffix);
+            update(listDefaultStrsKt, listAdditionalStrsKt, LIST_ADDITIONAL_STRSKT, f.strskt);
             JechConfig.update();
             TransformerRegistry.transformerRegExp.reload();
             TransformerRegistry.transformerString.reload();
             TransformerRegistry.transformerSuffix.reload();
+            TransformerRegistry.transformerStrsKt.reload();
         } catch (IOException e) {
             JechCore.LOG.warn("Caught an exception when fetching online data.");
         }
+    }
+
+    private static void update(String[] defolt, String[] additional, JechConfig.Item config, List<String> record) {
+        HashSet<String> buf = new HashSet<>();
+        Collections.addAll(buf, additional);
+        if (record != null) buf.addAll(record);
+        buf.removeAll(Arrays.asList(defolt));
+        config.getProperty().set(buf.stream().sorted().collect(Collectors.toList()).toArray(new String[]{}));
     }
 
     public static class Feed {
         public List<String> string;
         public List<String> regexp;
         public List<String> suffix;
+        public List<String> strskt;
     }
 }

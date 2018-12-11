@@ -44,7 +44,7 @@ public interface Transformer {
         boolean ret = false;
         while (iterator.hasNext()) {
             AbstractInsnNode node = iterator.next();
-            if (node instanceof MethodInsnNode && node.getOpcode() == Opcodes.INVOKEVIRTUAL) {
+            if (node instanceof MethodInsnNode && (node.getOpcode() == Opcodes.INVOKEVIRTUAL || node.getOpcode() == Opcodes.INVOKESTATIC)) {
                 MethodInsnNode insnNode = ((MethodInsnNode) node);
                 if (insnNode.owner.equals(owner) && insnNode.name.equals(name)) {
                     methodNode.instructions.set(insnNode, new MethodInsnNode(op, newOwner, newName, id, isInterface));
