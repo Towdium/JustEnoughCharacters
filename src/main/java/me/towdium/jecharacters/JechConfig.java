@@ -238,9 +238,10 @@ public class JechConfig {
                             "mezz.jei.ItemFilter$FilterPredicate:stringContainsTokens",  // JEI legacy
                             "com.raoulvdberge.refinedstorage.gui.grid.filtering.GridFilterName:accepts",  // Refined Storage legpacy
                             "com.raoulvdberge.refinedstorage.gui.grid.filtering.GridFilterTooltip:accepts",  // Refined Storage legacy
+                            "com.raoulvdberge.refinedstorage.gui.grid.filtering.GridFilterMod:test",  // Refined Storage item mod name
                             "com.raoulvdberge.refinedstorage.gui.grid.filtering.GridFilterName:test",  // Refined Storage item name
+                            "com.raoulvdberge.refinedstorage.gui.grid.filtering.GridFilterOreDict:lambda$test$0",  // Refined Storage item oreDict
                             "com.raoulvdberge.refinedstorage.gui.grid.filtering.GridFilterTooltip:test",  // Refined Storage item tooltip
-                            // TODO Refined Storage needs update
                             "com.rwtema.extrautils2.transfernodes.TileIndexer$ContainerIndexer$WidgetItemRefButton:lambda$getRef$0",  // Extra Utilities indexer
                             "crazypants.enderio.machine.invpanel.client.ItemFilter$ModFilter:matches",  // EnderIO inventory panel item mod
                             "crazypants.enderio.machine.invpanel.client.ItemFilter$NameFilter:matches",  // EnderIO inventory panel item name
@@ -253,8 +254,10 @@ public class JechConfig {
                             "io.github.elytra.copo.inventory.ContainerTerminal:updateSlots",  // Correlated legacy
                             "net.minecraft.client.gui.inventory.GuiContainerCreative:updateFilteredItems",  // vanilla creative search legacy
                             "bmp:updateFilteredItems",  // vanilla creative search legacy
-                            "appeng.client.gui.implementation.GuiInterfaceTerminal:refreshList",  // Applied Energistics terminal interface
-                            "appeng.client.gui.implementation.GuiInterfaceTerminal:itemStackMatchesSearchTerm",  // Applied Energistics terminal interface
+                            "appeng.client.gui.implementation.GuiInterfaceTerminal:refreshList",  // Applied Energistics terminal interface legacy
+                            "appeng.client.gui.implementation.GuiInterfaceTerminal:itemStackMatchesSearchTerm",  // Applied Energistics terminal interface legacy
+                            "appeng.client.gui.implementations.GuiInterfaceTerminal:refreshList",  // Applied Energistics terminal interface
+                            "appeng.client.gui.implementations.GuiInterfaceTerminal:itemStackMatchesSearchTerm",  // Applied Energistics terminal interface
                             "pers.towdium.just_enough_calculation.gui.guis.GuiPicker:updateLayout",  // JustEnoughCalculation legacy
                             "io.github.elytra.correlated.inventory.ContainerTerminal:updateSlots",  // Correlated legacy
                             "com.elytradev.correlated.inventory.ContainerTerminal:updateSlots",  // Correlated legacy
@@ -290,11 +293,14 @@ public class JechConfig {
                             "vswe.stevesfactory.components.ComponentMenuItem:updateSearch",  // Steve's Factory Manager item search
                             "com.mia.props.client.container.GuiDecobench:refreshButtons",  // Decofraft workbench
                             "mrriegel.storagenetwork.gui.GuiRequest:match",  // Storage Network
-                            "vazkii.quark.client.feature.ChestSearchBar:lambda$namesMatch$0"  // quark chest
+                            "vazkii.quark.client.feature.ChestSearchBar:lambda$namesMatch$0",  // quark chest
+                            "logisticspipes.gui.orderer.GuiOrderer:isSearched",  // logistics pipes orderer
+                            "logisticspipes.gui.orderer.GuiRequestTable:isSearched"  //logistics pipes request table
                     };
                 case LIST_DEFAULT_REGEXP:
                     return new String[]{
-                            "appeng.client.me.ItemRepo:updateView",  // Applied Energistics
+                            "appeng.client.me.FluidRepo:updateView",  // Applied Energistics fluid search
+                            "appeng.client.me.ItemRepo:updateView",  // Applied Energistics item search
                             "codechicken.nei.ItemList$PatternItemFilter:matches",  // NEI item list legacy
                             "codechicken.nei.util.ItemList$PatternItemFilter:matches",  // NEI item list
                             "org.cyclops.integrateddynamics.core.inventory.container.ContainerMultipartAspects$1:apply",

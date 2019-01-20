@@ -5,7 +5,9 @@
       "mezz.jei.ItemFilter$FilterPredicate:stringContainsTokens",
       "com.raoulvdberge.refinedstorage.gui.grid.filtering.GridFilterName:accepts",
       "com.raoulvdberge.refinedstorage.gui.grid.filtering.GridFilterTooltip:accepts",
+      "com.raoulvdberge.refinedstorage.gui.grid.filtering.GridFilterMod:test",
       "com.raoulvdberge.refinedstorage.gui.grid.filtering.GridFilterName:test",
+      "com.raoulvdberge.refinedstorage.gui.grid.filtering.GridFilterOreDict:lambda$test$0",
       "com.raoulvdberge.refinedstorage.gui.grid.filtering.GridFilterTooltip:test",
       "com.rwtema.extrautils2.transfernodes.TileIndexer$ContainerIndexer$WidgetItemRefButton:lambda$getRef$0",
       "crazypants.enderio.machine.invpanel.client.ItemFilter$ModFilter:matches",
@@ -24,6 +26,8 @@
       "bmp:updateFilteredItems",
       "appeng.client.gui.implementation.GuiInterfaceTerminal:refreshList",
       "appeng.client.gui.implementation.GuiInterfaceTerminal:itemStackMatchesSearchTerm",
+      "appeng.client.gui.implementations.GuiInterfaceTerminal:refreshList",
+      "appeng.client.gui.implementations.GuiInterfaceTerminal:itemStackMatchesSearchTerm",
       "pers.towdium.just_enough_calculation.gui.guis.GuiPicker:updateLayout",
       "sonar.logistics.client.gui.GuiFluidReader:getGridList",
       "sonar.logistics.client.gui.GuiGuide:updateSearchList",
@@ -57,7 +61,9 @@
       "vswe.stevesfactory.components.ComponentMenuItem:updateSearch",
       "com.mia.props.client.container.GuiDecobench:refreshButtons",
       "mrriegel.storagenetwork.gui.GuiRequest:match",
-      "vazkii.quark.client.feature.ChestSearchBar:lambda$namesMatch$0"
+      "vazkii.quark.client.feature.ChestSearchBar:lambda$namesMatch$0",
+      "logisticspipes.gui.orderer.GuiOrderer:isSearched",
+      "logisticspipes.gui.orderer.GuiRequestTable:isSearched"
     ],
     "regexp": [
       "appeng.client.me.ItemRepo:updateView",
