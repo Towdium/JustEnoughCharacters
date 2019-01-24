@@ -299,9 +299,11 @@ public class JechConfig {
                             "com.mia.props.client.container.GuiDecobench:refreshButtons",  // Decofraft workbench
                             "mrriegel.storagenetwork.gui.GuiRequest:match",  // Storage Network
                             "vazkii.quark.client.feature.ChestSearchBar:lambda$namesMatch$0",  // quark chest
-                            "logisticspipes.gui.orderer.GuiOrderer:isSearched",  // logistics pipes orderer
-                            "logisticspipes.gui.orderer.GuiRequestTable:isSearched",  // logistics pipes request table
-                            "us.getfluxed.controlsearch.client.gui.GuiNewControls:refreshKeys"  // controlling
+                            "logisticspipes.gui.orderer.GuiOrderer:isSearched",  // Logistics Pipes orderer
+                            "logisticspipes.gui.orderer.GuiRequestTable:isSearched",  // Logistics Pipes request table
+                            "us.getfluxed.controlsearch.client.gui.GuiNewControls:refreshKeys",  // Controlling
+                            "me.towdium.jecalculation.utils.Utilities$I18n:contains",  // Just Enough Calculation
+                            "net.blay09.mods.farmingforblockheads.container.ContainerMarketClient:applyFilters"  // Farming for Blockheads
                     };
                 case LIST_DEFAULT_REGEXP:
                     return new String[]{

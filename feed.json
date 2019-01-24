@@ -69,7 +69,9 @@
       "vazkii.quark.client.feature.ChestSearchBar:lambda$namesMatch$0",
       "logisticspipes.gui.orderer.GuiOrderer:isSearched",
       "logisticspipes.gui.orderer.GuiRequestTable:isSearched",
-      "us.getfluxed.controlsearch.client.gui.GuiNewControls:refreshKeys"
+      "us.getfluxed.controlsearch.client.gui.GuiNewControls:refreshKeys",
+      "me.towdium.jecalculation.utils.Utilities$I18n:contains",
+      "net.blay09.mods.farmingforblockheads.container.ContainerMarketClient:applyFilters"
     ],
     "regexp": [
       "appeng.client.me.ItemRepo:updateView",
