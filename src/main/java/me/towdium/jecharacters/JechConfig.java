@@ -282,11 +282,16 @@ public class JechConfig {
                             "blusunrize.lib.manual.ManualPages$CraftingMulti:listForSearch",  // Immersive Engineering manual
                             "blusunrize.lib.manual.ManualPages$ItemDisplay:listForSearch",  // Immersive Engineering manual
                             "blusunrize.lib.manual.gui.GuiManual:func_73869_a",  // Immersive Engineering manual
-                            "betterquesting.client.gui.editors.GuiPrerequisiteEditor:RefreshSearch",  // BetterQuesting prerequisite search
-                            "betterquesting.client.gui.editors.GuiQuestLineEditorB:RefreshSearch",
-                            "betterquesting.client.gui.editors.json.GuiJsonEntitySelection:updateSearch",  // BetterQuesting entity search
-                            "betterquesting.client.gui.editors.json.GuiJsonFluidSelection:doSearch",  // BetterQuesting fluid search
-                            "betterquesting.client.gui.editors.json.GuiJsonItemSelection:doSearch",  // BetterQuesting item search
+                            "betterquesting.client.gui.editors.GuiPrerequisiteEditor:RefreshSearch",  // BetterQuesting prerequisite search legacy
+                            "betterquesting.client.gui.editors.GuiQuestLineEditorB:RefreshSearch",  // BetterQuesting legacy
+                            "betterquesting.client.gui.editors.json.GuiJsonEntitySelection:updateSearch",  // BetterQuesting entity search legacy
+                            "betterquesting.client.gui.editors.json.GuiJsonFluidSelection:doSearch",  // BetterQuesting fluid search legacy
+                            "betterquesting.client.gui.editors.json.GuiJsonItemSelection:doSearch",  // BetterQuesting item search legacy
+                            "betterquesting.api2.client.gui.panels.lists.CanvasEntityDatabase:queryMatches",  // BetterQuesting entity search
+                            "betterquesting.api2.client.gui.panels.lists.CanvasFileDirectory:queryMatches",  // BetterQuesting file? search
+                            "betterquesting.api2.client.gui.panels.lists.CanvasFluidDatabase:queryMatches",  // BetterQuesting fluid search
+                            "betterquesting.api2.client.gui.panels.lists.CanvasItemDatabase:queryMatches",  // BetterQuesting item search
+                            "betterquesting.api2.client.gui.panels.lists.CanvasQuestDatabase:queryMatches",  // BetterQuesting quest search
                             "com.elytradev.correlated.C28n:contains",  // Correlated
                             "vswe.stevesfactory.components.ComponentMenuContainer$2:updateSearch",  // Steve's Factory Manager container search
                             "vswe.stevesfactory.components.ComponentMenuFluid:updateSearch",  // Steve's Factory Manager fluid search
@@ -295,7 +300,8 @@ public class JechConfig {
                             "mrriegel.storagenetwork.gui.GuiRequest:match",  // Storage Network
                             "vazkii.quark.client.feature.ChestSearchBar:lambda$namesMatch$0",  // quark chest
                             "logisticspipes.gui.orderer.GuiOrderer:isSearched",  // logistics pipes orderer
-                            "logisticspipes.gui.orderer.GuiRequestTable:isSearched"  //logistics pipes request table
+                            "logisticspipes.gui.orderer.GuiRequestTable:isSearched",  // logistics pipes request table
+                            "us.getfluxed.controlsearch.client.gui.GuiNewControls:refreshKeys"  // controlling
                     };
                 case LIST_DEFAULT_REGEXP:
                     return new String[]{

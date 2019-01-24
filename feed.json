@@ -55,6 +55,11 @@
       "betterquesting.client.gui.editors.json.GuiJsonEntitySelection:updateSearch",
       "betterquesting.client.gui.editors.json.GuiJsonFluidSelection:doSearch",
       "betterquesting.client.gui.editors.json.GuiJsonItemSelection:doSearch",
+      "betterquesting.api2.client.gui.panels.lists.CanvasEntityDatabase:queryMatches",
+      "betterquesting.api2.client.gui.panels.lists.CanvasFileDirectory:queryMatches",
+      "betterquesting.api2.client.gui.panels.lists.CanvasFluidDatabase:queryMatches",
+      "betterquesting.api2.client.gui.panels.lists.CanvasItemDatabase:queryMatches",
+      "betterquesting.api2.client.gui.panels.lists.CanvasQuestDatabase:queryMatches",
       "com.elytradev.correlated.C28n:contains",
       "vswe.stevesfactory.components.ComponentMenuContainer$2:updateSearch",
       "vswe.stevesfactory.components.ComponentMenuFluid:updateSearch",
@@ -63,7 +68,8 @@
       "mrriegel.storagenetwork.gui.GuiRequest:match",
       "vazkii.quark.client.feature.ChestSearchBar:lambda$namesMatch$0",
       "logisticspipes.gui.orderer.GuiOrderer:isSearched",
-      "logisticspipes.gui.orderer.GuiRequestTable:isSearched"
+      "logisticspipes.gui.orderer.GuiRequestTable:isSearched",
+      "us.getfluxed.controlsearch.client.gui.GuiNewControls:refreshKeys"
     ],
     "regexp": [
       "appeng.client.me.ItemRepo:updateView",

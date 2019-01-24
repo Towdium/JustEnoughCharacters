@@ -49,7 +49,7 @@ public class JechCommand extends CommandBase {
                     osw.flush();
                     sender.sendMessage(new TextComponentString(I18n.format("chat.saved")));
                 } catch (IOException e) {
-                    sender.sendMessage(new TextComponentString(I18n.format("chat.saveError")));
+                    sender.sendMessage(new TextComponentString(I18n.format("chat.save_error")));
                 }
             });
             t.setPriority(Thread.MIN_PRIORITY);
