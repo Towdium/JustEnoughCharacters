@@ -261,10 +261,14 @@ public class JechConfig {
                             "pers.towdium.just_enough_calculation.gui.guis.GuiPicker:updateLayout",  // JustEnoughCalculation legacy
                             "io.github.elytra.correlated.inventory.ContainerTerminal:updateSlots",  // Correlated legacy
                             "com.elytradev.correlated.inventory.ContainerTerminal:updateSlots",  // Correlated legacy
-                            "sonar.logistics.client.gui.GuiFluidReader:getGridList",  // Practical Logistics fluid search
-                            "sonar.logistics.client.gui.GuiGuide:updateSearchList",  // Practical Logistics manual
-                            "sonar.logistics.client.gui.GuiInventoryReader:getGridList",  // Practical Logistics item search
-                            "sonar.logistics.client.gui.GuiWirelessStorageReader:getGridList",  // Practical Logistics remote item search
+                            "sonar.logistics.client.gui.GuiFluidReader:getGridList",  // Practical Logistics legacy fluid search
+                            "sonar.logistics.client.gui.GuiGuide:updateSearchList",  // Practical Logistics legacy manual
+                            "sonar.logistics.client.gui.GuiInventoryReader:getGridList",  // Practical Logistics legacy item search
+                            "sonar.logistics.client.gui.GuiWirelessStorageReader:getGridList",  // Practical Logistics legacy remote item search
+                            "sonar.logistics.core.tiles.readers.fluids.GuiFluidReader:getGridList",   // Practical Logistics fluid search
+                            "sonar.logistics.core.tiles.readers.items.GuiInventoryReader:getGridList",  // Practical Logistics item search
+                            "sonar.logistics.core.items.wirelessstoragereader.GuiWirelessStorageReader:getGridList",  // Practical Logistics remote item search
+                            "sonar.logistics.core.items.guide.GuiGuide:updateSearchList",  // Practical Logistics manual
                             "binnie.core.machines.storage.SearchDialog:updateSearch",  // BinnieCore chest search
                             "net.blay09.mods.cookingforblockheads.container.ContainerRecipeBook:search",  // Cooking for Blockheads workbench search
                             "mcjty.rftools.blocks.storagemonitor.GuiStorageScanner:updateContentsList",  // RFTools unknown
