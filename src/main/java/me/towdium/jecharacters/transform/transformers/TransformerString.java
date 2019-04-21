@@ -45,7 +45,7 @@ public class TransformerString implements Transformer.Extended {
             if (!s.isEmpty())
                 s.forEach(methodNode ->
                         Transformer.transformInvoke(
-                                methodNode, "java/lang/String", "contains", "me/towdium/jecharacters/util/StringMatcher",
+                                methodNode, "java/lang/String", "contains", "me/towdium/jecharacters/match/PinyinMatcher",
                                 "checkStr", "(Ljava/lang/String;Ljava/lang/CharSequence;)Z", false, Opcodes.INVOKESTATIC,
                                 "(Ljava/lang/Object;)Z", "(Ljava/lang/String;)Z"
                         ));

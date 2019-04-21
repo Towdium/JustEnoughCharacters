@@ -1,4 +1,4 @@
-package me.towdium.jecharacters.util;
+package me.towdium.jecharacters.match;
 
 import java.util.HashMap;
 

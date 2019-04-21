@@ -5,7 +5,7 @@ import com.google.common.eventbus.Subscribe;
 import me.towdium.jecharacters.JechCommand;
 import me.towdium.jecharacters.JechConfig;
 import me.towdium.jecharacters.JechGuiFactory;
-import me.towdium.jecharacters.util.Keyboard;
+import me.towdium.jecharacters.match.Keyboard;
 import net.minecraft.client.Minecraft;
 import net.minecraft.command.ICommand;
 import net.minecraft.entity.player.EntityPlayer;
@@ -37,7 +37,7 @@ public class JechModContainer extends DummyModContainer {
         meta.name = "Just Enough Characters";
         meta.version = "@VERSION@";
         meta.authorList = Collections.singletonList("Towdium");
-        meta.description = "Help JEI read Pinyin";
+        meta.description = "Help JEI read PinyinPattern";
         meta.url = "https://minecraft.curseforge.com/projects/just-enough-characters";
     }
 

@@ -2,9 +2,8 @@ package me.towdium.jecharacters;
 
 import com.google.common.base.CaseFormat;
 import me.towdium.jecharacters.core.JechCore;
+import me.towdium.jecharacters.match.Keyboard;
 import me.towdium.jecharacters.util.FeedFetcher;
-import me.towdium.jecharacters.util.Keyboard;
-import me.towdium.jecharacters.util.VersionChecker;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
 
@@ -47,7 +46,6 @@ public class JechConfig {
         config = new Configuration(new File(location, "config/JustEnoughCharacters.cfg"), JechCore.VERSION);
         config.load();
         initProperties();
-        handleFormerVersion();
         setValue();
         update();
         fetchOnline();
@@ -67,13 +65,6 @@ public class JechConfig {
     public static void setValue() {
         Item.LIST_DEFAULT_REGEXP.getProperty().set(((String[]) Item.LIST_DEFAULT_REGEXP.getDefault()));
         Item.LIST_DEFAULT_STRING.getProperty().set(((String[]) Item.LIST_DEFAULT_STRING.getDefault()));
-    }
-
-    public static void handleFormerVersion() {
-        if (VersionChecker.checkVersion(config.getLoadedConfigVersion(), "1.12.0-1.10.0").toInt() < 0) {
-            JechCore.LOG.info("Low version detected. Disabling radical.");
-            Item.ENABLE_RADICAL_MODE.getProperty().set(false);
-        }
     }
 
     public static void initProperties() {
@@ -174,51 +165,31 @@ public class JechConfig {
         public Type getType() {
             switch (this) {
                 case LIST_ADDITIONAL_STRING:
-                    return Type.LIST_STRING;
-                case LIST_ADDITIONAL_REGEXP:
-                    return Type.LIST_STRING;
-                case LIST_ADDITIONAL_SUFFIX:
-                    return Type.LIST_STRING;
-                case LIST_ADDITIONAL_STRSKT:
-                    return Type.LIST_STRING;
-                case LIST_DEFAULT_STRING:
-                    return Type.LIST_STRING;
-                case LIST_DEFAULT_REGEXP:
-                    return Type.LIST_STRING;
-                case LIST_DEFAULT_SUFFIX:
-                    return Type.LIST_STRING;
                 case LIST_DEFAULT_STRSKT:
-                    return Type.LIST_STRING;
+                case LIST_DEFAULT_SUFFIX:
+                case LIST_DEFAULT_REGEXP:
+                case LIST_DEFAULT_STRING:
+                case LIST_ADDITIONAL_STRSKT:
+                case LIST_ADDITIONAL_SUFFIX:
+                case LIST_ADDITIONAL_REGEXP:
                 case LIST_DUMP_CLASS_FUNC:
-                    return Type.LIST_STRING;
                 case LIST_METHOD_BLACKLIST:
                     return Type.LIST_STRING;
                 case ENABLE_RADICAL_MODE:
-                    return Type.BOOLEAN;
                 case ENABLE_JEI:
-                    return Type.BOOLEAN;
                 case ENABLE_FUZZY_ZH2Z:
-                    return Type.BOOLEAN;
                 case ENABLE_FUZZY_SH2S:
-                    return Type.BOOLEAN;
                 case ENABLE_FUZZY_CH2C:
-                    return Type.BOOLEAN;
                 case ENABLE_FUZZY_ANG2AN:
-                    return Type.BOOLEAN;
                 case ENABLE_FUZZY_ING2IN:
-                    return Type.BOOLEAN;
                 case ENABLE_FUZZY_ENG2EN:
-                    return Type.BOOLEAN;
                 case ENABLE_FUZZY_U2V:
-                    return Type.BOOLEAN;
                 case ENABLE_FORCE_QUOTE:
+                case ENABLE_CHAT_HELP:
+                case ENABLE_DUMP_CLASS_NAME:
                     return Type.BOOLEAN;
                 case INT_KEYBOARD:
                     return Type.INTEGER;
-                case ENABLE_CHAT_HELP:
-                    return Type.BOOLEAN;
-                case ENABLE_DUMP_CLASS_NAME:
-                    return Type.BOOLEAN;
             }
             return Type.ERROR;
         }
@@ -226,12 +197,11 @@ public class JechConfig {
         public Object getDefault() {
             switch (this) {
                 case LIST_ADDITIONAL_STRING:
-                    return new String[0];
                 case LIST_ADDITIONAL_REGEXP:
-                    return new String[0];
                 case LIST_ADDITIONAL_SUFFIX:
-                    return new String[0];
                 case LIST_ADDITIONAL_STRSKT:
+                case LIST_DUMP_CLASS_FUNC:
+                case LIST_METHOD_BLACKLIST:
                     return new String[0];
                 case LIST_DEFAULT_STRING:
                     return new String[]{
@@ -322,8 +292,8 @@ public class JechConfig {
                     };
                 case LIST_DEFAULT_SUFFIX:
                     return new String[]{
-                            "net.minecraft.client.util.SearchTree:<init>",  // vanilla search
-                            "net.minecraft.client.util.SearchTree:recalculate",  // vanilla search
+                            "net.minecraft.client.util.PinyinTree:<init>",  // vanilla search
+                            "net.minecraft.client.util.PinyinTree:recalculate",  // vanilla search
                             "cgw:<init>",  // vanilla search notch name
                             "cgw:a",  // vanilla search notch name
                             "buildcraft.lib.client.guide.GuideManager:generateContentsPage"  // BuildCraft manual
@@ -332,36 +302,22 @@ public class JechConfig {
                     return new String[]{
                             "com.cout970.magneticraft.features.multiblocks.ContainerShelvingUnit:filterSlots"  // Magneticraft shelving unit
                     };
-                case LIST_DUMP_CLASS_FUNC:
-                    return new String[0];
-                case LIST_METHOD_BLACKLIST:
-                    return new String[0];
                 case ENABLE_RADICAL_MODE:
-                    return false;
-                case ENABLE_JEI:
-                    return true;
                 case ENABLE_FUZZY_ZH2Z:
-                    return false;
                 case ENABLE_FUZZY_SH2S:
-                    return false;
                 case ENABLE_FUZZY_CH2C:
-                    return false;
                 case ENABLE_FUZZY_ANG2AN:
-                    return false;
                 case ENABLE_FUZZY_ING2IN:
-                    return false;
                 case ENABLE_FUZZY_ENG2EN:
-                    return false;
                 case ENABLE_FUZZY_U2V:
-                    return false;
                 case ENABLE_FORCE_QUOTE:
-                    return false;
-                case INT_KEYBOARD:
-                    return 0;
-                case ENABLE_CHAT_HELP:
-                    return true;
                 case ENABLE_DUMP_CLASS_NAME:
                     return false;
+                case ENABLE_JEI:
+                case ENABLE_CHAT_HELP:
+                    return true;
+                case INT_KEYBOARD:
+                    return 0;
             }
             return JechConfig.empty;
         }

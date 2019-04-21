@@ -2,8 +2,8 @@ package me.towdium.jecharacters;
 
 import com.google.gson.GsonBuilder;
 import mcp.MethodsReturnNonnullByDefault;
+import me.towdium.jecharacters.match.PinyinMatcher;
 import me.towdium.jecharacters.util.Profiler;
-import me.towdium.jecharacters.util.StringMatcher;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;
@@ -57,10 +57,10 @@ public class JechCommand extends CommandBase {
         } else if (args.length == 2 && args[0].equals("verbose")) {
             switch (args[1].toLowerCase()) {
                 case "true":
-                    StringMatcher.verbose = true;
+                    PinyinMatcher.verbose = true;
                     break;
                 case "false":
-                    StringMatcher.verbose = false;
+                    PinyinMatcher.verbose = false;
                     break;
                 default:
                     sender.sendMessage(new TextComponentTranslation("command.unknown"));

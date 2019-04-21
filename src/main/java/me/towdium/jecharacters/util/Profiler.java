@@ -61,7 +61,7 @@ public class Profiler {
         ArrayList<String> methodsRegExp = new ArrayList<>();
         ArrayList<String> methodsSuffix = new ArrayList<>();
         ArrayList<String> methodsStrsKt = new ArrayList<>();
-        Wrapper<ModContainer[]> mods = new Wrapper<>(null);
+        JarContainer ret = new JarContainer();
         f.stream().forEach(entry -> {
             if (entry.getName().endsWith(".class")) {
                 try (InputStream is = f.getInputStream(entry)) {
@@ -80,9 +80,9 @@ public class Profiler {
                 Gson gson = new Gson();
                 try (InputStream is = f.getInputStream(entry)) {
                     try {
-                        mods.v = gson.fromJson(new InputStreamReader(is), ModContainer[].class);
+                        ret.mods = gson.fromJson(new InputStreamReader(is), ModContainer[].class);
                     } catch (Exception e) {
-                        mods.v = new ModContainer[]{gson.fromJson(new InputStreamReader(is), ModContainer.class)};
+                        ret.mods = new ModContainer[]{gson.fromJson(new InputStreamReader(is), ModContainer.class)};
                     }
                 } catch (Exception e) {
                     JechCore.LOG.info("Fail to read mod info in jar file " + f.getName() + ", skip.");
@@ -90,12 +90,10 @@ public class Profiler {
             }
         });
         if (!methodsString.isEmpty() || !methodsRegExp.isEmpty() || !methodsSuffix.isEmpty() || !methodsStrsKt.isEmpty()) {
-            JarContainer ret = new JarContainer();
             ret.methodsString = methodsString.toArray(EMPTY_STR);
             ret.methodsRegExp = methodsRegExp.toArray(EMPTY_STR);
             ret.methodsSuffix = methodsSuffix.toArray(EMPTY_STR);
             ret.methodsStrsKt = methodsStrsKt.toArray(EMPTY_STR);
-            ret.mods = mods.v;
             cbkJar.accept(ret);
         }
     }

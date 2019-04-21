@@ -1,10 +1,12 @@
 package me.towdium.jecharacters.transform.transformers;
 
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import mcp.MethodsReturnNonnullByDefault;
 import me.towdium.jecharacters.JechConfig;
 import me.towdium.jecharacters.core.JechCore;
+import me.towdium.jecharacters.match.PinyinTree;
 import me.towdium.jecharacters.transform.Transformer;
-import me.towdium.jecharacters.util.CachedFilter;
 import net.minecraft.client.util.SuffixArray;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodNode;
@@ -61,15 +63,15 @@ public class TransformerSuffix implements Transformer.Extended {
     @ParametersAreNonnullByDefault
     @MethodsReturnNonnullByDefault
     public static class FakeSuffixArray<T> extends SuffixArray<T> {
-        CachedFilter<T> filter;
-
-        public FakeSuffixArray() {
-            filter = new CachedFilter<>();
-        }
+        PinyinTree tree = new PinyinTree();
+        Int2ObjectMap<T> map = new Int2ObjectOpenHashMap<>();
+        int count = 0;
 
         @Override
         public void add(T v, String k) {
-            filter.put(k, v);
+            tree.put(k, count);
+            map.put(count, v);
+            count++;
         }
 
         @Override
@@ -78,7 +80,8 @@ public class TransformerSuffix implements Transformer.Extended {
 
         @Override
         public List<T> search(String k) {
-            return filter.search(k);
+            return tree.search(k).stream().sorted()
+                    .map(map::get).collect(Collectors.toList());
         }
     }
 }

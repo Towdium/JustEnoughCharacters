@@ -39,7 +39,7 @@ public class TransformerRegExp implements Transformer.Extended {
         if (!methods.isEmpty())
             n.methods.stream().filter(methodNode -> methods.contains(methodNode.name))
                     .forEach(methodNode -> Transformer.transformInvoke(
-                            methodNode, "java/util/regex/Pattern", "matcher", "me/towdium/jecharacters/util/StringMatcher",
+                            methodNode, "java/util/regex/Pattern", "matcher", "me/towdium/jecharacters/match/PinyinMatcher",
                             "checkReg", "(Ljava/util/regex/Pattern;Ljava/lang/CharSequence;)Ljava/util/regex/Matcher;",
                             false, Opcodes.INVOKESTATIC, null, null
                     ));

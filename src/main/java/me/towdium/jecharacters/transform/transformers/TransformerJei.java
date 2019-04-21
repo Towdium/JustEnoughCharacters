@@ -1,12 +1,11 @@
 package me.towdium.jecharacters.transform.transformers;
 
-import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import mcp.MethodsReturnNonnullByDefault;
 import me.towdium.jecharacters.JechConfig;
 import me.towdium.jecharacters.core.JechCore;
+import me.towdium.jecharacters.match.PinyinTree;
 import me.towdium.jecharacters.transform.Transformer;
-import me.towdium.jecharacters.util.CachedFilter;
 import mezz.jei.suffixtree.GeneralizedSuffixTree;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
@@ -47,25 +46,40 @@ public class TransformerJei implements Transformer.Extended {
         });
     }
 
+//    @ParametersAreNonnullByDefault
+//    @MethodsReturnNonnullByDefault
+//    public static class FakeTree extends GeneralizedSuffixTree {
+//        CachedFilter<Integer> cf;
+//
+//        public FakeTree() {
+//            cf = new CachedFilter<>();
+//        }
+//
+//        public IntSet search(String word) {
+//            StackTraceElement[] t = Thread.currentThread().getStackTrace();
+//            String func = t[2].getMethodName();
+//            return func.equals("getSearchResults") || func.equals("search") ?
+//                    new IntOpenHashSet(cf.search(word)) : super.search(word);
+//        }
+//
+//        public void put(String key, int index) throws IllegalStateException {
+//            super.put(key, index);
+//            cf.put(key, index);
+//        }
+//    }
+
     @ParametersAreNonnullByDefault
     @MethodsReturnNonnullByDefault
     public static class FakeTree extends GeneralizedSuffixTree {
-        CachedFilter<Integer> cf;
-
-        public FakeTree() {
-            cf = new CachedFilter<>();
-        }
+        PinyinTree graph = new PinyinTree();
 
         public IntSet search(String word) {
-            StackTraceElement[] t = Thread.currentThread().getStackTrace();
-            String func = t[2].getMethodName();
-            return func.equals("getSearchResults") || func.equals("search") ?
-                    new IntOpenHashSet(cf.search(word)) : super.search(word);
+            return graph.search(word);
         }
 
         public void put(String key, int index) throws IllegalStateException {
-            super.put(key, index);
-            cf.put(key, index);
+            //super.put(key, index);
+            graph.put(key, index);
         }
     }
 }

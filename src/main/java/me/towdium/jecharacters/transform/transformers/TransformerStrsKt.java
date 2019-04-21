@@ -2,8 +2,8 @@ package me.towdium.jecharacters.transform.transformers;
 
 import me.towdium.jecharacters.JechConfig;
 import me.towdium.jecharacters.core.JechCore;
+import me.towdium.jecharacters.match.PinyinMatcher;
 import me.towdium.jecharacters.transform.Transformer;
-import me.towdium.jecharacters.util.StringMatcher;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodNode;
@@ -24,8 +24,8 @@ public class TransformerStrsKt implements Transformer.Extended {
     }
 
     public static boolean contains(CharSequence a, CharSequence b, boolean c) {
-        if (c) return StringMatcher.checkStr(a.toString().toLowerCase(), b.toString().toLowerCase());
-        else return StringMatcher.checkStr(a.toString(), b);
+        if (c) return PinyinMatcher.checkStr(a.toString().toLowerCase(), b.toString().toLowerCase());
+        else return PinyinMatcher.checkStr(a.toString(), b);
     }
 
     public void reload() {
