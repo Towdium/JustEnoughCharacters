@@ -75,7 +75,9 @@
       "logisticspipes.gui.orderer.GuiRequestTable:isSearched",
       "us.getfluxed.controlsearch.client.gui.GuiNewControls:refreshKeys",
       "me.towdium.jecalculation.utils.Utilities$I18n:contains",
-      "net.blay09.mods.farmingforblockheads.container.ContainerMarketClient:applyFilters"
+      "net.blay09.mods.farmingforblockheads.container.ContainerMarketClient:applyFilters",
+      "mrriegel.storagenetwork.gui.GuiContainerStorageInventory:doesStackMatchSearch",
+      "mrriegel.storagenetwork.gui.fb.GuiFastNetworkCrafter:doesStackMatchSearch"
     ],
     "regexp": [
       "appeng.client.me.ItemRepo:updateView",

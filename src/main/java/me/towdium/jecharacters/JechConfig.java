@@ -276,7 +276,9 @@ public class JechConfig {
                             "logisticspipes.gui.orderer.GuiRequestTable:isSearched",  // Logistics Pipes request table
                             "us.getfluxed.controlsearch.client.gui.GuiNewControls:refreshKeys",  // Controlling
                             "me.towdium.jecalculation.utils.Utilities$I18n:contains",  // Just Enough Calculation
-                            "net.blay09.mods.farmingforblockheads.container.ContainerMarketClient:applyFilters"  // Farming for Blockheads
+                            "net.blay09.mods.farmingforblockheads.container.ContainerMarketClient:applyFilters",  // Farming for Blockheads
+                            "mrriegel.storagenetwork.gui.GuiContainerStorageInventory:doesStackMatchSearch",  // simple storage network storage
+                            "mrriegel.storagenetwork.gui.fb.GuiFastNetworkCrafter:doesStackMatchSearch"  // simple storage network crafting
                     };
                 case LIST_DEFAULT_REGEXP:
                     return new String[]{
