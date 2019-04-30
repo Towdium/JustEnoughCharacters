@@ -16,7 +16,7 @@ import java.util.Map;
  * Date: 21/04/19
  */
 public class PinyinTree {
-    Node root = new NMap();
+    Node root = new NSlice();
 
     public void put(String name, int identifier) {
         for (int i = 0; i < name.length(); i++) {
@@ -72,25 +72,16 @@ public class PinyinTree {
                 start = offset;
                 end = name.length();
                 exit = exit.put(name, identifier, end);
-                return this;
             } else {
                 int length = end - start;
                 int match = Utilities.strCmp(this.name, name, start, offset, length);
                 if (match >= length) exit = exit.put(name, identifier, offset + length);
                 else {
-                    NSlice half = new NSlice();
-                    half.name = this.name;
-                    half.start = start + match + 1;
-                    half.end = end;
-                    half.exit = exit;
-                    NMap insert = new NMap();
-                    insert = insert.put(name, identifier, offset + match);
-                    insert.put(this.name.charAt(start + match), half.start == half.end ? exit : half);
-                    end = start + match;
-                    exit = insert;
+                    cut(start + match);
+                    exit.put(name, identifier, offset + match);
                 }
-                return start == end ? exit : this;
             }
+            return start == end ? exit : this;
         }
 
         @Override
@@ -101,6 +92,21 @@ public class PinyinTree {
         @Override
         public int countMap() {
             return exit.countMap();
+        }
+
+        private void cut(int offset) {
+            NMap insert = new NMap();
+            if (offset + 1 == end) insert.put(name.charAt(offset), exit);
+            else {
+                NSlice half = new NSlice();
+                half.name = this.name;
+                half.start = offset + 1;
+                half.end = end;
+                half.exit = exit;
+                insert.put(name.charAt(offset), half);
+            }
+            exit = insert;
+            end = offset;
         }
 
         private void get(IntSet ret, String name, int offset, int start) {
