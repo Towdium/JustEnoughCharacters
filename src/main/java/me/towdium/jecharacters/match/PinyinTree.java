@@ -33,12 +33,24 @@ public class PinyinTree {
         return ret;
     }
 
+    public int countSlice() {
+        return root.countSlice();
+    }
+
+    public int countMap() {
+        return root.countMap();
+    }
+
     interface Node {
         void get(IntSet ret, String s, int index);
 
         void get(IntSet ret);
 
         Node put(String name, int id, int index);
+
+        int countSlice();
+
+        int countMap();
     }
 
     public static class NSlice implements Node {
@@ -94,6 +106,16 @@ public class PinyinTree {
                 return start == end ? exit : this;
             }
         }
+
+        @Override
+        public int countSlice() {
+            return 1 + exit.countSlice();
+        }
+
+        @Override
+        public int countMap() {
+            return exit.countMap();
+        }
     }
 
     public static class NMap implements Node {
@@ -134,6 +156,20 @@ public class PinyinTree {
                 exact.put(ch, sub);
             }
             return this;
+        }
+
+        @Override
+        public int countSlice() {
+            int ret = 0;
+            for (Node n : exact.values()) ret += n.countSlice();
+            return ret;
+        }
+
+        @Override
+        public int countMap() {
+            int ret = 1;
+            for (Node n : exact.values()) ret += n.countMap();
+            return ret;
         }
 
         private void put(char ch, Node n) {

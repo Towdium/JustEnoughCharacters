@@ -48,6 +48,8 @@ public class JechTest {
         }
         t = System.currentTimeMillis() - t;
         System.out.println("Tree construction took " + t + " milliseconds.");
+        System.out.println("Tree uses " + tree.countSlice() + " slice nodes.");
+        System.out.println("Tree uses " + tree.countMap() + " map nodes.");
         t = System.currentTimeMillis();
         tree.search("0yidceshwenben");
         t = System.currentTimeMillis() - t;
