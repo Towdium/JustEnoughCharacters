@@ -1,9 +1,11 @@
-package me.towdium.jecharacters.match;
+package me.towdium.jecharacters.match.matchables;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import me.towdium.jecharacters.JechConfig;
+import me.towdium.jecharacters.match.Matchable;
+import me.towdium.jecharacters.match.Utilities.IndexSet;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collections;
@@ -15,38 +17,38 @@ import static me.towdium.jecharacters.match.Utilities.strCmp;
  * Author: Towdium
  * Date: 21/04/19
  */
-public class PinyinPattern implements Matchable {
-    private static LoadingCache<String, PinyinPattern> cache = CacheBuilder.newBuilder().concurrencyLevel(1)
-            .build(new CacheLoader<String, PinyinPattern>() {
+public class Pinyin implements Matchable {
+    private static LoadingCache<String, Pinyin> cache = CacheBuilder.newBuilder().concurrencyLevel(1)
+            .build(new CacheLoader<String, Pinyin>() {
                 @Override
                 @ParametersAreNonnullByDefault
-                public PinyinPattern load(String str) {
-                    return new PinyinPattern(str);
+                public Pinyin load(String str) {
+                    return new Pinyin(str);
                 }
             });
 
-    private PinyinPattern.Phoneme initial;
-    private PinyinPattern.Phoneme finale;
-    private PinyinPattern.Phoneme tone;
+    private Phoneme initial;
+    private Phoneme finale;
+    private Phoneme tone;
 
-    public PinyinPattern(String str) {
+    public Pinyin(String str) {
         set(str);
     }
 
-    public static PinyinPattern get(String str) {
+    public static Pinyin get(String str) {
         return cache.getUnchecked(str);
     }
 
     public static void refresh() {
-        PinyinPattern.Phoneme.refresh();
+        Phoneme.refresh();
         cache.asMap().forEach((s, p) -> p.set(s));
     }
 
     private void set(String str) {
         String[] elements = JechConfig.keyboard.separate(str);
-        initial = PinyinPattern.Phoneme.get(elements[0]);
-        finale = PinyinPattern.Phoneme.get(elements[1]);
-        tone = PinyinPattern.Phoneme.get(elements[2]);
+        initial = Phoneme.get(elements[0]);
+        finale = Phoneme.get(elements[1]);
+        tone = Phoneme.get(elements[2]);
     }
 
     public IndexSet match(String str, int start) {
@@ -64,13 +66,13 @@ public class PinyinPattern implements Matchable {
 
     @SuppressWarnings("Duplicates")
     private static class Phoneme {
-        private static LoadingCache<String, PinyinPattern.Phoneme> cache =
+        private static LoadingCache<String, Phoneme> cache =
                 CacheBuilder.newBuilder().concurrencyLevel(1)
-                        .build(new CacheLoader<String, PinyinPattern.Phoneme>() {
+                        .build(new CacheLoader<String, Phoneme>() {
                             @Override
                             @ParametersAreNonnullByDefault
-                            public PinyinPattern.Phoneme load(String str) {
-                                return new PinyinPattern.Phoneme(str);
+                            public Phoneme load(String str) {
+                                return new Phoneme(str);
                             }
                         });
 
@@ -101,7 +103,7 @@ public class PinyinPattern implements Matchable {
             strs = ret.stream().map(JechConfig.keyboard::keys).toArray(String[]::new);
         }
 
-        public static PinyinPattern.Phoneme get(String str) {
+        public static Phoneme get(String str) {
             return cache.getUnchecked(str);
         }
 
@@ -110,9 +112,8 @@ public class PinyinPattern implements Matchable {
         }
 
         IndexSet match(String source, IndexSet idx, int start) {
-            if (strs.length == 1 && strs[0].isEmpty()) return new IndexSet(idx.value);
+            if (strs.length == 1 && strs[0].isEmpty()) return new IndexSet(idx);
             else {
-
                 IndexSet ret = new IndexSet();
                 idx.foreach(i -> {
                     for (String str : strs) {

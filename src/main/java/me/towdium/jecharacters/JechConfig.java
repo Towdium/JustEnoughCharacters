@@ -28,8 +28,8 @@ public class JechConfig {
     public static String[] listDefaultStrsKt = new String[0];
     public static String[] listDumpClassFunc = new String[0];
     public static String[] listMethodBlacklist = new String[0];
-    public static boolean enableRadicalMode = false;
     public static boolean enableJEI = true;
+    public static boolean enablePsi = true;
     public static boolean enableFuzzyZh2z = false;
     public static boolean enableFuzzySh2s = false;
     public static boolean enableFuzzyCh2c = false;
@@ -82,8 +82,8 @@ public class JechConfig {
         LIST_DEFAULT_STRSKT,
         LIST_DUMP_CLASS_FUNC,
         LIST_METHOD_BLACKLIST,
-        ENABLE_RADICAL_MODE,
         ENABLE_JEI,
+        ENABLE_PSI,
         ENABLE_CHAT_HELP,
         ENABLE_FUZZY_ZH2Z,
         ENABLE_FUZZY_SH2S,
@@ -131,11 +131,10 @@ public class JechConfig {
                     return "Dump all the methods in this class into log. Format is \"full.class.Path$InnerClass\".";
                 case LIST_METHOD_BLACKLIST:
                     return "Put the strings in default list here to disable transform for certain method";
-                case ENABLE_RADICAL_MODE:
-                    return "Set to true to enable radical mode. Keep in mind this is DANGEROUS.\n" +
-                            "This could support more mods but could lead to some strange behavior as well.";
                 case ENABLE_JEI:
                     return "Set to false to disable JEI support.";
+                case ENABLE_PSI:
+                    return "Set to false to disable PSI support.";
                 case ENABLE_FUZZY_ZH2Z:
                     return "Set to true to enable fuzzy Zh <=> Z";
                 case ENABLE_FUZZY_SH2S:
@@ -175,8 +174,8 @@ public class JechConfig {
                 case LIST_DUMP_CLASS_FUNC:
                 case LIST_METHOD_BLACKLIST:
                     return Type.LIST_STRING;
-                case ENABLE_RADICAL_MODE:
                 case ENABLE_JEI:
+                case ENABLE_PSI:
                 case ENABLE_FUZZY_ZH2Z:
                 case ENABLE_FUZZY_SH2S:
                 case ENABLE_FUZZY_CH2C:
@@ -302,7 +301,6 @@ public class JechConfig {
                     return new String[]{
                             "com.cout970.magneticraft.features.multiblocks.ContainerShelvingUnit:filterSlots"  // Magneticraft shelving unit
                     };
-                case ENABLE_RADICAL_MODE:
                 case ENABLE_FUZZY_ZH2Z:
                 case ENABLE_FUZZY_SH2S:
                 case ENABLE_FUZZY_CH2C:
@@ -314,6 +312,7 @@ public class JechConfig {
                 case ENABLE_DUMP_CLASS_NAME:
                     return false;
                 case ENABLE_JEI:
+                case ENABLE_PSI:
                 case ENABLE_CHAT_HELP:
                     return true;
                 case INT_KEYBOARD:
@@ -354,11 +353,11 @@ public class JechConfig {
                 case LIST_METHOD_BLACKLIST:
                     listMethodBlacklist = getProperty().getStringList();
                     break;
-                case ENABLE_RADICAL_MODE:
-                    enableRadicalMode = getProperty().getBoolean();
-                    break;
                 case ENABLE_JEI:
                     enableJEI = getProperty().getBoolean();
+                    break;
+                case ENABLE_PSI:
+                    enablePsi = getProperty().getBoolean();
                     break;
                 case ENABLE_FUZZY_ZH2Z:
                     enableFuzzyZh2z = getProperty().getBoolean();
@@ -416,8 +415,8 @@ public class JechConfig {
                     return Category.FUZZY;
                 case LIST_DUMP_CLASS_FUNC:
                 case ENABLE_DUMP_CLASS_NAME:
-                case ENABLE_RADICAL_MODE:
                 case ENABLE_JEI:
+                case ENABLE_PSI:
                 case ENABLE_FORCE_QUOTE:
                 case INT_KEYBOARD:
                 case ENABLE_CHAT_HELP:

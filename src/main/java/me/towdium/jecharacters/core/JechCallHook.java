@@ -13,7 +13,7 @@ public class JechCallHook implements IFMLCallHook {
 
     @Override
     public Void call() {
-        PinyinMatcher.checkStr("Test 这是一条测试文本", "Test zheshiytcswb");
+        PinyinMatcher.contains("Test 这是一条测试文本", "Test zheshiytcswb");
         TransformerRegistry.getTransformer("some.class");
         JechCore.INITIALIZED = true;
         return null;

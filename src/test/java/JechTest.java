@@ -10,62 +10,67 @@ public class JechTest {
     public void quanpin() {
         JechConfig.keyboard = Keyboard.QUANPIN;
         PinyinMatcher.refresh();
-        assert PinyinMatcher.checkStr("测试文本", "ceshiwenben");
-        assert PinyinMatcher.checkStr("测试文本", "ceshiwenbe");
-        assert PinyinMatcher.checkStr("测试文本", "ceshiwben");
-        assert PinyinMatcher.checkStr("测试文本", "ce4shi4w2ben");
-        assert !PinyinMatcher.checkStr("测试文本", "ce2shi4w2ben");
-        assert PinyinMatcher.checkStr("合金炉", "hejinlu");
-        assert PinyinMatcher.checkStr("洗矿场", "xikuangchang");
-        assert PinyinMatcher.checkStr("流体", "liuti");
+        assert PinyinMatcher.contains("测试文本", "ceshiwenben");
+        assert PinyinMatcher.contains("测试文本", "ceshiwenbe");
+        assert PinyinMatcher.contains("测试文本", "ceshiwben");
+        assert PinyinMatcher.contains("测试文本", "ce4shi4w2ben");
+        assert !PinyinMatcher.contains("测试文本", "ce2shi4w2ben");
+        assert PinyinMatcher.contains("合金炉", "hejinlu");
+        assert PinyinMatcher.contains("洗矿场", "xikuangchang");
+        assert PinyinMatcher.contains("流体", "liuti");
     }
 
     @Test
     public void daqian() {
         JechConfig.keyboard = Keyboard.DAQIAN;
         PinyinMatcher.refresh();
-        assert PinyinMatcher.checkStr("测试文本", "hk4g4jp61p3");
-        assert PinyinMatcher.checkStr("测试文本", "hkgjp1");
-        assert PinyinMatcher.checkStr("錫", "vu6");
-        assert PinyinMatcher.checkStr("物質", "j456");
+        assert PinyinMatcher.contains("测试文本", "hk4g4jp61p3");
+        assert PinyinMatcher.contains("测试文本", "hkgjp1");
+        assert PinyinMatcher.contains("錫", "vu6");
+        assert PinyinMatcher.contains("物質", "j456");
     }
 
     @Test
     public void performance() {
+        JechConfig.keyboard = Keyboard.QUANPIN;
+        PinyinMatcher.refresh();
         for (int i = 1; i < 100; i++)
-            PinyinMatcher.checkStr("一段测试文本", "yidceshwenben");
+            PinyinMatcher.contains("测试1000一段测试文本", "0yidceshwenben");
         long t = System.currentTimeMillis();
-        for (int i = 1; i < 300000; i++)
-            PinyinMatcher.checkStr("一段测试文本", "yidceshwenben");
+        for (int i = 1; i < 1000000; i++)
+            PinyinMatcher.contains("测试1000一段测试文本", "0yidceshwenben");
         t = System.currentTimeMillis() - t;
-        System.out.println("Iterate took " + t + " milliseconds.");
+        System.out.println("Iterate search took " + t + " milliseconds.");
         t = System.currentTimeMillis();
         PinyinTree tree = new PinyinTree();
-        for (int i = 1; i < 300000; i++) {
-            tree.put("测试" + i + "文本", i);
+        for (int i = 1; i < 1000000; i++) {
+            tree.put("测试" + i + "一段测试文本", i);
         }
         t = System.currentTimeMillis() - t;
-        System.out.println("Index took " + t + " milliseconds.");
+        System.out.println("Tree construction took " + t + " milliseconds.");
         t = System.currentTimeMillis();
-        tree.search("文本");
+        tree.search("0yidceshwenben");
         t = System.currentTimeMillis() - t;
-        System.out.println("Search took " + t + " milliseconds.");
-
+        System.out.println("Tree search took " + t + " milliseconds.");
     }
 
     @Test
-    public void graph() {
+    public void tree() {
+        JechConfig.keyboard = Keyboard.QUANPIN;
+        PinyinMatcher.refresh();
         PinyinTree graph = new PinyinTree();
         graph.put("测试文本", 1);
+        graph.put("测试切分", 5);
+        graph.put("测试切分文本", 6);
         graph.put("合金炉", 2);
         graph.put("洗矿场", 3);
         graph.put("流体", 4);
 
         IntSet s;
-//        s = graph.search("ceshiwenben");
-//        assert s.size() == 1 && s.contains("测试文本");
+        s = graph.search("ceshiwenben");
+        assert s.size() == 1 && s.contains(1);
         s = graph.search("ceshiwenbe");
-        assert s.size() == 0;
+        assert s.size() == 1 && s.contains(1);
         s = graph.search("ceshiwben");
         assert s.size() == 1 && s.contains(1);
         s = graph.search("ce4shi4w2ben");
@@ -78,17 +83,11 @@ public class JechTest {
         assert s.size() == 1 && s.contains(3);
         s = graph.search("liuti");
         assert s.size() == 1 && s.contains(4);
+        s = graph.search("ceshi");
+        assert s.size() == 3 && s.contains(1) && s.contains(5);
+        s = graph.search("ceshiqiefen");
+        assert s.size() == 2 && s.contains(5);
+        s = graph.search("ceshiqiefenw");
+        assert s.size() == 1 && s.contains(6);
     }
-
-
-//    @Test
-//    public void performance() {
-//        for (int i = 1; i < 100; i++)
-//            PinyinMatcher.checkStr("一段测试文本", "yidceshwenben");
-//        long t0 = System.currentTimeMillis();
-//        for (int i = 1; i < 3000000; i++)
-//            PinyinMatcher.checkStr("一段测试文本", "yidceshwenben");
-//        long td = System.currentTimeMillis() - t0;
-//        System.out.println("Took " + td + " milliseconds.");
-//    }
 }

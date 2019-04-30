@@ -1,6 +1,7 @@
 package me.towdium.jecharacters.transform;
 
 import com.google.common.collect.HashMultimap;
+import me.towdium.jecharacters.JechConfig;
 import me.towdium.jecharacters.core.JechCore;
 import org.objectweb.asm.*;
 import org.objectweb.asm.tree.*;
@@ -44,7 +45,8 @@ public interface Transformer {
         boolean ret = false;
         while (iterator.hasNext()) {
             AbstractInsnNode node = iterator.next();
-            if (node instanceof MethodInsnNode && (node.getOpcode() == Opcodes.INVOKEVIRTUAL || node.getOpcode() == Opcodes.INVOKESTATIC)) {
+            if (node instanceof MethodInsnNode && (node.getOpcode() == Opcodes.INVOKEVIRTUAL ||
+                    node.getOpcode() == Opcodes.INVOKESPECIAL || node.getOpcode() == Opcodes.INVOKESTATIC)) {
                 MethodInsnNode insnNode = ((MethodInsnNode) node);
                 if (insnNode.owner.equals(owner) && insnNode.name.equals(name)) {
                     methodNode.instructions.set(insnNode, new MethodInsnNode(op, newOwner, newName, id, isInterface));
@@ -109,8 +111,8 @@ public interface Transformer {
 
     byte[] transform(byte[] bytes);
 
-    interface Extended extends Transformer {
-        default byte[] transform(byte[] bytes) {
+    abstract class Default implements Transformer {
+        public byte[] transform(byte[] bytes) {
             ClassNode classNode = new ClassNode();
             ClassReader classReader = new ClassReader(bytes);
             classReader.accept(classNode, 0);
@@ -120,7 +122,40 @@ public interface Transformer {
             return classWriter.toByteArray();
         }
 
-        void transform(ClassNode n);
+        protected abstract void transform(ClassNode n);
+    }
+
+    abstract class Configurable extends Default {
+        protected MethodDecoder md = new MethodDecoder();
+
+        protected abstract String[] getDefault();
+
+        protected abstract String[] getAdditional();
+
+        protected abstract String getName();
+
+        protected abstract void transform(MethodNode n);
+
+        @Override
+        protected void transform(ClassNode c) {
+            JechCore.LOG.info("Transforming class " + c.name + " for " + getName() + ".");
+            Set<String> ms = md.getMethodsForClass(c.name.replace('/', '.'));
+            if (!ms.isEmpty()) c.methods.stream().filter(m -> ms.contains(m.name)).forEach(this::transform);
+            else JechCore.LOG.info("No function matched in class " + c.name);
+        }
+
+        @Override
+        public boolean accepts(String name) {
+            return md.contains(name);
+        }
+
+        public void reload() {
+            MethodDecoder mdt = new MethodDecoder();
+            mdt.addAll(getDefault());
+            mdt.addAll(getAdditional());
+            mdt.removeAll(JechConfig.listMethodBlacklist);
+            md = mdt;
+        }
     }
 
     class MethodDecoder {

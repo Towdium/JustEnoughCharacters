@@ -19,7 +19,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
  * Date:   13/06/17
  */
 
-public class TransformerJei implements Transformer.Extended {
+public class TransformerJei extends Transformer.Default {
     @SuppressWarnings("unused")
     public static String wrap(String s) {
         return "\"" + s + "\"";
@@ -33,8 +33,9 @@ public class TransformerJei implements Transformer.Extended {
     @Override
     public void transform(ClassNode n) {
         JechCore.LOG.info("Transforming class " + n.name + " for JEI integration.");
-        Transformer.findMethod(n, "<init>").ifPresent(methodNode -> Transformer.transformConstruct(methodNode, "mezz/jei/suffixtree/GeneralizedSuffixTree",
-                "me/towdium/jecharacters/transform/transformers/TransformerJei$FakeTree"));
+        Transformer.findMethod(n, "<init>").ifPresent(methodNode ->
+                Transformer.transformConstruct(methodNode, "mezz/jei/suffixtree/GeneralizedSuffixTree",
+                        "me/towdium/jecharacters/transform/transformers/TransformerJei$FakeTree"));
         Transformer.findMethod(n, "createPrefixedSearchTree").ifPresent(methodNode ->
                 Transformer.transformConstruct(methodNode, "mezz/jei/suffixtree/GeneralizedSuffixTree",
                         "me/towdium/jecharacters/transform/transformers/TransformerJei$FakeTree"));
@@ -45,28 +46,6 @@ public class TransformerJei implements Transformer.Extended {
                     "(Ljava/lang/String;)Ljava/lang/String;", false));
         });
     }
-
-//    @ParametersAreNonnullByDefault
-//    @MethodsReturnNonnullByDefault
-//    public static class FakeTree extends GeneralizedSuffixTree {
-//        CachedFilter<Integer> cf;
-//
-//        public FakeTree() {
-//            cf = new CachedFilter<>();
-//        }
-//
-//        public IntSet search(String word) {
-//            StackTraceElement[] t = Thread.currentThread().getStackTrace();
-//            String func = t[2].getMethodName();
-//            return func.equals("getSearchResults") || func.equals("search") ?
-//                    new IntOpenHashSet(cf.search(word)) : super.search(word);
-//        }
-//
-//        public void put(String key, int index) throws IllegalStateException {
-//            super.put(key, index);
-//            cf.put(key, index);
-//        }
-//    }
 
     @ParametersAreNonnullByDefault
     @MethodsReturnNonnullByDefault

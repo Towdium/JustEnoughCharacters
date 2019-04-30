@@ -13,7 +13,7 @@ import java.util.Set;
  * Author: Towdium
  * Date:   12/06/17
  */
-public class TransformerClassDump implements Transformer.Extended {
+public class TransformerClassDump extends Transformer.Default {
     Set<String> names = new HashSet<>();
 
     public TransformerClassDump() {

@@ -3,6 +3,7 @@ package me.towdium.jecharacters.util;
 import com.google.gson.*;
 import me.towdium.jecharacters.JechConfig;
 import me.towdium.jecharacters.core.JechCore;
+import me.towdium.jecharacters.transform.Transformer;
 import me.towdium.jecharacters.transform.TransformerRegistry;
 import org.apache.commons.io.IOUtils;
 
@@ -42,10 +43,7 @@ public class FeedFetcher {
             update(listDefaultSuffix, listAdditionalSuffix, LIST_ADDITIONAL_SUFFIX, f.suffix);
             update(listDefaultStrsKt, listAdditionalStrsKt, LIST_ADDITIONAL_STRSKT, f.strskt);
             JechConfig.update();
-            TransformerRegistry.transformerRegExp.reload();
-            TransformerRegistry.transformerString.reload();
-            TransformerRegistry.transformerSuffix.reload();
-            TransformerRegistry.transformerStrsKt.reload();
+            TransformerRegistry.configurables.forEach(Transformer.Configurable::reload);
         } catch (IOException e) {
             JechCore.LOG.warn("Caught an exception when fetching online data.");
         }

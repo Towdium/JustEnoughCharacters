@@ -163,7 +163,7 @@ public enum Keyboard {
         }
     }
 
-    String[] separate(String s) {
+    public String[] separate(String s) {
         if (this == DAQIAN) {
             String str = PHONETIC_SPELL.get(s.substring(0, s.length() - 1));
             if (str != null) s = str + s.charAt(s.length() - 1);
@@ -178,7 +178,7 @@ public enum Keyboard {
         }
     }
 
-    String keys(String s) {
+    public String keys(String s) {
         if (this == QUANPIN) return s;
         else {
             String symbol = PHONETIC_SYMBOL.get(s);

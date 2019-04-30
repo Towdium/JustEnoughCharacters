@@ -9,26 +9,17 @@ import java.util.ArrayList;
  * Date:   12/06/17
  */
 public class TransformerRegistry {
-    public static TransformerString transformerString;
-    public static TransformerRegExp transformerRegExp;
-    public static TransformerSuffix transformerSuffix;
-    public static TransformerStrsKt transformerStrsKt;
-
-
-    static ArrayList<Transformer> transformers = new ArrayList<>();
+    public static ArrayList<Transformer.Configurable> configurables = new ArrayList<>();
+    public static ArrayList<Transformer> transformers = new ArrayList<>();
 
     static {
-        transformerString = new TransformerString();
-        transformerRegExp = new TransformerRegExp();
-        transformerSuffix = new TransformerSuffix();
-        transformerStrsKt = new TransformerStrsKt();
-        transformers.add(transformerRegExp);
-        transformers.add(transformerString);
-        transformers.add(transformerSuffix);
-        transformers.add(transformerStrsKt);
+        configurables.add(new TransformerString());
+        configurables.add(new TransformerRegExp());
+        configurables.add(new TransformerSuffix());
+        configurables.add(new TransformerStrsKt());
+        transformers.addAll(configurables);
         transformers.add(new TransformerJei());
-        //noinspection deprecation
-        transformers.add(new TransformerRadical());
+        transformers.add(new TransformerPsi());
         transformers.add(new TransformerClassDump());
     }
 
