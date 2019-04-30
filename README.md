@@ -1,69 +1,54 @@
 [![][2]][1] 
 [![][3]][1]
 [![][8]][9]
+[中文文档][10]
 
 # Just Enough Characters Mod
 
-### What it does
+## What it does
 
-This is a little mod to help JEI search by pinyin in a Chinese environment.  
-The developer uses simplified Chinese
-but it should also work for traditional Chinese (not tested).  
-With this mod, you can search by full pinyin, 
-consonant or any combination of both (全拼，声母或两者的任意组合).
+This is a little mod to make other mods search by pinyin in a Chinese environment. It works for both simplified and traditional Chinese, you can use Quanpin or Phonetic spelling to search. With this mod, you can search by raw text, full pinyin, consonant, with or without tone, or anything you can imagine.
 
-### How does it work
+## How it works
 
-This mod is a coremod using a plugin based system for class transformation.  
-The plugins present are listed as follows:
+### Code injection
 
-- __Vanilla__: Transfer vanilla minecraft after 1.12 for creative and recipe
-book search. It substitutes the entire cache system in
-`net.minecraft.client.util.SuffixArray` to my universal cache to support
-pinyin search.
+This mod is a coremod using a plugin based system for specific targets. It mainly contains following parts:
 
-- __JEI__: Transfers JEI cache (currently in 
-`mezz.jei.suffixtree.GeneralizedSuffixTree`) to my cache so you can use
-pinyin to search. It used to be simple, before the day when mezz decides
-to use the current cache.
+- __Configurable__: These plugins targets at specific pieces in bytecode according to [online feed][4] fetched at runtime. It includes support for `String.contains`, `Regex.mather`, `StringsKt.contains` and cache structure `net.minecraft.client.util.SuffixArray` provided by vanilla Minecraft.
 
-- __String.contains__: This method is used for most of other mods that use
-`String.contains` for string matching. The transformed methods can be
-customized in config file. The local data will sync with online data from
-[online feed][4].
+- __Fixed__: It now includes support for Psi and JEI since their implementation does not match any configurable targets. For JEI, it transfers JEI cache (currently 
+`mezz.jei.suffixtree.GeneralizedSuffixTree`) to my cache. For Psi, it transforms Psi's sophisticated ranking system to a simple one based on `String.contains`.
 
-- __Regex.matcher__: RegExp is the method used in few mods like NEI and AE.
-My method is transforming the `Regex.mather` call to my fake Matcher.
-Really, don't expect me to enable pinyin search in RegExp. So, by enabling
-transforming of RegExp methods, you can do pinyin, but no more RegExp.
+### Pinyin match
 
-- __Radical__: Yes it transforms all the calls to `String.contains`.
-So it can support most of mods even without special support. But it also
-generates many bugs. Testing only.
+It has two sets of logic for Pinyin matching:
 
-- __Dumper__: It does not do transformation. It will only dump all the
-methods all methods in a class, which you can specify in config.
-Very useful when profiling.
+- __Uncached__: This method is implemented based on NFA for real-time matching. The time complexity is O(sw), with s and w for length of text string and pinyin string. For s=10 and w=10, it does around 1 million matches per second searching in pinyin.
 
-### How to use
+- __Cached__: The cache structure is generalized suffix tree with extra support for pinyin search. The time complexity is O(w+n), with w for length of pinyin string and n for amount of results. For w=10, n=100k, it takes around 10 seconds. Space complexity is O(s), with s for amount of characters in total. 
+
+ One is , based on NFA. Another is 
+
+## How to use
 
 For average users, installing it will do all the work. For advanced
 users, there are some tools to play with:
 
-##### /jech profile
+### /jech profile
 
 It collects all methods with `String.contains` call and `Regex.matcher` 
 call then put them in a report, of which the format is optimized for
 machines to read.
 
-##### Config
+### Config
 
 You can manually add entry to support `String.contains` and `Regex.matcher`
 call. If you are an experienced programmer, you can easily support other
 mods that is not currently supported. You are welcomed to notify me of
 these information.
 
-### For developers
+## For developers
 
 This mod provides no API currently, but there will be if there is need
 for this. I think most of people will do things in a `contains` way.
@@ -90,7 +75,7 @@ for English-only strings, and even more time for strings containing
 Chinese characters. But after testing, it does not generate significant
 lag when used in JEI, so I it should be fine for most of the developers.
 
-### Credits
+## Credits
 
 In versions before 3.0.0, this repository contained a simplified version 
 of pinyin4j as pinyin database. Thanks a lot for their work. In versions
@@ -108,3 +93,4 @@ Have fun!
 [7]: https://github.com/mozillazg/pinyin-data
 [8]: https://img.shields.io/discord/517485644163973120.svg?logo=discord
 [9]: https://discord.gg/M3fNfTW
+[10]: https://github.com/Towdium/JustEnoughCharacters/blob/1.12.0/README_CN.md
