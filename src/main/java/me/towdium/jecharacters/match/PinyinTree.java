@@ -11,9 +11,6 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 
-import static me.towdium.jecharacters.match.Utilities.isChinese;
-import static me.towdium.jecharacters.match.Utilities.strCmp;
-
 /**
  * Author: Towdium
  * Date: 21/04/19
@@ -42,11 +39,11 @@ public class PinyinTree {
     }
 
     interface Node {
-        void get(IntSet ret, String s, int index);
+        void get(IntSet ret, String name, int offset);
 
         void get(IntSet ret);
 
-        Node put(String name, int id, int index);
+        Node put(String name, int identifier, int offset);
 
         int countSlice();
 
@@ -58,8 +55,9 @@ public class PinyinTree {
         String name;
         int start, end;
 
-        public void get(IntSet ret, String s, int index) {
-            get(s, index, 0, ret);
+        @Override
+        public void get(IntSet ret, String name, int offset) {
+            get(ret, name, offset, 0);
         }
 
         @Override
@@ -67,30 +65,18 @@ public class PinyinTree {
             exit.get(ret);
         }
 
-        protected void get(String s, int index, int start, IntSet ret) {
-            if (this.start + start == end) exit.get(ret, s, index);
-            else if (index == s.length()) exit.get(ret);
-            else {
-                char ch = name.charAt(this.start + start);
-                Char.get(ch).match(s, index).foreach(i -> {
-                    get(s, index + i, start + 1, ret);
-                    return true;
-                });
-            }
-        }
-
         @Override
-        public Node put(String name, int id, int index) {
+        public Node put(String name, int identifier, int offset) {
             if (this.name == null) {
                 this.name = name;
-                start = index;
+                start = offset;
                 end = name.length();
-                exit = exit.put(name, id, end);
+                exit = exit.put(name, identifier, end);
                 return this;
             } else {
                 int length = end - start;
-                int match = strCmp(this.name, name, start, index, length);
-                if (match >= length) exit = exit.put(name, id, index + length);
+                int match = Utilities.strCmp(this.name, name, start, offset, length);
+                if (match >= length) exit = exit.put(name, identifier, offset + length);
                 else {
                     NSlice half = new NSlice();
                     half.name = this.name;
@@ -98,7 +84,7 @@ public class PinyinTree {
                     half.end = end;
                     half.exit = exit;
                     NMap insert = new NMap();
-                    insert = insert.put(name, id, index + match);
+                    insert = insert.put(name, identifier, offset + match);
                     insert.put(this.name.charAt(start + match), half.start == half.end ? exit : half);
                     end = start + match;
                     exit = insert;
@@ -116,6 +102,18 @@ public class PinyinTree {
         public int countMap() {
             return exit.countMap();
         }
+
+        private void get(IntSet ret, String name, int offset, int start) {
+            if (this.start + start == end) exit.get(ret, name, offset);
+            else if (offset == name.length()) exit.get(ret);
+            else {
+                char ch = this.name.charAt(this.start + start);
+                Char.get(ch).match(name, offset).foreach(i -> {
+                    get(ret, name, offset + i, start + 1);
+                    return true;
+                });
+            }
+        }
     }
 
     public static class NMap implements Node {
@@ -123,36 +121,39 @@ public class PinyinTree {
         Map<Pinyin, List<Character>> pinyin = new IdentityHashMap<>();
         IntSet leaves = new IntOpenHashSet();
 
-        public void get(IntSet ret, String s, int index) {
-            if (s.length() == index) get(ret);
+        @Override
+        public void get(IntSet ret, String name, int offset) {
+            if (name.length() == offset) get(ret);
             else {
                 Map<Node, IntSet> m = new IdentityHashMap<>();
-                Node ch = exact.get(s.charAt(index));
+                Node ch = exact.get(name.charAt(offset));
                 if (ch != null) m.computeIfAbsent(ch, k -> new IntOpenHashSet()).add(1);
 
-                pinyin.forEach((p, cs) -> p.match(s, index).foreach(offset -> {
-                    for (Character c : cs) m.computeIfAbsent(exact.get(c), k -> new IntOpenHashSet()).add(offset);
+                pinyin.forEach((p, cs) -> p.match(name, offset).foreach(i -> {
+                    for (Character c : cs) m.computeIfAbsent(exact.get(c), k -> new IntOpenHashSet()).add(i);
                     return true;
                 }));
                 m.forEach((n, is) -> {
-                    for (int i : is) n.get(ret, s, index + i);
+                    for (int i : is) n.get(ret, name, offset + i);
                 });
             }
         }
 
+        @Override
         public void get(IntSet ret) {
             ret.addAll(leaves);
             exact.forEach((p, n) -> n.get(ret));
         }
 
-        public NMap put(String name, int id, int index) {
-            if (index == name.length()) {
-                leaves.add(id);
+        @Override
+        public NMap put(String name, int identifier, int offset) {
+            if (offset == name.length()) {
+                leaves.add(identifier);
             } else {
-                char ch = name.charAt(index);
+                char ch = name.charAt(offset);
                 Node sub = exact.get(ch);
                 if (sub == null) put(ch, sub = new NSlice());
-                sub = sub.put(name, id, index + 1);
+                sub = sub.put(name, identifier, offset + 1);
                 exact.put(ch, sub);
             }
             return this;
@@ -174,7 +175,7 @@ public class PinyinTree {
 
         private void put(char ch, Node n) {
             exact.put(ch, n);
-            if (isChinese(ch)) {
+            if (Utilities.isChinese(ch)) {
                 for (String str : PinyinData.get(ch))
                     pinyin.computeIfAbsent(Pinyin.get(str), i -> new CharArrayList()).add(ch);
             }
