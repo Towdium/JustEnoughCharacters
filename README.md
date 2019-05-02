@@ -22,7 +22,7 @@ It uses two sets of logic for Pinyin matching:
 
 - __Uncached__: This method is implemented based on NFA for real-time matching. The time complexity is O(sw), with s and w for length of text string and pinyin string. For s=10 and w=10, it does around 1 million matches per second searching in pinyin.
 
-- __Cached__: The cache structure is generalized suffix tree with extra support for pinyin search. The time complexity is O(w+n), with w for length of pinyin string and n for amount of results. For w=10, n=100k, it takes around 10 milliseconds. Space complexity is O(s), with s for amount of characters in total. 
+- __Cached__: The cache structure is generalized suffix tree with extra support for pinyin search. Since multiple branches in the tree can be active, the time complexity is generally O(bw+n), with b for amount of active branches, w for length of pinyin string and n for amount of results. b can be slightly affected by w and data volume, but can be treated as constant is most of cases. For w=10, n=100k, it takes around 10 milliseconds. Space complexity is O(s), with s for amount of characters in total. 
 
 For real time matching like `String.contains`, `Regex.mather` and `StringsKt.contains`, they are transformed to uncached version. For other cache structures, they are replaced by the cached version.
 
