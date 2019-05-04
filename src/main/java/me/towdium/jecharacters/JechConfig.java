@@ -278,7 +278,9 @@ public class JechConfig {
                             "me.towdium.jecalculation.utils.Utilities$I18n:contains",  // Just Enough Calculation
                             "net.blay09.mods.farmingforblockheads.container.ContainerMarketClient:applyFilters",  // Farming for Blockheads
                             "mrriegel.storagenetwork.gui.GuiContainerStorageInventory:doesStackMatchSearch",  // simple storage network storage
-                            "mrriegel.storagenetwork.gui.fb.GuiFastNetworkCrafter:doesStackMatchSearch"  // simple storage network crafting
+                            "mrriegel.storagenetwork.gui.fb.GuiFastNetworkCrafter:doesStackMatchSearch",  // simple storage network crafting
+                            "com.feed_the_beast.ftblib.lib.gui.misc.GuiButtonListBase$1:add",  // FTB quests quest search
+                            "com.feed_the_beast.ftblib.lib.gui.misc.GuiSelectItemStack$ItemStackButton:shouldAdd"  // FTB quests item search
                     };
                 case LIST_DEFAULT_REGEXP:
                     return new String[]{

@@ -21,7 +21,7 @@ public class TransformerString extends Transformer.Configurable {
 
     @Override
     protected String[] getAdditional() {
-        return JechConfig.listDefaultString;
+        return JechConfig.listAdditionalString;
     }
 
     @Override

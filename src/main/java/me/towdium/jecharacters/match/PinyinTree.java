@@ -1,9 +1,12 @@
 package me.towdium.jecharacters.match;
 
-import io.netty.util.collection.CharObjectHashMap;
+
+import it.unimi.dsi.fastutil.chars.Char2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.chars.CharArrayList;
+import it.unimi.dsi.fastutil.ints.IntArraySet;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
+import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import me.towdium.jecharacters.match.matchables.Char;
 import me.towdium.jecharacters.match.matchables.Pinyin;
 
@@ -123,9 +126,9 @@ public class PinyinTree {
     }
 
     public static class NMap implements Node {
-        Map<Character, Node> exact = new CharObjectHashMap<>();
-        Map<Pinyin, List<Character>> pinyin = new IdentityHashMap<>();
-        IntSet leaves = new IntOpenHashSet();
+        Map<Character, Node> exact = new Char2ObjectOpenHashMap<>();
+        Map<Pinyin, List<Character>> pinyin = new Object2ObjectArrayMap<>();
+        IntSet leaves = new IntArraySet();
 
         @Override
         public void get(IntSet ret, String name, int offset) {
@@ -154,6 +157,7 @@ public class PinyinTree {
         @Override
         public NMap put(String name, int identifier, int offset) {
             if (offset == name.length()) {
+                if (leaves.size() >= 16) leaves = new IntOpenHashSet(leaves);
                 leaves.add(identifier);
             } else {
                 char ch = name.charAt(offset);

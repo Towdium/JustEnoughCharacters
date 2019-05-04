@@ -77,7 +77,9 @@
       "me.towdium.jecalculation.utils.Utilities$I18n:contains",
       "net.blay09.mods.farmingforblockheads.container.ContainerMarketClient:applyFilters",
       "mrriegel.storagenetwork.gui.GuiContainerStorageInventory:doesStackMatchSearch",
-      "mrriegel.storagenetwork.gui.fb.GuiFastNetworkCrafter:doesStackMatchSearch"
+      "mrriegel.storagenetwork.gui.fb.GuiFastNetworkCrafter:doesStackMatchSearch",
+      "com.feed_the_beast.ftblib.lib.gui.misc.GuiButtonListBase$1:add",
+      "com.feed_the_beast.ftblib.lib.gui.misc.GuiSelectItemStack$ItemStackButton:shouldAdd"
     ],
     "regexp": [
       "appeng.client.me.ItemRepo:updateView",
