@@ -17,8 +17,7 @@ import static me.towdium.jecharacters.match.Utilities.strCmp;
  * Author: Towdium
  * Date: 21/04/19
  */
-public class Pinyin implements Matchable, Comparable<Pinyin> {
-    private static int count = 0;
+public class Pinyin implements Matchable {
     private static LoadingCache<String, Pinyin> cache = CacheBuilder.newBuilder().concurrencyLevel(1)
             .build(new CacheLoader<String, Pinyin>() {
                 @Override
@@ -31,10 +30,8 @@ public class Pinyin implements Matchable, Comparable<Pinyin> {
     private Phoneme initial;
     private Phoneme finale;
     private Phoneme tone;
-    private int serial;
 
     public Pinyin(String str) {
-        serial = count++;
         set(str);
     }
 
@@ -65,11 +62,6 @@ public class Pinyin implements Matchable, Comparable<Pinyin> {
     @Override
     public String toString() {
         return "" + initial + finale + tone;
-    }
-
-    @Override
-    public int compareTo(Pinyin o) {
-        return Integer.compare(serial, o.serial);
     }
 
     @SuppressWarnings("Duplicates")

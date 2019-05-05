@@ -1,6 +1,5 @@
 package me.towdium.jecharacters.match;
 
-
 import it.unimi.dsi.fastutil.chars.Char2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.chars.CharArrayList;
 import it.unimi.dsi.fastutil.ints.IntArraySet;
@@ -157,7 +156,8 @@ public class PinyinTree {
         @Override
         public NMap put(String name, int identifier, int offset) {
             if (offset == name.length()) {
-                if (leaves.size() >= 16) leaves = new IntOpenHashSet(leaves);
+                if (leaves.size() >= 16 && leaves instanceof IntArraySet)
+                    leaves = new IntOpenHashSet(leaves);
                 leaves.add(identifier);
             } else {
                 char ch = name.charAt(offset);
