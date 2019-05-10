@@ -1,7 +1,6 @@
 package me.towdium.jecharacters.match;
 
-import it.unimi.dsi.fastutil.chars.Char2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.chars.CharArrayList;
+import it.unimi.dsi.fastutil.chars.*;
 import it.unimi.dsi.fastutil.ints.IntArraySet;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
@@ -10,7 +9,6 @@ import me.towdium.jecharacters.match.matchables.Char;
 import me.towdium.jecharacters.match.matchables.Pinyin;
 
 import java.util.IdentityHashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -125,20 +123,20 @@ public class PinyinTree {
     }
 
     public static class NMap implements Node {
-        Map<Character, Node> exact = new Char2ObjectOpenHashMap<>();
-        Map<Pinyin, List<Character>> pinyin = new Object2ObjectArrayMap<>();
+        Char2ObjectMap<Node> exact; // = new Char2ObjectOpenHashMap<>();
+        Map<Pinyin, CharList> pinyin; // = new Object2ObjectArrayMap<>();
         IntSet leaves = new IntArraySet();
 
         @Override
         public void get(IntSet ret, String name, int offset) {
             if (name.length() == offset) get(ret);
-            else {
+            else if (exact != null && pinyin != null) {
                 Map<Node, IntSet> m = new IdentityHashMap<>();
                 Node ch = exact.get(name.charAt(offset));
-                if (ch != null) m.computeIfAbsent(ch, k -> new IntOpenHashSet()).add(1);
+                if (ch != null) m.computeIfAbsent(ch, k -> new IntArraySet()).add(1);
 
                 pinyin.forEach((p, cs) -> p.match(name, offset).foreach(i -> {
-                    for (Character c : cs) m.computeIfAbsent(exact.get(c), k -> new IntOpenHashSet()).add(i);
+                    for (Character c : cs) m.computeIfAbsent(exact.get(c), k -> new IntArraySet()).add(i);
                     return true;
                 }));
                 m.forEach((n, is) -> {
@@ -150,7 +148,7 @@ public class PinyinTree {
         @Override
         public void get(IntSet ret) {
             ret.addAll(leaves);
-            exact.forEach((p, n) -> n.get(ret));
+            if (exact != null) exact.forEach((p, n) -> n.get(ret));
         }
 
         @Override
@@ -160,6 +158,7 @@ public class PinyinTree {
                     leaves = new IntOpenHashSet(leaves);
                 leaves.add(identifier);
             } else {
+                init();
                 char ch = name.charAt(offset);
                 Node sub = exact.get(ch);
                 if (sub == null) put(ch, sub = new NSlice());
@@ -172,22 +171,32 @@ public class PinyinTree {
         @Override
         public int countSlice() {
             int ret = 0;
-            for (Node n : exact.values()) ret += n.countSlice();
+            if (exact != null) for (Node n : exact.values()) ret += n.countSlice();
             return ret;
         }
 
         @Override
         public int countMap() {
             int ret = 1;
-            for (Node n : exact.values()) ret += n.countMap();
+            if (exact != null) for (Node n : exact.values()) ret += n.countMap();
             return ret;
         }
 
         private void put(char ch, Node n) {
+            init();
+            if (exact.size() >= 16 && exact instanceof Char2ObjectArrayMap)
+                exact = new Char2ObjectOpenHashMap<>(exact);
             exact.put(ch, n);
             if (Utilities.isChinese(ch)) {
                 for (String str : PinyinData.get(ch))
                     pinyin.computeIfAbsent(Pinyin.get(str), i -> new CharArrayList()).add(ch);
+            }
+        }
+
+        private void init() {
+            if (exact == null || pinyin == null) {
+                exact = new Char2ObjectArrayMap<>();
+                pinyin = new Object2ObjectArrayMap<>();
             }
         }
     }
