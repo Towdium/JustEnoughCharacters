@@ -1,5 +1,7 @@
 package me.towdium.jecharacters.match;
 
+import me.towdium.jecharacters.match.matchables.Pinyin;
+
 import java.util.function.Predicate;
 
 /**
@@ -29,6 +31,11 @@ public class Utilities {
         for (int i = 0; i < len; i++)
             if (a.charAt(i + aStart) != b.charAt(i + bStart)) return i;
         return len;
+    }
+
+    public static void refresh() {
+        Pinyin.refresh();
+        PinyinTree.refresh();
     }
 
     public static class IndexSet {

@@ -5,6 +5,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import me.towdium.jecharacters.JechConfig;
 import me.towdium.jecharacters.match.Matchable;
+import me.towdium.jecharacters.match.PinyinData;
 import me.towdium.jecharacters.match.Utilities.IndexSet;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -39,6 +40,14 @@ public class Pinyin implements Matchable {
         return cache.getUnchecked(str);
     }
 
+    public static Pinyin[] get(char ch) {
+        String[] ss = PinyinData.get(ch);
+        Pinyin[] ret = new Pinyin[ss.length];
+        for (int i = 0; i < ss.length; i++)
+            ret[i] = get(ss[i]);
+        return ret;
+    }
+
     public static void refresh() {
         Phoneme.refresh();
         cache.asMap().forEach((s, p) -> p.set(s));
@@ -57,6 +66,12 @@ public class Pinyin implements Matchable {
         ret.merge(finale.match(str, ret, start));
         ret.merge(tone.match(str, ret, start));
         return ret;
+    }
+
+    public char start() {
+        String ret = initial.toString();
+        if (ret.isEmpty()) ret = finale.toString();
+        return ret.charAt(0);
     }
 
     @Override

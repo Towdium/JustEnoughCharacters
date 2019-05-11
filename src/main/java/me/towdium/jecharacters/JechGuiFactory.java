@@ -1,7 +1,7 @@
 package me.towdium.jecharacters;
 
 import me.towdium.jecharacters.core.JechCore;
-import me.towdium.jecharacters.match.PinyinMatcher;
+import me.towdium.jecharacters.match.Utilities;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraftforge.common.config.ConfigElement;
@@ -56,7 +56,7 @@ public class JechGuiFactory implements IModGuiFactory {
         public static void onConfigChanged(ConfigChangedEvent.OnConfigChangedEvent event) {
             if (event.getModID().equals(JechCore.MODID)) {
                 JechConfig.update();
-                PinyinMatcher.refresh();
+                Utilities.refresh();
             }
         }
     }

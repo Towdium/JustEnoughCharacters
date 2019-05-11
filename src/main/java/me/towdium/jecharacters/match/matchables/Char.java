@@ -41,10 +41,6 @@ public class Char implements Matchable {
         return cache.getUnchecked(ch);
     }
 
-    public static void refresh() {
-        Pinyin.refresh();
-    }
-
     @Override
     public IndexSet match(String str, int start) {
         IndexSet ret = new IndexSet();

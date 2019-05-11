@@ -37,10 +37,6 @@ public class PinyinMatcher {
         return ret;
     }
 
-    public static void refresh() {
-        Char.refresh();
-    }
-
     private static boolean check(String s1, CharSequence s2) {
         boolean b;
         if (s2 instanceof String) {
