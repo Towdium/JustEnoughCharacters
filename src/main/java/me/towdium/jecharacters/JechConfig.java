@@ -280,7 +280,8 @@ public class JechConfig {
                             "mrriegel.storagenetwork.gui.GuiContainerStorageInventory:doesStackMatchSearch",  // simple storage network storage
                             "mrriegel.storagenetwork.gui.fb.GuiFastNetworkCrafter:doesStackMatchSearch",  // simple storage network crafting
                             "com.feed_the_beast.ftblib.lib.gui.misc.GuiButtonListBase$1:add",  // FTB quests quest search
-                            "com.feed_the_beast.ftblib.lib.gui.misc.GuiSelectItemStack$ItemStackButton:shouldAdd"  // FTB quests item search
+                            "com.feed_the_beast.ftblib.lib.gui.misc.GuiSelectItemStack$ItemStackButton:shouldAdd",  // FTB quests item search
+                            "com.latmod.mods.projectex.gui.GuiTableBase:updateValidItemList"  // Project EX
                     };
                 case LIST_DEFAULT_REGEXP:
                     return new String[]{
@@ -291,7 +292,13 @@ public class JechConfig {
                             "org.cyclops.integrateddynamics.core.inventory.container.ContainerMultipartAspects$1:apply",
                             "org.cyclops.integrateddynamics.inventory.container.ContainerLogicProgrammerBase$1:apply",  // Integrated Dynamics programmer
                             "p455w0rd.wct.client.me.ItemRepo:updateView",  // Wireless Crafting Terminal
-                            "vazkii.quark.client.feature.ChestSearchBar:lambda$namesMatch$2"  // quark chest
+                            "vazkii.quark.client.feature.ChestSearchBar:lambda$namesMatch$2",  // quark chest
+                            "org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerFluidStack:lambda$getInstanceFilterPredicate$1",  // integrated terminals
+                            "org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerFluidStack:lambda$getInstanceFilterPredicate$4",  // integrated terminals
+                            "org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$getInstanceFilterPredicate$1",  // integrated terminals
+                            "org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$getInstanceFilterPredicate$6",  // integrated terminals
+                            "org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$null$2",  // integrated terminals
+                            "org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$null$4"  // integrated terminals
                     };
                 case LIST_DEFAULT_SUFFIX:
                     return new String[]{

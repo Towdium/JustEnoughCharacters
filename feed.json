@@ -79,7 +79,8 @@
       "mrriegel.storagenetwork.gui.GuiContainerStorageInventory:doesStackMatchSearch",
       "mrriegel.storagenetwork.gui.fb.GuiFastNetworkCrafter:doesStackMatchSearch",
       "com.feed_the_beast.ftblib.lib.gui.misc.GuiButtonListBase$1:add",
-      "com.feed_the_beast.ftblib.lib.gui.misc.GuiSelectItemStack$ItemStackButton:shouldAdd"
+      "com.feed_the_beast.ftblib.lib.gui.misc.GuiSelectItemStack$ItemStackButton:shouldAdd",
+      "com.latmod.mods.projectex.gui.GuiTableBase:updateValidItemList"
     ],
     "regexp": [
       "appeng.client.me.ItemRepo:updateView",
@@ -88,7 +89,14 @@
       "org.cyclops.integrateddynamics.core.inventory.container.ContainerMultipartAspects$1:apply",
       "org.cyclops.integrateddynamics.inventory.container.ContainerLogicProgrammerBase$1:apply",
       "p455w0rd.wct.client.me.ItemRepo:updateView",
-      "vazkii.quark.client.feature.ChestSearchBar:lambda$namesMatch$2"
+      "vazkii.quark.client.feature.ChestSearchBar:lambda$namesMatch$2",
+      "com.latmod.mods.projectex.gui.GuiTableBase:updateValidItemList",
+      "org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerFluidStack:lambda$getInstanceFilterPredicate$1",
+      "org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerFluidStack:lambda$getInstanceFilterPredicate$4",
+      "org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$getInstanceFilterPredicate$1",
+      "org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$getInstanceFilterPredicate$6",
+      "org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$null$2",
+      "org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$null$4"
     ],
     "suffix": [
       "net.minecraft.client.util.SearchTree:<init>",

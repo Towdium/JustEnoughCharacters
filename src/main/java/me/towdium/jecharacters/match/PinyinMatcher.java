@@ -4,29 +4,13 @@ import me.towdium.jecharacters.core.JechCore;
 import me.towdium.jecharacters.match.Utilities.IndexSet;
 import me.towdium.jecharacters.match.matchables.Char;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 
 /**
  * Author: Towdium
  * Date:   2016/9/4.
  */
 public class PinyinMatcher {
-    static final Pattern p = Pattern.compile("a");
     public static boolean verbose = false;
-
-    @SuppressWarnings("unused")
-    public static Matcher matcher(Pattern test, CharSequence name) {
-        if (Utilities.isChinese(name)) {
-            String testS = test.toString();
-            String nameS = name.toString();
-            if (testS.startsWith(".*")) testS = testS.substring(2);
-            if (testS.endsWith(".*")) testS = testS.substring(0, testS.length() - 2);
-            boolean ret = check(nameS, testS);
-            return ret ? p.matcher("a") : p.matcher("");
-        } else return test.matcher(name);
-    }
 
     // s1.contains(s2)
     @SuppressWarnings("unused")

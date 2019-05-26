@@ -122,6 +122,10 @@ public class Profiler {
                             && mNode.name.equals("contains") && mNode.desc.equals("(Ljava/lang/CharSequence;)Z")) {
                         string.accept((classNode.name + ":" + methodNode.name + ":" + methodNode.desc).replace('/', '.'));
                         break;
+                    } else if (mNode.getOpcode() == Opcodes.INVOKEVIRTUAL && mNode.owner.equals("java/lang/String")
+                            && mNode.name.equals("matches") && mNode.desc.equals("(Ljava/lang/String;)Z")) {
+                        regexp.accept((classNode.name + ":" + methodNode.name + ":" + methodNode.desc).replace('/', '.'));
+                        break;
                     } else if (mNode.getOpcode() == Opcodes.INVOKEVIRTUAL && mNode.owner.equals("java/util/regex/Pattern")
                             && mNode.name.equals("matcher")
                             && mNode.desc.equals("(Ljava/lang/CharSequence;)Ljava/util/regex/Matcher;")) {
