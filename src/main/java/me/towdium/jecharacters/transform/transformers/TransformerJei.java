@@ -51,14 +51,24 @@ public class TransformerJei extends Transformer.Default {
     @MethodsReturnNonnullByDefault
     public static class FakeTree extends GeneralizedSuffixTree {
         PinyinTree graph = new PinyinTree();
+        int highestIndex = -1;
 
         public IntSet search(String word) {
             return graph.search(word);
         }
 
         public void put(String key, int index) throws IllegalStateException {
-            //super.put(key, index);
+            if (index < highestIndex) {
+                String err = "The input index must not be less than any of the previously " +
+                        "inserted ones. Got " + index + ", expected at least " + highestIndex;
+                throw new IllegalStateException(err);
+            } else highestIndex = index;
             graph.put(key, index);
+        }
+
+        @Override
+        public int getHighestIndex() {
+            return highestIndex;
         }
     }
 }
