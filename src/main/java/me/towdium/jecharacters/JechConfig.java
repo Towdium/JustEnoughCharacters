@@ -59,7 +59,7 @@ public class JechConfig {
     public static void fetchOnline() {
         Thread t = new Thread(FeedFetcher::fetch);
         t.setPriority(Thread.MIN_PRIORITY);
-        t.run();
+        t.start();
     }
 
     public static void setValue() {

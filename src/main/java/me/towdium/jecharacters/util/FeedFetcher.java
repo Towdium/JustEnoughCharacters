@@ -9,6 +9,7 @@ import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -26,8 +27,11 @@ public class FeedFetcher {
     public static void fetch() {
         try {
             Feed f = null;
-            String s = IOUtils.toString(new URL(
-                    "https://raw.githubusercontent.com/Towdium/JustEnoughCharacters/1.12.0/feed.json"), "UTF-8");
+            URL url = new URL("https://raw.githubusercontent.com/Towdium/" +
+                    "JustEnoughCharacters/1.12.0/feed.json");
+            URLConnection cnn = url.openConnection();
+            cnn.setReadTimeout(10000);
+            String s = IOUtils.toString(cnn.getInputStream(), "UTF-8");
             JsonElement fullE = new JsonParser().parse(s);
             JsonArray fullA = fullE.getAsJsonArray();
             for (JsonElement feedE : fullA) {
@@ -45,7 +49,8 @@ public class FeedFetcher {
             JechConfig.update();
             TransformerRegistry.configurables.forEach(Transformer.Configurable::reload);
         } catch (IOException e) {
-            JechCore.LOG.warn("Caught an exception when fetching online data.");
+            JechCore.LOG.warn("Caught an exception when fetching online data:");
+            e.printStackTrace();
         }
     }
 
