@@ -1,7 +1,0 @@
-chat.start=开始分析模组文件。
-chat.saved=搞定！分析报告已储存至 logs/jecharacters-profiler.txt。
-chat.save_error=卧槽，写入文件时出现了一个问题。
-chat.taiwan=如果你看到了这条信息，说明 JECh 翻车了。
-
-command.desc=/jech [profile] / [verbose true/false]
-command.unknown=未知指令。

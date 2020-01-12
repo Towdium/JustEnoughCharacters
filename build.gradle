@@ -1,62 +1,101 @@
 buildscript {
     repositories {
+        maven { url = 'https://files.minecraftforge.net/maven' }
         jcenter()
-        maven { url = "http://files.minecraftforge.net/maven" }
+        mavenCentral()
     }
     dependencies {
-        classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
     }
 }
-apply plugin: 'net.minecraftforge.gradle.forge'
+apply plugin: 'net.minecraftforge.gradle'
+apply plugin: 'eclipse'
 
-version = "${mc_version}-${proj_version}"
-group= "me.towdium.jecharacters"
+version = "1.14.4-${verspec}.${verbuild}"
+group = "me.towdium.jecharacters"
 archivesBaseName = "jecharacters"
 
-//noinspection GroovyAssignabilityCheck
-tasks.withType(JavaCompile) {
-    options.encoding = 'UTF-8'
-}
-
-compileJava {
-    sourceCompatibility = targetCompatibility = '1.8'
-}
-
-minecraft {
-    version = "1.12.2-14.23.5.2772"
-    runDir = "run"
-    mappings = "snapshot_20180410"
-
-    replace '@VERSION@', project.version
-}
-
-dependencies {
-    compile 'mezz.jei:jei_1.12.2:4.13.1.225'
-    testCompile 'org.junit.jupiter:junit-jupiter-api:5.2.0'
-}
+sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8' // Need this here so eclipse task generates correctly.
 
 repositories {
     mavenCentral()
     maven { url = "http://dvs1.progwml6.com/files/maven" }
-    maven { url = "modmaven.k-4u.nl" }
+    flatDir { dirs 'libs' }
 }
 
-processResources {
-    inputs.property "version", project.version
-    inputs.property "mcversion", project.minecraft.version
+configurations {
+    fatJar
+}
 
-    from(sourceSets.main.resources.srcDirs) {
-        include 'mcmod.info'
-        expand 'version':project.version, 'mcversion':project.minecraft.version
-    }
+minecraft {
+    mappings channel: 'snapshot', version: '20190719-1.14.3'
+    runs {
+        client {
+            workingDirectory project.file('run')
+            property 'forge.logging.console.level', 'debug'
+            mods {
+                jecharacters {
+                    source sourceSets.main
+                }
+            }
+        }
 
-    from(sourceSets.main.resources.srcDirs) {
-        exclude 'mcmod.info'
+        server {
+            workingDirectory project.file('run')
+            property 'forge.logging.console.level', 'debug'
+            mods {
+                jecharacters {
+                    source sourceSets.main
+                }
+            }
+        }
+
+        data {
+            workingDirectory project.file('run')
+            property 'forge.logging.console.level', 'debug'
+            args '--mod', 'jecharacters', '--all', '--output', file('src/generated/resources/')
+            mods {
+                jecharacters {
+                    source sourceSets.main
+                }
+            }
+        }
     }
+}
+
+clean {
+    delete 'libs'
+}
+
+dependencies {
+    mkdir 'libs'
+    def url = 'https://github.com/Towdium/PinIn/releases/' +
+            "download/v${verpinin}/PinIn-${verpinin}.jar"
+    ant.get src: url, dest: "libs/PinIn-${verpinin}.jar", skipexisting: true
+    minecraft 'net.minecraftforge:forge:1.14.4-28.1.107'
+    compile fg.deobf('mezz.jei:jei-1.14.4:6.0.0.13')
+    implementation name: "PinIn-${verpinin}"
+    fatJar name: "PinIn-${verpinin}"
 }
 
 jar {
     manifest {
-        attributes 'FMLCorePlugin': 'me.towdium.jecharacters.core.JechCore'
+        attributes([
+                "Specification-Title": "Just Enough Characters",
+                "Specification-Vendor": "Towdium",
+                "Specification-Version": "${verspec}",
+                "Implementation-Title": project.name,
+                "Implementation-Version": "${verspec}.${verbuild}",
+                "Implementation-Vendor" :"Towdium",
+                "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+        ])
     }
+
+    from {
+        configurations.fatJar.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = "UTF-8"
 }
