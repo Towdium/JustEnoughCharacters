@@ -1,4 +1,4 @@
-package me.towdium.jecharacters.safe;
+package me.towdium.jecharacters;
 
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
@@ -30,5 +30,9 @@ public class JechSearcher extends GeneralizedSuffixTree {
     @Override
     public int getHighestIndex() {
         return highestIndex;
+    }
+
+    public static String wrap(String s) {
+        return JechConfig.enableQuote.get() ? '"' + s + '"' : s;
     }
 }

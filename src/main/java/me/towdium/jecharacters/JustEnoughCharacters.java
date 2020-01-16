@@ -1,4 +1,4 @@
-package me.towdium.jecharacters.safe;
+package me.towdium.jecharacters;
 
 import mcp.MethodsReturnNonnullByDefault;
 import me.towdium.pinin.PinIn;
@@ -22,12 +22,12 @@ public class JustEnoughCharacters {
     public static Logger logger = LogManager.getLogger(MODID);
     public static PinIn context = new PinIn();
 
-    @SubscribeEvent
-    public static void setupClient(FMLClientSetupEvent event) {
+    public JustEnoughCharacters() {
+        JechConfig.register();
     }
 
-    public static String wrap(String s) {
-        return s;
+    @SubscribeEvent
+    public static void setupClient(FMLClientSetupEvent event) {
     }
 }
 
