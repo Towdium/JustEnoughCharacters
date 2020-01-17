@@ -12,7 +12,6 @@ function transConstruct(src, dst) {
             if (n.getOpcode() === Ops.NEW) {
                 if (n.desc === src) {
                     n.desc = dst;
-                    print(src)
                 }
             } else if (n.getOpcode() === Ops.INVOKESPECIAL) {
                 if (n.owner === src) n.owner = dst;
