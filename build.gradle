@@ -72,10 +72,16 @@ dependencies {
     def url = 'https://github.com/Towdium/PinIn/releases/' +
             "download/v${verpinin}/PinIn-${verpinin}.jar"
     ant.get src: url, dest: "libs/PinIn-${verpinin}.jar", skipexisting: true
-    minecraft 'net.minecraftforge:forge:1.14.4-28.1.107'
-    compile fg.deobf('mezz.jei:jei-1.14.4:6.0.0.13')
     implementation name: "PinIn-${verpinin}"
     fatJar name: "PinIn-${verpinin}"
+
+    minecraft 'net.minecraftforge:forge:1.14.4-28.1.107'
+    compile fg.deobf('mezz.jei:jei-1.14.4:6.0.0.13')
+    testCompile 'org.junit.jupiter:junit-jupiter-api:5.2.0'
+}
+
+test {
+    useJUnitPlatform()
 }
 
 jar {
@@ -97,5 +103,9 @@ jar {
 }
 
 tasks.withType(JavaCompile) {
-    options.encoding = "UTF-8"
+    options.encoding = 'UTF-8'
+}
+
+build.dependsOn exec{
+    commandLine 'python', 'generate.py'
 }

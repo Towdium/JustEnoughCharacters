@@ -6,12 +6,13 @@ function initializeCoreMod() {
                 'type': 'METHOD',
                 'class': 'mezz.jei.ingredients.IngredientFilter',
                 'methodName': 'createPrefixedSearchTree',
-                'methodDesc': '(CLmezz/jei/ingredients/PrefixedSearchTree$IModeGetter' +
+                'methodDesc': '(CLmezz/jei/ingredients/PrefixedSearchTree$IModeGetter;' +
                     'Lmezz/jei/ingredients/PrefixedSearchTree$IStringsGetter;)V'
             },
-            'transformer': constructor(
+            'transformer': transConstruct(
                 'mezz/jei/suffixtree/GeneralizedSuffixTree',
-                'me/towdium/jecharacters/JechSearcher')
+                'me/towdium/jecharacters/JechMatcher$FakeTree'
+            )
         }
     }
 }

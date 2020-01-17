@@ -12,7 +12,7 @@ function initializeCoreMod() {
             'transformer': function (method) {
                 var list = method.instructions;
                 list.insert(list.get(3), new insn(opcodes.INVOKESTATIC,
-                    "me/towdium/jecharacters/JechSearcher", "wrap",
+                    "me/towdium/jecharacters/JechMatcher", "wrap",
                     "(Ljava/lang/String;)Ljava/lang/String;", false));
                 return method;
             }

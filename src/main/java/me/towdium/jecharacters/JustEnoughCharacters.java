@@ -1,7 +1,6 @@
 package me.towdium.jecharacters;
 
 import mcp.MethodsReturnNonnullByDefault;
-import me.towdium.pinin.PinIn;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
@@ -9,6 +8,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.function.Function;
 
 import static net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus.MOD;
 
@@ -20,10 +20,11 @@ public class JustEnoughCharacters {
     public static final String MODID = "jecharacters";
     public static final String MODNAME = "Just Enough Characters";
     public static Logger logger = LogManager.getLogger(MODID);
-    public static PinIn context = new PinIn();
 
     public JustEnoughCharacters() {
         JechConfig.register();
+        Function<String, Boolean> f = "测试"::contains;
+        logger.info(f.apply("csh"));
     }
 
     @SubscribeEvent

@@ -10,9 +10,10 @@ function initializeCoreMod() {
                     'Lmezz/jei/config/IIngredientFilterConfig;Lmezz/jei/config/IEditModeConfig;' +
                     'Lmezz/jei/api/runtime/IIngredientManager;Lmezz/jei/api/helpers/IModIdHelper;)V'
             },
-            'transformer': constructor(
+            'transformer': transConstruct(
                 'mezz/jei/suffixtree/GeneralizedSuffixTree',
-                'me/towdium/jecharacters/JechSearcher')
+                'me/towdium/jecharacters/JechMatcher$FakeTree'
+            )
         }
     }
 }
