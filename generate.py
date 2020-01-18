@@ -8,12 +8,9 @@ suffix = [
     'net.minecraft.client.util.SearchTreeReloadable:func_194040_a()V'
 ]
 string = [
-    'com.blamejared.controlling.client.gui.GuiNewControls:lambda$filterKeys$8(Lcom.blamejared.controlling.client.gui.GuiNewKeyBindingList$KeyEntry;)Z',
-    # controlling 1
-    'com.blamejared.controlling.client.gui.GuiNewControls:lambda$filterKeys$7(Lcom.blamejared.controlling.client.gui.GuiNewKeyBindingList$KeyEntry;)Z',
-    # controlling 2
-    'com.blamejared.controlling.client.gui.GuiNewControls:lambda$filterKeys$6(Lcom.blamejared.controlling.client.gui.GuiNewKeyBindingList$KeyEntry;)Z'
-    # controlling 3
+    'com.blamejared.controlling.client.gui.GuiNewControls:lambda$filterKeys$8(Lcom/blamejared/controlling/client/gui/GuiNewKeyBindingList$KeyEntry;)Z',  # controlling 1
+    'com.blamejared.controlling.client.gui.GuiNewControls:lambda$filterKeys$7(Lcom/blamejared/controlling/client/gui/GuiNewKeyBindingList$KeyEntry;)Z',  # controlling 2
+    'com.blamejared.controlling.client.gui.GuiNewControls:lambda$filterKeys$6(Lcom/blamejared/controlling/client/gui/GuiNewKeyBindingList$KeyEntry;)Z'   # controlling 3
 ]
 strsKt = []
 regExp = []

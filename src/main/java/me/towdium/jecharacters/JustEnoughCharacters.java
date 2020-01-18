@@ -8,7 +8,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.function.Function;
 
 import static net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus.MOD;
 
@@ -23,8 +22,6 @@ public class JustEnoughCharacters {
 
     public JustEnoughCharacters() {
         JechConfig.register();
-        Function<String, Boolean> f = "测试"::contains;
-        logger.info(f.apply("csh"));
     }
 
     @SubscribeEvent

@@ -135,24 +135,23 @@ public class Profiler {
                     MethodInsnNode mNode = ((MethodInsnNode) node);
                     if (mNode.getOpcode() == Opcodes.INVOKEVIRTUAL && mNode.owner.equals("java/lang/String")
                             && mNode.name.equals("contains") && mNode.desc.equals("(Ljava/lang/CharSequence;)Z")) {
-                        string.accept((classNode.name + ":" + methodNode.name + methodNode.desc).replace('/', '.'));
+                        string.accept(classNode.name.replace('/', '.') + ":" + methodNode.name + methodNode.desc);
                         break;
                     } else if (mNode.getOpcode() == Opcodes.INVOKEVIRTUAL && mNode.owner.equals("java/lang/String")
                             && mNode.name.equals("matches") && mNode.desc.equals("(Ljava/lang/String;)Z")) {
-                        regexp.accept((classNode.name + ":" + methodNode.name + methodNode.desc).replace('/', '.'));
+                        regexp.accept(classNode.name.replace('/', '.') + ":" + methodNode.name + methodNode.desc);
                         break;
                     } else if (mNode.getOpcode() == Opcodes.INVOKEVIRTUAL && mNode.owner.equals("java/util/regex/Pattern")
-                            && mNode.name.equals("matcher")
-                            && mNode.desc.equals("(Ljava/lang/CharSequence;)Ljava/util/regex/Matcher;")) {
-                        regexp.accept((classNode.name + ":" + methodNode.name + methodNode.desc).replace('/', '.'));
+                            && mNode.name.equals("matcher") && mNode.desc.equals("(Ljava/lang/CharSequence;)Ljava/util/regex/Matcher;")) {
+                        regexp.accept(classNode.name.replace('/', '.') + ":" + methodNode.name + methodNode.desc);
                         break;
                     } else if (mNode.getOpcode() == Opcodes.INVOKESTATIC && mNode.owner.equals("kotlin/text/StringsKt")
                             && mNode.name.equals("contains") && mNode.desc.equals("(Ljava/lang/CharSequence;Ljava/lang/CharSequence;Z)Z")) {
-                        strskt.accept((classNode.name + ":" + methodNode.name + methodNode.desc).replace('/', '.'));
+                        strskt.accept(classNode.name.replace('/', '.') + ":" + methodNode.name + methodNode.desc);
                         break;
                     } else if (mNode.getOpcode() == Opcodes.INVOKESTATIC && mNode.owner.equals("kotlin/text/StringsKt")
                             && mNode.name.equals("contains") && mNode.desc.equals("(Ljava/lang/CharSequence;Ljava/lang/CharSequence)Z")) {
-                        strskt.accept((classNode.name + ":" + methodNode.name + methodNode.desc).replace('/', '.'));
+                        strskt.accept(classNode.name.replace('/', '.') + ":" + methodNode.name + methodNode.desc);
                         break;
                     }
                 } else if (node instanceof TypeInsnNode) {

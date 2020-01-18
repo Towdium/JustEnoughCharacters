@@ -110,4 +110,4 @@ task generate(type:Exec) {
     commandLine 'python', 'generate.py'
 }
 
-build.dependsOn generate
+compileJava.dependsOn generate
