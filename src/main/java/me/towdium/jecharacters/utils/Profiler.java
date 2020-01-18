@@ -1,5 +1,7 @@
 package me.towdium.jecharacters.utils;
 
+import com.electronwill.nightconfig.core.Config;
+import com.electronwill.nightconfig.core.file.FileConfig;
 import com.google.gson.Gson;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Opcodes;
@@ -12,11 +14,15 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.function.Consumer;
 import java.util.zip.ZipFile;
 
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static me.towdium.jecharacters.JustEnoughCharacters.logger;
 
 /**
@@ -62,23 +68,42 @@ public class Profiler {
         ArrayList<String> strsKt = new ArrayList<>();
         JarContainer ret = new JarContainer();
         f.stream().forEach(entry -> {
-            if (entry.getName().endsWith(".class")) {
-                try (InputStream is = f.getInputStream(entry)) {
+            try (InputStream is = f.getInputStream(entry)) {
+                if (entry.getName().endsWith(".class")) {
                     long size = entry.getSize() + 4;
                     if (size > Integer.MAX_VALUE) {
                         logger.info("Class file " + entry.getName() + " in jar file " + f.getName() + " is too large, skip.");
                     } else scanClass(is, string::add, regExp::add, suffix::add, strsKt::add);
-                } catch (IOException e) {
-                    logger.info("Fail to read file " + entry.getName() + " in jar file " + f.getName() + ", skip.");
+                } else if (entry.getName().equals("mcmod.info")) {
+                    Gson gson = new Gson();
+                    try {
+                        ret.mods = gson.fromJson(new InputStreamReader(is), ModContainer[].class);
+                    } catch (Exception e) {
+                        ret.mods = new ModContainer[]{gson.fromJson(new InputStreamReader(is), ModContainer.class)};
+                    }
+                } else if (entry.getName().equals("META-INF/mods.toml")) {
+                    Path p = null;
+                    try {
+                        p = Files.createTempFile("jecharacters", ".toml");
+                        Files.copy(is, p, REPLACE_EXISTING);
+                        FileConfig c = FileConfig.of(p);
+                        c.load();
+                        Collection<Config> mods = c.get("mods");
+                        ret.mods = mods.stream().map(i -> {
+                            ModContainer mc = new ModContainer();
+                            mc.modid = i.get("modId");
+                            mc.name = i.get("displayName");
+                            mc.version = i.get("version");
+                            return mc;
+                        }).toArray(ModContainer[]::new);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } finally {
+                        if (p != null) p.toFile().delete();
+                    }
                 }
-            } else if (entry.getName().equals("mcmod.info")) {
-                Gson gson = new Gson();
-                try (InputStream is = f.getInputStream(entry)) {
-                    ret.mods = gson.fromJson(new InputStreamReader(is), ModContainer[].class);
-                    // ret.mods = new ModContainer[]{gson.fromJson(new InputStreamReader(is), ModContainer.class)};
-                } catch (Exception e) {
-                    logger.info("Fail to read mod info in jar file " + f.getName() + ", skip.");
-                }
+            } catch (IOException e) {
+                logger.info("Fail to read file " + entry.getName() + " in jar file " + f.getName() + ", skip.");
             }
         });
         if (!string.isEmpty() || !regExp.isEmpty() || !suffix.isEmpty() || !strsKt.isEmpty()) {

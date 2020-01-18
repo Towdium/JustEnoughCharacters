@@ -7,6 +7,16 @@ suffix = [
     'net.minecraft.client.util.SearchTreeReloadable:<init>(Ljava/util/function/Function;)V',
     'net.minecraft.client.util.SearchTreeReloadable:func_194040_a()V'
 ]
+string = [
+    'com.blamejared.controlling.client.gui.GuiNewControls:lambda$filterKeys$8(Lcom.blamejared.controlling.client.gui.GuiNewKeyBindingList$KeyEntry;)Z',
+    # controlling 1
+    'com.blamejared.controlling.client.gui.GuiNewControls:lambda$filterKeys$7(Lcom.blamejared.controlling.client.gui.GuiNewKeyBindingList$KeyEntry;)Z',
+    # controlling 2
+    'com.blamejared.controlling.client.gui.GuiNewControls:lambda$filterKeys$6(Lcom.blamejared.controlling.client.gui.GuiNewKeyBindingList$KeyEntry;)Z'
+    # controlling 3
+]
+strsKt = []
+regExp = []
 pattern = """// Generated
 function initializeCoreMod() {{
     Java.type('net.minecraftforge.coremod.api.ASMAPI').loadFile('me/towdium/jecharacters/lib.js');
@@ -43,11 +53,13 @@ if __name__ == '__main__':
         if i.startswith('gen'):
             os.remove(path + i)
 
-    for i in suffix:
-        s = pattern.format(idx=total, **decode(i), op='Suffix')
-        with open(file.format(total), 'w') as f:
-            f.write(s)
-        total += 1
+    for i in ['string', 'suffix', 'strsKt', 'regExp']:
+        for j in globals()[i]:
+            print(j)
+            s = pattern.format(idx=total, **decode(j), op=i.capitalize())
+            with open(file.format(total), 'w') as f:
+                f.write(s)
+            total += 1
 
     json = '{'
     for i in manual:
