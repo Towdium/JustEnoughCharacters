@@ -11,6 +11,12 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 import static net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus.MOD;
 
+/**
+ * TODO:
+ * Planned support but not out yet:
+ * Psi, EnderIO (inventory panel)
+ */
+
 @Mod.EventBusSubscriber(bus = MOD)
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault

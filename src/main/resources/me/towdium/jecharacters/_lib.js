@@ -37,7 +37,7 @@ function transInvoke(method, srcOwner, srcName, srcDesc, dstOwner, dstName, dstD
     }
 }
 
-var transString = function (method) {
+var transContains = function (method) {
     transInvoke(method,
         'java/lang/String',
         'contains',
@@ -93,6 +93,18 @@ var transStrsKt = function (method) {
         'me/towdium/jecharacters/Match',
         'contains',
         '(Ljava/lang/CharSequence;Ljava/lang/CharSequence)Z'
+    );
+    return method;
+};
+
+var transEquals = function (method) {
+    transInvoke(method,
+        'java/lang/String',
+        'equals',
+        '(Ljava/lang/Object;)Z',
+        'me/towdium/jecharacters/utils/Match',
+        'equals',
+        '(Ljava/lang/String;Ljava/lang/Object;)Z'
     );
     return method;
 };

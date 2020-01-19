@@ -66,6 +66,7 @@ public class Profiler {
         ArrayList<String> regExp = new ArrayList<>();
         ArrayList<String> suffix = new ArrayList<>();
         ArrayList<String> strsKt = new ArrayList<>();
+        ArrayList<String> equals = new ArrayList<>();
         JarContainer ret = new JarContainer();
         f.stream().forEach(entry -> {
             try (InputStream is = f.getInputStream(entry)) {
@@ -73,7 +74,7 @@ public class Profiler {
                     long size = entry.getSize() + 4;
                     if (size > Integer.MAX_VALUE) {
                         logger.info("Class file " + entry.getName() + " in jar file " + f.getName() + " is too large, skip.");
-                    } else scanClass(is, string::add, regExp::add, suffix::add, strsKt::add);
+                    } else scanClass(is, string::add, regExp::add, suffix::add, strsKt::add, equals::add);
                 } else if (entry.getName().equals("mcmod.info")) {
                     Gson gson = new Gson();
                     try {
@@ -106,17 +107,19 @@ public class Profiler {
                 logger.info("Fail to read file " + entry.getName() + " in jar file " + f.getName() + ", skip.");
             }
         });
-        if (!string.isEmpty() || !regExp.isEmpty() || !suffix.isEmpty() || !strsKt.isEmpty()) {
-            ret.string = string.toArray(EMPTY_STR);
+        if (!string.isEmpty() || !regExp.isEmpty() || !suffix.isEmpty() || !strsKt.isEmpty() || !equals.isEmpty()) {
+            ret.contains = string.toArray(EMPTY_STR);
             ret.regExp = regExp.toArray(EMPTY_STR);
             ret.suffix = suffix.toArray(EMPTY_STR);
             ret.strsKt = strsKt.toArray(EMPTY_STR);
+            ret.equals = equals.toArray(EMPTY_STR);
             cbkJar.accept(ret);
         }
     }
 
-    private static void scanClass(InputStream is, Consumer<String> string, Consumer<String> regexp,
-                                  Consumer<String> suffix, Consumer<String> strskt) throws IOException {
+    private static void scanClass(InputStream is, Consumer<String> contains, Consumer<String> regexp,
+                                  Consumer<String> suffix, Consumer<String> strskt, Consumer<String> equals)
+            throws IOException {
         ClassNode classNode = new ClassNode();
         ClassReader classReader = new ClassReader(is);
         try {
@@ -135,7 +138,11 @@ public class Profiler {
                     MethodInsnNode mNode = ((MethodInsnNode) node);
                     if (mNode.getOpcode() == Opcodes.INVOKEVIRTUAL && mNode.owner.equals("java/lang/String")
                             && mNode.name.equals("contains") && mNode.desc.equals("(Ljava/lang/CharSequence;)Z")) {
-                        string.accept(classNode.name.replace('/', '.') + ":" + methodNode.name + methodNode.desc);
+                        contains.accept(classNode.name.replace('/', '.') + ":" + methodNode.name + methodNode.desc);
+                        break;
+                    } else if (mNode.getOpcode() == Opcodes.INVOKEVIRTUAL && mNode.owner.equals("java/lang/String")
+                            && mNode.name.equals("equals") && mNode.desc.equals("(Ljava/lang/Object;)Z")) {
+                        equals.accept(classNode.name.replace('/', '.') + ":" + methodNode.name + methodNode.desc);
                         break;
                     } else if (mNode.getOpcode() == Opcodes.INVOKEVIRTUAL && mNode.owner.equals("java/lang/String")
                             && mNode.name.equals("matches") && mNode.desc.equals("(Ljava/lang/String;)Z")) {
@@ -171,10 +178,11 @@ public class Profiler {
 
     private static class JarContainer {
         ModContainer[] mods;
-        String[] string;
+        String[] contains;
         String[] regExp;
         String[] suffix;
         String[] strsKt;
+        String[] equals;
     }
 
     private static class ModContainer {

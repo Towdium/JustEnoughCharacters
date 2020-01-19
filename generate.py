@@ -2,21 +2,77 @@ import os
 
 manual = ['jei1', 'jei2', 'jei3']
 suffix = [
-    'net.minecraft.client.util.SearchTree:<init>(Ljava/util/function/Function;Ljava/util/function/Function;)V',
-    'net.minecraft.client.util.SearchTree:func_194040_a()V',
-    'net.minecraft.client.util.SearchTreeReloadable:<init>(Ljava/util/function/Function;)V',
-    'net.minecraft.client.util.SearchTreeReloadable:func_194040_a()V'
+    'net.minecraft.client.util.SearchTree:<init>(Ljava/util/function/Function;Ljava/util/function/Function;)V',  # Vanilla
+    'net.minecraft.client.util.SearchTree:func_194040_a()V',  # Vanilla
+    'net.minecraft.client.util.SearchTreeReloadable:<init>(Ljava/util/function/Function;)V',  # Vanilla
+    'net.minecraft.client.util.SearchTreeReloadable:func_194040_a()V'  # Vanilla
 ]
-string = [
-    'com.blamejared.controlling.client.gui.GuiNewControls:lambda$filterKeys$8(Lcom/blamejared/controlling/client/gui/GuiNewKeyBindingList$KeyEntry;)Z',  # controlling 1
-    'com.blamejared.controlling.client.gui.GuiNewControls:lambda$filterKeys$7(Lcom/blamejared/controlling/client/gui/GuiNewKeyBindingList$KeyEntry;)Z',  # controlling 2
-    'com.blamejared.controlling.client.gui.GuiNewControls:lambda$filterKeys$6(Lcom/blamejared/controlling/client/gui/GuiNewKeyBindingList$KeyEntry;)Z'   # controlling 3
+contains = [
+    'com.blamejared.controlling.client.gui.GuiNewControls:lambda$filterKeys$8(Lcom/blamejared/controlling/client/gui/GuiNewKeyBindingList$KeyEntry;)Z',  # Controlling
+    'com.blamejared.controlling.client.gui.GuiNewControls:lambda$filterKeys$7(Lcom/blamejared/controlling/client/gui/GuiNewKeyBindingList$KeyEntry;)Z',  # Controlling
+    'com.blamejared.controlling.client.gui.GuiNewControls:lambda$filterKeys$6(Lcom/blamejared/controlling/client/gui/GuiNewKeyBindingList$KeyEntry;)Z',  # Controlling
+    'com.raoulvdberge.refinedstorage.screen.grid.filtering.ModGridFilter:test(Lcom/raoulvdberge/refinedstorage/screen/grid/stack/IGridStack;)Z',  # Refined Storage
+    'com.raoulvdberge.refinedstorage.screen.grid.filtering.NameGridFilter:test(Lcom/raoulvdberge/refinedstorage/screen/grid/stack/IGridStack;)Z',  # Refined Storage
+    'com.raoulvdberge.refinedstorage.screen.grid.filtering.TagGridFilter:lambda$test$0(Ljava/lang/String;)Z',  # Refined Storage
+    'com.raoulvdberge.refinedstorage.screen.grid.filtering.TooltipGridFilter:test(Lcom/raoulvdberge/refinedstorage/screen/grid/stack/IGridStack;)Z',  # Refined Storage
+    'com.rwtema.extrautils2.transfernodes.TileIndexer$ContainerIndexer$WidgetItemRefButton:lambda$getRef$0([Ljava/lang/String;Lcom/rwtema/extrautils2/utils/datastructures/ItemRef;)Z',  # Extra Utilities
+    'de.ellpeck.actuallyadditions.mod.booklet.entry.BookletEntry:fitsFilter(Lde/ellpeck/actuallyadditions/api/booklet/IBookletPage;Ljava/lang/String;)Z',  # Actually Additions
+    'de.ellpeck.actuallyadditions.mod.booklet.entry.BookletEntry:getChaptersForDisplay(Ljava/lang/String;)Ljava/util/List;',  # Actually Additions
+    'appeng.client.gui.implementations.GuiInterfaceTerminal:refreshList()V',  # Applied Energistics
+    'appeng.client.gui.implementations.GuiInterfaceTerminal:itemStackMatchesSearchTerm(Lnet/minecraft/item/ItemStack;Ljava/lang/String;)Z',  # Applied Energistics
+    'me.towdium.jecalculation.utils.Utilities$I18n:contains(Ljava/lang/String;Ljava/lang/String;)Z',  # Just Enough Calculation
+    'sonar.logistics.core.tiles.readers.fluids.GuiFluidReader:getGridList()Ljava/util/List;',  # Practical Logistics
+    'sonar.logistics.core.tiles.readers.items.GuiInventoryReader:getGridList()Ljava/util/List;',  # Practical Logistics
+    'sonar.logistics.core.items.wirelessstoragereader.GuiWirelessStorageReader:getGridList()Ljava/util/List;',  # Practical Logistics
+    'sonar.logistics.core.items.guide.GuiGuide:updateSearchList()V',  # Practical Logistics
+    'binnie.core.machines.storage.SearchDialog:updateSearch()V',  # Binnie Core
+    'vazkii.patchouli.client.book.BookEntry:isFoundByQuery(Ljava/lang/String;)Z',  # Patchouli (Botania)
+    'vazkii.botania.api.corporea.CorporeaRequestDefaultMatchers$CorporeaStringMatcher:equalOrContain(Ljava/lang/String;)Z',  # Botania (Corporea)
+    'net.blay09.mods.cookingforblockheads.container.RecipeBookContainer:search(Ljava/lang/String;)V',  # Cooking for Blockheads
+    'net.blay09.mods.farmingforblockheads.container.MarketClientContainer:applyFilters()V',  # Farming for Blockheads
+    'mcjty.rftools.blocks.shaper.LocatorTileEntity:checkFilter(Ljava/lang/String;Lnet/minecraft/entity/Entity;)Z',  # RF Tools
+    'mcjty.rftools.blocks.storagemonitor.StorageScannerTileEntity:lambda$makeSearchPredicate$20(Ljava/lang/String;Lnet/minecraft/item/ItemStack;)Z',  # RF Tools
+    'mcjty.rftools.blocks.storage.GuiModularStorage:updateList()V',  # RF Tools
+    'mcjty.rftools.items.netmonitor.GuiNetworkMonitor:populateList()V',  # RF Tools
+    'moze_intel.projecte.gameObjs.container.inventory.TransmutationInventory:doesItemMatchFilter(Lmoze_intel/projecte/api/ItemInfo;)Z',  # Project E
+    'org.cyclops.integrateddynamics.core.client.gui.GuiTextFieldDropdown:func_146201_a(CI)Z',  # Integrated Dynamics
+    'blusunrize.immersiveengineering.api.ManualPageBlueprint:listForSearch(Ljava/lang/String;)Z'  # Immersive Engineering
+    'blusunrize.lib.manual.ManualPages$Crafting:listForSearch(Ljava/lang/String;)Z',  # Immersive Engineering
+    'blusunrize.lib.manual.ManualPages$CraftingMulti:listForSearch(Ljava/lang/String;)Z',  # Immersive Engineering
+    'blusunrize.lib.manual.ManualPages$ItemDisplay:listForSearch(Ljava/lang/String;)Z',  # Immersive Engineering
+    'blusunrize.lib.manual.gui.GuiManual:func_73869_a(CI)V',  # Immersive Engineering
+    'betterquesting.api2.client.gui.panels.lists.CanvasEntityDatabase:queryMatches(Lnet/minecraftforge/fml/common/registry/EntityEntry;Ljava/lang/String;Ljava/util/ArrayDeque;)V',  # Better Questing
+    'betterquesting.api2.client.gui.panels.lists.CanvasFileDirectory:queryMatches(Ljava/io/File;Ljava/lang/String;Ljava/util/ArrayDeque;)V',  # Better Questing
+    'betterquesting.api2.client.gui.panels.lists.CanvasFluidDatabase:queryMatches(Lnet/minecraftforge/fluids/Fluid;Ljava/lang/String;Ljava/util/ArrayDeque;)V',  # Better Questing
+    'betterquesting.api2.client.gui.panels.lists.CanvasItemDatabase:queryMatches(Lnet/minecraft/item/Item;Ljava/lang/String;Ljava/util/ArrayDeque;)V',  # Better Questing
+    'betterquesting.api2.client.gui.panels.lists.CanvasQuestDatabase:queryMatches(Lbetterquesting/api2/storage/DBEntry;Ljava/lang/String;Ljava/util/ArrayDeque;)V',  # Better Questing
+    'com.mia.props.client.container.GuiDecobench:refreshButtons()V',  # Decofraft workbench
+    'logisticspipes.gui.orderer.GuiOrderer:isSearched(Ljava/lang/String;Ljava/lang/String;)Z',  # Logistics Pipes
+    'logisticspipes.gui.orderer.GuiRequestTable:isSearched(Ljava/lang/String;Ljava/lang/String;)Z',  # Logistics Pipes
+    'com.lothrazar.storagenetwork.api.util.UtilInventory:doOverlap(Ljava/lang/String;Ljava/lang/String;)Z',  # Simple Storage Network
+    'com.lothrazar.storagenetwork.gui.NetworkWidget:doesStackMatchSearch(Lnet/minecraft/item/ItemStack;)Z',  # Simple Storage Network
+    'com.latmod.mods.projectex.gui.GuiTableBase:updateValidItemList()V',  # Project EX
+    'vazkii.quark.client.module.ChestSearchingModule:namesMatch(Lnet/minecraft/item/ItemStack;Ljava/lang/String;)Z',  # Quark
+    'net.minecraft.client.gui.screen.inventory.CreativeScreen:func_147053_i()V',  # Vanilla
+    'net.minecraft.client.gui.screen.inventory.CreativeScreen:func_214080_a(Ljava/lang/String;)V'  # Vanilla
 ]
-strsKt = []
-regExp = []
+equals = [
+    'vazkii.botania.api.corporea.CorporeaRequestDefaultMatchers$CorporeaStringMatcher:equalOrContain(Ljava/lang/String;)Z',  # Botania (Corporea)
+    'vazkii.quark.client.module.ChestSearchingModule:namesMatch(Lnet/minecraft/item/ItemStack;Ljava/lang/String;)Z'  # Quark
+]
+regExp = [
+    'appeng.client.me.FluidRepo:updateView()V',  # Applied Energistics
+    'appeng.client.me.ItemRepo:updateView()V',  # Applied Energistics
+    'org.cyclops.integrateddynamics.core.inventory.container.ContainerMultipartAspects$1:apply(Lorg/cyclops/integrateddynamics/api/part/aspect/IAspect;Ljava/util/regex/Pattern;)Z',  # Integrated Dynamics 1
+    'org.cyclops.integrateddynamics.inventory.container.ContainerLogicProgrammerBase$1:apply(Lorg/cyclops/integrateddynamics/api/logicprogrammer/ILogicProgrammerElement;Ljava/util/regex/Pattern;)Z'  # Integrated Dynamics 2
+]
+strsKt = [
+    'com.cout970.magneticraft.features.multiblocks.ContainerShelvingUnit$filterSlots$1:invoke(Lnet/minecraft/item/ItemStack;Ljava/lang/String;)Z'  # Magneticraft
+]
+
 pattern = """// Generated
 function initializeCoreMod() {{
-    Java.type('net.minecraftforge.coremod.api.ASMAPI').loadFile('me/towdium/jecharacters/lib.js');
+    Java.type('net.minecraftforge.coremod.api.ASMAPI').loadFile('me/towdium/jecharacters/_lib.js');
     return {{
         'jecharacters-gen{idx}': {{
             'target': {{
@@ -44,13 +100,13 @@ def decode(s):
 
 if __name__ == '__main__':
     total = 0
-    file = 'src/main/resources/me/towdium/jecharacters/gen{}.js'
+    file = 'src/main/resources/me/towdium/jecharacters/_gen{}.js'
     path = 'src/main/resources/me/towdium/jecharacters/'
     for i in os.listdir(path):
-        if i.startswith('gen'):
+        if i.startswith('_gen'):
             os.remove(path + i)
 
-    for i in ['string', 'suffix', 'strsKt', 'regExp']:
+    for i in ['contains', 'suffix', 'regExp', 'equals', 'strsKt']:
         for j in globals()[i]:
             print(j)
             s = pattern.format(idx=total, **decode(j), op=i.capitalize())
@@ -62,7 +118,7 @@ if __name__ == '__main__':
     for i in manual:
         json += '\n  "jecharacters-{0}": "me/towdium/jecharacters/{0}.js",'.format(i)
     for i in range(total):
-        json += '\n  "jecharacters-gen{0}": "me/towdium/jecharacters/gen{0}.js",'.format(i)
+        json += '\n  "jecharacters-gen{0}": "me/towdium/jecharacters/_gen{0}.js",'.format(i)
     json = json[:-1] + '\n}\n'
     with open('src/main/resources/META-INF/coremods.json', 'w') as f:
         f.write(json)

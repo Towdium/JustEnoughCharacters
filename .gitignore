@@ -22,5 +22,5 @@ eclipse
 run
 
 # generated
-src/main/resources/me/towdium/jecharacters/gen*
+src/main/resources/me/towdium/jecharacters/_gen*
 src/main/resources/META-INF/coremods.json

@@ -27,12 +27,22 @@ public class Match {
     }
 
     public static boolean contains(String s, CharSequence cs) {
-        return context.contains(s, cs);
+        boolean b = context.contains(s, cs);
+        if (JechConfig.enableVerbose.get())
+            JustEnoughCharacters.logger.debug("contains(" + s + ',' + cs +")->" + b);
+        return b;
     }
 
     public static boolean contains(CharSequence a, CharSequence b, boolean c) {
         if (c) return contains(a.toString().toLowerCase(), b.toString().toLowerCase());
         else return contains(a, b);
+    }
+
+    public static boolean equals(String s, Object o) {
+        boolean b = o instanceof String && context.matches(s, (String) o);
+        if (JechConfig.enableVerbose.get())
+            JustEnoughCharacters.logger.debug("contains(" + s + ',' + o +")->" + b);
+        return b;
     }
 
     public static boolean contains(CharSequence a, CharSequence b) {
@@ -85,6 +95,8 @@ public class Match {
 
         @Override
         public void add(T v, String k) {
+            if (JechConfig.enableVerbose.get())
+                JustEnoughCharacters.logger.debug("FakeArray:put(" + v + ',' + k + ')');
             tree.put(k, v);
         }
 
@@ -94,6 +106,8 @@ public class Match {
 
         @Override
         public List<T> search(String k) {
+            if (JechConfig.enableVerbose.get())
+                JustEnoughCharacters.logger.debug("FakeArray:search(" + k + ')');
             return tree.search(k);
         }
     }

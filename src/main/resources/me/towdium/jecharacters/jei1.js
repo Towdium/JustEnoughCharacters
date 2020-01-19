@@ -1,5 +1,5 @@
 function initializeCoreMod() {
-    Java.type('net.minecraftforge.coremod.api.ASMAPI').loadFile('me/towdium/jecharacters/lib.js');
+    Java.type('net.minecraftforge.coremod.api.ASMAPI').loadFile('me/towdium/jecharacters/_lib.js');
     return {
         'jecharacters-jei1': {
             'target': {

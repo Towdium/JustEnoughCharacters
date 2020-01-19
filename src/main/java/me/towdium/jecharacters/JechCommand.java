@@ -6,20 +6,17 @@ import com.mojang.brigadier.ParseResults;
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.tree.RootCommandNode;
 import me.towdium.jecharacters.utils.Profiler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.gui.screen.ChatScreen;
 import net.minecraft.command.CommandSource;
 import net.minecraft.command.ISuggestionProvider;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TextComponentUtils;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.util.text.*;
 import net.minecraft.util.text.event.ClickEvent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ClientChatEvent;
-import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -27,7 +24,6 @@ import net.minecraftforge.fml.common.Mod;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.util.function.Supplier;
 
 import static net.minecraft.util.text.TextFormatting.*;
 import static net.minecraft.util.text.event.ClickEvent.Action.SUGGEST_COMMAND;
@@ -35,48 +31,58 @@ import static net.minecraft.util.text.event.ClickEvent.Action.SUGGEST_COMMAND;
 @Mod.EventBusSubscriber({Dist.CLIENT})
 public class JechCommand {
     static CommandDispatcher<ISuggestionProvider> dispatcher;
-    static boolean active;
+    static LiteralArgumentBuilder<ISuggestionProvider> builder;
 
-    @SubscribeEvent
-    public static void onOpenGui(GuiScreenEvent.InitGuiEvent event) {
-        Supplier<Integer> profile = () -> {
-            Thread t = new Thread(() -> {
-                ClientPlayerEntity p = Minecraft.getInstance().player;
-                p.sendMessage(new TranslationTextComponent("jecharacters.chat.start"));
-                Profiler.Report r = Profiler.run();
-                try (FileOutputStream fos = new FileOutputStream("logs/jecharacters-profiler.txt")) {
-                    OutputStreamWriter osw = new OutputStreamWriter(fos);
-                    osw.write(new GsonBuilder().setPrettyPrinting().create().toJson(r));
-                    osw.flush();
-                    p.sendMessage(new TranslationTextComponent("jecharacters.chat.saved"));
-                } catch (IOException e) {
-                    p.sendMessage(new TranslationTextComponent("jecharacters.chat.error"));
-                }
-            });
-            t.setPriority(Thread.MIN_PRIORITY);
-            t.start();
-            return 0;
-        };
+    static {
+        builder = literal("jech")
+                .executes((c) -> {
+                    TextComponent tc = new TranslationTextComponent("jecharacters.chat.help");
+                    Minecraft.getInstance().player.sendMessage(tc);
+                    return 0;
+                })
+                .then(literal("profile").executes(c -> profile()))
+                .then(literal("verbose")
+                        .then(literal("true").executes(c -> {
+                            JechConfig.enableVerbose.set(true);
+                            return 0;
+                        })).then(literal("false").executes(c -> {
+                            JechConfig.enableVerbose.set(false);
+                            return 0;
+                        })));
+        dispatcher = new CommandDispatcher<>();
+        dispatcher.register(builder);
+    }
 
-        ClientPlayerEntity p = Minecraft.getInstance().player;
-        if (event.getGui() instanceof ChatScreen && !active) {
-            LiteralArgumentBuilder<ISuggestionProvider> lab = LiteralArgumentBuilder.<ISuggestionProvider>literal("jech")
-                    .executes((c) -> {
-                        p.sendMessage(new TranslationTextComponent("jecharacters.chat.help"));
-                        return 0;
-                    })
-                    .then(LiteralArgumentBuilder.<ISuggestionProvider>literal("profile").executes(c -> profile.get()));
-            dispatcher = new CommandDispatcher<>();
-            dispatcher.register(lab);
-            Minecraft.getInstance().player.connection.func_195515_i().register(lab);
-            active = true;
-        }
+    private static LiteralArgumentBuilder<ISuggestionProvider> literal(String s) {
+        return LiteralArgumentBuilder.literal(s);
+    }
+
+    private static int profile() {
+        Thread t = new Thread(() -> {
+            ClientPlayerEntity p = Minecraft.getInstance().player;
+            p.sendMessage(new TranslationTextComponent("jecharacters.chat.start"));
+            Profiler.Report r = Profiler.run();
+            try (FileOutputStream fos = new FileOutputStream("logs/jecharacters-profiler.txt")) {
+                OutputStreamWriter osw = new OutputStreamWriter(fos);
+                osw.write(new GsonBuilder().setPrettyPrinting().create().toJson(r));
+                osw.flush();
+                p.sendMessage(new TranslationTextComponent("jecharacters.chat.saved"));
+            } catch (IOException e) {
+                p.sendMessage(new TranslationTextComponent("jecharacters.chat.error"));
+            }
+        });
+        t.setPriority(Thread.MIN_PRIORITY);
+        t.start();
+        return 0;
     }
 
     @SubscribeEvent
-    public static void onLogOut(ClientPlayerNetworkEvent.LoggedOutEvent event) {
-        active = false;
-        dispatcher = null;
+    public static void onOpenGui(GuiScreenEvent.InitGuiEvent event) {
+        if (event.getGui() instanceof ChatScreen) {
+            RootCommandNode<ISuggestionProvider> root = Minecraft.getInstance()
+                    .player.connection.func_195515_i().getRoot();
+            if (root.getChild("jech") == null) root.addChild(builder.build());
+        }
     }
 
     @SubscribeEvent
