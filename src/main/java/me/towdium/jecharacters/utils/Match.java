@@ -83,21 +83,12 @@ public class Match {
 
     @SubscribeEvent
     public static void onConfigChange(ModConfig.ModConfigEvent e) {
-        if (context.keyboard() != JechConfig.enumKeyboard.get().keyboard
-                || context.fAng2An() != JechConfig.enableFAng2an.get()
-                || context.fEng2En() != JechConfig.enableFEng2en.get()
-                || context.fIng2In() != JechConfig.enableFIng2in.get()
-                || context.fZh2Z() != JechConfig.enableFZh2z.get()
-                || context.fCh2C() != JechConfig.enableFCh2c.get()
-                || context.fSh2S() != JechConfig.enableFSh2s.get()
-                || context.fU2V() != JechConfig.enableFU2v.get()) {
-            context.config().keyboard(JechConfig.enumKeyboard.get().keyboard)
-                    .fAng2An(JechConfig.enableFAng2an.get()).fEng2En(JechConfig.enableFEng2en.get())
-                    .fIng2In(JechConfig.enableFIng2in.get()).fZh2Z(JechConfig.enableFZh2z.get())
-                    .fCh2C(JechConfig.enableFCh2c.get()).fSh2S(JechConfig.enableFZh2z.get())
-                    .fU2V(JechConfig.enableFU2v.get()).commit();
-            searchers.forEach(TreeSearcher::refresh);
-        }
+        context.config().keyboard(JechConfig.enumKeyboard.get().keyboard)
+                .fAng2An(JechConfig.enableFAng2an.get()).fEng2En(JechConfig.enableFEng2en.get())
+                .fIng2In(JechConfig.enableFIng2in.get()).fZh2Z(JechConfig.enableFZh2z.get())
+                .fCh2C(JechConfig.enableFCh2c.get()).fSh2S(JechConfig.enableFZh2z.get())
+                .fU2V(JechConfig.enableFU2v.get()).commit();
+        searchers.forEach(TreeSearcher::refresh);
     }
 
     public static class FakeTree extends GeneralizedSuffixTree {
