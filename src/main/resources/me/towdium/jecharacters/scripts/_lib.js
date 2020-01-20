@@ -82,7 +82,7 @@ var transStrsKt = function (method) {
         'kotlin/text/StringsKt',
         'contains',
         '(Ljava/lang/CharSequence;Ljava/lang/CharSequence;Z)Z',
-        'me/towdium/jecharacters/Match',
+        'me/towdium/jecharacters/utils/Match',
         'contains',
         '(Ljava/lang/CharSequence;Ljava/lang/CharSequence;Z)Z'
     );
@@ -90,7 +90,7 @@ var transStrsKt = function (method) {
         'kotlin/text/StringsKt',
         'contains',
         '(Ljava/lang/CharSequence;Ljava/lang/CharSequence)Z',
-        'me/towdium/jecharacters/Match',
+        'me/towdium/jecharacters/utils/Match',
         'contains',
         '(Ljava/lang/CharSequence;Ljava/lang/CharSequence)Z'
     );

@@ -74,11 +74,11 @@ public class JechConfig {
                 FMLPaths.CONFIGDIR.get().resolve(PATH).toString());
     }
 
-    enum Spell {
+    public enum Spell {
         QUANPIN(Keyboard.QUANPIN), DAQIAN(Keyboard.DAQIAN),
         XIAOHE(Keyboard.XIAOHE), ZIRANMA(Keyboard.ZIRANMA);
 
-        Keyboard keyboard;
+        public final Keyboard keyboard;
 
         Spell(Keyboard keyboard) {
             this.keyboard = keyboard;

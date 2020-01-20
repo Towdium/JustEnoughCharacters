@@ -9,18 +9,38 @@ import me.towdium.pinin.PinIn;
 import me.towdium.pinin.TreeSearcher;
 import mezz.jei.suffixtree.GeneralizedSuffixTree;
 import net.minecraft.client.util.SuffixArray;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.config.ModConfig;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import java.util.WeakHashMap;
 import java.util.regex.Pattern;
 
 import static me.towdium.pinin.Searcher.Logic.CONTAIN;
+import static net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus.MOD;
 
+@Mod.EventBusSubscriber(bus = MOD)
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class Match {
     public static final PinIn context = new PinIn();
     static final Pattern p = Pattern.compile("a");
+    static Set<TreeSearcher<?>> searchers = Collections.newSetFromMap(new WeakHashMap<>());
+
+    private static <T> TreeSearcher<T> searcher() {
+        TreeSearcher<T> ret = new TreeSearcher<>(CONTAIN, context);
+        searchers.add(ret);
+        return ret;
+    }
+
+    // Psi
+    public static int rank(Object o, String s1, String s2) {
+        return contains(s1, s2) ? 1 : 0;
+    }
 
     public static String wrap(String s) {
         return JechConfig.enableQuote.get() ? '"' + s + '"' : s;
@@ -29,7 +49,7 @@ public class Match {
     public static boolean contains(String s, CharSequence cs) {
         boolean b = context.contains(s, cs);
         if (JechConfig.enableVerbose.get())
-            JustEnoughCharacters.logger.debug("contains(" + s + ',' + cs +")->" + b);
+            JustEnoughCharacters.logger.debug("contains(" + s + ',' + cs + ")->" + b);
         return b;
     }
 
@@ -41,7 +61,7 @@ public class Match {
     public static boolean equals(String s, Object o) {
         boolean b = o instanceof String && context.matches(s, (String) o);
         if (JechConfig.enableVerbose.get())
-            JustEnoughCharacters.logger.debug("contains(" + s + ',' + o +")->" + b);
+            JustEnoughCharacters.logger.debug("contains(" + s + ',' + o + ")->" + b);
         return b;
     }
 
@@ -61,8 +81,27 @@ public class Match {
         return contains(s1, s2);
     }
 
+    @SubscribeEvent
+    public static void onConfigChange(ModConfig.ModConfigEvent e) {
+        if (context.keyboard() != JechConfig.enumKeyboard.get().keyboard
+                || context.fAng2An() != JechConfig.enableFAng2an.get()
+                || context.fEng2En() != JechConfig.enableFEng2en.get()
+                || context.fIng2In() != JechConfig.enableFIng2in.get()
+                || context.fZh2Z() != JechConfig.enableFZh2z.get()
+                || context.fCh2C() != JechConfig.enableFCh2c.get()
+                || context.fSh2S() != JechConfig.enableFSh2s.get()
+                || context.fU2V() != JechConfig.enableFU2v.get()) {
+            context.config().keyboard(JechConfig.enumKeyboard.get().keyboard)
+                    .fAng2An(JechConfig.enableFAng2an.get()).fEng2En(JechConfig.enableFEng2en.get())
+                    .fIng2In(JechConfig.enableFIng2in.get()).fZh2Z(JechConfig.enableFZh2z.get())
+                    .fCh2C(JechConfig.enableFCh2c.get()).fSh2S(JechConfig.enableFZh2z.get())
+                    .fU2V(JechConfig.enableFU2v.get()).commit();
+            searchers.forEach(TreeSearcher::refresh);
+        }
+    }
+
     public static class FakeTree extends GeneralizedSuffixTree {
-        TreeSearcher<Integer> tree = new TreeSearcher<>(CONTAIN, context);
+        TreeSearcher<Integer> tree = searcher();
         int highestIndex = -1;
 
         public IntSet search(String word) {
@@ -91,7 +130,7 @@ public class Match {
 
 
     public static class FakeArray<T> extends SuffixArray<T> {
-        TreeSearcher<T> tree = new TreeSearcher<>(CONTAIN, context);
+        TreeSearcher<T> tree = searcher();
 
         @Override
         public void add(T v, String k) {

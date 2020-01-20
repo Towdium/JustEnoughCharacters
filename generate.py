@@ -1,6 +1,6 @@
 import os
 
-manual = ['jei1', 'jei2', 'jei3']
+manual = ['jei1', 'jei2', 'jei3', 'psi']
 suffix = [
     'net.minecraft.client.util.SearchTree:<init>(Ljava/util/function/Function;Ljava/util/function/Function;)V',  # Vanilla
     'net.minecraft.client.util.SearchTree:func_194040_a()V',  # Vanilla
@@ -36,7 +36,7 @@ contains = [
     'mcjty.rftools.items.netmonitor.GuiNetworkMonitor:populateList()V',  # RF Tools
     'moze_intel.projecte.gameObjs.container.inventory.TransmutationInventory:doesItemMatchFilter(Lmoze_intel/projecte/api/ItemInfo;)Z',  # Project E
     'org.cyclops.integrateddynamics.core.client.gui.GuiTextFieldDropdown:func_146201_a(CI)Z',  # Integrated Dynamics
-    'blusunrize.immersiveengineering.api.ManualPageBlueprint:listForSearch(Ljava/lang/String;)Z'  # Immersive Engineering
+    'blusunrize.immersiveengineering.api.ManualPageBlueprint:listForSearch(Ljava/lang/String;)Z',  # Immersive Engineering
     'blusunrize.lib.manual.ManualPages$Crafting:listForSearch(Ljava/lang/String;)Z',  # Immersive Engineering
     'blusunrize.lib.manual.ManualPages$CraftingMulti:listForSearch(Ljava/lang/String;)Z',  # Immersive Engineering
     'blusunrize.lib.manual.ManualPages$ItemDisplay:listForSearch(Ljava/lang/String;)Z',  # Immersive Engineering
@@ -72,7 +72,7 @@ strsKt = [
 
 pattern = """// Generated
 function initializeCoreMod() {{
-    Java.type('net.minecraftforge.coremod.api.ASMAPI').loadFile('me/towdium/jecharacters/_lib.js');
+    Java.type('net.minecraftforge.coremod.api.ASMAPI').loadFile('me/towdium/jecharacters/scripts/_lib.js');
     return {{
         'jecharacters-gen{idx}': {{
             'target': {{
@@ -100,8 +100,8 @@ def decode(s):
 
 if __name__ == '__main__':
     total = 0
-    file = 'src/main/resources/me/towdium/jecharacters/_gen{}.js'
-    path = 'src/main/resources/me/towdium/jecharacters/'
+    file = 'src/main/resources/me/towdium/jecharacters/scripts/_gen{}.js'
+    path = 'src/main/resources/me/towdium/jecharacters/scripts/'
     for i in os.listdir(path):
         if i.startswith('_gen'):
             os.remove(path + i)
@@ -109,16 +109,16 @@ if __name__ == '__main__':
     for i in ['contains', 'suffix', 'regExp', 'equals', 'strsKt']:
         for j in globals()[i]:
             print(j)
-            s = pattern.format(idx=total, **decode(j), op=i.capitalize())
+            s = pattern.format(idx=total, **decode(j), op=i[0].capitalize() + i[1:])
             with open(file.format(total), 'w') as f:
                 f.write(s)
             total += 1
 
     json = '{'
     for i in manual:
-        json += '\n  "jecharacters-{0}": "me/towdium/jecharacters/{0}.js",'.format(i)
+        json += '\n  "jecharacters-{0}": "me/towdium/jecharacters/scripts/{0}.js",'.format(i)
     for i in range(total):
-        json += '\n  "jecharacters-gen{0}": "me/towdium/jecharacters/_gen{0}.js",'.format(i)
+        json += '\n  "jecharacters-gen{0}": "me/towdium/jecharacters/scripts/_gen{0}.js",'.format(i)
     json = json[:-1] + '\n}\n'
     with open('src/main/resources/META-INF/coremods.json', 'w') as f:
         f.write(json)

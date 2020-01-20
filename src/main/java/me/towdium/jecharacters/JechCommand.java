@@ -7,6 +7,7 @@ import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.RootCommandNode;
+import me.towdium.jecharacters.JechConfig.Spell;
 import me.towdium.jecharacters.utils.Profiler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
@@ -39,14 +40,34 @@ public class JechCommand {
                     TextComponent tc = new TranslationTextComponent("jecharacters.chat.help");
                     Minecraft.getInstance().player.sendMessage(tc);
                     return 0;
-                })
-                .then(literal("profile").executes(c -> profile()))
+                }).then(literal("profile").executes(c -> profile()))
                 .then(literal("verbose")
                         .then(literal("true").executes(c -> {
                             JechConfig.enableVerbose.set(true);
                             return 0;
                         })).then(literal("false").executes(c -> {
                             JechConfig.enableVerbose.set(false);
+                            return 0;
+                        }))
+                ).then(literal("silent")).executes(c -> {
+                    JechConfig.enableChat.set(false);
+                    return 0;
+                }).then(literal("keyboard")
+                        .then(literal("QUANPIN").executes(c -> {
+                            JechConfig.enumKeyboard.set(Spell.QUANPIN);
+                            JechConfig.enableQuote.set(false);
+                            return 0;
+                        })).then(literal("DAQIAN").executes(c -> {
+                            JechConfig.enumKeyboard.set(Spell.DAQIAN);
+                            JechConfig.enableQuote.set(true);
+                            return 0;
+                        })).then(literal("XIAOHE").executes(c -> {
+                            JechConfig.enumKeyboard.set(Spell.XIAOHE);
+                            JechConfig.enableQuote.set(false);
+                            return 0;
+                        })).then(literal("ZIRANMA").executes(c -> {
+                            JechConfig.enumKeyboard.set(Spell.ZIRANMA);
+                            JechConfig.enableQuote.set(false);
                             return 0;
                         })));
         dispatcher = new CommandDispatcher<>();
@@ -62,7 +83,7 @@ public class JechCommand {
             ClientPlayerEntity p = Minecraft.getInstance().player;
             p.sendMessage(new TranslationTextComponent("jecharacters.chat.start"));
             Profiler.Report r = Profiler.run();
-            try (FileOutputStream fos = new FileOutputStream("logs/jecharacters-profiler.txt")) {
+            try (FileOutputStream fos = new FileOutputStream("logs/jecharacters.txt")) {
                 OutputStreamWriter osw = new OutputStreamWriter(fos);
                 osw.write(new GsonBuilder().setPrettyPrinting().create().toJson(r));
                 osw.flush();
