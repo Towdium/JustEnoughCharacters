@@ -312,7 +312,8 @@ public class JechConfig {
                     };
                 case LIST_DEFAULT_STRSKT:
                     return new String[]{
-                            "com.cout970.magneticraft.features.multiblocks.ContainerShelvingUnit:filterSlots"  // Magneticraft shelving unit
+                            "com.cout970.magneticraft.features.multiblocks.ContainerShelvingUnit:filterSlots",  // Magneticraft shelving unit legacy
+                            "com.cout970.magneticraft.features.multiblocks.ContainerShelvingUnit$filterSlots$1:invoke"  // Magneticraft shelving unit
                     };
                 case ENABLE_FUZZY_ZH2Z:
                 case ENABLE_FUZZY_SH2S:

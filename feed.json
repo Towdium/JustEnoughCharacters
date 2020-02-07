@@ -108,7 +108,8 @@
       "buildcraft.lib.client.guide.GuideManager:generateContentsPage"
     ],
     "strskt": [
-      "com.cout970.magneticraft.features.multiblocks.ContainerShelvingUnit:filterSlots"
+      "com.cout970.magneticraft.features.multiblocks.ContainerShelvingUnit:filterSlots",
+      "com.cout970.magneticraft.features.multiblocks.ContainerShelvingUnit$filterSlots$1:invoke"
     ]
   }
 ]
