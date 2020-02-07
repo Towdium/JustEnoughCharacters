@@ -281,7 +281,9 @@ public class JechConfig {
                             "mrriegel.storagenetwork.gui.fb.GuiFastNetworkCrafter:doesStackMatchSearch",  // simple storage network crafting
                             "com.feed_the_beast.ftblib.lib.gui.misc.GuiButtonListBase$1:add",  // FTB quests quest search
                             "com.feed_the_beast.ftblib.lib.gui.misc.GuiSelectItemStack$ItemStackButton:shouldAdd",  // FTB quests item search
-                            "com.latmod.mods.projectex.gui.GuiTableBase:updateValidItemList"  // Project EX
+                            "com.latmod.mods.projectex.gui.GuiTableBase:updateValidItemList",  // Project EX
+                            "amerifrance.guideapi.gui.GuiSearch:getMatches",  // Guide-API
+                            "thaumcraft.client.gui.GuiResearchBrowser:updateSearch"  // Thaumcraft
                     };
                 case LIST_DEFAULT_REGEXP:
                     return new String[]{
