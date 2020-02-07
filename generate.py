@@ -54,7 +54,9 @@ contains = [
     'com.latmod.mods.projectex.gui.GuiTableBase:updateValidItemList()V',  # Project EX
     'vazkii.quark.client.module.ChestSearchingModule:namesMatch(Lnet/minecraft/item/ItemStack;Ljava/lang/String;)Z',  # Quark
     'net.minecraft.client.gui.screen.inventory.CreativeScreen:func_147053_i()V',  # Vanilla
-    'net.minecraft.client.gui.screen.inventory.CreativeScreen:func_214080_a(Ljava/lang/String;)V'  # Vanilla
+    'net.minecraft.client.gui.screen.inventory.CreativeScreen:func_214080_a(Ljava/lang/String;)V',  # Vanilla
+    'amerifrance.guideapi.gui.GuiSearch:getMatches:(Lamerifrance.guideapi.api.impl.Book;Ljava.lang.String;Lnet.minecraft.entity.player.EntityPlayer;Lnet.minecraft.item.ItemStack;)Ljava.util.List;',  # Guide-API
+    'thaumcraft.client.gui.GuiResearchBrowser:updateSearch:()V'  # Thaumcraft
 ]
 equals = [
     'vazkii.botania.api.corporea.CorporeaRequestDefaultMatchers$CorporeaStringMatcher:equalOrContain(Ljava/lang/String;)Z',  # Botania (Corporea)
