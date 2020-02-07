@@ -69,7 +69,7 @@ regExp = [
     'org.cyclops.integrateddynamics.inventory.container.ContainerLogicProgrammerBase$1:apply(Lorg/cyclops/integrateddynamics/api/logicprogrammer/ILogicProgrammerElement;Ljava/util/regex/Pattern;)Z'  # Integrated Dynamics 2
 ]
 strsKt = [
-    'com.cout970.magneticraft.features.multiblocks.ContainerShelvingUnit$filterSlots$1:invoke(Lnet/minecraft/item/ItemStack;Ljava/lang/String;)Z'  # Magneticraft
+    'com.cout970.magneticraft.features.multiblocks.ContainerShelvingUnit$filterSlots$1:invoke:(Lnet.minecraft.item.ItemStack;Ljava.lang.String;)Z'  # Magneticraft
 ]
 
 pattern = """// Generated
