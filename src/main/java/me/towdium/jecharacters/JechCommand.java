@@ -25,6 +25,7 @@ import net.minecraftforge.fml.common.Mod;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.util.Objects;
 
 import static net.minecraft.util.text.TextFormatting.*;
 import static net.minecraft.util.text.event.ClickEvent.Action.SUGGEST_COMMAND;
@@ -38,7 +39,7 @@ public class JechCommand {
         builder = literal("jech")
                 .executes((c) -> {
                     TextComponent tc = new TranslationTextComponent("jecharacters.chat.help");
-                    Minecraft.getInstance().player.sendMessage(tc);
+                    getPlayer().sendMessage(tc);
                     return 0;
                 }).then(literal("profile").executes(c -> profile()))
                 .then(literal("verbose")
@@ -80,7 +81,7 @@ public class JechCommand {
 
     private static int profile() {
         Thread t = new Thread(() -> {
-            ClientPlayerEntity p = Minecraft.getInstance().player;
+            ClientPlayerEntity p = getPlayer();
             p.sendMessage(new TranslationTextComponent("jecharacters.chat.start"));
             Profiler.Report r = Profiler.run();
             try (FileOutputStream fos = new FileOutputStream("logs/jecharacters.txt")) {
@@ -100,15 +101,15 @@ public class JechCommand {
     @SubscribeEvent
     public static void onOpenGui(GuiScreenEvent.InitGuiEvent event) {
         if (event.getGui() instanceof ChatScreen) {
-            RootCommandNode<ISuggestionProvider> root = Minecraft.getInstance()
-                    .player.connection.func_195515_i().getRoot();
+            RootCommandNode<ISuggestionProvider> root = getPlayer()
+                    .connection.getCommandDispatcher().getRoot();
             if (root.getChild("jech") == null) root.addChild(builder.build());
         }
     }
 
     @SubscribeEvent
     public static void onCommand(ClientChatEvent event) {
-        CommandSource cs = Minecraft.getInstance().player.getCommandSource();
+        CommandSource cs = getPlayer().getCommandSource();
         String msg = event.getMessage();
         if (msg.startsWith("/jech ") || msg.equals("/jech")) {
             event.setCanceled(true);
@@ -139,5 +140,9 @@ public class JechCommand {
                 }
             }
         }
+    }
+
+    private static ClientPlayerEntity getPlayer() {
+        return Objects.requireNonNull(Minecraft.getInstance().player);
     }
 }

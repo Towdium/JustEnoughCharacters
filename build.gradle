@@ -11,7 +11,7 @@ buildscript {
 apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'eclipse'
 
-version = "1.14.4-${verspec}.${verbuild}"
+version = "1.15.2-${verspec}.${verbuild}"
 group = "me.towdium.jecharacters"
 archivesBaseName = "jecharacters"
 
@@ -28,7 +28,7 @@ configurations {
 }
 
 minecraft {
-    mappings channel: 'snapshot', version: '20190719-1.14.3'
+    mappings channel: 'snapshot', version: '20200303-1.15.1'
     runs {
         client {
             workingDirectory project.file('run')
@@ -75,8 +75,8 @@ dependencies {
     implementation name: "PinIn-${verpinin}"
     fatJar name: "PinIn-${verpinin}"
 
-    minecraft 'net.minecraftforge:forge:1.14.4-28.1.107'
-    implementation fg.deobf('mezz.jei:jei-1.14.4:6.0.0.13')
+    minecraft 'net.minecraftforge:forge:1.15.2-31.1.18'
+    implementation fg.deobf('mezz.jei:jei-1.15.2:6.0.0.2')
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.2.0'
 }
 
