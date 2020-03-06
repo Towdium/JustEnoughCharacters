@@ -47,7 +47,7 @@ public class Match {
     }
 
     public static boolean contains(String s, CharSequence cs) {
-        boolean b = context.contains(s, cs);
+        boolean b = context.contains(s, cs.toString());
         if (JechConfig.enableVerbose.get())
             JustEnoughCharacters.logger.debug("contains(" + s + ',' + cs + ")->" + b);
         return b;
