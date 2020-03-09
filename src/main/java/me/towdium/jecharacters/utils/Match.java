@@ -27,7 +27,7 @@ import static net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus.MOD;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class Match {
-    public static final PinIn context = new PinIn();
+    public static final PinIn context = new PinIn().config().accelerate(true).commit();
     static final Pattern p = Pattern.compile("a");
     static Set<TreeSearcher<?>> searchers = Collections.newSetFromMap(new WeakHashMap<>());
 
@@ -47,7 +47,7 @@ public class Match {
     }
 
     public static boolean contains(String s, CharSequence cs) {
-        boolean b = context.contains(s, cs);
+        boolean b = context.contains(s, cs.toString());
         if (JechConfig.enableVerbose.get())
             JustEnoughCharacters.logger.debug("contains(" + s + ',' + cs + ")->" + b);
         return b;
