@@ -19,12 +19,13 @@ sourceCompatibility = targetCompatibility = '1.8'
 
 repositories {
     mavenCentral()
-    maven { url = 'http://dvs1.progwml6.com/files/maven' }
-    flatDir { dirs 'libs' }
+    jcenter()
+    maven { url 'http://dvs1.progwml6.com/files/maven' }
 }
 
 configurations {
-    fatJar
+    shade
+    compile.extendsFrom shade
 }
 
 minecraft {
@@ -63,18 +64,8 @@ minecraft {
     }
 }
 
-clean {
-    delete 'libs'
-}
-
 dependencies {
-    mkdir 'libs'
-    def url = 'https://github.com/Towdium/PinIn/releases/' +
-            "download/v${verpinin}/PinIn-${verpinin}.jar"
-    ant.get src: url, dest: "libs/PinIn-${verpinin}.jar", skipexisting: true
-    implementation name: "PinIn-${verpinin}"
-    fatJar name: "PinIn-${verpinin}"
-
+    shade "me.towdium.pinin:pinin:${verpinin}"
     minecraft 'net.minecraftforge:forge:1.15.2-31.1.18'
     implementation fg.deobf('mezz.jei:jei-1.15.2:6.0.0.2')
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.2.0'
@@ -97,8 +88,10 @@ jar {
         ])
     }
 
-    from {
-        configurations.fatJar.collect { it.isDirectory() ? it : zipTree(it) }
+    configurations.shade.each { dep ->
+        from(project.zipTree(dep)){
+            include 'me/towdium/pinin/**'
+        }
     }
 }
 
