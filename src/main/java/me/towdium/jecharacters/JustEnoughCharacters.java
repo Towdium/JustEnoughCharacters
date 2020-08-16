@@ -33,7 +33,7 @@ public class JustEnoughCharacters {
                 && JechConfig.enableChat.get() && !messageSent
                 && (JechConfig.enumKeyboard.get() == QUANPIN)
                 && Minecraft.getInstance().gameSettings.language.equals("zh_tw")) {
-            event.getEntity().sendMessage(new TranslationTextComponent("jecharacters.chat.taiwan"));
+            event.getEntity().sendMessage(new TranslationTextComponent("jecharacters.chat.taiwan"), null);
             messageSent = true;
         }
     }

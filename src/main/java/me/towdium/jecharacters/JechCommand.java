@@ -39,7 +39,7 @@ public class JechCommand {
         builder = literal("jech")
                 .executes((c) -> {
                     TextComponent tc = new TranslationTextComponent("jecharacters.chat.help");
-                    getPlayer().sendMessage(tc);
+                    getPlayer().sendMessage(tc, null);
                     return 0;
                 }).then(literal("profile").executes(c -> profile()))
                 .then(literal("verbose")
@@ -82,15 +82,15 @@ public class JechCommand {
     private static int profile() {
         Thread t = new Thread(() -> {
             ClientPlayerEntity p = getPlayer();
-            p.sendMessage(new TranslationTextComponent("jecharacters.chat.start"));
+            p.sendMessage(new TranslationTextComponent("jecharacters.chat.start"), null);
             Profiler.Report r = Profiler.run();
             try (FileOutputStream fos = new FileOutputStream("logs/jecharacters.txt")) {
                 OutputStreamWriter osw = new OutputStreamWriter(fos);
                 osw.write(new GsonBuilder().setPrettyPrinting().create().toJson(r));
                 osw.flush();
-                p.sendMessage(new TranslationTextComponent("jecharacters.chat.saved"));
+                p.sendMessage(new TranslationTextComponent("jecharacters.chat.saved"), null);
             } catch (IOException e) {
-                p.sendMessage(new TranslationTextComponent("jecharacters.chat.error"));
+                p.sendMessage(new TranslationTextComponent("jecharacters.chat.error"), null);
             }
         });
         t.setPriority(Thread.MIN_PRIORITY);
@@ -125,17 +125,18 @@ public class JechCommand {
                 cs.sendErrorMessage(TextComponentUtils.toTextComponent(e.getRawMessage()));
                 if (e.getInput() != null && e.getCursor() >= 0) {
                     int k = Math.min(e.getInput().length(), e.getCursor());
-                    ITextComponent tc1 = new StringTextComponent("").applyTextStyle(GRAY).applyTextStyle(i ->
+                    StringTextComponent tc1 = new StringTextComponent("");
+                    tc1.mergeStyle(GRAY).modifyStyle(i ->
                             i.setClickEvent(new ClickEvent(SUGGEST_COMMAND, event.getMessage())));
-                    if (k > 10) tc1.appendText("...");
-                    tc1.appendText(e.getInput().substring(Math.max(0, k - 10), k));
+                    if (k > 10) tc1.appendString("...");
+                    tc1.appendString(e.getInput().substring(Math.max(0, k - 10), k));
                     if (k < e.getInput().length()) {
                         ITextComponent tc2 = (new StringTextComponent(e.getInput().substring(k)))
-                                .applyTextStyles(RED, UNDERLINE);
-                        tc1.appendSibling(tc2);
+                                .mergeStyle(RED, UNDERLINE);
+                        tc1.getSiblings().add(tc2);
                     }
-                    tc1.appendSibling((new TranslationTextComponent("command.context.here"))
-                            .applyTextStyles(RED, ITALIC));
+                    tc1.getSiblings().add((new TranslationTextComponent("command.context.here"))
+                            .mergeStyle(RED, ITALIC));
                     cs.sendErrorMessage(tc1);
                 }
             }
