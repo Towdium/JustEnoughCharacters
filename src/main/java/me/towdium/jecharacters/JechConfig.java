@@ -30,6 +30,7 @@ public class JechConfig {
     public static String[] listMethodBlacklist = new String[0];
     public static boolean enableJEI = true;
     public static boolean enablePsi = true;
+    public static boolean enableProjectEX = true;
     public static boolean enableFuzzyZh2z = false;
     public static boolean enableFuzzySh2s = false;
     public static boolean enableFuzzyCh2c = false;
@@ -84,6 +85,7 @@ public class JechConfig {
         LIST_METHOD_BLACKLIST,
         ENABLE_JEI,
         ENABLE_PSI,
+        ENABLE_PROJECTEX,
         ENABLE_CHAT_HELP,
         ENABLE_FUZZY_ZH2Z,
         ENABLE_FUZZY_SH2S,
@@ -135,6 +137,8 @@ public class JechConfig {
                     return "Set to false to disable JEI support.";
                 case ENABLE_PSI:
                     return "Set to false to disable PSI support.";
+                case ENABLE_PROJECTEX:
+                    return "Set to false to disable Project EX support.";
                 case ENABLE_FUZZY_ZH2Z:
                     return "Set to true to enable fuzzy Zh <=> Z";
                 case ENABLE_FUZZY_SH2S:
@@ -176,6 +180,7 @@ public class JechConfig {
                     return Type.LIST_STRING;
                 case ENABLE_JEI:
                 case ENABLE_PSI:
+                case ENABLE_PROJECTEX:
                 case ENABLE_FUZZY_ZH2Z:
                 case ENABLE_FUZZY_SH2S:
                 case ENABLE_FUZZY_CH2C:
@@ -327,6 +332,7 @@ public class JechConfig {
                     return false;
                 case ENABLE_JEI:
                 case ENABLE_PSI:
+                case ENABLE_PROJECTEX:
                 case ENABLE_CHAT_HELP:
                     return true;
                 case INT_KEYBOARD:
@@ -372,6 +378,9 @@ public class JechConfig {
                     break;
                 case ENABLE_PSI:
                     enablePsi = getProperty().getBoolean();
+                    break;
+                case ENABLE_PROJECTEX:
+                    enableProjectEX = getProperty().getBoolean();
                     break;
                 case ENABLE_FUZZY_ZH2Z:
                     enableFuzzyZh2z = getProperty().getBoolean();
@@ -431,6 +440,7 @@ public class JechConfig {
                 case ENABLE_DUMP_CLASS_NAME:
                 case ENABLE_JEI:
                 case ENABLE_PSI:
+                case ENABLE_PROJECTEX:
                 case ENABLE_FORCE_QUOTE:
                 case INT_KEYBOARD:
                 case ENABLE_CHAT_HELP:

@@ -20,6 +20,7 @@ public class TransformerRegistry {
         transformers.addAll(configurables);
         transformers.add(new TransformerJei());
         transformers.add(new TransformerPsi());
+        transformers.add(new TransformerProjex());
         transformers.add(new TransformerClassDump());
     }
 
