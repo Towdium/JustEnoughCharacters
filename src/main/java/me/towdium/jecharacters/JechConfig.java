@@ -288,7 +288,8 @@ public class JechConfig {
                             "com.feed_the_beast.ftblib.lib.gui.misc.GuiSelectItemStack$ItemStackButton:shouldAdd",  // FTB quests item search
                             "com.latmod.mods.projectex.gui.GuiTableBase:updateValidItemList",  // Project EX
                             "amerifrance.guideapi.gui.GuiSearch:getMatches",  // Guide-API
-                            "thaumcraft.client.gui.GuiResearchBrowser:updateSearch"  // Thaumcraft
+                            "thaumcraft.client.gui.GuiResearchBrowser:updateSearch",  // Thaumcraft
+                            "astavie.thermallogistics.client.gui.GuiTerminalItem:updateFilter"  // Thermal Logistics
                     };
                 case LIST_DEFAULT_REGEXP:
                     return new String[]{

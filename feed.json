@@ -82,7 +82,8 @@
       "com.feed_the_beast.ftblib.lib.gui.misc.GuiSelectItemStack$ItemStackButton:shouldAdd",
       "com.latmod.mods.projectex.gui.GuiTableBase:updateValidItemList",
       "amerifrance.guideapi.gui.GuiSearch:getMatches",
-      "thaumcraft.client.gui.GuiResearchBrowser:updateSearch"
+      "thaumcraft.client.gui.GuiResearchBrowser:updateSearch",
+      "astavie.thermallogistics.client.gui.GuiTerminalItem:updateFilter"
     ],
     "regexp": [
       "appeng.client.me.ItemRepo:updateView",
