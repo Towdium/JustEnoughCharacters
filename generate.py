@@ -11,10 +11,10 @@ contains = [
     'com.blamejared.controlling.client.gui.GuiNewControls:lambda$filterKeys$8(Lcom/blamejared/controlling/client/gui/GuiNewKeyBindingList$KeyEntry;)Z',  # Controlling
     'com.blamejared.controlling.client.gui.GuiNewControls:lambda$filterKeys$7(Lcom/blamejared/controlling/client/gui/GuiNewKeyBindingList$KeyEntry;)Z',  # Controlling
     'com.blamejared.controlling.client.gui.GuiNewControls:lambda$filterKeys$6(Lcom/blamejared/controlling/client/gui/GuiNewKeyBindingList$KeyEntry;)Z',  # Controlling
-    'com.raoulvdberge.refinedstorage.screen.grid.filtering.ModGridFilter:test(Lcom/raoulvdberge/refinedstorage/screen/grid/stack/IGridStack;)Z',  # Refined Storage
-    'com.raoulvdberge.refinedstorage.screen.grid.filtering.NameGridFilter:test(Lcom/raoulvdberge/refinedstorage/screen/grid/stack/IGridStack;)Z',  # Refined Storage
-    'com.raoulvdberge.refinedstorage.screen.grid.filtering.TagGridFilter:lambda$test$0(Ljava/lang/String;)Z',  # Refined Storage
-    'com.raoulvdberge.refinedstorage.screen.grid.filtering.TooltipGridFilter:test(Lcom/raoulvdberge/refinedstorage/screen/grid/stack/IGridStack;)Z',  # Refined Storage
+    'com.refinedmods.refinedstorage.screen.grid.filtering.ModGridFilter:test(Lcom/refinedmods/refinedstorage/screen/grid/stack/IGridStack;)Z',  # Refined Storage
+    'com.refinedmods.refinedstorage.screen.grid.filtering.NameGridFilter:test(Lcom/refinedmods/refinedstorage/screen/grid/stack/IGridStack;)Z',  # Refined Storage
+    'com.refinedmods.refinedstorage.screen.grid.filtering.TagGridFilter:lambda$test$0(Ljava/lang/String;)Z',  # Refined Storage
+    'com.refinedmods.refinedstorage.screen.grid.filtering.TooltipGridFilter:test(Lcom/refinedmods/refinedstorage/screen/grid/stack/IGridStack;)Z',  # Refined Storage
     'com.rwtema.extrautils2.transfernodes.TileIndexer$ContainerIndexer$WidgetItemRefButton:lambda$getRef$0([Ljava/lang/String;Lcom/rwtema/extrautils2/utils/datastructures/ItemRef;)Z',  # Extra Utilities
     'de.ellpeck.actuallyadditions.mod.booklet.entry.BookletEntry:fitsFilter(Lde/ellpeck/actuallyadditions/api/booklet/IBookletPage;Ljava/lang/String;)Z',  # Actually Additions
     'de.ellpeck.actuallyadditions.mod.booklet.entry.BookletEntry:getChaptersForDisplay(Ljava/lang/String;)Ljava/util/List;',  # Actually Additions
