@@ -83,7 +83,7 @@ public class Match {
         context.config().keyboard(JechConfig.enumKeyboard.get().keyboard)
                 .fAng2An(JechConfig.enableFAng2an.get()).fEng2En(JechConfig.enableFEng2en.get())
                 .fIng2In(JechConfig.enableFIng2in.get()).fZh2Z(JechConfig.enableFZh2z.get())
-                .fCh2C(JechConfig.enableFCh2c.get()).fSh2S(JechConfig.enableFZh2z.get())
+                .fCh2C(JechConfig.enableFCh2c.get()).fSh2S(JechConfig.enableFSh2s.get())
                 .fU2V(JechConfig.enableFU2v.get()).commit();
         searchers.forEach(TreeSearcher::refresh);
     }
