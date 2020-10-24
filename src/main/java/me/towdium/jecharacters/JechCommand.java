@@ -8,13 +8,17 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.RootCommandNode;
 import me.towdium.jecharacters.JechConfig.Spell;
+import me.towdium.jecharacters.utils.Match;
 import me.towdium.jecharacters.utils.Profiler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.gui.screen.ChatScreen;
 import net.minecraft.command.CommandSource;
 import net.minecraft.command.ISuggestionProvider;
-import net.minecraft.util.text.*;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.util.text.TextComponentUtils;
+import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.util.text.event.ClickEvent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ClientChatEvent;
@@ -27,6 +31,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.Objects;
 
+import static me.towdium.jecharacters.JustEnoughCharacters.printMessage;
 import static net.minecraft.util.text.TextFormatting.*;
 import static net.minecraft.util.text.event.ClickEvent.Action.SUGGEST_COMMAND;
 
@@ -38,8 +43,7 @@ public class JechCommand {
     static {
         builder = literal("jech")
                 .executes((c) -> {
-                    TextComponent tc = new TranslationTextComponent("jecharacters.chat.help");
-                    getPlayer().sendMessage(tc, null);
+                    printMessage(new TranslationTextComponent("jecharacters.chat.help"));
                     return 0;
                 }).then(literal("profile").executes(c -> profile()))
                 .then(literal("verbose")
@@ -54,23 +58,10 @@ public class JechCommand {
                     JechConfig.enableChat.set(false);
                     return 0;
                 }).then(literal("keyboard")
-                        .then(literal("QUANPIN").executes(c -> {
-                            JechConfig.enumKeyboard.set(Spell.QUANPIN);
-                            JechConfig.enableQuote.set(false);
-                            return 0;
-                        })).then(literal("DAQIAN").executes(c -> {
-                            JechConfig.enumKeyboard.set(Spell.DAQIAN);
-                            JechConfig.enableQuote.set(true);
-                            return 0;
-                        })).then(literal("XIAOHE").executes(c -> {
-                            JechConfig.enumKeyboard.set(Spell.XIAOHE);
-                            JechConfig.enableQuote.set(false);
-                            return 0;
-                        })).then(literal("ZIRANMA").executes(c -> {
-                            JechConfig.enumKeyboard.set(Spell.ZIRANMA);
-                            JechConfig.enableQuote.set(false);
-                            return 0;
-                        })));
+                        .then(literal("QUANPIN").executes(c -> setKeyboard(Spell.QUANPIN)))
+                        .then(literal("DAQIAN").executes(c -> setKeyboard(Spell.DAQIAN)))
+                        .then(literal("XIAOHE").executes(c -> setKeyboard(Spell.XIAOHE)))
+                        .then(literal("ZIRANMA").executes(c -> setKeyboard(Spell.ZIRANMA))));
         dispatcher = new CommandDispatcher<>();
         dispatcher.register(builder);
     }
@@ -79,18 +70,24 @@ public class JechCommand {
         return LiteralArgumentBuilder.literal(s);
     }
 
+    private static int setKeyboard(Spell keyboard) {
+        JechConfig.enumKeyboard.set(keyboard);
+        JechConfig.enableQuote.set(false);
+        Match.onConfigChange();
+        return 0;
+    }
+
     private static int profile() {
         Thread t = new Thread(() -> {
-            ClientPlayerEntity p = getPlayer();
-            p.sendMessage(new TranslationTextComponent("jecharacters.chat.start"), null);
+            printMessage(new TranslationTextComponent("jecharacters.chat.start"));
             Profiler.Report r = Profiler.run();
             try (FileOutputStream fos = new FileOutputStream("logs/jecharacters.txt")) {
                 OutputStreamWriter osw = new OutputStreamWriter(fos);
                 osw.write(new GsonBuilder().setPrettyPrinting().create().toJson(r));
                 osw.flush();
-                p.sendMessage(new TranslationTextComponent("jecharacters.chat.saved"), null);
+                printMessage(new TranslationTextComponent("jecharacters.chat.saved"));
             } catch (IOException e) {
-                p.sendMessage(new TranslationTextComponent("jecharacters.chat.error"), null);
+                printMessage(new TranslationTextComponent("jecharacters.chat.error"));
             }
         });
         t.setPriority(Thread.MIN_PRIORITY);
@@ -101,8 +98,7 @@ public class JechCommand {
     @SubscribeEvent
     public static void onOpenGui(GuiScreenEvent.InitGuiEvent event) {
         if (event.getGui() instanceof ChatScreen) {
-            RootCommandNode<ISuggestionProvider> root = getPlayer()
-                    .connection.getCommandDispatcher().getRoot();
+            RootCommandNode<ISuggestionProvider> root = getPlayer().connection.getCommandDispatcher().getRoot();
             if (root.getChild("jech") == null) root.addChild(builder.build());
         }
     }

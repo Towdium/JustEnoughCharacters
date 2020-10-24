@@ -3,6 +3,7 @@ package me.towdium.jecharacters;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -33,9 +34,13 @@ public class JustEnoughCharacters {
                 && JechConfig.enableChat.get() && !messageSent
                 && (JechConfig.enumKeyboard.get() == QUANPIN)
                 && Minecraft.getInstance().gameSettings.language.equals("zh_tw")) {
-            event.getEntity().sendMessage(new TranslationTextComponent("jecharacters.chat.taiwan"), null);
+            printMessage(new TranslationTextComponent("jecharacters.chat.taiwan"));
             messageSent = true;
         }
+    }
+
+    public static void printMessage(ITextComponent message) {
+        Minecraft.getInstance().ingameGUI.getChatGUI().printChatMessage(message);
     }
 }
 

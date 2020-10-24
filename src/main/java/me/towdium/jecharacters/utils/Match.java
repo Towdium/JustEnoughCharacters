@@ -14,7 +14,11 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+import java.util.WeakHashMap;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static me.towdium.pinin.Searcher.Logic.CONTAIN;
@@ -46,7 +50,7 @@ public class Match {
     public static boolean contains(String s, CharSequence cs) {
         boolean b = context.contains(s, cs.toString());
         if (JechConfig.enableVerbose.get())
-            JustEnoughCharacters.logger.debug("contains(" + s + ',' + cs + ")->" + b);
+            JustEnoughCharacters.logger.info("contains(" + s + ',' + cs + ")->" + b);
         return b;
     }
 
@@ -58,7 +62,7 @@ public class Match {
     public static boolean equals(String s, Object o) {
         boolean b = o instanceof String && context.matches(s, (String) o);
         if (JechConfig.enableVerbose.get())
-            JustEnoughCharacters.logger.debug("contains(" + s + ',' + o + ")->" + b);
+            JustEnoughCharacters.logger.info("contains(" + s + ',' + o + ")->" + b);
         return b;
     }
 
@@ -66,7 +70,7 @@ public class Match {
         return contains(a.toString(), b);
     }
 
-    public static java.util.regex.Matcher matcher(Pattern test, CharSequence name) {
+    public static Matcher matcher(Pattern test, CharSequence name) {
         return matches(name.toString(), test.toString()) ? p.matcher("a") : p.matcher("");
     }
 
@@ -80,6 +84,10 @@ public class Match {
 
     @SubscribeEvent
     public static void onConfigChange(ModConfig.ModConfigEvent e) {
+        onConfigChange();
+    }
+
+    public static void onConfigChange() {
         context.config().keyboard(JechConfig.enumKeyboard.get().keyboard)
                 .fAng2An(JechConfig.enableFAng2an.get()).fEng2En(JechConfig.enableFEng2en.get())
                 .fIng2In(JechConfig.enableFIng2in.get()).fZh2Z(JechConfig.enableFZh2z.get())
@@ -93,13 +101,15 @@ public class Match {
         int highestIndex = -1;
 
         public IntSet search(String word) {
+            if (JechConfig.enableVerbose.get())
+                JustEnoughCharacters.logger.info("FakeTree:search(" + word + ')');
             return new IntOpenHashSet(tree.search(word));
         }
 
         @Override
         public void put(String key, int index) throws IllegalStateException {
             if (JechConfig.enableVerbose.get())
-                JustEnoughCharacters.logger.debug("FakeTree:put(" + key + ',' + index + ')');
+                JustEnoughCharacters.logger.info("FakeTree:put(" + key + ',' + index + ')');
             if (index < highestIndex) {
                 String err = "The input index must not be less than any of the previously " +
                         "inserted ones. Got " + index + ", expected at least " + highestIndex;
@@ -111,7 +121,7 @@ public class Match {
         @Override
         public int getHighestIndex() {
             if (JechConfig.enableVerbose.get())
-                JustEnoughCharacters.logger.debug("FakeTree:getHighestIndex()->" + highestIndex);
+                JustEnoughCharacters.logger.info("FakeTree:getHighestIndex()->" + highestIndex);
             return highestIndex;
         }
     }
@@ -123,7 +133,7 @@ public class Match {
         @Override
         public void add(T v, String k) {
             if (JechConfig.enableVerbose.get())
-                JustEnoughCharacters.logger.debug("FakeArray:put(" + v + ',' + k + ')');
+                JustEnoughCharacters.logger.info("FakeArray:put(" + v + ',' + k + ')');
             tree.put(k, v);
         }
 
@@ -134,7 +144,7 @@ public class Match {
         @Override
         public List<T> search(String k) {
             if (JechConfig.enableVerbose.get())
-                JustEnoughCharacters.logger.debug("FakeArray:search(" + k + ')');
+                JustEnoughCharacters.logger.info("FakeArray:search(" + k + ')');
             return tree.search(k);
         }
     }
