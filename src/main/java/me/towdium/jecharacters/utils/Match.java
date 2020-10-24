@@ -7,17 +7,14 @@ import me.towdium.jecharacters.JechConfig;
 import me.towdium.jecharacters.JustEnoughCharacters;
 import me.towdium.pinin.PinIn;
 import me.towdium.pinin.TreeSearcher;
-import mezz.jei.suffixtree.GeneralizedSuffixTree;
+import mezz.jei.search.suffixtree.GeneralizedSuffixTree;
 import net.minecraft.client.util.SuffixArray;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-import java.util.WeakHashMap;
+import java.util.*;
 import java.util.regex.Pattern;
 
 import static me.towdium.pinin.Searcher.Logic.CONTAIN;
