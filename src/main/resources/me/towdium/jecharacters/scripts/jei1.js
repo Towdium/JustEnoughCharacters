@@ -4,15 +4,13 @@ function initializeCoreMod() {
         'jecharacters-jei1': {
             'target': {
                 'type': 'METHOD',
-                'class': 'mezz.jei.ingredients.IngredientFilter',
-                'methodName': '<init>',
-                'methodDesc': '(Lmezz/jei/ingredients/IngredientBlacklistInternal;' +
-                    'Lmezz/jei/config/IIngredientFilterConfig;Lmezz/jei/config/IEditModeConfig;' +
-                    'Lmezz/jei/api/runtime/IIngredientManager;Lmezz/jei/api/helpers/IModIdHelper;)V'
+                'class': 'mezz.jei.search.ElementSearch',
+                'methodName': 'registerPrefix',
+                'methodDesc': 'Lmezz/jei/search/PrefixInfo;'
             },
             'transformer': function (method) {
                 transConstruct(method,
-                    'mezz/jei/suffixtree/GeneralizedSuffixTree',
+                    'mezz/jei/search/suffixtree/GeneralizedSuffixTree',
                     'me/towdium/jecharacters/utils/Match$FakeTree'
                 );
                 return method;

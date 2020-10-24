@@ -1,6 +1,7 @@
 modLoader="javafml"
-loaderVersion="[32,)"
+loaderVersion="[34,)"
 issueTrackerURL="https://github.com/Towdium/JustEnoughCharacters/issues"
+license="GPL"
 
 [[mods]]
 modId="jecharacters"
