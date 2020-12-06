@@ -99,7 +99,11 @@
       "org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$getInstanceFilterPredicate$1",
       "org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$getInstanceFilterPredicate$6",
       "org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$null$2",
-      "org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$null$4"
+      "org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$null$4",
+      "thaumicenergistics.client.gui.helpers.MERepo:searchName",
+      "thaumicenergistics.client.gui.helpers.MERepo:searchTooltip",
+      "thaumicenergistics.client.gui.helpers.MERepo:searchMod",
+      "thaumicenergistics.client.gui.helpers.MERepo:lambda$searchAspects$5"
     ],
     "suffix": [
       "net.minecraft.client.util.SearchTree:<init>",

@@ -306,7 +306,11 @@ public class JechConfig {
                             "org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$getInstanceFilterPredicate$1",  // integrated terminals
                             "org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$getInstanceFilterPredicate$6",  // integrated terminals
                             "org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$null$2",  // integrated terminals
-                            "org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$null$4"  // integrated terminals
+                            "org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$null$4",  // integrated terminals
+                            "thaumicenergistics.client.gui.helpers.MERepo:searchName",  // Thaumic Energistics
+                            "thaumicenergistics.client.gui.helpers.MERepo:searchTooltip",  // Thaumic Energistics
+                            "thaumicenergistics.client.gui.helpers.MERepo:searchMod",  // Thaumic Energistics
+                            "thaumicenergistics.client.gui.helpers.MERepo:lambda$searchAspects$5"  // Thaumic Energistics
                     };
                 case LIST_DEFAULT_SUFFIX:
                     return new String[]{
