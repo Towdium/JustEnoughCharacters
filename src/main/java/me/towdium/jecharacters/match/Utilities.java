@@ -18,7 +18,7 @@ public class Utilities {
     }
 
     public static boolean isChinese(char i) {
-        return 0x3007 <= i && i < 0x9FA5;
+        return (0x3000 <= i && i < 0xA000) || (0xE900 <= i && i < 0xEA00);
     }
 
     public static int strCmp(String a, String b, int aStart) {
