@@ -104,6 +104,7 @@ public class JechCommand {
     }
 
     @SubscribeEvent
+    @SuppressWarnings("resource")
     public static void onCommand(ClientChatEvent event) {
         CommandSource cs = getPlayer().getCommandSource();
         String msg = event.getMessage();
@@ -139,6 +140,7 @@ public class JechCommand {
         }
     }
 
+    @SuppressWarnings("resource")
     private static ClientPlayerEntity getPlayer() {
         return Objects.requireNonNull(Minecraft.getInstance().player);
     }

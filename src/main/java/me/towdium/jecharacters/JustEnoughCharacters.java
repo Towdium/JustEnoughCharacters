@@ -39,6 +39,7 @@ public class JustEnoughCharacters {
         }
     }
 
+    @SuppressWarnings("resource")
     public static void printMessage(ITextComponent message) {
         Minecraft.getInstance().ingameGUI.getChatGUI().printChatMessage(message);
     }
