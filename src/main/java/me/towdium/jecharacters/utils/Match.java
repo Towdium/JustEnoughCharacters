@@ -5,8 +5,9 @@ import it.unimi.dsi.fastutil.ints.IntSet;
 import mcp.MethodsReturnNonnullByDefault;
 import me.towdium.jecharacters.JechConfig;
 import me.towdium.jecharacters.JustEnoughCharacters;
+import me.towdium.pinin.DictLoader;
 import me.towdium.pinin.PinIn;
-import me.towdium.pinin.TreeSearcher;
+import me.towdium.pinin.searchers.TreeSearcher;
 import mezz.jei.search.suffixtree.GeneralizedSuffixTree;
 import net.minecraft.client.util.SuffixArray;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -18,17 +19,37 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.WeakHashMap;
+import java.util.function.BiConsumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static me.towdium.pinin.Searcher.Logic.CONTAIN;
+import static me.towdium.pinin.searchers.Searcher.Logic.CONTAIN;
 import static net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus.MOD;
 
 @Mod.EventBusSubscriber(bus = MOD)
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class Match {
-    public static final PinIn context = new PinIn().config().accelerate(true).commit();
+    public static final PinIn context = new PinIn(new DictLoader.Default() {
+        @Override
+        public void load(BiConsumer<Character, String[]> feed) {
+            super.load(feed);
+            feed.accept('\u9FCF', new String[]{"mai4"});   // 钅麦
+            feed.accept('\u9FD4', new String[]{"ge1"});    // 钅哥
+            feed.accept('\u9FED', new String[]{"ni3"});    // 钅尔
+            feed.accept('\u9FEC', new String[]{"tian2"});  // 石田
+            feed.accept('\u9FEB', new String[]{"ao4"});    // 奥气
+            feed.accept('\uE900', new String[]{"lu2"});    // 钅卢
+            feed.accept('\uE901', new String[]{"du4"});    // 钅杜
+            feed.accept('\uE902', new String[]{"xi3"});    // 钅喜
+            feed.accept('\uE903', new String[]{"bo1"});    // 钅波
+            feed.accept('\uE904', new String[]{"hei1"});   // 钅黑
+            feed.accept('\uE906', new String[]{"da2"});    // 钅达
+            feed.accept('\uE907', new String[]{"lun2"});   // 钅仑
+            feed.accept('\uE910', new String[]{"fu1"});    // 钅夫
+            feed.accept('\uE912', new String[]{"li4"});    // 钅立
+        }
+    }).config().accelerate(true).commit();
     static final Pattern p = Pattern.compile("a");
     static Set<TreeSearcher<?>> searchers = Collections.newSetFromMap(new WeakHashMap<>());
 
