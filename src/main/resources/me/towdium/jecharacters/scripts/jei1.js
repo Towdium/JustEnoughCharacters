@@ -6,7 +6,7 @@ function initializeCoreMod() {
                 'type': 'METHOD',
                 'class': 'mezz.jei.search.ElementSearch',
                 'methodName': 'registerPrefix',
-                'methodDesc': 'Lmezz/jei/search/PrefixInfo;'
+                'methodDesc': '(Lmezz/jei/search/PrefixInfo;)V'
             },
             'transformer': function (method) {
                 transConstruct(method,

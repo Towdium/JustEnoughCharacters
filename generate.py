@@ -8,9 +8,9 @@ suffix = [
     'net.minecraft.client.util.SearchTreeReloadable:func_194040_a()V'  # Vanilla
 ]
 contains = [
-    'com.blamejared.controlling.client.gui.GuiNewControls:lambda$filterKeys$8(Lcom/blamejared/controlling/client/gui/GuiNewKeyBindingList$KeyEntry;)Z',  # Controlling
-    'com.blamejared.controlling.client.gui.GuiNewControls:lambda$filterKeys$7(Lcom/blamejared/controlling/client/gui/GuiNewKeyBindingList$KeyEntry;)Z',  # Controlling
-    'com.blamejared.controlling.client.gui.GuiNewControls:lambda$filterKeys$6(Lcom/blamejared/controlling/client/gui/GuiNewKeyBindingList$KeyEntry;)Z',  # Controlling
+    'com.blamejared.controlling.client.gui.GuiNewControls:lambda$filterKeys$11(Lcom/blamejared/controlling/client/gui/GuiNewKeyBindingList$KeyEntry;)Z',  # Controlling
+    'com.blamejared.controlling.client.gui.GuiNewControls:lambda$filterKeys$10(Lcom/blamejared/controlling/client/gui/GuiNewKeyBindingList$KeyEntry;)Z',  # Controlling
+    'com.blamejared.controlling.client.gui.GuiNewControls:lambda$filterKeys$9(Lcom/blamejared/controlling/client/gui/GuiNewKeyBindingList$KeyEntry;)Z',  # Controlling
     'com.refinedmods.refinedstorage.screen.grid.filtering.ModGridFilter:test(Lcom/refinedmods/refinedstorage/screen/grid/stack/IGridStack;)Z',  # Refined Storage
     'com.refinedmods.refinedstorage.screen.grid.filtering.NameGridFilter:test(Lcom/refinedmods/refinedstorage/screen/grid/stack/IGridStack;)Z',  # Refined Storage
     'com.refinedmods.refinedstorage.screen.grid.filtering.TagGridFilter:lambda$test$0(Ljava/lang/String;)Z',  # Refined Storage
@@ -35,7 +35,7 @@ contains = [
     'mcjty.rftools.blocks.storage.GuiModularStorage:updateList()V',  # RF Tools
     'mcjty.rftools.items.netmonitor.GuiNetworkMonitor:populateList()V',  # RF Tools
     'moze_intel.projecte.gameObjs.container.inventory.TransmutationInventory:doesItemMatchFilter(Lmoze_intel/projecte/api/ItemInfo;)Z',  # Project E
-    'org.cyclops.integrateddynamics.core.client.gui.GuiTextFieldDropdown:func_146201_a(CI)Z',  # Integrated Dynamics
+    'org.cyclops.integrateddynamics.core.client.gui.WidgetTextFieldDropdown:refreshDropdownList()V',  # Integrated Dynamics
     'blusunrize.immersiveengineering.api.ManualPageBlueprint:listForSearch(Ljava/lang/String;)Z',  # Immersive Engineering
     'blusunrize.lib.manual.ManualPages$Crafting:listForSearch(Ljava/lang/String;)Z',  # Immersive Engineering
     'blusunrize.lib.manual.ManualPages$CraftingMulti:listForSearch(Ljava/lang/String;)Z',  # Immersive Engineering
@@ -62,6 +62,16 @@ contains = [
     'mekanism.common.content.qio.SearchQueryParser$QueryType:lambda$null$3(Ljava/lang/String;Ljava/lang/String;)Z',  # Mekanism (QIO)
     'mekanism.common.content.qio.SearchQueryParser$QueryType:lambda$static$1(Ljava/lang/String;Lnet/minecraft/item/ItemStack;)Z',  # Mekanism (QIO)
     'mekanism.common.content.qio.SearchQueryParser$QueryType:lambda$static$0(Ljava/lang/String;Lnet/minecraft/item/ItemStack;)Z',  # Mekanism (QIO)
+    'hellfirepvp.astralsorcery.client.screen.journal.ScreenJournalPerkTree:updateSearchHighlight()V', #Astral Sorcery
+    'hellfirepvp.astralsorcery.client.screen.journal.ScreenJournalProgression:onSearchTextInput()V', #Astral Sorcery
+    'com.ma.guide.GuideBookEntries:lambda$null$4(Lnet/minecraft/client/Minecraft;Ljava/lang/String;Ljava/util/HashMap;Lcom/ma/guide/RelatedRecipe;)V',#Mana and Artifice
+    'com.ma.guide.GuideBookEntries:lambda$null$1(Ljava/lang/String;Lcom/ma/guide/interfaces/IEntrySection;)Z', #Mana and Artifice
+    'com.minecolonies.coremod.client.gui.WindowHutAllInventory:lambda$updateResources$1(Lcom/minecolonies/api/crafting/ItemStorage;)Z', #MineColonies
+    'com.minecolonies.coremod.client.gui.WindowPostBox:lambda$updateResources$0(Lnet/minecraft/item/ItemStack;)Z', #MineColonies
+    'com.minecolonies.coremod.client.gui.ItemListModuleWindow:lambda$updateResources$2(Lnet/minecraft/item/ItemStack;)Z', #MineColonies
+    'com.minecolonies.coremod.client.gui.WindowSelectRes:lambda$updateResources$0(Lnet/minecraft/item/ItemStack;)Z', #MineColonies
+    'com.chaosthedude.naturescompass.gui.NaturesCompassScreen:processSearchTerm()V' #Nature's Compass
+
 ]
 equals = [
     'vazkii.botania.api.corporea.CorporeaRequestDefaultMatchers$CorporeaStringMatcher:equalOrContain(Ljava/lang/String;)Z',  # Botania (Corporea)
@@ -70,8 +80,8 @@ equals = [
 regExp = [
     'appeng.client.me.FluidRepo:updateView()V',  # Applied Energistics
     'appeng.client.me.ItemRepo:updateView()V',  # Applied Energistics
-    'org.cyclops.integrateddynamics.core.inventory.container.ContainerMultipartAspects$1:apply(Lorg/cyclops/integrateddynamics/api/part/aspect/IAspect;Ljava/util/regex/Pattern;)Z',  # Integrated Dynamics 1
-    'org.cyclops.integrateddynamics.inventory.container.ContainerLogicProgrammerBase$1:apply(Lorg/cyclops/integrateddynamics/api/logicprogrammer/ILogicProgrammerElement;Ljava/util/regex/Pattern;)Z'  # Integrated Dynamics 2
+    'org.cyclops.integrateddynamics.inventory.container.ContainerLogicProgrammerBase:lambda$static$0(Lorg/cyclops/integrateddynamics/api/logicprogrammer/ILogicProgrammerElement;Ljava/util/regex/Pattern;)Z',  # Integrated Dynamics 1
+    'org.cyclops.integrateddynamics.core.inventory.container.ContainerMultipartAspects:lambda$new$0(Lorg/cyclops/integrateddynamics/api/part/aspect/IAspect;Ljava/util/regex/Pattern;)Z'  # Integrated Dynamics 2
 ]
 strsKt = [
     'com.cout970.magneticraft.features.multiblocks.ContainerShelvingUnit$filterSlots$1:invoke:(Lnet.minecraft.item.ItemStack;Ljava.lang.String;)Z'  # Magneticraft
