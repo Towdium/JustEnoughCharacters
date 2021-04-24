@@ -21,6 +21,7 @@ repositories {
     mavenCentral()
     jcenter()
     maven { url 'http://dvs1.progwml6.com/files/maven' }
+    maven { url 'https://jitpack.io' }
 }
 
 configurations {
@@ -65,7 +66,7 @@ minecraft {
 }
 
 dependencies {
-    shade "me.towdium.pinin:pinin:${verpinin}"
+    shade "com.github.towdium:pinin:${verpinin}"
     minecraft 'net.minecraftforge:forge:1.16.4-35.1.10'
     implementation fg.deobf('mezz.jei:jei-1.16.4:7.6.0.58')
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.2.0'

@@ -25,6 +25,7 @@
 ## 致谢
 
 - 本模组更新到 1.16 的绝大部分工作是由 [yzl210][8] 完成的。
+- 本模组对于 1.16 的一吨 mod 的支持是由 [Death-123][12] 完成的。
 - 本模组的核心库 PinIn 中使用的拼音数据来自于 [地球拼音][6] 和 [pinyin-data][7]。
 
 [1]: https://minecraft.curseforge.com/projects/just-enough-characters
@@ -38,3 +39,4 @@
 [9]: https://github.com/Towdium/PinIn
 [10]: https://github.com/Towdium/JustEnoughCharacters/blob/1.16/generate.py
 [11]: https://github.com/Towdium/JustEnoughCharacters/tree/1.16/src/main/resources/me/towdium/jecharacters/scripts
+[12]: https://github.com/Death-123
