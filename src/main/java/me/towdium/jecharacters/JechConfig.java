@@ -3,7 +3,6 @@ package me.towdium.jecharacters;
 import com.google.common.base.CaseFormat;
 import me.towdium.jecharacters.core.JechCore;
 import me.towdium.jecharacters.match.Keyboard;
-import me.towdium.jecharacters.util.FeedFetcher;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
 
@@ -49,18 +48,11 @@ public class JechConfig {
         initProperties();
         setValue();
         update();
-        fetchOnline();
     }
 
     public static void update() {
         for (Item i : Item.values()) i.sync();
         config.save();
-    }
-
-    public static void fetchOnline() {
-        Thread t = new Thread(FeedFetcher::fetch);
-        t.setPriority(Thread.MIN_PRIORITY);
-        t.start();
     }
 
     public static void setValue() {

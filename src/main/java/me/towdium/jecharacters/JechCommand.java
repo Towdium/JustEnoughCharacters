@@ -53,7 +53,7 @@ public class JechCommand extends CommandBase {
                 }
             });
             t.setPriority(Thread.MIN_PRIORITY);
-            t.run();
+            t.start();
         } else if (args.length == 2 && args[0].equals("verbose")) {
             switch (args[1].toLowerCase()) {
                 case "true":
