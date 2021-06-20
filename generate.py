@@ -18,8 +18,8 @@ contains = [
     'com.rwtema.extrautils2.transfernodes.TileIndexer$ContainerIndexer$WidgetItemRefButton:lambda$getRef$0([Ljava/lang/String;Lcom/rwtema/extrautils2/utils/datastructures/ItemRef;)Z',  # Extra Utilities
     'de.ellpeck.actuallyadditions.mod.booklet.entry.BookletEntry:fitsFilter(Lde/ellpeck/actuallyadditions/api/booklet/IBookletPage;Ljava/lang/String;)Z',  # Actually Additions
     'de.ellpeck.actuallyadditions.mod.booklet.entry.BookletEntry:getChaptersForDisplay(Ljava/lang/String;)Ljava/util/List;',  # Actually Additions
-    'appeng.client.gui.implementations.GuiInterfaceTerminal:refreshList()V',  # Applied Energistics
-    'appeng.client.gui.implementations.GuiInterfaceTerminal:itemStackMatchesSearchTerm(Lnet/minecraft/item/ItemStack;Ljava/lang/String;)Z',  # Applied Energistics
+    'appeng.client.gui.me.interfaceterminal.InterfaceTerminalScreen:refreshList()V',  # Applied Energistics
+    'appeng.client.gui.me.interfaceterminal.InterfaceTerminalScreen:itemStackMatchesSearchTerm(Lnet/minecraft/item/ItemStack;Ljava/lang/String;)Z',  # Applied Energistics
     'me.towdium.jecalculation.utils.Utilities$I18n:contains(Ljava/lang/String;Ljava/lang/String;)Z',  # Just Enough Calculation
     'sonar.logistics.core.tiles.readers.fluids.GuiFluidReader:getGridList()Ljava/util/List;',  # Practical Logistics
     'sonar.logistics.core.tiles.readers.items.GuiInventoryReader:getGridList()Ljava/util/List;',  # Practical Logistics
@@ -71,6 +71,7 @@ contains = [
     'com.minecolonies.coremod.client.gui.ItemListModuleWindow:lambda$updateResources$2(Lnet/minecraft/item/ItemStack;)Z', #MineColonies
     'com.minecolonies.coremod.client.gui.WindowSelectRes:lambda$updateResources$0(Lnet/minecraft/item/ItemStack;)Z', #MineColonies
     'com.chaosthedude.naturescompass.gui.NaturesCompassScreen:processSearchTerm()V' #Nature's Compass
+    'com.hollingsworth.arsnouveau.client.gui.book.GuiSpellBook:onSearchChanged(Ljava/lang/String;)V' #Ars Nouveau
 
 ]
 equals = [
@@ -78,8 +79,8 @@ equals = [
     'vazkii.quark.client.module.ChestSearchingModule:namesMatch(Lnet/minecraft/item/ItemStack;Ljava/lang/String;)Z'  # Quark
 ]
 regExp = [
-    'appeng.client.me.FluidRepo:updateView()V',  # Applied Energistics
-    'appeng.client.me.ItemRepo:updateView()V',  # Applied Energistics
+    'appeng.client.gui.me.fluids.FluidRepo:matchesSearch(Lappeng/client/gui/me/common/Repo$SearchMode;Ljava/util/regex/Pattern;Lappeng/api/storage/data/IAEFluidStack;)Z',  # Applied Energistics
+    'appeng.client.gui.me.items.ItemRepo:matchesSearch(Lappeng/client/gui/me/common/Repo$SearchMode;Ljava/util/regex/Pattern;Lappeng/api/storage/data/IAEItemStack;)Z',  # Applied Energistics
     'org.cyclops.integrateddynamics.inventory.container.ContainerLogicProgrammerBase:lambda$static$0(Lorg/cyclops/integrateddynamics/api/logicprogrammer/ILogicProgrammerElement;Ljava/util/regex/Pattern;)Z',  # Integrated Dynamics 1
     'org.cyclops.integrateddynamics.core.inventory.container.ContainerMultipartAspects:lambda$new$0(Lorg/cyclops/integrateddynamics/api/part/aspect/IAspect;Ljava/util/regex/Pattern;)Z'  # Integrated Dynamics 2
 ]
