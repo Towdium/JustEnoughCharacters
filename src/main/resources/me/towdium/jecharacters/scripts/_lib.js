@@ -77,7 +77,7 @@ var transRegExp = function (method) {
     return method;
 };
 
-var transStrsKt = function (method) {
+var transContainsKt = function (method) {
     transInvoke(method,
         'kotlin/text/StringsKt',
         'contains',
@@ -105,6 +105,18 @@ var transEquals = function (method) {
         'me/towdium/jecharacters/utils/Match',
         'equals',
         '(Ljava/lang/String;Ljava/lang/Object;)Z'
+    );
+    return method;
+};
+
+var transContainsAsync = function (method) {
+    transInvoke(method,
+        'java/lang/String',
+        'contains',
+        '(Ljava/lang/CharSequence;)Z',
+        'me/towdium/jecharacters/utils/Match',
+        'containsAsync',
+        '(Ljava/lang/String;Ljava/lang/CharSequence;)Z'
     );
     return method;
 };

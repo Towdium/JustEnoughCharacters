@@ -30,31 +30,13 @@ import static net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus.MOD;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class Match {
-    public static final PinIn context = new PinIn(new DictLoader.Default() {
-        @Override
-        public void load(BiConsumer<Character, String[]> feed) {
-            super.load(feed);
-            feed.accept('\u9FCF', new String[]{"mai4"});   // 钅麦
-            feed.accept('\u9FD4', new String[]{"ge1"});    // 钅哥
-            feed.accept('\u9FED', new String[]{"ni3"});    // 钅尔
-            feed.accept('\u9FEC', new String[]{"tian2"});  // 石田
-            feed.accept('\u9FEB', new String[]{"ao4"});    // 奥气
-            feed.accept('\uE900', new String[]{"lu2"});    // 钅卢
-            feed.accept('\uE901', new String[]{"du4"});    // 钅杜
-            feed.accept('\uE902', new String[]{"xi3"});    // 钅喜
-            feed.accept('\uE903', new String[]{"bo1"});    // 钅波
-            feed.accept('\uE904', new String[]{"hei1"});   // 钅黑
-            feed.accept('\uE906', new String[]{"da2"});    // 钅达
-            feed.accept('\uE907', new String[]{"lun2"});   // 钅仑
-            feed.accept('\uE910', new String[]{"fu1"});    // 钅夫
-            feed.accept('\uE912', new String[]{"li4"});    // 钅立
-        }
-    }).config().accelerate(true).commit();
+    public static final PinIn sync = new PinIn(new Loader()).config().accelerate(true).commit();
+    public static final PinIn async = new PinIn(new Loader()).config().accelerate(false).commit();
     static final Pattern p = Pattern.compile("a");
     static Set<TreeSearcher<?>> searchers = Collections.newSetFromMap(new WeakHashMap<>());
 
     private static <T> TreeSearcher<T> searcher() {
-        TreeSearcher<T> ret = new TreeSearcher<>(CONTAIN, context);
+        TreeSearcher<T> ret = new TreeSearcher<>(CONTAIN, sync);
         searchers.add(ret);
         return ret;
     }
@@ -69,7 +51,14 @@ public class Match {
     }
 
     public static boolean contains(String s, CharSequence cs) {
-        boolean b = context.contains(s, cs.toString());
+        boolean b = sync.contains(s, cs.toString());
+        if (JechConfig.enableVerbose.get())
+            JustEnoughCharacters.logger.info("contains(" + s + ',' + cs + ")->" + b);
+        return b;
+    }
+
+    public static boolean containsAsync(String s, CharSequence cs) {
+        boolean b = async.contains(s, cs.toString());
         if (JechConfig.enableVerbose.get())
             JustEnoughCharacters.logger.info("contains(" + s + ',' + cs + ")->" + b);
         return b;
@@ -81,7 +70,7 @@ public class Match {
     }
 
     public static boolean equals(String s, Object o) {
-        boolean b = o instanceof String && context.matches(s, (String) o);
+        boolean b = o instanceof String && sync.matches(s, (String) o);
         if (JechConfig.enableVerbose.get())
             JustEnoughCharacters.logger.info("contains(" + s + ',' + o + ")->" + b);
         return b;
@@ -109,7 +98,7 @@ public class Match {
     }
 
     public static void onConfigChange() {
-        context.config().keyboard(JechConfig.enumKeyboard.get().keyboard)
+        sync.config().keyboard(JechConfig.enumKeyboard.get().keyboard)
                 .fAng2An(JechConfig.enableFAng2an.get()).fEng2En(JechConfig.enableFEng2en.get())
                 .fIng2In(JechConfig.enableFIng2in.get()).fZh2Z(JechConfig.enableFZh2z.get())
                 .fCh2C(JechConfig.enableFCh2c.get()).fSh2S(JechConfig.enableFSh2s.get())
@@ -167,6 +156,27 @@ public class Match {
             if (JechConfig.enableVerbose.get())
                 JustEnoughCharacters.logger.info("FakeArray:search(" + k + ')');
             return tree.search(k);
+        }
+    }
+
+    static class Loader extends DictLoader.Default {
+        @Override
+        public void load(BiConsumer<Character, String[]> feed) {
+            super.load(feed);
+            feed.accept('\u9FCF', new String[]{"mai4"});   // 钅麦
+            feed.accept('\u9FD4', new String[]{"ge1"});    // 钅哥
+            feed.accept('\u9FED', new String[]{"ni3"});    // 钅尔
+            feed.accept('\u9FEC', new String[]{"tian2"});  // 石田
+            feed.accept('\u9FEB', new String[]{"ao4"});    // 奥气
+            feed.accept('\uE900', new String[]{"lu2"});    // 钅卢
+            feed.accept('\uE901', new String[]{"du4"});    // 钅杜
+            feed.accept('\uE902', new String[]{"xi3"});    // 钅喜
+            feed.accept('\uE903', new String[]{"bo1"});    // 钅波
+            feed.accept('\uE904', new String[]{"hei1"});   // 钅黑
+            feed.accept('\uE906', new String[]{"da2"});    // 钅达
+            feed.accept('\uE907', new String[]{"lun2"});   // 钅仑
+            feed.accept('\uE910', new String[]{"fu1"});    // 钅夫
+            feed.accept('\uE912', new String[]{"li4"});    // 钅立
         }
     }
 }

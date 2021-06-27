@@ -62,30 +62,37 @@ contains = [
     'mekanism.common.content.qio.SearchQueryParser$QueryType:lambda$null$3(Ljava/lang/String;Ljava/lang/String;)Z',  # Mekanism (QIO)
     'mekanism.common.content.qio.SearchQueryParser$QueryType:lambda$static$1(Ljava/lang/String;Lnet/minecraft/item/ItemStack;)Z',  # Mekanism (QIO)
     'mekanism.common.content.qio.SearchQueryParser$QueryType:lambda$static$0(Ljava/lang/String;Lnet/minecraft/item/ItemStack;)Z',  # Mekanism (QIO)
-    'hellfirepvp.astralsorcery.client.screen.journal.ScreenJournalPerkTree:updateSearchHighlight()V', #Astral Sorcery
-    'hellfirepvp.astralsorcery.client.screen.journal.ScreenJournalProgression:onSearchTextInput()V', #Astral Sorcery
-    'com.ma.guide.GuideBookEntries:lambda$null$4(Lnet/minecraft/client/Minecraft;Ljava/lang/String;Ljava/util/HashMap;Lcom/ma/guide/RelatedRecipe;)V',#Mana and Artifice
-    'com.ma.guide.GuideBookEntries:lambda$null$1(Ljava/lang/String;Lcom/ma/guide/interfaces/IEntrySection;)Z', #Mana and Artifice
-    'com.minecolonies.coremod.client.gui.WindowHutAllInventory:lambda$updateResources$1(Lcom/minecolonies/api/crafting/ItemStorage;)Z', #MineColonies
-    'com.minecolonies.coremod.client.gui.WindowPostBox:lambda$updateResources$0(Lnet/minecraft/item/ItemStack;)Z', #MineColonies
-    'com.minecolonies.coremod.client.gui.ItemListModuleWindow:lambda$updateResources$2(Lnet/minecraft/item/ItemStack;)Z', #MineColonies
-    'com.minecolonies.coremod.client.gui.WindowSelectRes:lambda$updateResources$0(Lnet/minecraft/item/ItemStack;)Z', #MineColonies
-    'com.chaosthedude.naturescompass.gui.NaturesCompassScreen:processSearchTerm()V' #Nature's Compass
-    'com.hollingsworth.arsnouveau.client.gui.book.GuiSpellBook:onSearchChanged(Ljava/lang/String;)V' #Ars Nouveau
-
+    'hellfirepvp.astralsorcery.client.screen.journal.ScreenJournalPerkTree:updateSearchHighlight()V',  #Astral Sorcery
+    'hellfirepvp.astralsorcery.client.screen.journal.ScreenJournalProgression:onSearchTextInput()V',  #Astral Sorcery
+    'com.ma.guide.GuideBookEntries:lambda$null$4(Lnet/minecraft/client/Minecraft;Ljava/lang/String;Ljava/util/HashMap;Lcom/ma/guide/RelatedRecipe;)V',  #Mana and Artifice
+    'com.ma.guide.GuideBookEntries:lambda$null$1(Ljava/lang/String;Lcom/ma/guide/interfaces/IEntrySection;)Z',  #Mana and Artifice
+    'com.minecolonies.coremod.client.gui.WindowHutAllInventory:lambda$updateResources$1(Lcom/minecolonies/api/crafting/ItemStorage;)Z',  #MineColonies
+    'com.minecolonies.coremod.client.gui.WindowPostBox:lambda$updateResources$0(Lnet/minecraft/item/ItemStack;)Z',  #MineColonies
+    'com.minecolonies.coremod.client.gui.ItemListModuleWindow:lambda$updateResources$2(Lnet/minecraft/item/ItemStack;)Z',  #MineColonies
+    'com.minecolonies.coremod.client.gui.WindowSelectRes:lambda$updateResources$0(Lnet/minecraft/item/ItemStack;)Z',  #MineColonies
+    'com.chaosthedude.naturescompass.gui.NaturesCompassScreen:processSearchTerm()V',  #Nature's Compass
+    'com.hollingsworth.arsnouveau.client.gui.book.GuiSpellBook:onSearchChanged(Ljava/lang/String;)V',  #Ars Nouveau
 ]
 equals = [
     'vazkii.botania.api.corporea.CorporeaRequestDefaultMatchers$CorporeaStringMatcher:equalOrContain(Ljava/lang/String;)Z',  # Botania (Corporea)
-    'vazkii.quark.client.module.ChestSearchingModule:namesMatch(Lnet/minecraft/item/ItemStack;Ljava/lang/String;)Z'  # Quark
+    'vazkii.quark.client.module.ChestSearchingModule:namesMatch(Lnet/minecraft/item/ItemStack;Ljava/lang/String;)Z',  # Quark
 ]
 regExp = [
     'appeng.client.gui.me.fluids.FluidRepo:matchesSearch(Lappeng/client/gui/me/common/Repo$SearchMode;Ljava/util/regex/Pattern;Lappeng/api/storage/data/IAEFluidStack;)Z',  # Applied Energistics
     'appeng.client.gui.me.items.ItemRepo:matchesSearch(Lappeng/client/gui/me/common/Repo$SearchMode;Ljava/util/regex/Pattern;Lappeng/api/storage/data/IAEItemStack;)Z',  # Applied Energistics
     'org.cyclops.integrateddynamics.inventory.container.ContainerLogicProgrammerBase:lambda$static$0(Lorg/cyclops/integrateddynamics/api/logicprogrammer/ILogicProgrammerElement;Ljava/util/regex/Pattern;)Z',  # Integrated Dynamics 1
-    'org.cyclops.integrateddynamics.core.inventory.container.ContainerMultipartAspects:lambda$new$0(Lorg/cyclops/integrateddynamics/api/part/aspect/IAspect;Ljava/util/regex/Pattern;)Z'  # Integrated Dynamics 2
+    'org.cyclops.integrateddynamics.core.inventory.container.ContainerMultipartAspects:lambda$new$0(Lorg/cyclops/integrateddynamics/api/part/aspect/IAspect;Ljava/util/regex/Pattern;)Z',  # Integrated Dynamics 2
 ]
-strsKt = [
-    'com.cout970.magneticraft.features.multiblocks.ContainerShelvingUnit$filterSlots$1:invoke:(Lnet.minecraft.item.ItemStack;Ljava.lang.String;)Z'  # Magneticraft
+containsKt = [
+    'com.cout970.magneticraft.features.multiblocks.ContainerShelvingUnit$filterSlots$1:invoke:(Lnet.minecraft.item.ItemStack;Ljava.lang.String;)Z',  # Magneticraft
+]
+
+containsAsync = [
+    'me.shedaniel.rei.impl.client.search.argument.type.TagArgumentType:matches(Lorg/apache/commons/lang3/mutable/Mutable;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z',  # REI
+    'me.shedaniel.rei.impl.client.search.argument.type.IdentifierArgumentType:matches(Lorg/apache/commons/lang3/mutable/Mutable;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z',  # REI
+    'me.shedaniel.rei.impl.client.search.argument.type.ModArgumentType:matches(Lorg/apache/commons/lang3/mutable/Mutable;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z',  # REI
+    'me.shedaniel.rei.impl.client.search.argument.type.TooltipArgumentType:matches(Lorg/apache/commons/lang3/mutable/Mutable;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z',  # REI
+    'me.shedaniel.rei.impl.client.search.argument.type.TextArgumentType:matches(Lorg/apache/commons/lang3/mutable/Mutable;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z',  # REI
 ]
 
 pattern = """// Generated
@@ -124,7 +131,7 @@ if __name__ == '__main__':
         if i.startswith('_gen'):
             os.remove(path + i)
 
-    for i in ['contains', 'suffix', 'regExp', 'equals', 'strsKt']:
+    for i in ['contains', 'suffix', 'regExp', 'equals', 'containsKt', 'containsAsync']:
         for j in globals()[i]:
             print(j)
             s = pattern.format(idx=total, **decode(j), op=i[0].capitalize() + i[1:])
