@@ -46,6 +46,22 @@ var transContains = function (method) {
         'contains',
         '(Ljava/lang/String;Ljava/lang/CharSequence;)Z'
     );
+    transInvoke(method,
+        'kotlin/text/StringsKt',
+        'contains',
+        '(Ljava/lang/CharSequence;Ljava/lang/CharSequence;Z)Z',
+        'me/towdium/jecharacters/utils/Match',
+        'contains',
+        '(Ljava/lang/CharSequence;Ljava/lang/CharSequence;Z)Z'
+    );
+    transInvoke(method,
+        'kotlin/text/StringsKt',
+        'contains',
+        '(Ljava/lang/CharSequence;Ljava/lang/CharSequence)Z',
+        'me/towdium/jecharacters/utils/Match',
+        'contains',
+        '(Ljava/lang/CharSequence;Ljava/lang/CharSequence)Z'
+    );
     return method;
 };
 
@@ -77,26 +93,6 @@ var transRegExp = function (method) {
     return method;
 };
 
-var transContainsKt = function (method) {
-    transInvoke(method,
-        'kotlin/text/StringsKt',
-        'contains',
-        '(Ljava/lang/CharSequence;Ljava/lang/CharSequence;Z)Z',
-        'me/towdium/jecharacters/utils/Match',
-        'contains',
-        '(Ljava/lang/CharSequence;Ljava/lang/CharSequence;Z)Z'
-    );
-    transInvoke(method,
-        'kotlin/text/StringsKt',
-        'contains',
-        '(Ljava/lang/CharSequence;Ljava/lang/CharSequence)Z',
-        'me/towdium/jecharacters/utils/Match',
-        'contains',
-        '(Ljava/lang/CharSequence;Ljava/lang/CharSequence)Z'
-    );
-    return method;
-};
-
 var transEquals = function (method) {
     transInvoke(method,
         'java/lang/String',
@@ -105,18 +101,6 @@ var transEquals = function (method) {
         'me/towdium/jecharacters/utils/Match',
         'equals',
         '(Ljava/lang/String;Ljava/lang/Object;)Z'
-    );
-    return method;
-};
-
-var transContainsAsync = function (method) {
-    transInvoke(method,
-        'java/lang/String',
-        'contains',
-        '(Ljava/lang/CharSequence;)Z',
-        'me/towdium/jecharacters/utils/Match',
-        'containsAsync',
-        '(Ljava/lang/String;Ljava/lang/CharSequence;)Z'
     );
     return method;
 };

@@ -30,13 +30,12 @@ import static net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus.MOD;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class Match {
-    public static final PinIn sync = new PinIn(new Loader()).config().accelerate(true).commit();
-    public static final PinIn async = new PinIn(new Loader()).config().accelerate(false).commit();
+    public static final PinIn context = new PinIn(new Loader()).config().accelerate(true).commit();
     static final Pattern p = Pattern.compile("a");
     static Set<TreeSearcher<?>> searchers = Collections.newSetFromMap(new WeakHashMap<>());
 
     private static <T> TreeSearcher<T> searcher() {
-        TreeSearcher<T> ret = new TreeSearcher<>(CONTAIN, sync);
+        TreeSearcher<T> ret = new TreeSearcher<>(CONTAIN, context);
         searchers.add(ret);
         return ret;
     }
@@ -51,14 +50,7 @@ public class Match {
     }
 
     public static boolean contains(String s, CharSequence cs) {
-        boolean b = sync.contains(s, cs.toString());
-        if (JechConfig.enableVerbose.get())
-            JustEnoughCharacters.logger.info("contains(" + s + ',' + cs + ")->" + b);
-        return b;
-    }
-
-    public static boolean containsAsync(String s, CharSequence cs) {
-        boolean b = async.contains(s, cs.toString());
+        boolean b = context.contains(s, cs.toString());
         if (JechConfig.enableVerbose.get())
             JustEnoughCharacters.logger.info("contains(" + s + ',' + cs + ")->" + b);
         return b;
@@ -70,7 +62,7 @@ public class Match {
     }
 
     public static boolean equals(String s, Object o) {
-        boolean b = o instanceof String && sync.matches(s, (String) o);
+        boolean b = o instanceof String && context.matches(s, (String) o);
         if (JechConfig.enableVerbose.get())
             JustEnoughCharacters.logger.info("contains(" + s + ',' + o + ")->" + b);
         return b;
@@ -98,7 +90,7 @@ public class Match {
     }
 
     public static void onConfigChange() {
-        sync.config().keyboard(JechConfig.enumKeyboard.get().keyboard)
+        context.config().keyboard(JechConfig.enumKeyboard.get().keyboard)
                 .fAng2An(JechConfig.enableFAng2an.get()).fEng2En(JechConfig.enableFEng2en.get())
                 .fIng2In(JechConfig.enableFIng2in.get()).fZh2Z(JechConfig.enableFZh2z.get())
                 .fCh2C(JechConfig.enableFCh2c.get()).fSh2S(JechConfig.enableFSh2s.get())

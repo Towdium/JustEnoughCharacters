@@ -72,6 +72,12 @@ contains = [
     'com.minecolonies.coremod.client.gui.WindowSelectRes:lambda$updateResources$0(Lnet/minecraft/item/ItemStack;)Z',  #MineColonies
     'com.chaosthedude.naturescompass.gui.NaturesCompassScreen:processSearchTerm()V',  #Nature's Compass
     'com.hollingsworth.arsnouveau.client.gui.book.GuiSpellBook:onSearchChanged(Ljava/lang/String;)V',  #Ars Nouveau
+    'me.shedaniel.rei.impl.client.search.argument.type.TagArgumentType:matches(Lorg/apache/commons/lang3/mutable/Mutable;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z',  # REI
+    'me.shedaniel.rei.impl.client.search.argument.type.IdentifierArgumentType:matches(Lorg/apache/commons/lang3/mutable/Mutable;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z',  # REI
+    'me.shedaniel.rei.impl.client.search.argument.type.ModArgumentType:matches(Lorg/apache/commons/lang3/mutable/Mutable;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z',  # REI
+    'me.shedaniel.rei.impl.client.search.argument.type.TooltipArgumentType:matches(Lorg/apache/commons/lang3/mutable/Mutable;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z',  # REI
+    'me.shedaniel.rei.impl.client.search.argument.type.TextArgumentType:matches(Lorg/apache/commons/lang3/mutable/Mutable;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z',  # REI
+    'com.cout970.magneticraft.features.multiblocks.ContainerShelvingUnit$filterSlots$1:invoke:(Lnet.minecraft.item.ItemStack;Ljava.lang.String;)Z',  # Magneticraft
 ]
 equals = [
     'vazkii.botania.api.corporea.CorporeaRequestDefaultMatchers$CorporeaStringMatcher:equalOrContain(Ljava/lang/String;)Z',  # Botania (Corporea)
@@ -82,17 +88,6 @@ regExp = [
     'appeng.client.gui.me.items.ItemRepo:matchesSearch(Lappeng/client/gui/me/common/Repo$SearchMode;Ljava/util/regex/Pattern;Lappeng/api/storage/data/IAEItemStack;)Z',  # Applied Energistics
     'org.cyclops.integrateddynamics.inventory.container.ContainerLogicProgrammerBase:lambda$static$0(Lorg/cyclops/integrateddynamics/api/logicprogrammer/ILogicProgrammerElement;Ljava/util/regex/Pattern;)Z',  # Integrated Dynamics 1
     'org.cyclops.integrateddynamics.core.inventory.container.ContainerMultipartAspects:lambda$new$0(Lorg/cyclops/integrateddynamics/api/part/aspect/IAspect;Ljava/util/regex/Pattern;)Z',  # Integrated Dynamics 2
-]
-containsKt = [
-    'com.cout970.magneticraft.features.multiblocks.ContainerShelvingUnit$filterSlots$1:invoke:(Lnet.minecraft.item.ItemStack;Ljava.lang.String;)Z',  # Magneticraft
-]
-
-containsAsync = [
-    'me.shedaniel.rei.impl.client.search.argument.type.TagArgumentType:matches(Lorg/apache/commons/lang3/mutable/Mutable;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z',  # REI
-    'me.shedaniel.rei.impl.client.search.argument.type.IdentifierArgumentType:matches(Lorg/apache/commons/lang3/mutable/Mutable;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z',  # REI
-    'me.shedaniel.rei.impl.client.search.argument.type.ModArgumentType:matches(Lorg/apache/commons/lang3/mutable/Mutable;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z',  # REI
-    'me.shedaniel.rei.impl.client.search.argument.type.TooltipArgumentType:matches(Lorg/apache/commons/lang3/mutable/Mutable;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z',  # REI
-    'me.shedaniel.rei.impl.client.search.argument.type.TextArgumentType:matches(Lorg/apache/commons/lang3/mutable/Mutable;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z',  # REI
 ]
 
 pattern = """// Generated
@@ -131,7 +126,7 @@ if __name__ == '__main__':
         if i.startswith('_gen'):
             os.remove(path + i)
 
-    for i in ['contains', 'suffix', 'regExp', 'equals', 'containsKt', 'containsAsync']:
+    for i in ['contains', 'suffix', 'regExp', 'equals']:
         for j in globals()[i]:
             print(j)
             s = pattern.format(idx=total, **decode(j), op=i[0].capitalize() + i[1:])
