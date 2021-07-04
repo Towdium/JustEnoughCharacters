@@ -5,9 +5,9 @@ license="The MIT License (MIT)"
 
 [[mods]]
 modId="jecharacters"
-version="${file.jarVersion}"
+version="${version}"
 displayName="Just Enough Characters"
 displayURL="https://github.com/Towdium/JustEnoughCaracters"
 credits="Thanks to TartaricAcid, 3TUSK, Seraph_JACK, Snownee and many people for their efforts for development of the Chinese modding community."
-authors="Towdium, yzl210"
+authors="Towdium, yzl210, Death-123"
 description="Pinyin search for JEI and more."

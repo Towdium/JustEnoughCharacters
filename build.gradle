@@ -105,3 +105,19 @@ task generate(type:Exec) {
 }
 
 compileJava.dependsOn generate
+
+task replaceResources(type: Copy) {
+    outputs.upToDateWhen { false }
+    from(sourceSets.main.resources.srcDirs) {
+        include 'META-INF/mods.toml'
+        expand 'version': version
+    }
+    into "$buildDir/resources/main/"
+}
+
+processResources {
+    from(sourceSets.main.resources.srcDirs) {
+        exclude 'META-INF/mods.toml'
+    }
+    finalizedBy replaceResources
+}
