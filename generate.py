@@ -52,7 +52,6 @@ contains = [
     'com.lothrazar.storagenetwork.api.util.UtilInventory:doOverlap(Ljava/lang/String;Ljava/lang/String;)Z',  # Simple Storage Network
     'com.lothrazar.storagenetwork.gui.NetworkWidget:doesStackMatchSearch(Lnet/minecraft/item/ItemStack;)Z',  # Simple Storage Network
     'com.latmod.mods.projectex.gui.GuiTableBase:updateValidItemList()V',  # Project EX
-    'vazkii.quark.client.module.ChestSearchingModule:namesMatch(Lnet/minecraft/item/ItemStack;Ljava/lang/String;)Z',  # Quark
     'net.minecraft.client.gui.screen.inventory.CreativeScreen:func_147053_i()V',  # Vanilla
     'net.minecraft.client.gui.screen.inventory.CreativeScreen:func_214080_a(Ljava/lang/String;)V',  # Vanilla
     'amerifrance.guideapi.gui.GuiSearch:getMatches:(Lamerifrance.guideapi.api.impl.Book;Ljava.lang.String;Lnet.minecraft.entity.player.EntityPlayer;Lnet.minecraft.item.ItemStack;)Ljava.util.List;',  # Guide-API
@@ -78,10 +77,13 @@ contains = [
     'me.shedaniel.rei.impl.client.search.argument.type.TooltipArgumentType:matches(Lorg/apache/commons/lang3/mutable/Mutable;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z',  # REI
     'me.shedaniel.rei.impl.client.search.argument.type.TextArgumentType:matches(Lorg/apache/commons/lang3/mutable/Mutable;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z',  # REI
     'com.cout970.magneticraft.features.multiblocks.ContainerShelvingUnit$filterSlots$1:invoke:(Lnet.minecraft.item.ItemStack;Ljava.lang.String;)Z',  # Magneticraft
+    'vazkii.quark.client.module.ChestSearchingModule:namesMatch(Lnet/minecraft/item/ItemStack;Ljava/lang/String;)Z',  # Quark legacy
+    'vazkii.quark.content.client.module.ChestSearchingModule:namesMatch(Lnet/minecraft/item/ItemStack;Ljava/lang/String;)Z',  # Quark
 ]
 equals = [
     'vazkii.botania.api.corporea.CorporeaRequestDefaultMatchers$CorporeaStringMatcher:equalOrContain(Ljava/lang/String;)Z',  # Botania (Corporea)
-    'vazkii.quark.client.module.ChestSearchingModule:namesMatch(Lnet/minecraft/item/ItemStack;Ljava/lang/String;)Z',  # Quark
+    'vazkii.quark.client.module.ChestSearchingModule:namesMatch(Lnet/minecraft/item/ItemStack;Ljava/lang/String;)Z',  # Quark legacy
+    'vazkii.quark.content.client.module.ChestSearchingModule:namesMatch(Lnet/minecraft/item/ItemStack;Ljava/lang/String;)Z',  # Quark
 ]
 regExp = [
     'appeng.client.gui.me.fluids.FluidRepo:matchesSearch(Lappeng/client/gui/me/common/Repo$SearchMode;Ljava/util/regex/Pattern;Lappeng/api/storage/data/IAEFluidStack;)Z',  # Applied Energistics

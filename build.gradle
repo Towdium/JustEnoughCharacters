@@ -67,7 +67,7 @@ minecraft {
 
 dependencies {
     shade "com.github.towdium:pinin:${verpinin}"
-    minecraft 'net.minecraftforge:forge:1.16.4-35.1.10'
+    minecraft 'net.minecraftforge:forge:1.16.4-35.1.28'
     implementation fg.deobf('mezz.jei:jei-1.16.4:7.6.0.58')
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.2.0'
 }
