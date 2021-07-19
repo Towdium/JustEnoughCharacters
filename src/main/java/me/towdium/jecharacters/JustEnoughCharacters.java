@@ -1,17 +1,15 @@
 package me.towdium.jecharacters;
 
 import mcp.MethodsReturnNonnullByDefault;
+import me.towdium.jecharacters.utils.Greetings;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.ModList;
-import net.minecraftforge.fml.ModLoader;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLConstructModEvent;
-import net.minecraftforge.fml.loading.FMLLoader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -36,12 +34,7 @@ public class JustEnoughCharacters {
 
     @SubscribeEvent
     public static void onConstruct(FMLConstructModEvent event) {
-        if (ModList.get().isLoaded("i18nupdatemod")) {
-            logger.info("Good to see you, TartaricAcid and your friends.");
-        }
-        if (ModList.get().isLoaded("fruittrees") || ModList.get().isLoaded("snowrealmagic")) {
-            logger.info("Good to see you, Snownee.");
-        }
+        Greetings.send(logger, MODID);
     }
 
     @SuppressWarnings("resource")

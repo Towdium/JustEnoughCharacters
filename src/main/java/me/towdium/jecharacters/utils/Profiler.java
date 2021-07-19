@@ -222,6 +222,7 @@ public class Profiler {
                             node.name.equals(name) && node.desc.equals(desc);
                 } else if (insn instanceof InvokeDynamicInsnNode) {
                     InvokeDynamicInsnNode din = (InvokeDynamicInsnNode) insn;
+                    if (din.bsmArgs.length != 3) return false;
                     Object arg = din.bsmArgs[1];
                     if (arg instanceof Handle) {
                         Handle handle = (Handle) arg;
