@@ -73,7 +73,13 @@ public class Match {
     }
 
     public static Matcher matcher(Pattern test, CharSequence name) {
-        return matches(name.toString(), test.toString()) ? p.matcher("a") : p.matcher("");
+        boolean result;
+        if ((test.flags() & Pattern.CASE_INSENSITIVE) != 0 || (test.flags() & Pattern.UNICODE_CASE) != 0) {
+            result = matches(name.toString().toLowerCase(), test.toString().toLowerCase());
+        } else {
+            result = matches(name.toString(), test.toString());
+        }
+        return result ? p.matcher("a") : p.matcher("");
     }
 
     public static boolean matches(String s1, String s2) {

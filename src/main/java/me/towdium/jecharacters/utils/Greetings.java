@@ -20,8 +20,10 @@ public class Greetings {
     public static void send(Logger logger, String self) {
         boolean master = true;
         for (String i : MODS) {
-            if (i.equals(self)) break;
-            else if (ModList.get().isLoaded(i)) master = false;
+            if (ModList.get().isLoaded(i)) {
+                if (!i.equals(self)) master = false;
+                break;
+            }
         }
 
         if (master) {
