@@ -1,26 +1,24 @@
 buildscript {
     repositories {
-        maven { url = 'https://files.minecraftforge.net/maven' }
-        jcenter()
+        maven { url = 'https://maven.minecraftforge.net' }
         mavenCentral()
     }
     dependencies {
-        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1.+', changing: true
     }
 }
 apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'eclipse'
 
-version = "1.16.4-${verspec}.${verbuild}"
+version = "1.18.1-${verspec}.${verbuild}"
 group = "me.towdium.jecharacters"
 archivesBaseName = "jecharacters"
 
-sourceCompatibility = targetCompatibility = '1.8'
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
 repositories {
     mavenCentral()
-    jcenter()
-    maven { url 'http://dvs1.progwml6.com/files/maven' }
+    maven { url 'https://dvs1.progwml6.com/files/maven' }
     maven { url 'https://jitpack.io' }
 }
 
@@ -30,7 +28,7 @@ configurations {
 }
 
 minecraft {
-    mappings channel: 'snapshot', version: '20200916-1.16.2'
+    mappings channel: 'official', version: '1.18.1'
     runs {
         client {
             workingDirectory project.file('run')
@@ -67,8 +65,8 @@ minecraft {
 
 dependencies {
     shade "com.github.towdium:pinin:${verpinin}"
-    minecraft 'net.minecraftforge:forge:1.16.4-35.1.28'
-    implementation fg.deobf('mezz.jei:jei-1.16.4:7.6.0.58')
+    minecraft 'net.minecraftforge:forge:1.18.1-39.0.9'
+    implementation fg.deobf('mezz.jei:jei-1.18.1:9.1.1.48')
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.2.0'
 }
 
@@ -116,6 +114,7 @@ task replaceResources(type: Copy) {
 }
 
 processResources {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     from(sourceSets.main.resources.srcDirs) {
         exclude 'META-INF/mods.toml'
     }
