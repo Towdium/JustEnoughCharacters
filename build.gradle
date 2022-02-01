@@ -24,7 +24,7 @@ repositories {
 
 configurations {
     shade
-    compile.extendsFrom shade
+    implementation.extendsFrom shade
 }
 
 minecraft {
@@ -63,11 +63,18 @@ minecraft {
     }
 }
 
+minecraft.runs.all {
+    lazyToken('minecraft_classpath') {
+        configurations.shade.copyRecursive().resolve().collect { it.absolutePath }.join(File.pathSeparator)
+    }
+}
+
 dependencies {
-    shade "com.github.towdium:pinin:${verpinin}"
     minecraft 'net.minecraftforge:forge:1.18.1-39.0.9'
     implementation fg.deobf('mezz.jei:jei-1.18.1:9.1.1.48')
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.2.0'
+    shade(group: 'com.github.towdium', name: 'pinin', version: "${verpinin}") {
+        transitive = false
+    }
 }
 
 test {
