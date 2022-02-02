@@ -58,10 +58,10 @@ public class JechCommand {
                     JechConfig.enableChat.set(false);
                     return 0;
                 }).then(literal("keyboard")
-                        .then(literal("QUANPIN").executes(c -> setKeyboard(Spell.QUANPIN)))
-                        .then(literal("DAQIAN").executes(c -> setKeyboard(Spell.DAQIAN)))
-                        .then(literal("XIAOHE").executes(c -> setKeyboard(Spell.XIAOHE)))
-                        .then(literal("ZIRANMA").executes(c -> setKeyboard(Spell.ZIRANMA))));
+                        .then(literal("quanpin").executes(c -> setKeyboard(Spell.QUANPIN)))
+                        .then(literal("daqian").executes(c -> setKeyboard(Spell.DAQIAN)))
+                        .then(literal("xiaohe").executes(c -> setKeyboard(Spell.XIAOHE)))
+                        .then(literal("ziranma").executes(c -> setKeyboard(Spell.ZIRANMA))));
         dispatcher = new CommandDispatcher<>();
         dispatcher.register(builder);
     }
