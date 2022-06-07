@@ -10,7 +10,7 @@ buildscript {
 apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'eclipse'
 
-version = "1.18.1-${verspec}.${verbuild}"
+version = "1.18.2-${verspec}.${verbuild}"
 group = "me.towdium.jecharacters"
 archivesBaseName = "jecharacters"
 
@@ -71,8 +71,8 @@ minecraft.runs.all {
 
 dependencies {
     minecraft 'net.minecraftforge:forge:1.18.2-40.1.0'
-    compileOnly fg.deobf('mezz.jei:jei-1.18.2:9.5.5.174')
-    runtimeOnly fg.deobf('mezz.jei:jei-1.18.2:9.5.5.174')
+    compileOnly fg.deobf('mezz.jei:jei-1.18.2:9.7.0.195')
+    runtimeOnly fg.deobf('mezz.jei:jei-1.18.2:9.7.0.195')
     shade(group: 'com.github.towdium', name: 'pinin', version: "${verpinin}") {
         transitive = false
     }
