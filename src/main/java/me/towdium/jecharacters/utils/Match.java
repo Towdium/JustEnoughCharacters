@@ -2,17 +2,17 @@ package me.towdium.jecharacters.utils;
 
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
-import mcp.MethodsReturnNonnullByDefault;
 import me.towdium.jecharacters.JechConfig;
 import me.towdium.jecharacters.JustEnoughCharacters;
 import me.towdium.pinin.DictLoader;
 import me.towdium.pinin.PinIn;
 import me.towdium.pinin.searchers.TreeSearcher;
 import mezz.jei.search.suffixtree.GeneralizedSuffixTree;
-import net.minecraft.client.util.SuffixArray;
+import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.client.searchtree.SuffixArray;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.config.ModConfig;
+import net.minecraftforge.fml.event.config.ModConfigEvent;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collections;
@@ -91,7 +91,7 @@ public class Match {
     }
 
     @SubscribeEvent
-    public static void onConfigChange(ModConfig.ModConfigEvent e) {
+    public static void onConfigChange(ModConfigEvent e) {
         onConfigChange();
     }
 

@@ -11,18 +11,14 @@ import me.towdium.jecharacters.JechConfig.Spell;
 import me.towdium.jecharacters.utils.Match;
 import me.towdium.jecharacters.utils.Profiler;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.player.ClientPlayerEntity;
-import net.minecraft.client.gui.screen.ChatScreen;
-import net.minecraft.command.CommandSource;
-import net.minecraft.command.ISuggestionProvider;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TextComponentUtils;
-import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraft.util.text.event.ClickEvent;
+import net.minecraft.client.gui.screens.ChatScreen;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.SharedSuggestionProvider;
+import net.minecraft.network.chat.*;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ClientChatEvent;
-import net.minecraftforge.client.event.GuiScreenEvent;
+import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
@@ -32,18 +28,19 @@ import java.io.OutputStreamWriter;
 import java.util.Objects;
 
 import static me.towdium.jecharacters.JustEnoughCharacters.printMessage;
-import static net.minecraft.util.text.TextFormatting.*;
-import static net.minecraft.util.text.event.ClickEvent.Action.SUGGEST_COMMAND;
+import static net.minecraft.ChatFormatting.*;
+import static net.minecraft.network.chat.ClickEvent.Action.SUGGEST_COMMAND;
+
 
 @Mod.EventBusSubscriber({Dist.CLIENT})
 public class JechCommand {
-    static CommandDispatcher<ISuggestionProvider> dispatcher;
-    static LiteralArgumentBuilder<ISuggestionProvider> builder;
+    static CommandDispatcher<SharedSuggestionProvider> dispatcher;
+    static LiteralArgumentBuilder<SharedSuggestionProvider> builder;
 
     static {
         builder = literal("jech")
                 .executes((c) -> {
-                    printMessage(new TranslationTextComponent("jecharacters.chat.help"));
+                    printMessage(new TranslatableComponent("jecharacters.chat.help"));
                     return 0;
                 }).then(literal("profile").executes(c -> profile()))
                 .then(literal("verbose")
@@ -66,7 +63,7 @@ public class JechCommand {
         dispatcher.register(builder);
     }
 
-    private static LiteralArgumentBuilder<ISuggestionProvider> literal(String s) {
+    private static LiteralArgumentBuilder<SharedSuggestionProvider> literal(String s) {
         return LiteralArgumentBuilder.literal(s);
     }
 
@@ -79,15 +76,15 @@ public class JechCommand {
 
     private static int profile() {
         Thread t = new Thread(() -> {
-            printMessage(new TranslationTextComponent("jecharacters.chat.start"));
+            printMessage(new TranslatableComponent("jecharacters.chat.start"));
             Profiler.Report r = Profiler.run();
             try (FileOutputStream fos = new FileOutputStream("logs/jecharacters.txt")) {
                 OutputStreamWriter osw = new OutputStreamWriter(fos);
                 osw.write(new GsonBuilder().setPrettyPrinting().create().toJson(r));
                 osw.flush();
-                printMessage(new TranslationTextComponent("jecharacters.chat.saved"));
+                printMessage(new TranslatableComponent("jecharacters.chat.saved"));
             } catch (IOException e) {
-                printMessage(new TranslationTextComponent("jecharacters.chat.error"));
+                printMessage(new TranslatableComponent("jecharacters.chat.error"));
             }
         });
         t.setPriority(Thread.MIN_PRIORITY);
@@ -96,9 +93,9 @@ public class JechCommand {
     }
 
     @SubscribeEvent
-    public static void onOpenGui(GuiScreenEvent.InitGuiEvent event) {
-        if (event.getGui() instanceof ChatScreen) {
-            RootCommandNode<ISuggestionProvider> root = getPlayer().connection.getCommandDispatcher().getRoot();
+    public static void onOpenGui(ScreenEvent.InitScreenEvent event) {
+        if (event.getScreen() instanceof ChatScreen) {
+            RootCommandNode<SharedSuggestionProvider> root = getPlayer().connection.getCommands().getRoot();
             if (root.getChild("jech") == null) root.addChild(builder.build());
         }
     }
@@ -106,42 +103,42 @@ public class JechCommand {
     @SubscribeEvent
     @SuppressWarnings("resource")
     public static void onCommand(ClientChatEvent event) {
-        CommandSource cs = getPlayer().getCommandSource();
+        CommandSourceStack cs = getPlayer().createCommandSourceStack();
         String msg = event.getMessage();
         if (msg.startsWith("/jech ") || msg.equals("/jech")) {
             event.setCanceled(true);
-            Minecraft.getInstance().ingameGUI.getChatGUI().addToSentMessages(msg);
+            Minecraft.getInstance().gui.getChat().addRecentChat(msg);
 
             try {
                 StringReader stringreader = new StringReader(msg);
                 if (stringreader.canRead() && stringreader.peek() == '/') stringreader.skip();
-                ParseResults<ISuggestionProvider> parse = dispatcher.parse(stringreader, cs);
+                ParseResults<SharedSuggestionProvider> parse = dispatcher.parse(stringreader, cs);
                 dispatcher.execute(parse);
             } catch (CommandSyntaxException e) {
                 // copied and modified from net.minecraft.command.Commands
-                cs.sendErrorMessage(TextComponentUtils.toTextComponent(e.getRawMessage()));
+                cs.sendFailure(ComponentUtils.fromMessage(e.getRawMessage()));
                 if (e.getInput() != null && e.getCursor() >= 0) {
                     int k = Math.min(e.getInput().length(), e.getCursor());
-                    StringTextComponent tc1 = new StringTextComponent("");
-                    tc1.mergeStyle(GRAY).modifyStyle(i ->
-                            i.setClickEvent(new ClickEvent(SUGGEST_COMMAND, event.getMessage())));
-                    if (k > 10) tc1.appendString("...");
-                    tc1.appendString(e.getInput().substring(Math.max(0, k - 10), k));
+                    TextComponent tc1 = new TextComponent("");
+                    tc1.withStyle(GRAY).withStyle(i ->
+                            i.withClickEvent(new ClickEvent(SUGGEST_COMMAND, event.getMessage())));
+                    if (k > 10) tc1.append("...");
+                    tc1.append(e.getInput().substring(Math.max(0, k - 10), k));
                     if (k < e.getInput().length()) {
-                        ITextComponent tc2 = (new StringTextComponent(e.getInput().substring(k)))
-                                .mergeStyle(RED, UNDERLINE);
+                        Component tc2 = (new TextComponent(e.getInput().substring(k)))
+                                .withStyle(RED, UNDERLINE);
                         tc1.getSiblings().add(tc2);
                     }
-                    tc1.getSiblings().add((new TranslationTextComponent("command.context.here"))
-                            .mergeStyle(RED, ITALIC));
-                    cs.sendErrorMessage(tc1);
+                    tc1.getSiblings().add((new TranslatableComponent("command.context.here"))
+                            .withStyle(RED, ITALIC));
+                    cs.sendFailure(tc1);
                 }
             }
         }
     }
 
     @SuppressWarnings("resource")
-    private static ClientPlayerEntity getPlayer() {
+    private static LocalPlayer getPlayer() {
         return Objects.requireNonNull(Minecraft.getInstance().player);
     }
 }

@@ -1,11 +1,11 @@
 package me.towdium.jecharacters;
 
-import mcp.MethodsReturnNonnullByDefault;
 import me.towdium.jecharacters.utils.Greetings;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -38,19 +38,19 @@ public class JustEnoughCharacters {
     }
 
     @SuppressWarnings("resource")
-    public static void printMessage(ITextComponent message) {
-        Minecraft.getInstance().ingameGUI.getChatGUI().printChatMessage(message);
+    public static void printMessage(Component message) {
+        Minecraft.getInstance().gui.getChat().addMessage(message);
     }
 
     @Mod.EventBusSubscriber
     static class EventHandler {
         @SubscribeEvent
         public static void onPlayerLogin(EntityJoinWorldEvent event) {
-            if (event.getEntity() instanceof PlayerEntity && event.getEntity().world.isRemote
+            if (event.getEntity() instanceof Player && event.getEntity().level.isClientSide
                     && JechConfig.enableChat.get() && !messageSent
                     && (JechConfig.enumKeyboard.get() == QUANPIN)
-                    && Minecraft.getInstance().gameSettings.language.equals("zh_tw")) {
-                printMessage(new TranslationTextComponent("jecharacters.chat.taiwan"));
+                    && Minecraft.getInstance().options.languageCode.equals("zh_tw")) {
+                printMessage(new TranslatableComponent("jecharacters.chat.taiwan"));
                 messageSent = true;
             }
         }

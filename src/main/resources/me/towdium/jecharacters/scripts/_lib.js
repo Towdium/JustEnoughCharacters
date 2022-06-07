@@ -67,7 +67,7 @@ var transContains = function (method) {
 
 var transSuffix = function (method) {
     transConstruct(method,
-        'net/minecraft/client/util/SuffixArray',
+        'net/minecraft/client/searchtree/SuffixArray',
         'me/towdium/jecharacters/utils/Match$FakeArray'
     );
     return method;

@@ -2,10 +2,8 @@ import os
 
 manual = ['jei1', 'jei2', 'jei3', 'psi']
 suffix = [
-    'net.minecraft.client.util.SearchTree:<init>(Ljava/util/function/Function;Ljava/util/function/Function;)V',  # Vanilla
-    'net.minecraft.client.util.SearchTree:func_194040_a()V',  # Vanilla
-    'net.minecraft.client.util.SearchTreeReloadable:<init>(Ljava/util/function/Function;)V',  # Vanilla
-    'net.minecraft.client.util.SearchTreeReloadable:func_194040_a()V'  # Vanilla
+    'net.minecraft.client.searchtree.ReloadableIdSearchTree:m_7729_()V',  # Vanilla
+    'net.minecraft.client.searchtree.ReloadableSearchTree:m_7729_()V',  # Vanilla
 ]
 contains = [
     'com.blamejared.controlling.client.gui.GuiNewControls:lambda$filterKeys$11(Lcom/blamejared/controlling/client/gui/GuiNewKeyBindingList$KeyEntry;)Z',  # Controlling
@@ -52,8 +50,8 @@ contains = [
     'com.lothrazar.storagenetwork.api.util.UtilInventory:doOverlap(Ljava/lang/String;Ljava/lang/String;)Z',  # Simple Storage Network
     'com.lothrazar.storagenetwork.gui.NetworkWidget:doesStackMatchSearch(Lnet/minecraft/item/ItemStack;)Z',  # Simple Storage Network
     'com.latmod.mods.projectex.gui.GuiTableBase:updateValidItemList()V',  # Project EX
-    'net.minecraft.client.gui.screen.inventory.CreativeScreen:func_147053_i()V',  # Vanilla
-    'net.minecraft.client.gui.screen.inventory.CreativeScreen:func_214080_a(Ljava/lang/String;)V',  # Vanilla
+    'net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen:m_98630_()V',  # Vanilla
+    'net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen:m_98619_(Ljava/lang/String;)V',  # Vanilla
     'amerifrance.guideapi.gui.GuiSearch:getMatches:(Lamerifrance.guideapi.api.impl.Book;Ljava.lang.String;Lnet.minecraft.entity.player.EntityPlayer;Lnet.minecraft.item.ItemStack;)Ljava.util.List;',  # Guide-API
     'thaumcraft.client.gui.GuiResearchBrowser:updateSearch:()V',  # Thaumcraft
     'zuve.searchablechests.ChestEventHandler:stackMatches(Ljava/lang/String;Lnet/minecraft/item/ItemStack;)Z',  # Searchable Chests
