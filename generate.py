@@ -31,8 +31,8 @@ contains = [
     'net.blay09.mods.cookingforblockheads.container.RecipeBookContainer:search(Ljava/lang/String;)V',  # Cooking for Blockheads
     'net.blay09.mods.farmingforblockheads.container.MarketClientContainer:applyFilters()V',  # Farming for Blockheads
     'mcjty.rftools.blocks.shaper.LocatorTileEntity:checkFilter(Ljava/lang/String;Lnet/minecraft/entity/Entity;)Z',  # RF Tools
-    'mcjty.rftools.blocks.storagemonitor.StorageScannerTileEntity:lambda$makeSearchPredicate$20(Ljava/lang/String;Lnet/minecraft/item/ItemStack;)Z',  # RF Tools
-    'mcjty.rftools.blocks.storage.GuiModularStorage:updateList()V',  # RF Tools
+    'mcjty.rftoolsstorage.modules.scanner.blocks.StorageScannerTileEntity:lambda$makeSearchPredicate$30(Ljava/lang/String;Lnet/minecraft/item/ItemStack;)Z',  # RF Tools
+    'mcjty.rftoolsstorage.modules.modularstorage.client.GuiModularStorage:lambda$updateList$6(Ljava/lang/String;Ljava/util/List;Ljava/util/concurrent/atomic/AtomicInteger;Lnet/minecraftforge/items/IItemHandler;)V',  # RF Tools
     'mcjty.rftools.items.netmonitor.GuiNetworkMonitor:populateList()V',  # RF Tools
     'moze_intel.projecte.gameObjs.container.inventory.TransmutationInventory:doesItemMatchFilter(Lmoze_intel/projecte/api/ItemInfo;)Z',  # Project E
     'org.cyclops.integrateddynamics.core.client.gui.WidgetTextFieldDropdown:refreshDropdownList()V',  # Integrated Dynamics
@@ -82,6 +82,8 @@ contains = [
     'me.shedaniel.clothconfig2.forge.gui.entries.DropdownBoxEntry$DefaultDropdownMenuElement:search()V',  # Cloth Config
     'me.shedaniel.clothconfig2.gui.entries.DropdownBoxEntry$DefaultDropdownMenuElement:search()V',  # Cloth Config
     'mezz.jei.search.ElementSearchLowMem:matches(Ljava/lang/String;Lmezz/jei/search/PrefixInfo;Lmezz/jei/ingredients/IIngredientListElementInfo;)Z',  # JEI (low memory)
+    'com.github.klikli_dev.occultism.client.gui.storage.StorageControllerGuiBase:itemMatchesSearch(Lnet/minecraft/item/ItemStack;)Z', # Occultism
+    'com.github.klikli_dev.occultism.client.gui.storage.StorageControllerGuiBase:machineMatchesSearch(Lcom/github/klikli_dev/occultism/api/common/data/MachineReference;)Z', # Occultism
 ]
 equals = [
     'vazkii.botania.api.corporea.CorporeaRequestDefaultMatchers$CorporeaStringMatcher:equalOrContain(Ljava/lang/String;)Z',  # Botania (Corporea)

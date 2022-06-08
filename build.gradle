@@ -1,7 +1,6 @@
 buildscript {
     repositories {
         maven { url = 'https://files.minecraftforge.net/maven' }
-        jcenter()
         mavenCentral()
     }
     dependencies {
@@ -19,8 +18,7 @@ sourceCompatibility = targetCompatibility = '1.8'
 
 repositories {
     mavenCentral()
-    jcenter()
-    maven { url 'http://dvs1.progwml6.com/files/maven' }
+    maven { url 'https://dvs1.progwml6.com/files/maven' }
     maven { url 'https://jitpack.io' }
 }
 
