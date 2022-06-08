@@ -10,7 +10,7 @@ buildscript {
 apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'eclipse'
 
-version = "1.18.1-${verspec}.${verbuild}"
+version = "1.18.2-${verspec}.${verbuild}"
 group = "me.towdium.jecharacters"
 archivesBaseName = "jecharacters"
 
@@ -18,7 +18,7 @@ java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
 repositories {
     mavenCentral()
-    maven { url 'https://dvs1.progwml6.com/files/maven' }
+    maven { url 'https://dvs1.progwml6.com/files/maven/' }
     maven { url 'https://jitpack.io' }
 }
 
@@ -28,7 +28,7 @@ configurations {
 }
 
 minecraft {
-    mappings channel: 'official', version: '1.18.1'
+    mappings channel: 'official', version: '1.18.2'
     runs {
         client {
             workingDirectory project.file('run')
@@ -70,8 +70,9 @@ minecraft.runs.all {
 }
 
 dependencies {
-    minecraft 'net.minecraftforge:forge:1.18.1-39.0.9'
-    implementation fg.deobf('mezz.jei:jei-1.18.1:9.1.1.48')
+    minecraft 'net.minecraftforge:forge:1.18.2-40.1.0'
+    compileOnly fg.deobf('mezz.jei:jei-1.18.2:9.7.0.195')
+    runtimeOnly fg.deobf('mezz.jei:jei-1.18.2:9.7.0.195')
     shade(group: 'com.github.towdium', name: 'pinin', version: "${verpinin}") {
         transitive = false
     }
