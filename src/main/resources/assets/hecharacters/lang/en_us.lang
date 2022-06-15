@@ -1,0 +1,7 @@
+chat.start=Start profiling.
+chat.saved=Done! Output saved to logs/hecharacters-profiler.txt.
+chat.save_error=Oops! An error occurred when writing the file.
+chat.taiwan=If you see this, there is an error in Had Enough Characters.
+
+command.desc=/hech [profile] / [verbose true/false]
+command.unknown=Unknown command.

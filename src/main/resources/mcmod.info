@@ -1,13 +1,13 @@
 [
 {
-  "modid": "jecharacters",
-  "name": "Just Enough Characters",
-  "description": "Pinyin search for JEI and more",
+  "modid": "hecharacters",
+  "name": "Had Enough Characters",
+  "description": "Pinyin search for HEI and more",
   "version": "${version}",
   "mcversion": "${mcversion}",
   "url": "",
   "updateUrl": "",
-  "authorList": ["Towdium"],
+  "authorList": ["Towdium", "Rongmario"],
   "credits": "To all the tutorial makers",
   "logoFile": "",
   "screenshots": [],

@@ -1,2 +1,2 @@
 Manifest-Version: 1.0
-FMLCorePlugin: me.towdium.jecharacters.core.JechCore
+FMLCorePlugin: me.towdium.hecharacters.core.HechCore

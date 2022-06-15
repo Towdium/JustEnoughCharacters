@@ -1,15 +1,15 @@
 import it.unimi.dsi.fastutil.ints.IntSet;
-import me.towdium.jecharacters.JechConfig;
-import me.towdium.jecharacters.match.Keyboard;
-import me.towdium.jecharacters.match.PinyinMatcher;
-import me.towdium.jecharacters.match.PinyinTree;
-import me.towdium.jecharacters.match.Utilities;
+import me.towdium.hecharacters.HechConfig;
+import me.towdium.hecharacters.match.Keyboard;
+import me.towdium.hecharacters.match.PinyinMatcher;
+import me.towdium.hecharacters.match.PinyinTree;
+import me.towdium.hecharacters.match.Utilities;
 import org.junit.jupiter.api.Test;
 
-public class JechTest {
+public class HechTest {
     @Test
     public void quanpin() {
-        JechConfig.keyboard = Keyboard.QUANPIN;
+        HechConfig.keyboard = Keyboard.QUANPIN;
         Utilities.refresh();
         assert PinyinMatcher.contains("测试文本", "ceshiwenben");
         assert PinyinMatcher.contains("测试文本", "ceshiwenbe");
@@ -23,7 +23,7 @@ public class JechTest {
 
     @Test
     public void daqian() {
-        JechConfig.keyboard = Keyboard.DAQIAN;
+        HechConfig.keyboard = Keyboard.DAQIAN;
         Utilities.refresh();
         assert PinyinMatcher.contains("测试文本", "hk4g4jp61p3");
         assert PinyinMatcher.contains("测试文本", "hkgjp1");
@@ -33,7 +33,7 @@ public class JechTest {
 
     @Test
     public void performance() {
-        JechConfig.keyboard = Keyboard.QUANPIN;
+        HechConfig.keyboard = Keyboard.QUANPIN;
         Utilities.refresh();
         for (int i = 1; i < 100; i++)
             PinyinMatcher.contains("测试1000一段测试文本", "0yidceshwenben");
@@ -59,7 +59,7 @@ public class JechTest {
 
     @Test
     public void tree() {
-        JechConfig.keyboard = Keyboard.QUANPIN;
+        HechConfig.keyboard = Keyboard.QUANPIN;
         Utilities.refresh();
         PinyinTree graph = new PinyinTree();
         graph.put("测试文本", 1);

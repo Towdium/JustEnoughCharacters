@@ -1,0 +1,6 @@
+chat.start=開始分析模組文件。
+chat.saved=分析報告已經保存至 logs/hecharacters-profiler.txt。
+chat.save_error=寫入文檔時出現了一個問題。
+chat.taiwan=§e[Had Enough Characters] §f檢測到您正在使用繁體中文。如有需要可以在配置頁面 將鍵盤切換至注音輸入法（phonetic）。同時建議您在使用注音輸入法時將配置 文件中 EnableForceQuote 打開，這可以解決 HEI 分詞算法與注音輸入的衝突。
+command.desc=/hech [profile] / [verbose true/false]
+command.unknown=未知指令。
