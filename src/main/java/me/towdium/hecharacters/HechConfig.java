@@ -222,6 +222,7 @@ public class HechConfig {
                 case LIST_DEFAULT_STRING:
                     return new String[]{
                             "mezz.jei.ItemFilter$FilterPredicate:stringContainsTokens",  // HEI legacy
+                            "mezz.jei.search.ElementSearchLowMem:matches",  //HEI low memory mode
                             "com.raoulvdberge.refinedstorage.gui.grid.filtering.GridFilterName:accepts",  // Refined Storage legpacy
                             "com.raoulvdberge.refinedstorage.gui.grid.filtering.GridFilterTooltip:accepts",  // Refined Storage legacy
                             "com.raoulvdberge.refinedstorage.gui.grid.filtering.GridFilterMod:test",  // Refined Storage item mod name
