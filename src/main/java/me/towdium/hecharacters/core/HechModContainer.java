@@ -4,8 +4,7 @@ import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import me.towdium.hecharacters.HechCommand;
 import me.towdium.hecharacters.HechConfig;
-import me.towdium.hecharacters.HechGuiFactory;
-import me.towdium.hecharacters.match.Keyboard;
+import me.towdium.pinin.Keyboard;
 import net.minecraft.client.Minecraft;
 import net.minecraft.command.ICommand;
 import net.minecraft.entity.player.EntityPlayer;
@@ -80,7 +79,6 @@ public class HechModContainer extends DummyModContainer {
 
     @Subscribe
     public static void initPost(FMLPostInitializationEvent event) {
-        MinecraftForge.EVENT_BUS.register(HechGuiFactory.ConfigHandler.class);
         MinecraftForge.EVENT_BUS.register(EventHandler.class);
     }
 

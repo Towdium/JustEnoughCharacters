@@ -1,15 +1,12 @@
 package me.towdium.hecharacters;
 
 import me.towdium.hecharacters.core.HechCore;
-import me.towdium.hecharacters.match.Utilities;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraftforge.common.config.ConfigElement;
 import net.minecraftforge.fml.client.IModGuiFactory;
 import net.minecraftforge.fml.client.config.GuiConfig;
 import net.minecraftforge.fml.client.config.IConfigElement;
-import net.minecraftforge.fml.client.event.ConfigChangedEvent;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 import java.util.ArrayList;
 import java.util.Set;
@@ -50,14 +47,4 @@ public class HechGuiFactory implements IModGuiFactory {
         }
     }
 
-    @SuppressWarnings("unused")
-    public static class ConfigHandler {
-        @SubscribeEvent
-        public static void onConfigChanged(ConfigChangedEvent.OnConfigChangedEvent event) {
-            if (event.getModID().equals(HechCore.MODID)) {
-                HechConfig.update();
-                Utilities.refresh();
-            }
-        }
-    }
 }

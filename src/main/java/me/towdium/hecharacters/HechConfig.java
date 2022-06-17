@@ -2,7 +2,7 @@ package me.towdium.hecharacters;
 
 import com.google.common.base.CaseFormat;
 import me.towdium.hecharacters.core.HechCore;
-import me.towdium.hecharacters.match.Keyboard;
+import me.towdium.pinin.Keyboard;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
 
@@ -39,6 +39,7 @@ public class HechConfig {
     public static boolean enableFuzzyU2v = false;
     public static boolean enableForceQuote = false;
     public static boolean enableChatHelp = true;
+    public static boolean enableVerbose = false;
     public static boolean enableDumpClassName = false;
     public static Keyboard keyboard = Keyboard.QUANPIN;
 
@@ -64,6 +65,21 @@ public class HechConfig {
         for (Item item : Item.values()) item.init();
     }
 
+    private static Keyboard getKeyboard(int i){
+        switch (i) {
+            case 0:
+                return Keyboard.QUANPIN;
+            case 1:
+                return Keyboard.DAQIAN;
+            case 3:
+                return Keyboard.XIAOHE;
+            case 4:
+                return Keyboard.ZIRANMA;
+            default:
+                throw new RuntimeException("Unacceptable identifier: " + i + ".");
+        }
+    }
+
     public enum Item {
         LIST_ADDITIONAL_STRING,
         LIST_ADDITIONAL_REGEXP,
@@ -79,6 +95,7 @@ public class HechConfig {
         ENABLE_PSI,
         ENABLE_PROJECTEX,
         ENABLE_CHAT_HELP,
+        ENABLE_VERBOSE,
         ENABLE_FUZZY_ZH2Z,
         ENABLE_FUZZY_SH2S,
         ENABLE_FUZZY_CH2C,
@@ -149,10 +166,12 @@ public class HechConfig {
                     return "Set to true to disable HEI keyword separation";
                 case ENABLE_CHAT_HELP:
                     return "Set to false to disable all the chat messages";
+                case ENABLE_VERBOSE:
+                    return "Set true to print verbose debug message";
                 case ENABLE_DUMP_CLASS_NAME:
                     return "Set to true to dump all the class names";
                 case INT_KEYBOARD:
-                    return "Choose keyboard: 0 for quanpin, 1 for phonetic (Daqian)";
+                    return "Choose keyboard: 0 for quanpin, 1 for phonetic (Daqian), 2 for xiaohe, 3 for ziranma";
             }
             return "";
         }
@@ -182,6 +201,7 @@ public class HechConfig {
                 case ENABLE_FUZZY_U2V:
                 case ENABLE_FORCE_QUOTE:
                 case ENABLE_CHAT_HELP:
+                case ENABLE_VERBOSE:
                 case ENABLE_DUMP_CLASS_NAME:
                     return Type.BOOLEAN;
                 case INT_KEYBOARD:
@@ -326,6 +346,7 @@ public class HechConfig {
                 case ENABLE_FUZZY_U2V:
                 case ENABLE_FORCE_QUOTE:
                 case ENABLE_DUMP_CLASS_NAME:
+                case ENABLE_VERBOSE:
                     return false;
                 case ENABLE_HEI:
                 case ENABLE_PSI:
@@ -404,12 +425,14 @@ public class HechConfig {
                     enableForceQuote = getProperty().getBoolean();
                     break;
                 case INT_KEYBOARD:
-                    keyboard = Keyboard.get(getProperty().getInt());
+                    keyboard = getKeyboard((getProperty().getInt()));
                     break;
                 case ENABLE_CHAT_HELP:
                     enableChatHelp = getProperty().getBoolean();
                 case ENABLE_DUMP_CLASS_NAME:
                     enableDumpClassName = getProperty().getBoolean();
+                case ENABLE_VERBOSE:
+                    enableVerbose = getProperty().getBoolean();
             }
         }
 
@@ -440,6 +463,7 @@ public class HechConfig {
                 case ENABLE_PROJECTEX:
                 case ENABLE_FORCE_QUOTE:
                 case INT_KEYBOARD:
+                case ENABLE_VERBOSE:
                 case ENABLE_CHAT_HELP:
                     return Category.GENERAL;
             }
