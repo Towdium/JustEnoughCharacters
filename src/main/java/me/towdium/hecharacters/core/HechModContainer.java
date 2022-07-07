@@ -36,9 +36,10 @@ public class HechModContainer extends DummyModContainer {
         meta.modId = "hecharacters";
         meta.name = "Had Enough Characters";
         meta.version = "@VERSION@";
-        meta.authorList = Arrays.asList("Towdium", "Rongmario");
+        meta.authorList = Arrays.asList("Towdium", "vfyjxf", "Rongmario");
         meta.description = "Help HEI read Pinyin";
-        meta.url = "https://minecraft.curseforge.com/projects/had-enough-characters";
+        meta.url = "https://www.curseforge.com/minecraft/mc-mods/had-enough-characters";
+        meta.logoFile = "icon.png";
     }
 
     @Override
