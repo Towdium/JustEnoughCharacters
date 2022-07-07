@@ -96,6 +96,29 @@ public interface Transformer {
         HechCore.LOG.info("Transformed " + cnt + " occurrences.");
     }
 
+    static boolean transformInvokeLambda(
+            MethodNode method, String owner, String name, String desc,
+            String newOwner, String newName, String newDesc
+    ) {
+        boolean ret = false;
+        Iterator<AbstractInsnNode> i = method.instructions.iterator();
+        while (i.hasNext()) {
+            AbstractInsnNode node = i.next();
+            int op = node.getOpcode();
+            if (node instanceof InvokeDynamicInsnNode && op == Opcodes.INVOKEDYNAMIC) {
+                InvokeDynamicInsnNode insnNode = ((InvokeDynamicInsnNode) node);
+                if (insnNode.bsmArgs[1] instanceof Handle) {
+                    Handle h = ((Handle) insnNode.bsmArgs[1]);
+                    if (!(!h.getOwner().equals(owner) || !h.getName().equals(name) || !h.getDesc().equals(desc))) {
+                        insnNode.bsmArgs[1] = new Handle(h.getTag(), newOwner, newName, newDesc, h.isInterface());
+                        ret = true;
+                    }
+                }
+            }
+        }
+        return ret;
+    }
+
     static void transformHook(MethodNode methodNode, String owner, String name, String id) {
         Iterator<AbstractInsnNode> i = methodNode.instructions.iterator();
         while (i.hasNext()) {
@@ -112,6 +135,7 @@ public interface Transformer {
     byte[] transform(byte[] bytes);
 
     abstract class Default implements Transformer {
+        @Override
         public byte[] transform(byte[] bytes) {
             ClassNode classNode = new ClassNode();
             ClassReader classReader = new ClassReader(bytes);

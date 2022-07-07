@@ -1,7 +1,10 @@
 buildscript {
     repositories {
         jcenter()
-        maven { url = "http://files.minecraftforge.net/maven" }
+        maven {
+            name = "forge"
+            url = "https://maven.minecraftforge.net"
+        }
     }
     dependencies {
         classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
@@ -10,7 +13,7 @@ buildscript {
 apply plugin: 'net.minecraftforge.gradle.forge'
 
 version = "${mc_version}-${proj_version}"
-group= "me.towdium.jecharacters"
+group = "me.towdium.jecharacters"
 archivesBaseName = "jecharacters"
 
 //noinspection GroovyAssignabilityCheck
@@ -30,15 +33,25 @@ minecraft {
     replace '@VERSION@', project.version
 }
 
+configurations {
+    shade
+    compile.extendsFrom shade
+}
+
 dependencies {
-    compile 'mezz.jei:jei_1.12.2:4.16.1.301'
+    deobfCompile 'curse.maven:had-enough-items-557549:3831825'
+    shade files("libs/PinIn-1.5.0-all.jar")
+
     testCompile 'org.junit.jupiter:junit-jupiter-api:5.2.0'
 }
 
+
 repositories {
     mavenCentral()
-    maven { url = "http://dvs1.progwml6.com/files/maven" }
+    maven { url = "https://dvs1.progwml6.com/files/maven" }
     maven { url = "modmaven.k-4u.nl" }
+    maven { url "https://cursemaven.com" }
+    maven { url 'https://jitpack.io' }
 }
 
 processResources {
@@ -47,7 +60,7 @@ processResources {
 
     from(sourceSets.main.resources.srcDirs) {
         include 'mcmod.info'
-        expand 'version':project.version, 'mcversion':project.minecraft.version
+        expand 'version': project.version, 'mcversion': project.minecraft.version
     }
 
     from(sourceSets.main.resources.srcDirs) {
@@ -57,6 +70,11 @@ processResources {
 
 jar {
     manifest {
-        attributes 'FMLCorePlugin': 'me.towdium.jecharacters.core.JechCore'
+        attributes 'FMLCorePlugin': 'me.towdium.hecharacters.core.HechCore'
+    }
+    configurations.shade.each { dep ->
+        from(project.zipTree(dep)) {
+            include 'me/towdium/pinin/**'
+        }
     }
 }

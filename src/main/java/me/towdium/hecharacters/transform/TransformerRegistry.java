@@ -18,7 +18,7 @@ public class TransformerRegistry {
         configurables.add(new TransformerSuffix());
         configurables.add(new TransformerStrsKt());
         transformers.addAll(configurables);
-        transformers.add(new TransformerJei());
+        transformers.add(new TransformerHei());
         transformers.add(new TransformerPsi());
         transformers.add(new TransformerProjex());
         transformers.add(new TransformerClassDump());

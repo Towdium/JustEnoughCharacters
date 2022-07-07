@@ -1,7 +1,6 @@
 package me.towdium.hecharacters.transform.transformers;
 
 import me.towdium.hecharacters.HechConfig;
-import me.towdium.hecharacters.match.PinyinMatcher;
 import me.towdium.hecharacters.transform.Transformer;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.MethodNode;
@@ -13,11 +12,6 @@ import org.objectweb.asm.tree.MethodNode;
 public class TransformerStrsKt extends Transformer.Configurable {
     public TransformerStrsKt() {
         reload();
-    }
-
-    public static boolean contains(CharSequence a, CharSequence b, boolean c) {
-        if (c) return PinyinMatcher.contains(a.toString().toLowerCase(), b.toString().toLowerCase());
-        else return PinyinMatcher.contains(a.toString(), b);
     }
 
     @Override
@@ -38,7 +32,7 @@ public class TransformerStrsKt extends Transformer.Configurable {
     @Override
     protected void transform(MethodNode n) {
         Transformer.transformInvoke(
-                n, "kotlin/text/StringsKt", "contains", "me/towdium/hecharacters/transform/transformers/TransformerStrsKt", "contains",
+                n, "kotlin/text/StringsKt", "contains", "me/towdium/hecharacters/util/Match", "contains",
                 "(Ljava/lang/CharSequence;Ljava/lang/CharSequence;Z)Z",
                 false, Opcodes.INVOKESTATIC, null, null
         );

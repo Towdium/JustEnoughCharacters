@@ -2,7 +2,6 @@ package me.towdium.hecharacters;
 
 import com.google.gson.GsonBuilder;
 import mcp.MethodsReturnNonnullByDefault;
-import me.towdium.hecharacters.match.PinyinMatcher;
 import me.towdium.hecharacters.util.Profiler;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.command.CommandBase;
@@ -57,10 +56,10 @@ public class HechCommand extends CommandBase {
         } else if (args.length == 2 && args[0].equals("verbose")) {
             switch (args[1].toLowerCase()) {
                 case "true":
-                    PinyinMatcher.verbose = true;
+                    HechConfig.enableVerbose = true;
                     break;
                 case "false":
-                    PinyinMatcher.verbose = false;
+                    HechConfig.enableVerbose = false;
                     break;
                 default:
                     sender.sendMessage(new TextComponentTranslation("command.unknown"));
