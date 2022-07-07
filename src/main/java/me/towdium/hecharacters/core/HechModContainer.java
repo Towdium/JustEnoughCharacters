@@ -43,7 +43,7 @@ public class HechModContainer extends DummyModContainer {
 
     @Override
     public List<ArtifactVersion> getDependencies() {
-        return Collections.singletonList(VersionParser.parseVersionReference("jei@[4.9.2,)"));
+        return Collections.singletonList(VersionParser.parseVersionReference("jei@[4.22.0,)"));
     }
 
     @Override
