@@ -2,8 +2,8 @@ import os
 
 manual = ['jei1', 'jei2', 'jei3', 'psi']
 suffix = [
-    'net.minecraft.client.searchtree.ReloadableIdSearchTree:m_7729_()V',  # Vanilla
-    'net.minecraft.client.searchtree.ReloadableSearchTree:m_7729_()V',  # Vanilla
+    'net.minecraft.client.searchtree.ResourceLocationSearchTree:m_235212_(Ljava/util/List;Ljava/util/function/Function;)Lnet/minecraft/client/searchtree/ResourceLocationSearchTree;',  # Vanilla
+    'net.minecraft.client.searchtree.PlainTextSearchTree:m_235197_(Ljava/util/List;Ljava/util/function/Function;)Lnet/minecraft/client/searchtree/PlainTextSearchTree;', # Vanilla
 ]
 contains = [
     'com.blamejared.controlling.client.gui.GuiNewControls:lambda$filterKeys$11(Lcom/blamejared/controlling/client/gui/GuiNewKeyBindingList$KeyEntry;)Z',  # Controlling
@@ -84,7 +84,7 @@ contains = [
     'vazkii.quark.content.client.module.ChestSearchingModule:namesMatch(Lnet/minecraft/world/item/ItemStack;Ljava/lang/String;)Z',  # Quark
     'me.shedaniel.clothconfig2.forge.gui.entries.DropdownBoxEntry$DefaultDropdownMenuElement:search()V',  # Cloth Config
     'me.shedaniel.clothconfig2.gui.entries.DropdownBoxEntry$DefaultDropdownMenuElement:search()V',  # Cloth Config
-    'mezz.jei.search.ElementSearchLowMem:matches(Ljava/lang/String;Lmezz/jei/core/search/PrefixInfo;Lmezz/jei/ingredients/IListElementInfo;)Z',  # JEI (low memory)
+    'mezz.jei.common.search.ElementSearchLowMem:matches(Ljava/lang/String;Lmezz/jei/core/search/PrefixInfo;Lmezz/jei/common/ingredients/IListElementInfo;)Z',  # JEI (low memory)
     'com.github.klikli_dev.occultism.client.gui.storage.StorageControllerGuiBase:itemMatchesSearch(Lnet/minecraft/world/item/ItemStack;)Z', # Occultism
     'com.github.klikli_dev.occultism.client.gui.storage.StorageControllerGuiBase:machineMatchesSearch(Lcom/github/klikli_dev/occultism/api/common/data/MachineReference;)Z', # Occultism
 ]

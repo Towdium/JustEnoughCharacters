@@ -4,7 +4,7 @@ function initializeCoreMod() {
         'jecharacters-jei1': {
             'target': {
                 'type': 'METHOD',
-                'class': 'mezz.jei.search.ElementPrefixParser',
+                'class': 'mezz.jei.common.search.ElementPrefixParser',
                 'methodName': "<clinit>",
                 'methodDesc': '()V'
             },

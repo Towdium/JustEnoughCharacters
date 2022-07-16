@@ -5,7 +5,7 @@ function initializeCoreMod() {
         'jecharacters-jei3': {
             'target': {
                 'type': 'METHOD',
-                'class': 'mezz.jei.ingredients.IngredientFilter',
+                'class': 'mezz.jei.common.ingredients.IngredientFilter',
                 'methodName': 'parseSearchTokens',
                 'methodDesc': '(Ljava/lang/String;)Lmezz/jei/ingredients/IngredientFilter$SearchTokens;'
             },

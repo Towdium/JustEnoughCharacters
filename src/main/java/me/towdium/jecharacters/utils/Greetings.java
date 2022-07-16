@@ -11,7 +11,7 @@ import java.util.Set;
 public class Greetings {
     static final String[] MODS = {"jecharacters", "jecalculation"};
     static final Set<String> SENT = new HashSet<>();
-    static final Map<String, String> FRIENDS = new HashMap<String, String>() {{
+    static final Map<String, String> FRIENDS = new HashMap<>() {{
         put("kiwi", "Snownee");
         put("i18nupdatemod", "TartaricAcid");
         put("touhou_little_maid", "TartaricAcid");
