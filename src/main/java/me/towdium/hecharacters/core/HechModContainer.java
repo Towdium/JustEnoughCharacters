@@ -95,7 +95,7 @@ public class HechModContainer extends DummyModContainer {
         public static void onPlayerLogin(EntityJoinWorldEvent event) {
             if (event.getEntity() instanceof EntityPlayer && event.getEntity().world.isRemote
                     && HechConfig.enableChatHelp && !messageSent
-                    && (HechConfig.keyboard == Keyboard.QUANPIN || !HechConfig.enableForceQuote)
+                    && (HechConfig.keyboard == HechConfig.Spell.QUANPIN || !HechConfig.enableForceQuote)
                     && Minecraft.getMinecraft().gameSettings.language.equals("zh_tw")) {
                 event.getEntity().sendMessage(new TextComponentTranslation("chat.taiwan"));
                 messageSent = true;

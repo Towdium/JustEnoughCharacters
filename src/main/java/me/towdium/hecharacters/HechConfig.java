@@ -484,7 +484,7 @@ public class HechConfig {
                 case LIST_STRING:
                     return config.get(getCategory().toString(), toString(), (String[]) getDefault(), getComment());
                 case STRING:
-                    return config.get(getCategory().toString(), toString(), (int) getDefault(), getComment());
+                    return config.get(getCategory().toString(), toString(), (String) getDefault(), getComment());
             }
             throw new RuntimeException("Internal error.");
         }
