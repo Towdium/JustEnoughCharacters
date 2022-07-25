@@ -34,7 +34,7 @@ public class HechGuiFactory implements IModGuiFactory {
     public static class ConfigGUI extends GuiConfig {
         public ConfigGUI(GuiScreen parent) {
             super(parent, new ArrayList<IConfigElement>() {{
-                add(new ConfigElement(HechConfig.Item.INT_KEYBOARD.getProperty()));
+                add(new ConfigElement(HechConfig.Item.STRING_KEYBOARD.getProperty()));
                 add(new ConfigElement(HechConfig.Item.ENABLE_FUZZY_ANG2AN.getProperty()));
                 add(new ConfigElement(HechConfig.Item.ENABLE_FUZZY_ENG2EN.getProperty()));
                 add(new ConfigElement(HechConfig.Item.ENABLE_FUZZY_ING2IN.getProperty()));

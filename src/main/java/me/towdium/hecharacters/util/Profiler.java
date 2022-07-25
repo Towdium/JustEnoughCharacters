@@ -116,25 +116,22 @@ public class Profiler {
             Iterator<AbstractInsnNode> it = methodNode.instructions.iterator();
             while (it.hasNext()) {
                 AbstractInsnNode node = it.next();
+                //Although it seems a bit strange, there are indeed mods that use different methods in one method to match. (Such as AE2 Unofficial Extended Life)
                 if (node instanceof MethodInsnNode) {
                     MethodInsnNode mNode = ((MethodInsnNode) node);
                     if (mNode.getOpcode() == Opcodes.INVOKEVIRTUAL && mNode.owner.equals("java/lang/String")
                             && mNode.name.equals("contains") && mNode.desc.equals("(Ljava/lang/CharSequence;)Z")) {
                         string.accept((classNode.name + ":" + methodNode.name + ":" + methodNode.desc).replace('/', '.'));
-                        break;
                     } else if (mNode.getOpcode() == Opcodes.INVOKEVIRTUAL && mNode.owner.equals("java/lang/String")
                             && mNode.name.equals("matches") && mNode.desc.equals("(Ljava/lang/String;)Z")) {
                         regexp.accept((classNode.name + ":" + methodNode.name + ":" + methodNode.desc).replace('/', '.'));
-                        break;
                     } else if (mNode.getOpcode() == Opcodes.INVOKEVIRTUAL && mNode.owner.equals("java/util/regex/Pattern")
                             && mNode.name.equals("matcher")
                             && mNode.desc.equals("(Ljava/lang/CharSequence;)Ljava/util/regex/Matcher;")) {
                         regexp.accept((classNode.name + ":" + methodNode.name + ":" + methodNode.desc).replace('/', '.'));
-                        break;
                     } else if (mNode.getOpcode() == Opcodes.INVOKESTATIC && mNode.owner.equals("kotlin/text/StringsKt")
                             && mNode.name.equals("contains") && mNode.desc.equals("(Ljava/lang/CharSequence;Ljava/lang/CharSequence;Z)Z")) {
                         strskt.accept((classNode.name + ":" + methodNode.name + ":" + methodNode.desc).replace('/', '.'));
-                        break;
                     }
                 } else if (node instanceof TypeInsnNode) {
                     TypeInsnNode tNode = ((TypeInsnNode) node);

@@ -22,7 +22,8 @@ public class TransformerPsi extends Transformer.Default {
     protected void transform(ClassNode n) {
         HechCore.LOG.info("Transforming class " + n.name + " for Psi integration.");
         Transformer.findMethod(n, "ranking").ifPresent(m ->
-                Transformer.transformInvoke(m, "vazkii/psi/client/gui/GuiProgrammer", "rankTextToken", "me/towdium/hecharacters/util/Match", "rank",
+                Transformer.transformInvoke(m, "vazkii/psi/client/gui/GuiProgrammer", "rankTextToken",
+                        "me/towdium/hecharacters/util/Match", "rank",
                         "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;)I",
                         false, Opcodes.INVOKESTATIC, null, null
                 )

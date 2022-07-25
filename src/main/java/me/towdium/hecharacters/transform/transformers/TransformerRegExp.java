@@ -33,12 +33,14 @@ public class TransformerRegExp extends Transformer.Configurable {
     @Override
     protected void transform(MethodNode n) {
         Transformer.transformInvoke(
-                n, "java/util/regex/Pattern", "matcher", "me/towdium/hecharacters/util/Match", "matcher",
+                n, "java/util/regex/Pattern", "matcher",
+                "me/towdium/hecharacters/util/Match", "matcher",
                 "(Ljava/util/regex/Pattern;Ljava/lang/CharSequence;)Ljava/util/regex/Matcher;",
                 false, Opcodes.INVOKESTATIC, null, null
         );
         Transformer.transformInvoke(
-                n, "java/lang/String", "matches", "me/towdium/hecharacters/util/Match", "matches",
+                n, "java/lang/String", "matches",
+                "me/towdium/hecharacters/util/Match", "matches",
                 "(Ljava/lang/String;Ljava/lang/String;)Z",
                 false, Opcodes.INVOKESTATIC, "(Ljava/lang/Object;)Z", "(Ljava/lang/String;)Z"
         );
