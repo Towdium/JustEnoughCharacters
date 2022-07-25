@@ -1,6 +1,5 @@
 package me.towdium.jecharacters.core;
 
-import me.towdium.jecharacters.match.PinyinMatcher;
 import me.towdium.jecharacters.transform.TransformerRegistry;
 import net.minecraftforge.fml.relauncher.IFMLCallHook;
 
@@ -13,7 +12,7 @@ public class JechCallHook implements IFMLCallHook {
 
     @Override
     public Void call() {
-        PinyinMatcher.contains("Test 这是一条测试文本", "Test zheshiytcswb");
+//        Math.contains("Test 这是一条测试文本", "Test zheshiytcswb");
         TransformerRegistry.getTransformer("some.class");
         JechCore.INITIALIZED = true;
         return null;
