@@ -56,7 +56,6 @@ public class JechGuiFactory implements IModGuiFactory {
         public static void onConfigChanged(ConfigChangedEvent.OnConfigChangedEvent event) {
             if (event.getModID().equals(JechCore.MODID)) {
                 JechConfig.update();
-                Match.onConfigChange();
             }
         }
     }
