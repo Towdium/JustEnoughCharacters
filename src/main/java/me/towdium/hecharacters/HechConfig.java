@@ -2,6 +2,7 @@ package me.towdium.hecharacters;
 
 import com.google.common.base.CaseFormat;
 import me.towdium.hecharacters.core.HechCore;
+import me.towdium.hecharacters.util.Match;
 import me.towdium.pinin.Keyboard;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
@@ -41,7 +42,7 @@ public class HechConfig {
     public static boolean enableChatHelp = true;
     public static boolean enableVerbose = false;
     public static boolean enableDumpClassName = false;
-    public static Keyboard keyboard = Keyboard.QUANPIN;
+    public static Spell keyboard = Spell.QUANPIN;
 
     public static void init(File location) {
         config = new Configuration(new File(location, "config/JustEnoughCharacters.cfg"), HechCore.VERSION);
@@ -53,6 +54,7 @@ public class HechConfig {
 
     public static void update() {
         for (Item i : Item.values()) i.sync();
+        Match.onConfigChange();
         config.save();
     }
 
@@ -65,19 +67,20 @@ public class HechConfig {
         for (Item item : Item.values()) item.init();
     }
 
-    private static Keyboard getKeyboard(int i){
-        switch (i) {
-            case 0:
-                return Keyboard.QUANPIN;
-            case 1:
-                return Keyboard.DAQIAN;
-            case 3:
-                return Keyboard.XIAOHE;
-            case 4:
-                return Keyboard.ZIRANMA;
-            default:
-                throw new RuntimeException("Unacceptable identifier: " + i + ".");
+    public static Spell getKeyboard(String keyboardName){
+        try{
+            return Spell.valueOf(keyboardName.toUpperCase());
+        }catch (IllegalArgumentException e){
+            return Spell.QUANPIN;
         }
+    }
+
+    public static void setKeyboard(Spell keyboard){
+        HechConfig.keyboard = keyboard;
+        HechConfig.enableForceQuote = false;
+        Item.STRING_KEYBOARD.getProperty().set(keyboard.name());
+        Match.onConfigChange();
+        config.save();
     }
 
     public enum Item {
@@ -105,7 +108,7 @@ public class HechConfig {
         ENABLE_FUZZY_U2V,
         ENABLE_FORCE_QUOTE,
         ENABLE_DUMP_CLASS_NAME,
-        INT_KEYBOARD;
+        STRING_KEYBOARD;
 
 
         public String getComment() {
@@ -170,8 +173,8 @@ public class HechConfig {
                     return "Set true to print verbose debug message";
                 case ENABLE_DUMP_CLASS_NAME:
                     return "Set to true to dump all the class names";
-                case INT_KEYBOARD:
-                    return "Choose keyboard: 0 for quanpin, 1 for phonetic (Daqian), 2 for xiaohe, 3 for ziranma";
+                case STRING_KEYBOARD:
+                    return "Choose keyboard(It needs to be in all caps): QUANPIN(quanpin),  DAQIAN(phonetic/Daqian), XIAOHE(xiaohe), ZIRANMA(ziranma)";
             }
             return "";
         }
@@ -204,8 +207,8 @@ public class HechConfig {
                 case ENABLE_VERBOSE:
                 case ENABLE_DUMP_CLASS_NAME:
                     return Type.BOOLEAN;
-                case INT_KEYBOARD:
-                    return Type.INTEGER;
+                case STRING_KEYBOARD:
+                    return Type.STRING;
             }
             return Type.ERROR;
         }
@@ -241,6 +244,7 @@ public class HechConfig {
                             "io.github.elytra.copo.inventory.ContainerTerminal:updateSlots",  // Correlated legacy
                             "net.minecraft.client.gui.inventory.GuiContainerCreative:updateFilteredItems",  // vanilla creative search legacy
                             "bmp:updateFilteredItems",  // vanilla creative search legacy
+                            "appeng.client.me.ItemRepo:updateView",// AE2 Unofficial Extended Life
                             "appeng.client.gui.implementation.GuiInterfaceTerminal:refreshList",  // Applied Energistics terminal interface legacy
                             "appeng.client.gui.implementation.GuiInterfaceTerminal:itemStackMatchesSearchTerm",  // Applied Energistics terminal interface legacy
                             "appeng.client.gui.implementations.GuiInterfaceTerminal:refreshList",  // Applied Energistics terminal interface
@@ -354,8 +358,8 @@ public class HechConfig {
                 case ENABLE_PROJECTEX:
                 case ENABLE_CHAT_HELP:
                     return true;
-                case INT_KEYBOARD:
-                    return 0;
+                case STRING_KEYBOARD:
+                    return "QUANPIN";
             }
             return HechConfig.empty;
         }
@@ -425,8 +429,8 @@ public class HechConfig {
                 case ENABLE_FORCE_QUOTE:
                     enableForceQuote = getProperty().getBoolean();
                     break;
-                case INT_KEYBOARD:
-                    keyboard = getKeyboard((getProperty().getInt()));
+                case STRING_KEYBOARD:
+                    keyboard = getKeyboard((getProperty().getString()));
                     break;
                 case ENABLE_CHAT_HELP:
                     enableChatHelp = getProperty().getBoolean();
@@ -463,7 +467,7 @@ public class HechConfig {
                 case ENABLE_PSI:
                 case ENABLE_PROJECTEX:
                 case ENABLE_FORCE_QUOTE:
-                case INT_KEYBOARD:
+                case STRING_KEYBOARD:
                 case ENABLE_VERBOSE:
                 case ENABLE_CHAT_HELP:
                     return Category.GENERAL;
@@ -479,8 +483,8 @@ public class HechConfig {
                     return config.get(getCategory().toString(), toString(), (Boolean) getDefault(), getComment());
                 case LIST_STRING:
                     return config.get(getCategory().toString(), toString(), (String[]) getDefault(), getComment());
-                case INTEGER:
-                    return config.get(getCategory().toString(), toString(), (int) getDefault(), getComment());
+                case STRING:
+                    return config.get(getCategory().toString(), toString(), (String) getDefault(), getComment());
             }
             throw new RuntimeException("Internal error.");
         }
@@ -512,6 +516,22 @@ public class HechConfig {
         }
     }
 
-    public enum Type {BOOLEAN, LIST_STRING, INTEGER, ERROR}
+    public enum Type {BOOLEAN, LIST_STRING, STRING, ERROR}
+
+    public enum Spell {
+        QUANPIN(Keyboard.QUANPIN), DAQIAN(Keyboard.DAQIAN),
+        XIAOHE(Keyboard.XIAOHE), ZIRANMA(Keyboard.ZIRANMA);
+
+        public final Keyboard keyboard;
+
+        Spell(Keyboard keyboard) {
+            this.keyboard = keyboard;
+        }
+
+        public Keyboard get() {
+            return keyboard;
+        }
+    }
+
 }
 

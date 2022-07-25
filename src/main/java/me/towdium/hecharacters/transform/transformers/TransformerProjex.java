@@ -21,7 +21,8 @@ public class TransformerProjex extends Transformer.Default {
     protected void transform(ClassNode n) {
         HechCore.LOG.info("Transforming class " + n.name + " for Project EX integration.");
         Transformer.findMethod(n, "updateValidItemList").ifPresent(m ->
-                Transformer.transformInvoke(m, "org/apache/commons/lang3/StringUtils", "contains", "me/towdium/hecharacters/util/Match", "contains",
+                Transformer.transformInvoke(m, "org/apache/commons/lang3/StringUtils", "contains",
+                        "me/towdium/hecharacters/util/Match", "contains",
                         "(Ljava/lang/CharSequence;Ljava/lang/CharSequence;)Z",
                         false, Opcodes.INVOKESTATIC, null, null
                 )

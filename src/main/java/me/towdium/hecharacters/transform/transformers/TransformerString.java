@@ -32,7 +32,8 @@ public class TransformerString extends Transformer.Configurable {
     @Override
     protected void transform(MethodNode n) {
         Transformer.transformInvoke(
-                n, "java/lang/String", "contains", "me/towdium/hecharacters/util/Match", "contains",
+                n, "java/lang/String", "contains",
+                "me/towdium/hecharacters/util/Match", "contains",
                 "(Ljava/lang/String;Ljava/lang/CharSequence;)Z",
                 false, Opcodes.INVOKESTATIC, "(Ljava/lang/Object;)Z", "(Ljava/lang/String;)Z"
         );

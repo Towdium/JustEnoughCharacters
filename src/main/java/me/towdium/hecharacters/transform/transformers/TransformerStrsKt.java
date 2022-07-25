@@ -32,7 +32,8 @@ public class TransformerStrsKt extends Transformer.Configurable {
     @Override
     protected void transform(MethodNode n) {
         Transformer.transformInvoke(
-                n, "kotlin/text/StringsKt", "contains", "me/towdium/hecharacters/util/Match", "contains",
+                n, "kotlin/text/StringsKt", "contains",
+                "me/towdium/hecharacters/util/Match", "contains",
                 "(Ljava/lang/CharSequence;Ljava/lang/CharSequence;Z)Z",
                 false, Opcodes.INVOKESTATIC, null, null
         );

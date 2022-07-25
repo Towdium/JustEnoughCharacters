@@ -65,6 +65,24 @@ public class HechCommand extends CommandBase {
                     sender.sendMessage(new TextComponentTranslation("command.unknown"));
                     break;
             }
+        }else if (args.length == 2 && "keyboard".equals(args[0])) {
+            switch (args[1].toLowerCase()) {
+                case "quanpin":
+                    HechConfig.setKeyboard(HechConfig.Spell.QUANPIN);
+                    break;
+                case "daqian":
+                    HechConfig.setKeyboard(HechConfig.Spell.DAQIAN);
+                    break;
+                case "xiaohe":
+                    HechConfig.setKeyboard(HechConfig.Spell.XIAOHE);
+                    break;
+                case "ziranma":
+                    HechConfig.setKeyboard(HechConfig.Spell.ZIRANMA);
+                    break;
+                default:
+                    sender.sendMessage(new TextComponentTranslation("command.unknown"));
+                    break;
+            }
         } else {
             sender.sendMessage(new TextComponentTranslation("command.unknown"));
         }
@@ -74,9 +92,11 @@ public class HechCommand extends CommandBase {
     public List<String> getTabCompletions(
             MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos targetPos) {
         if (args.length == 1)
-            return getListOfStringsMatchingLastWord(args, "profile", "verbose");
+            return getListOfStringsMatchingLastWord(args, "profile", "verbose","keyboard");
         else if (args.length == 2 && args[0].equals("verbose"))
             return getListOfStringsMatchingLastWord(args, "true", "false");
+        else if (args.length == 2 && "keyboard".equals(args[0]))
+            return getListOfStringsMatchingLastWord(args, "quanpin", "daqian", "xiaohe", "ziranma");
         else
             return Collections.emptyList();
     }

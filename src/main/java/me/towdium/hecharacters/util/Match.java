@@ -89,13 +89,17 @@ public class Match {
     @SubscribeEvent
     public static void onConfigChange(ConfigChangedEvent.OnConfigChangedEvent event) {
         if (event.getModID().equals(HechCore.MODID)) {
-            context.config().keyboard(HechConfig.keyboard)
-                    .fAng2An(HechConfig.enableFuzzyAng2an).fEng2En(HechConfig.enableFuzzyEng2en)
-                    .fIng2In(HechConfig.enableFuzzyIng2in).fZh2Z(HechConfig.enableFuzzyZh2z)
-                    .fCh2C(HechConfig.enableFuzzyCh2c).fSh2S(HechConfig.enableFuzzySh2s)
-                    .fU2V(HechConfig.enableFuzzyU2v).commit();
-            searchers.forEach(TreeSearcher::refresh);
+            HechConfig.update();
         }
+    }
+
+    public static void onConfigChange(){
+        context.config().keyboard(HechConfig.keyboard.get())
+                .fAng2An(HechConfig.enableFuzzyAng2an).fEng2En(HechConfig.enableFuzzyEng2en)
+                .fIng2In(HechConfig.enableFuzzyIng2in).fZh2Z(HechConfig.enableFuzzyZh2z)
+                .fCh2C(HechConfig.enableFuzzyCh2c).fSh2S(HechConfig.enableFuzzySh2s)
+                .fU2V(HechConfig.enableFuzzyU2v).commit();
+        searchers.forEach(TreeSearcher::refresh);
     }
 
     @ParametersAreNonnullByDefault
