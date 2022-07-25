@@ -30,14 +30,20 @@ minecraft {
     replace '@VERSION@', project.version
 }
 
+configurations {
+    shade
+    compile.extendsFrom shade
+}
+
 dependencies {
     compile 'mezz.jei:jei_1.12.2:4.16.1.301'
+    shade files("libs/PinIn-1.5.0-all.jar")
     testCompile 'org.junit.jupiter:junit-jupiter-api:5.2.0'
 }
 
 repositories {
     mavenCentral()
-    maven { url = "http://dvs1.progwml6.com/files/maven" }
+    maven { url = "https://dvs1.progwml6.com/files/maven" }
     maven { url = "modmaven.k-4u.nl" }
 }
 
@@ -58,5 +64,10 @@ processResources {
 jar {
     manifest {
         attributes 'FMLCorePlugin': 'me.towdium.jecharacters.core.JechCore'
+    }
+    configurations.shade.each { dep ->
+        from(project.zipTree(dep)) {
+            include 'me/towdium/pinin/**'
+        }
     }
 }

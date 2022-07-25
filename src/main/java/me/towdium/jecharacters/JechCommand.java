@@ -2,7 +2,6 @@ package me.towdium.jecharacters;
 
 import com.google.gson.GsonBuilder;
 import mcp.MethodsReturnNonnullByDefault;
-import me.towdium.jecharacters.match.PinyinMatcher;
 import me.towdium.jecharacters.util.Profiler;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.command.CommandBase;
@@ -39,7 +38,7 @@ public class JechCommand extends CommandBase {
 
     @Override
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) {
-        if (args.length == 1 && args[0].equals("profile")) {
+        if (args.length == 1 && "profile".equals(args[0])) {
             Thread t = new Thread(() -> {
                 sender.sendMessage(new TextComponentString(I18n.format("chat.start")));
                 Profiler.Report r = Profiler.run();
@@ -54,13 +53,31 @@ public class JechCommand extends CommandBase {
             });
             t.setPriority(Thread.MIN_PRIORITY);
             t.start();
-        } else if (args.length == 2 && args[0].equals("verbose")) {
+        } else if (args.length == 2 && "verbose".equals(args[0])) {
             switch (args[1].toLowerCase()) {
                 case "true":
-                    PinyinMatcher.verbose = true;
+                    JechConfig.enableVerbose = true;
                     break;
                 case "false":
-                    PinyinMatcher.verbose = false;
+                    JechConfig.enableVerbose = false;
+                    break;
+                default:
+                    sender.sendMessage(new TextComponentTranslation("command.unknown"));
+                    break;
+            }
+        } else if (args.length == 2 && "keyboard".equals(args[0])) {
+            switch (args[1].toLowerCase()) {
+                case "quanpin":
+                    JechConfig.setKeyboard(JechConfig.Spell.QUANPIN);
+                    break;
+                case "daqian":
+                    JechConfig.setKeyboard(JechConfig.Spell.DAQIAN);
+                    break;
+                case "xiaohe":
+                    JechConfig.setKeyboard(JechConfig.Spell.XIAOHE);
+                    break;
+                case "ziranma":
+                    JechConfig.setKeyboard(JechConfig.Spell.ZIRANMA);
                     break;
                 default:
                     sender.sendMessage(new TextComponentTranslation("command.unknown"));
@@ -75,9 +92,11 @@ public class JechCommand extends CommandBase {
     public List<String> getTabCompletions(
             MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos targetPos) {
         if (args.length == 1)
-            return getListOfStringsMatchingLastWord(args, "profile", "verbose");
-        else if (args.length == 2 && args[0].equals("verbose"))
+            return getListOfStringsMatchingLastWord(args, "profile", "verbose", "keyboard");
+        else if (args.length == 2 && "verbose".equals(args[0]))
             return getListOfStringsMatchingLastWord(args, "true", "false");
+        else if (args.length == 2 && "keyboard".equals(args[0]))
+            return getListOfStringsMatchingLastWord(args, "quanpin", "daqian", "xiaohe", "ziranma");
         else
             return Collections.emptyList();
     }

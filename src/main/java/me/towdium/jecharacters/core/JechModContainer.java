@@ -5,7 +5,6 @@ import com.google.common.eventbus.Subscribe;
 import me.towdium.jecharacters.JechCommand;
 import me.towdium.jecharacters.JechConfig;
 import me.towdium.jecharacters.JechGuiFactory;
-import me.towdium.jecharacters.match.Keyboard;
 import net.minecraft.client.Minecraft;
 import net.minecraft.command.ICommand;
 import net.minecraft.entity.player.EntityPlayer;
@@ -95,7 +94,7 @@ public class JechModContainer extends DummyModContainer {
         public static void onPlayerLogin(EntityJoinWorldEvent event) {
             if (event.getEntity() instanceof EntityPlayer && event.getEntity().world.isRemote
                     && JechConfig.enableChatHelp && !messageSent
-                    && (JechConfig.keyboard == Keyboard.QUANPIN || !JechConfig.enableForceQuote)
+                    && (JechConfig.keyboard == JechConfig.Spell.QUANPIN || !JechConfig.enableForceQuote)
                     && Minecraft.getMinecraft().gameSettings.language.equals("zh_tw")) {
                 event.getEntity().sendMessage(new TextComponentTranslation("chat.taiwan"));
                 messageSent = true;
