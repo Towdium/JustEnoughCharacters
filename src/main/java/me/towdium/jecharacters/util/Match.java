@@ -89,6 +89,10 @@ public class Match {
         return contains(s1, s2);
     }
 
+    public static boolean matches(String s1, CharSequence cs) {
+        return matches(s1, cs.toString());
+    }
+
     @SubscribeEvent
     public static void onConfigChange() {
         context.config().keyboard(JechConfig.keyboard.get())
