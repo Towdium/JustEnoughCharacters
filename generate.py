@@ -6,9 +6,12 @@ suffix = [
     'net.minecraft.client.searchtree.ReloadableSearchTree:m_7729_()V',  # Vanilla
 ]
 contains = [
-    'com.blamejared.controlling.client.gui.GuiNewControls:lambda$filterKeys$11(Lcom/blamejared/controlling/client/gui/GuiNewKeyBindingList$KeyEntry;)Z',  # Controlling
-    'com.blamejared.controlling.client.gui.GuiNewControls:lambda$filterKeys$10(Lcom/blamejared/controlling/client/gui/GuiNewKeyBindingList$KeyEntry;)Z',  # Controlling
-    'com.blamejared.controlling.client.gui.GuiNewControls:lambda$filterKeys$9(Lcom/blamejared/controlling/client/gui/GuiNewKeyBindingList$KeyEntry;)Z',  # Controlling
+    'com.blamejared.controlling.client.NewKeyBindsScreen:lambda$filterKeys$10(Lcom/blamejared/controlling/client/NewKeyBindsList$KeyEntry;)Z',  # Controlling
+    'com.blamejared.controlling.client.NewKeyBindsScreen:lambda$filterKeys$8(Lcom/blamejared/controlling/client/NewKeyBindsList$KeyEntry;)Z',  # Controlling
+    'com.blamejared.controlling.client.NewKeyBindsScreen:lambda$filterKeys$9(Lcom/blamejared/controlling/client/NewKeyBindsList$KeyEntry;)Z', # Controlling
+    'com.blamejared.controlling.client.gui.GuiNewControls:lambda$filterKeys$11(Lcom/blamejared/controlling/client/gui/GuiNewKeyBindingList$KeyEntry;)Z',  # Controlling legacy
+    'com.blamejared.controlling.client.gui.GuiNewControls:lambda$filterKeys$10(Lcom/blamejared/controlling/client/gui/GuiNewKeyBindingList$KeyEntry;)Z',  # Controlling legacy
+    'com.blamejared.controlling.client.gui.GuiNewControls:lambda$filterKeys$9(Lcom/blamejared/controlling/client/gui/GuiNewKeyBindingList$KeyEntry;)Z',  # Controlling legacy
     'com.refinedmods.refinedstorage.screen.grid.filtering.ModGridFilter:test(Lcom/refinedmods/refinedstorage/screen/grid/stack/IGridStack;)Z',  # Refined Storage
     'com.refinedmods.refinedstorage.screen.grid.filtering.NameGridFilter:test(Lcom/refinedmods/refinedstorage/screen/grid/stack/IGridStack;)Z',  # Refined Storage
     'com.refinedmods.refinedstorage.screen.grid.filtering.TagGridFilter:lambda$test$0(Ljava/lang/String;)Z',  # Refined Storage
