@@ -31,8 +31,10 @@ function transInvoke(method, srcOwner, srcName, srcDesc, dstOwner, dstName, dstD
             n.desc = dstDesc
         } else if (n instanceof InsnDynamic && op === Ops.INVOKEDYNAMIC) {
             var h = n.bsmArgs[1];
-            if (h.getOwner() === srcOwner && h.getName() === srcName && h.getDesc() === srcDesc)
-                n.bsmArgs[1] = new Handle(Ops.H_INVOKESTATIC, dstOwner, dstName, dstDesc);
+            if (h instanceof Handle) {
+                if (h.getOwner() === srcOwner && h.getName() === srcName && h.getDesc() === srcDesc)
+                    n.bsmArgs[1] = new Handle(Ops.H_INVOKESTATIC, dstOwner, dstName, dstDesc);
+            }
         }
     }
 }
