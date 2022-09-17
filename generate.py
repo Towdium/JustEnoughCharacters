@@ -95,6 +95,8 @@ contains = [
     'com.minecolonies.coremod.client.gui.modules.ItemListModuleWindow:lambda$updateResources$3(Lnet/minecraft/world/item/ItemStack;)Z', # MineColonies
     'com.minecolonies.coremod.client.gui.WindowSelectRes:updateResources()V', # MineColonies
     'com.minecolonies.coremod.client.gui.modules.EntityListModuleWindow:lambda$updateResources$3(Lnet/minecraft/resources/ResourceLocation;)Z', # MineColonies
+    'me.desht.pneumaticcraft.api.crafting.recipe.AmadronRecipe:passesQuery(Ljava/lang/String;)Z', # PneumaticCraft Amadron
+    'me.desht.pneumaticcraft.client.gui.ItemSearcherScreen$SearchEntry:test(Ljava/lang/String;)Z', # PneumaticCraft Item Search Upgrade
 ]
 equals = [
     'vazkii.botania.api.corporea.CorporeaRequestDefaultMatchers$CorporeaStringMatcher:equalOrContain(Ljava/lang/String;)Z',  # Botania (Corporea)

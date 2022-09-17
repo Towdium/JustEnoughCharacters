@@ -101,7 +101,6 @@ public class JechCommand {
     }
 
     @SubscribeEvent
-    @SuppressWarnings("resource")
     public static void onCommand(ClientChatEvent event) {
         CommandSourceStack cs = getPlayer().createCommandSourceStack();
         String msg = event.getMessage();
