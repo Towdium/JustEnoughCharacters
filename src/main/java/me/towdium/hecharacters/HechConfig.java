@@ -306,7 +306,10 @@ public class HechConfig {
                             "com.latmod.mods.projectex.gui.GuiTableBase:updateValidItemList",  // Project EX
                             "amerifrance.guideapi.gui.GuiSearch:getMatches",  // Guide-API
                             "thaumcraft.client.gui.GuiResearchBrowser:updateSearch",  // Thaumcraft
-                            "astavie.thermallogistics.client.gui.GuiTerminalItem:updateFilter"  // Thermal Logistics
+                            "astavie.thermallogistics.client.gui.GuiTerminalItem:updateFilter",  // Thermal Logistics
+                            "com.the9grounds.aeadditions.gui.GuiTerminal:updateFluids", // AE Additions Terminal
+                            "com.the9grounds.aeadditions.gui.GuiStorage:updateFluids", // AE Additions Terminal
+                            "me.desht.pneumaticcraft.common.recipes.AmadronOffer:passesQuery" //PneumaticCraft Amadron
                     };
                 case LIST_DEFAULT_REGEXP:
                     return new String[]{
@@ -333,8 +336,12 @@ public class HechConfig {
                     return new String[]{
                             "net.minecraft.client.util.PinyinTree:<init>",  // vanilla search
                             "net.minecraft.client.util.PinyinTree:recalculate",  // vanilla search
+                            "net.minecraft.client.util.SearchTree:<init>", // vanilla search
+                            "net.minecraft.client.util.SearchTree:recalculate", // vanilla search
                             "cgw:<init>",  // vanilla search notch name
                             "cgw:a",  // vanilla search notch name
+                            "cgu:<init>", // vanilla search notch name
+                            "cgu:a", // va
                             "buildcraft.lib.client.guide.GuideManager:generateContentsPage"  // BuildCraft manual
                     };
                 case LIST_DEFAULT_STRSKT:

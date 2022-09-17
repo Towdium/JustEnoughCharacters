@@ -40,7 +40,7 @@ configurations {
 
 dependencies {
     deobfCompile 'curse.maven:had-enough-items-557549:3831825'
-    shade files("libs/PinIn-1.5.0-all.jar")
+    shade files("libs/PinIn-1.5.1-all.jar")
 
     testCompile 'org.junit.jupiter:junit-jupiter-api:5.2.0'
 }
