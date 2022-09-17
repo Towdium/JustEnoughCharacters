@@ -37,7 +37,7 @@ configurations {
 
 dependencies {
     compile 'mezz.jei:jei_1.12.2:4.16.1.301'
-    shade files("libs/PinIn-1.5.0-all.jar")
+    shade files("libs/PinIn-1.5.1-all.jar")
     testCompile 'org.junit.jupiter:junit-jupiter-api:5.2.0'
 }
 
