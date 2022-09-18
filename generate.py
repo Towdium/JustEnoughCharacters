@@ -55,8 +55,6 @@ contains = [
     'com.latmod.mods.projectex.gui.GuiTableBase:updateValidItemList()V',  # Project EX
     'net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen:m_98630_()V',  # Vanilla
     'net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen:m_98619_(Ljava/lang/String;)V',  # Vanilla
-    'amerifrance.guideapi.gui.GuiSearch:getMatches:(Lamerifrance.guideapi.api.impl.Book;Ljava.lang.String;Lnet.minecraft.entity.player.EntityPlayer;Lnet.minecraft.item.ItemStack;)Ljava.util.List;',  # Guide-API
-    'thaumcraft.client.gui.GuiResearchBrowser:updateSearch:()V',  # Thaumcraft
     'zuve.searchablechests.ChestEventHandler:stackMatches(Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z',  # Searchable Chests
     'mekanism.common.content.qio.SearchQueryParser$QueryType:lambda$null$5(Ljava/lang/String;Ljava/lang/String;)Z',  # Mekanism (QIO)
     'mekanism.common.content.qio.SearchQueryParser$QueryType:lambda$null$3(Ljava/lang/String;Ljava/lang/String;)Z',  # Mekanism (QIO)
@@ -82,7 +80,6 @@ contains = [
     'me.shedaniel.rei.impl.client.search.argument.type.TagArgumentType:matches([Ljava/lang/String;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z', # REI
     'me.shedaniel.rei.impl.client.search.argument.type.TextArgumentType:matches(Ljava/lang/String;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z', # REI
     'me.shedaniel.rei.impl.client.search.argument.type.TooltipArgumentType:matches(Ljava/lang/String;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z', # REI
-    'com.cout970.magneticraft.features.multiblocks.ContainerShelvingUnit$filterSlots$1:invoke:(Lnet.minecraft.item.ItemStack;Ljava.lang.String;)Z',  # Magneticraft
     'vazkii.quark.client.module.ChestSearchingModule:namesMatch(Lnet/minecraft/world/item/ItemStack;Ljava/lang/String;)Z',  # Quark legacy
     'vazkii.quark.content.client.module.ChestSearchingModule:namesMatch(Lnet/minecraft/world/item/ItemStack;Ljava/lang/String;)Z',  # Quark
     'me.shedaniel.clothconfig2.forge.gui.entries.DropdownBoxEntry$DefaultDropdownMenuElement:search()V',  # Cloth Config
@@ -91,12 +88,14 @@ contains = [
     'com.github.klikli_dev.occultism.client.gui.storage.StorageControllerGuiBase:itemMatchesSearch(Lnet/minecraft/world/item/ItemStack;)Z', # Occultism
     'com.github.klikli_dev.occultism.client.gui.storage.StorageControllerGuiBase:machineMatchesSearch(Lcom/github/klikli_dev/occultism/api/common/data/MachineReference;)Z', # Occultism,
     'pro.mikey.xray.gui.GuiSelectionScreen:lambda$updateSearch$7(Lpro/mikey/xray/utils/BlockData;)Z', #Advanced XRay Gui
+    'pro.mikey.xray.gui.manage.GuiBlockList:lambda$reloadBlocks$1(Lpro/mikey/xray/store/GameBlockStore$BlockWithItemStack;)Z', #Advanced XRay Gui
     'com.minecolonies.coremod.client.gui.WindowPostBox:lambda$updateResources$1(Lnet/minecraft/world/item/ItemStack;)Z', # MineColonies
     'com.minecolonies.coremod.client.gui.modules.ItemListModuleWindow:lambda$updateResources$3(Lnet/minecraft/world/item/ItemStack;)Z', # MineColonies
     'com.minecolonies.coremod.client.gui.WindowSelectRes:updateResources()V', # MineColonies
     'com.minecolonies.coremod.client.gui.modules.EntityListModuleWindow:lambda$updateResources$3(Lnet/minecraft/resources/ResourceLocation;)Z', # MineColonies
     'me.desht.pneumaticcraft.api.crafting.recipe.AmadronRecipe:passesQuery(Ljava/lang/String;)Z', # PneumaticCraft Amadron
     'me.desht.pneumaticcraft.client.gui.ItemSearcherScreen$SearchEntry:test(Ljava/lang/String;)Z', # PneumaticCraft Item Search Upgrade
+    'de.ellpeck.prettypipes.terminal.containers.ItemTerminalGui:lambda$updateWidgets$8(Ljava/lang/String;Lorg/apache/commons/lang3/tuple/Pair;)Z' # Pretty Pipes Terminal
 ]
 equals = [
     'vazkii.botania.api.corporea.CorporeaRequestDefaultMatchers$CorporeaStringMatcher:equalOrContain(Ljava/lang/String;)Z',  # Botania (Corporea)
@@ -123,7 +122,7 @@ regExp = [
     'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$getInstanceFilterPredicate$8(Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z',  # Integrated Terminals
     'com.tom.storagemod.gui.GuiStorageTerminalBase:updateSearch()V', # Toms Storage
     'appeng.client.gui.me.search.SearchPredicates:lambda$createNamePredicate$2(Ljava/util/regex/Pattern;Lappeng/menu/me/common/GridInventoryEntry;)Z', #new Applied Energistics Terminals
-    'appeng.client.gui.me.search.SearchPredicates:lambda$createTooltipPredicate$3(Lappeng/client/gui/me/search/RepoSearch;Ljava/util/regex/Pattern;Lappeng/menu/me/common/GridInventoryEntry;)Z',
+    'appeng.client.gui.me.search.SearchPredicates:lambda$createTooltipPredicate$3(Lappeng/client/gui/me/search/RepoSearch;Ljava/util/regex/Pattern;Lappeng/menu/me/common/GridInventoryEntry;)Z', #new Applied Energistics Terminals
 ]
 
 pattern = """// Generated
