@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "id": "jecharacters",
+  "version": "${version}",
+  "name": "Just Enough Characters",
+  "description": "Pinyin search for JEI and more.",
+  "authors": [
+    "Towdium,vfyjxf_"
+  ],
+  "contact": {
+    "homepage": "https://github.com/Towdium/JustEnoughCaracters",
+    "issues": "https://github.com/Towdium/JustEnoughCaracters/issues",
+    "sources": "https://github.com/Towdium/JustEnoughCaracters"
+  },
+  "license": "MIT License",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "me.towdium.jecharacters.JustEnoughCharacters"
+    ]
+  },
+  "mixins": [
+    "jecharacters.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.14.6",
+    "fabric": "*",
+    "minecraft": ">=1.16.5",
+    "java": ">=17"
+  }
+}

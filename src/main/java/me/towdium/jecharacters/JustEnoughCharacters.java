@@ -1,48 +1,32 @@
 package me.towdium.jecharacters;
 
 import me.towdium.jecharacters.utils.Greetings;
-import net.minecraft.MethodsReturnNonnullByDefault;
+import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.command.v1.ClientCommandManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TranslatableComponent;
-import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.event.entity.EntityJoinWorldEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLConstructModEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import javax.annotation.ParametersAreNonnullByDefault;
 
-import static me.towdium.jecharacters.JechConfig.Spell.QUANPIN;
-import static net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus.MOD;
-
-
-@Mod.EventBusSubscriber(bus = MOD)
-@MethodsReturnNonnullByDefault
-@ParametersAreNonnullByDefault
-@Mod(JustEnoughCharacters.MODID)
-public class JustEnoughCharacters {
+public class JustEnoughCharacters implements ClientModInitializer {
     public static final String MODID = "jecharacters";
     public static Logger logger = LogManager.getLogger(MODID);
     static boolean messageSent = false;
 
-    public JustEnoughCharacters() {
-        JechConfig.register();
-    }
-
-    @SubscribeEvent
-    public static void onConstruct(FMLConstructModEvent event) {
-        Greetings.send(logger, MODID);
-    }
-
-    @SuppressWarnings("resource")
     public static void printMessage(Component message) {
         Minecraft.getInstance().gui.getChat().addMessage(message);
     }
 
-    @Mod.EventBusSubscriber
+    @Override
+    public void onInitializeClient() {
+        Greetings.send(logger, MODID);
+        JechConfig.register();
+        JechConfig.loadConfig();
+        ClientCommandManager.DISPATCHER.register(JechCommand.builder);
+    }
+
+    /*
     static class EventHandler {
         @SubscribeEvent
         public static void onPlayerLogin(EntityJoinWorldEvent event) {
@@ -55,5 +39,7 @@ public class JustEnoughCharacters {
             }
         }
     }
+
+     */
 }
 
