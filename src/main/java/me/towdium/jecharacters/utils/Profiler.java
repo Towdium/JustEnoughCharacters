@@ -1,8 +1,8 @@
 package me.towdium.jecharacters.utils;
 
-import com.electronwill.nightconfig.core.Config;
-import com.electronwill.nightconfig.core.file.FileConfig;
-import com.google.gson.Gson;
+
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Handle;
 import org.objectweb.asm.Opcodes;
@@ -12,13 +12,11 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.zip.ZipFile;
 
-import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static me.towdium.jecharacters.JustEnoughCharacters.logger;
 
 /**
@@ -81,49 +79,31 @@ public class Profiler {
         return jcs;
     }
 
-    private static ModContainer[] readInfoOld(InputStream is) {
-        Gson gson = new Gson();
-        try {
-            return gson.fromJson(new InputStreamReader(is), ModContainer[].class);
-        } catch (Exception e) {
-            return new ModContainer[]{gson.fromJson(new InputStreamReader(is), ModContainer.class)};
+    private static ModContainer readInfoNew(InputStream is) {
+        JsonObject jsonObject = JsonParser.parseReader(new InputStreamReader(is, StandardCharsets.UTF_8)).getAsJsonObject();
+        if (jsonObject != null) {
+            ModContainer mc = new ModContainer();
+            mc.modid = jsonObject.has("id") ? jsonObject.get("id").getAsString() : "";
+            mc.name = jsonObject.has("name") ? jsonObject.get("name").getAsString() : "";
+            mc.version = jsonObject.has("version") ? jsonObject.get("version").getAsString() : "";
+            return mc;
         }
-    }
-
-    private static ModContainer[] readInfoNew(InputStream is) {
-        Path p = null;
         try {
-            p = Files.createTempFile("jecharacters", ".toml");
-            Files.copy(is, p, REPLACE_EXISTING);
-            FileConfig c = FileConfig.of(p);
-            c.load();
-            Collection<Config> mods = c.get("mods");
-            return mods.stream().map(i -> {
-                ModContainer mc = new ModContainer();
-                mc.modid = i.get("modId");
-                mc.name = i.get("displayName");
-                mc.version = i.get("version");
-                return mc;
-            }).toArray(ModContainer[]::new);
+            is.close();
         } catch (IOException e) {
             e.printStackTrace();
-            return null;
-        } finally {
-            if (p != null && !p.toFile().delete()) {
-                logger.info("Failed to delete temp file.");
-            }
         }
+        return null;
     }
 
     private static void scanJar(ZipFile f, Consumer<JarContainer> cbkJar) {
-        EnumMap<Type, Set<String>> methods = new EnumMap<>(Type.class);
-        for (Type t : Type.values()) methods.put(t, new TreeSet<>());
+        EnumMap<Type, Map<String, Boolean>> methods = new EnumMap<>(Type.class);
+        for (Type t : Type.values()) methods.put(t, new HashMap<>());
 
         JarContainer ret = new JarContainer();
         f.stream().forEach(entry -> {
             try (InputStream is = f.getInputStream(entry)) {
-                if (entry.getName().equals("META-INF/mods.toml")) ret.mods = readInfoNew(is);
-                else if (entry.getName().equals("mcmod.info")) ret.mods = readInfoOld(is);
+                if (entry.getName().equals("fabric.mod.json")) ret.mods = readInfoNew(is);
                 else if (entry.getName().endsWith(".class")) {
                     long size = entry.getSize() + 4;
                     if (size > Integer.MAX_VALUE) {
@@ -136,15 +116,15 @@ public class Profiler {
         });
 
         if (methods.values().stream().anyMatch(i -> !i.isEmpty())) {
-            ret.contains = new ArrayList<>(methods.get(Type.CONTAINS));
-            ret.regExp = new ArrayList<>(methods.get(Type.REGEXP));
-            ret.suffix = new ArrayList<>(methods.get(Type.SUFFIX));
-            ret.equals = new ArrayList<>(methods.get(Type.EQUALS));
+            ret.contains = methods.get(Type.CONTAINS);
+            ret.regExp = methods.get(Type.REGEXP);
+            ret.suffix = methods.get(Type.SUFFIX);
+            ret.equals = methods.get(Type.EQUALS);
             cbkJar.accept(ret);
         }
     }
 
-    private static void scanClass(InputStream is, EnumMap<Type, Set<String>> methods)
+    private static void scanClass(InputStream is, EnumMap<Type, Map<String, Boolean>> methods)
             throws IOException {
         ClassNode classNode = new ClassNode();
         ClassReader classReader = new ClassReader(is);
@@ -168,11 +148,11 @@ public class Profiler {
 
     @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
     private static class JarContainer {
-        ModContainer[] mods;
-        List<String> contains;
-        List<String> regExp;
-        List<String> suffix;
-        List<String> equals;
+        ModContainer mods;
+        Map<String, Boolean> contains;
+        Map<String, Boolean> regExp;
+        Map<String, Boolean> suffix;
+        Map<String, Boolean> equals;
     }
 
     @SuppressWarnings("unused")
@@ -190,9 +170,9 @@ public class Profiler {
         }
 
         public void analyze(AbstractInsnNode insn, ClassNode clazz, MethodNode method,
-                            EnumMap<Type, Set<String>> methods) {
+                            EnumMap<Type, Map<String, Boolean>> methods) {
             if (match(insn)) {
-                methods.get(type).add(clazz.name.replace('/', '.') + ":" + method.name + method.desc);
+                methods.get(type).put(clazz.name.replace('/', '.') + ":" + method.name + method.desc, (method.access & Opcodes.ACC_STATIC) != 0);
             }
         }
 

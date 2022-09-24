@@ -8,9 +8,6 @@ import me.towdium.pinin.searchers.TreeSearcher;
 import mezz.jei.core.search.suffixtree.GeneralizedSuffixTree;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.searchtree.SuffixArray;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.config.ModConfigEvent;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collections;
@@ -22,9 +19,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static me.towdium.pinin.searchers.Searcher.Logic.CONTAIN;
-import static net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus.MOD;
 
-@Mod.EventBusSubscriber(bus = MOD)
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class Match {
@@ -44,12 +39,12 @@ public class Match {
     }
 
     public static String wrap(String s) {
-        return JechConfig.enableQuote.get() ? '"' + s + '"' : s;
+        return JechConfig.enableQuote ? '"' + s + '"' : s;
     }
 
     public static boolean contains(String s, CharSequence cs) {
         boolean b = context.contains(s, cs.toString());
-        if (JechConfig.enableVerbose.get())
+        if (JechConfig.enableVerbose)
             JustEnoughCharacters.logger.info("contains(" + s + ',' + cs + ")->" + b);
         return b;
     }
@@ -61,7 +56,7 @@ public class Match {
 
     public static boolean equals(String s, Object o) {
         boolean b = o instanceof String && context.matches(s, (String) o);
-        if (JechConfig.enableVerbose.get())
+        if (JechConfig.enableVerbose)
             JustEnoughCharacters.logger.info("contains(" + s + ',' + o + ")->" + b);
         return b;
     }
@@ -88,17 +83,20 @@ public class Match {
         return contains(s1, s2);
     }
 
+    /*
     @SubscribeEvent
     public static void onConfigChange(ModConfigEvent e) {
         onConfigChange();
     }
 
+
+     */
     public static void onConfigChange() {
-        context.config().keyboard(JechConfig.enumKeyboard.get().keyboard)
-                .fAng2An(JechConfig.enableFAng2an.get()).fEng2En(JechConfig.enableFEng2en.get())
-                .fIng2In(JechConfig.enableFIng2in.get()).fZh2Z(JechConfig.enableFZh2z.get())
-                .fCh2C(JechConfig.enableFCh2c.get()).fSh2S(JechConfig.enableFSh2s.get())
-                .fU2V(JechConfig.enableFU2v.get()).commit();
+        context.config().keyboard(JechConfig.enumKeyboard.keyboard)
+                .fAng2An(JechConfig.enableFAng2an).fEng2En(JechConfig.enableFEng2en)
+                .fIng2In(JechConfig.enableFIng2in).fZh2Z(JechConfig.enableFZh2z)
+                .fCh2C(JechConfig.enableFCh2c).fSh2S(JechConfig.enableFSh2s)
+                .fU2V(JechConfig.enableFU2v).commit();
         searchers.forEach(TreeSearcher::refresh);
     }
 
@@ -108,7 +106,7 @@ public class Match {
 
         @Override
         public void getSearchResults(String word, Set<T> results) {
-            if (JechConfig.enableVerbose.get()) {
+            if (JechConfig.enableVerbose) {
                 JustEnoughCharacters.logger.info("FakeTree:search(" + word + ')');
             }
             results.addAll(tree.search(word));
@@ -116,7 +114,7 @@ public class Match {
 
         @Override
         public void put(String key, T value) {
-            if (JechConfig.enableVerbose.get()) {
+            if (JechConfig.enableVerbose) {
                 JustEnoughCharacters.logger.info("FakeTree:put(" + key + ',' + value + ')');
             }
             tree.put(key, value);
@@ -134,7 +132,7 @@ public class Match {
 
         @Override
         public void add(T v, String k) {
-            if (JechConfig.enableVerbose.get())
+            if (JechConfig.enableVerbose)
                 JustEnoughCharacters.logger.info("FakeArray:put(" + v + ',' + k + ')');
             tree.put(k, v);
         }
@@ -145,7 +143,7 @@ public class Match {
 
         @Override
         public List<T> search(String k) {
-            if (JechConfig.enableVerbose.get())
+            if (JechConfig.enableVerbose)
                 JustEnoughCharacters.logger.info("FakeArray:search(" + k + ')');
             return tree.search(k);
         }

@@ -1,0 +1,332 @@
+import java.nio.file.Files
+
+task generate {
+    new ClassGenerator().generate()
+}
+
+class ClassGenerator {
+
+    private static final String MIXIN_JSON_PATTERN =
+            "{\n" +
+            "  \"required\": false,\n" +
+            "  \"minVersion\": \"0.8\",\n" +
+            "  \"package\": \"me.towdium.jecharacters.mixins\",\n" +
+            "  \"compatibilityLevel\": \"JAVA_17\",\n" +
+            "  \"client\": [\n" +
+            "    MixinClasses\n" +
+            "  ]\n" +
+            "}"
+
+
+    private static final String MIXIN_SUFFIX_CLASS_PATTERN =
+            "package me.towdium.jecharacters.mixins;\n" +
+                    "\n" +
+                    "import me.towdium.jecharacters.utils.Match;\n" +
+                    "import net.minecraft.client.searchtree.SuffixArray;\n" +
+                    "import org.spongepowered.asm.mixin.Mixin;\n" +
+                    "import org.spongepowered.asm.mixin.Pseudo;\n" +
+                    "import org.spongepowered.asm.mixin.injection.At;\n" +
+                    "import org.spongepowered.asm.mixin.injection.Redirect;\n" +
+                    "\n" +
+                    "\n" +
+                    "@SuppressWarnings({\"UnresolvedMixinReference\",\"mapping\"})\n" +
+                    "@Pseudo\n" +
+                    "@Mixin(targets = \"targetClass\", remap = isRemap)\n" +
+                    "public class ClassName {\n" +
+                    "\n" +
+                    "    @Redirect(method = \"targetMethod\", at = @At(value = \"NEW\", target = \"net/minecraft/client/searchtree/SuffixArray\", remap = isRemap))\n" +
+                    "    private staticFlag SuffixArray redirectConstructor() {\n" +
+                    "        return new Match.FakeArray();\n" +
+                    "    }\n" +
+                    "\n" +
+                    "}"
+
+    private static final String MIXIN_CONTAINS_CLASS_PATTERN =
+            "package me.towdium.jecharacters.mixins;\n" +
+                    "\n" +
+                    "import me.towdium.jecharacters.utils.Match;\n" +
+                    "import org.spongepowered.asm.mixin.Mixin;\n" +
+                    "import org.spongepowered.asm.mixin.Pseudo;\n" +
+                    "import org.spongepowered.asm.mixin.injection.At;\n" +
+                    "import org.spongepowered.asm.mixin.injection.Redirect;\n" +
+                    "\n" +
+                    "\n" +
+                    "@SuppressWarnings({\"UnresolvedMixinReference\",\"mapping\"})\n" +
+                    "@Pseudo\n" +
+                    "@Mixin(targets = \"targetClass\", remap = isRemap)\n" +
+                    "public class ClassName {\n" +
+                    "\n" +
+                    "    @Redirect(method = \"targetMethod\", at = @At(value = \"INVOKE\", target = \"Ljava/lang/String;contains(Ljava/lang/CharSequence;)Z\", remap = isRemap))\n" +
+                    "    private staticFlag boolean redirectContains(String haystack, CharSequence needle) {\n" +
+                    "        return Match.contains(haystack, needle);\n" +
+                    "    }\n" +
+                    "\n" +
+                    "    @Redirect(method = \"targetMethod\", at = @At(value = \"INVOKE\", target = \"Lkotlin/text/StringsKt;contains(Ljava/lang/CharSequence;Ljava/lang/CharSequence;Z)Z\", remap = isRemap))\n" +
+                    "    private staticFlag boolean redirectContainsKt1(CharSequence haystack, CharSequence needle) {\n" +
+                    "        return Match.contains(haystack, needle);\n" +
+                    "    }\n" +
+                    "\n" +
+                    "    @Redirect(method = \"targetMethod\", at = @At(value = \"INVOKE\", target = \"Lkotlin/text/StringsKt;contains(Ljava/lang/CharSequence;Ljava/lang/CharSequence;)Z\", remap = isRemap))\n" +
+                    "    private staticFlag boolean redirectContainsKt2(CharSequence haystack, CharSequence needle) {\n" +
+                    "        return Match.contains(haystack, needle);\n" +
+                    "    }\n" +
+                    "\n" +
+                    "}"
+
+    private static final String MIXIN_EQUALS_CLASS_PATTERN =
+            "package me.towdium.jecharacters.mixins;\n" +
+                    "\n" +
+                    "import me.towdium.jecharacters.utils.Match;\n" +
+                    "import org.spongepowered.asm.mixin.Mixin;\n" +
+                    "import org.spongepowered.asm.mixin.Pseudo;\n" +
+                    "import org.spongepowered.asm.mixin.injection.At;\n" +
+                    "import org.spongepowered.asm.mixin.injection.Redirect;\n" +
+                    "\n" +
+                    "\n" +
+                    "@SuppressWarnings({\"UnresolvedMixinReference\",\"mapping\"})\n" +
+                    "@Pseudo\n" +
+                    "@Mixin(targets = \"targetClass\", remap = isRemap)\n" +
+                    "public class ClassName {\n" +
+                    "\n" +
+                    "    @Redirect(method = \"targetMethod\", at = @At(value = \"INVOKE\", target = \"Ljava/lang/String;equals(Ljava/lang/Object;)Z\", remap = isRemap))\n" +
+                    "    private staticFlag boolean redirectEquals(String string, Object object) {\n" +
+                    "        return Match.equals(string, object);\n" +
+                    "    }\n" +
+                    "\n" +
+                    "}"
+
+    private static final String MIXIN_REGEXP_CLASS_PATTERN =
+            "package me.towdium.jecharacters.mixins;\n" +
+                    "\n" +
+                    "import me.towdium.jecharacters.utils.Match;\n" +
+                    "import org.spongepowered.asm.mixin.Mixin;\n" +
+                    "import org.spongepowered.asm.mixin.Pseudo;\n" +
+                    "import org.spongepowered.asm.mixin.injection.At;\n" +
+                    "import org.spongepowered.asm.mixin.injection.Redirect;\n" +
+                    "\n" +
+                    "import java.util.regex.Matcher;\n" +
+                    "import java.util.regex.Pattern;\n" +
+                    "\n" +
+                    "\n" +
+                    "@SuppressWarnings({\"UnresolvedMixinReference\",\"mapping\"})\n" +
+                    "@Pseudo\n" +
+                    "@Mixin(targets = \"targetClass\", remap = isRemap)\n" +
+                    "public class ClassName {\n" +
+                    "\n" +
+                    "    @Redirect(method = \"targetMethod\", at = @At(value = \"INVOKE\", target = \"Ljava/util/regex/Pattern;matcher(Ljava/lang/CharSequence;)Ljava/util/regex/Matcher;\", remap = isRemap))\n" +
+                    "    private staticFlag Matcher redirectRegx(Pattern pattern, CharSequence sequence) {\n" +
+                    "        return Match.matcher(pattern, sequence);\n" +
+                    "    }\n" +
+                    "\n" +
+                    "    @Redirect(method = \"targetMethod\", at = @At(value = \"INVOKE\", target = \"Ljava/lang/String;matches(Ljava/lang/String;)Z\", remap = isRemap))\n" +
+                    "    private staticFlag boolean redirectRegx(String s1, String s2) {\n" +
+                    "        return Match.matches(s1, s2);\n" +
+                    "    }\n" +
+                    "\n" +
+                    "}"
+
+
+    private final String[] manual = new String[]{
+            'manual.MixinJeiSearch'
+    }
+
+    private final Map<String, Boolean> suffix = new HashMap<>()
+
+    private final Map<String, Boolean> contains = new HashMap()
+
+    private final Map<String, Boolean> equals = new HashMap<>()
+
+    private final Map<String, Boolean> regExp = new HashMap<>()
+
+    private final List<String> mixinClasses = new ArrayList<>()
+
+
+    ClassGenerator(){
+
+        //suffix
+        suffix.put('net.minecraft.client.searchtree.ReloadableIdSearchTree:refresh()V', false)  // Vanilla
+        suffix.put('net.minecraft.client.searchtree.ReloadableSearchTree:refresh()V', false)  // Vanilla
+
+        //contains
+        contains.put('com.blamejared.controlling.client.gui.GuiNewControls:lambda$filterKeys$11(Lcom/blamejared/controlling/client/gui/GuiNewKeyBindingList$KeyEntry;)Z', false)  // Controlling
+        contains.put('com.blamejared.controlling.client.gui.GuiNewControls:lambda$filterKeys$10(Lcom/blamejared/controlling/client/gui/GuiNewKeyBindingList$KeyEntry;)Z', false)  // Controlling
+        contains.put('com.blamejared.controlling.client.gui.GuiNewControls:lambda$filterKeys$9(Lcom/blamejared/controlling/client/gui/GuiNewKeyBindingList$KeyEntry;)Z', false)  // Controlling
+        contains.put('com.refinedmods.refinedstorage.screen.grid.filtering.ModGridFilter:test(Lcom/refinedmods/refinedstorage/screen/grid/stack/IGridStack;)Z', false)  // Refined Storage
+        contains.put('com.refinedmods.refinedstorage.screen.grid.filtering.NameGridFilter:test(Lcom/refinedmods/refinedstorage/screen/grid/stack/IGridStack;)Z', false)  // Refined Storage
+        contains.put('com.refinedmods.refinedstorage.screen.grid.filtering.TagGridFilter:lambda$test$0(Ljava/lang/String;)Z', false)  // Refined Storage
+        contains.put('com.refinedmods.refinedstorage.screen.grid.filtering.TooltipGridFilter:test(Lcom/refinedmods/refinedstorage/screen/grid/stack/IGridStack;)Z', false)  // Refined Storage
+        contains.put('de.ellpeck.actuallyadditions.mod.booklet.entry.BookletEntry:fitsFilter(Lde/ellpeck/actuallyadditions/api/booklet/IBookletPage;Ljava/lang/String;)Z', false)  // Actually Additions
+        contains.put('de.ellpeck.actuallyadditions.mod.booklet.entry.BookletEntry:getChaptersForDisplay(Ljava/lang/String;)Ljava/util/List;', false)  // Actually Additions
+        contains.put('appeng.client.gui.me.interfaceterminal.InterfaceTerminalScreen:refreshList()V', false)  // Applied Energistics
+        contains.put('appeng.client.gui.me.interfaceterminal.InterfaceTerminalScreen:itemStackMatchesSearchTerm(Lnet/minecraft/class_1799;Ljava/lang/String;)Z', false)  // Applied Energistics
+        contains.put('me.towdium.jecalculation.utils.Utilities$I18n:contains(Ljava/lang/String;Ljava/lang/String;)Z', false)  // Just Enough Calculation
+        contains.put('sonar.logistics.core.tiles.readers.fluids.GuiFluidReader:getGridList()Ljava/util/List;', false)  // Practical Logistics
+        contains.put('sonar.logistics.core.tiles.readers.items.GuiInventoryReader:getGridList()Ljava/util/List;', false)  // Practical Logistics
+        contains.put('sonar.logistics.core.items.wirelessstoragereader.GuiWirelessStorageReader:getGridList()Ljava/util/List;', false)  // Practical Logistics
+        contains.put('sonar.logistics.core.items.guide.GuiGuide:updateSearchList()V', false)  // Practical Logistics
+        contains.put('binnie.core.machines.storage.SearchDialog:updateSearch()V', false)  // Binnie Core
+        contains.put('vazkii.patchouli.client.book.BookEntry:isFoundByQuery(Ljava/lang/String;)Z', false)  // Patchouli (Botania)
+        contains.put('vazkii.botania.api.corporea.CorporeaRequestDefaultMatchers$CorporeaStringMatcher:equalOrContain(Ljava/lang/String;)Z', false)  // Botania (Corporea)
+        contains.put('net.blay09.mods.cookingforblockheads.container.RecipeBookContainer:search(Ljava/lang/String;)V', false)  // Cooking for Blockheads
+        contains.put('net.blay09.mods.farmingforblockheads.container.MarketClientContainer:applyFilters()V', false)  // Farming for Blockheads
+        contains.put('mcjty.rftools.blocks.shaper.LocatorTileEntity:checkFilter(Ljava/lang/String;Lnet/minecraft/entity/Entity;)Z', false)  // RF Tools
+        contains.put('mcjty.rftoolsstorage.modules.scanner.blocks.StorageScannerTileEntity:lambda$makeSearchPredicate$30(Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z', false)  // RF Tools
+        contains.put('mcjty.rftoolsstorage.modules.modularstorage.client.GuiModularStorage:lambda$updateList$6(Ljava/lang/String;Ljava/util/List;Ljava/util/concurrent/atomic/AtomicInteger;Lnet/minecraftforge/items/IItemHandler;)V', false)  // RF Tools
+        contains.put('mcjty.rftools.items.netmonitor.GuiNetworkMonitor:populateList()V', false)  // RF Tools
+        contains.put('moze_intel.projecte.gameObjs.container.inventory.TransmutationInventory:doesItemMatchFilter(Lmoze_intel/projecte/api/ItemInfo;)Z', false)  // Project E
+        contains.put('org.cyclops.integrateddynamics.core.client.gui.WidgetTextFieldDropdown:refreshDropdownList()V', false)  // Integrated Dynamics
+        contains.put('blusunrize.immersiveengineering.api.ManualPageBlueprint:listForSearch(Ljava/lang/String;)Z', false)  // Immersive Engineering
+        contains.put('blusunrize.lib.manual.ManualPages$Crafting:listForSearch(Ljava/lang/String;)Z', false)  // Immersive Engineering
+        contains.put('blusunrize.lib.manual.ManualPages$CraftingMulti:listForSearch(Ljava/lang/String;)Z', false)  // Immersive Engineering
+        contains.put('blusunrize.lib.manual.ManualPages$ItemDisplay:listForSearch(Ljava/lang/String;)Z', false)  // Immersive Engineering
+        contains.put('blusunrize.lib.manual.gui.GuiManual:func_73869_a(CI)V', false)  // Immersive Engineering
+        contains.put('com.mia.props.client.container.GuiDecobench:refreshButtons()V', false)  // Decofraft workbench
+        contains.put('logisticspipes.gui.orderer.GuiOrderer:isSearched(Ljava/lang/String;Ljava/lang/String;)Z', false)  // Logistics Pipes
+        contains.put('logisticspipes.gui.orderer.GuiRequestTable:isSearched(Ljava/lang/String;Ljava/lang/String;)Z', false)  // Logistics Pipes
+        contains.put('com.lothrazar.storagenetwork.api.util.UtilInventory:doOverlap(Ljava/lang/String;Ljava/lang/String;)Z', false)  // Simple Storage Network legacy
+        contains.put('com.lothrazar.storagenetwork.gui.NetworkWidget:doesStackMatchSearch(Lnet/minecraft/world/item/ItemStack;)Z', false) // Simple Storage Network
+        contains.put('com.latmod.mods.projectex.gui.GuiTableBase:updateValidItemList()V', false)  // Project EX
+        contains.put('net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen:m_98630_()V', false)  // Vanilla
+        contains.put('net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen:m_98619_(Ljava/lang/String;)V', false)  // Vanilla
+        contains.put('zuve.searchablechests.ChestEventHandler:stackMatches(Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z', false)  // Searchable Chests
+        contains.put('mekanism.common.content.qio.SearchQueryParser$QueryType:lambda$null$5(Ljava/lang/String;Ljava/lang/String;)Z', false)  // Mekanism (QIO)
+        contains.put('mekanism.common.content.qio.SearchQueryParser$QueryType:lambda$null$3(Ljava/lang/String;Ljava/lang/String;)Z', false)  // Mekanism (QIO)
+        contains.put('mekanism.common.content.qio.SearchQueryParser$QueryType:lambda$static$1(Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z', false)  // Mekanism (QIO)
+        contains.put('mekanism.common.content.qio.SearchQueryParser$QueryType:lambda$static$0(Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z', false)  // Mekanism (QIO)
+        contains.put('hellfirepvp.astralsorcery.client.screen.journal.ScreenJournalPerkTree:updateSearchHighlight()V', false)  //Astral Sorcery
+        contains.put('hellfirepvp.astralsorcery.client.screen.journal.ScreenJournalProgression:onSearchTextInput()V', false)  //Astral Sorcery
+        contains.put('com.ma.guide.GuideBookEntries:lambda$null$4(Lnet/minecraft/client/Minecraft;Ljava/lang/String;Ljava/util/HashMap;Lcom/ma/guide/RelatedRecipe;)V', false)  //Mana and Artifice
+        contains.put('com.ma.guide.GuideBookEntries:lambda$null$1(Ljava/lang/String;Lcom/ma/guide/interfaces/IEntrySection;)Z', false)  //Mana and Artifice
+        contains.put('com.minecolonies.coremod.client.gui.WindowHutAllInventory:lambda$updateResources$1(Lcom/minecolonies/api/crafting/ItemStorage;)Z', false)  //MineColonies
+        contains.put('com.minecolonies.coremod.client.gui.WindowPostBox:lambda$updateResources$0(Lnet/minecraft/world/item/ItemStack;)Z', false)  //MineColonies
+        contains.put('com.minecolonies.coremod.client.gui.ItemListModuleWindow:lambda$updateResources$2(Lnet/minecraft/world/item/ItemStack;)Z', false)  //MineColonies
+        contains.put('com.minecolonies.coremod.client.gui.WindowSelectRes:lambda$updateResources$0(Lnet/minecraft/world/item/ItemStack;)Z', false)  //MineColonies
+        contains.put('com.chaosthedude.naturescompass.gui.NaturesCompassScreen:processSearchTerm()V', false)  //Nature"s Compass
+        contains.put('com.hollingsworth.arsnouveau.client.gui.book.GuiSpellBook:onSearchChanged(Ljava/lang/String;)V', false)  //Ars Nouveau
+        contains.put('me.shedaniel.rei.impl.client.search.argument.type.TagArgumentType:matches(Lorg/apache/commons/lang3/mutable/Mutable;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z', false)  // REI legacy
+        contains.put('me.shedaniel.rei.impl.client.search.argument.type.IdentifierArgumentType:matches(Lorg/apache/commons/lang3/mutable/Mutable;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z', false)  // REI legacy
+        contains.put('me.shedaniel.rei.impl.client.search.argument.type.ModArgumentType:matches(Lorg/apache/commons/lang3/mutable/Mutable;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z', false)  // REI legacy
+        contains.put('me.shedaniel.rei.impl.client.search.argument.type.TooltipArgumentType:matches(Lorg/apache/commons/lang3/mutable/Mutable;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z', false)  // REI legacy
+        contains.put('me.shedaniel.rei.impl.client.search.argument.type.TextArgumentType:matches(Lorg/apache/commons/lang3/mutable/Mutable;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z', false)  // REI legacy
+        contains.put('me.shedaniel.rei.impl.client.search.argument.type.IdentifierArgumentType:matches(Ljava/lang/String;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z', false) // REI
+        contains.put('me.shedaniel.rei.impl.client.search.argument.type.ModArgumentType:matches(Lme/shedaniel/rei/impl/client/search/argument/type/ModArgumentType$ModInfoPair;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z', false) // REI
+        contains.put('me.shedaniel.rei.impl.client.search.argument.type.TagArgumentType:matches([Ljava/lang/String;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z', false) // REI
+        contains.put('me.shedaniel.rei.impl.client.search.argument.type.TextArgumentType:matches(Ljava/lang/String;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z', false) // REI
+        contains.put('me.shedaniel.rei.impl.client.search.argument.type.TooltipArgumentType:matches(Ljava/lang/String;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z', false) // REI
+        contains.put('vazkii.quark.client.module.ChestSearchingModule:namesMatch(Lnet/minecraft/world/item/ItemStack;Ljava/lang/String;)Z', false)  // Quark legacy
+        contains.put('vazkii.quark.content.client.module.ChestSearchingModule:namesMatch(Lnet/minecraft/world/item/ItemStack;Ljava/lang/String;)Z', false)  // Quark
+        contains.put('me.shedaniel.clothconfig2.forge.gui.entries.DropdownBoxEntry$DefaultDropdownMenuElement:search()V', false)  // Cloth Config
+        contains.put('me.shedaniel.clothconfig2.gui.entries.DropdownBoxEntry$DefaultDropdownMenuElement:search()V', false)  // Cloth Config
+        contains.put('mezz.jei.search.ElementSearchLowMem:matches(Ljava/lang/String;Lmezz/jei/core/search/PrefixInfo;Lmezz/jei/ingredients/IListElementInfo;)Z', false)  // JEI (low memory)
+        contains.put('com.github.klikli_dev.occultism.client.gui.storage.StorageControllerGuiBase:itemMatchesSearch(Lnet/minecraft/world/item/ItemStack;)Z', false) // Occultism
+        contains.put('com.github.klikli_dev.occultism.client.gui.storage.StorageControllerGuiBase:machineMatchesSearch(Lcom/github/klikli_dev/occultism/api/common/data/MachineReference;)Z', false) // Occultism
+        contains.put('dev.emi.emi.search.NameQuery:matches(Ldev/emi/emi/api/stack/EmiStack;)Z', false) //EMI text search
+        contains.put('dev.emi.emi.search.TooltipQuery:matches(Ldev/emi/emi/api/stack/EmiStack;)Z', false) //EMI text search
+
+        //equals
+        equals.put('vazkii.botania.api.corporea.CorporeaRequestDefaultMatchers$CorporeaStringMatcher:equalOrContain(Ljava/lang/String;)Z', false)  // Botania (Corporea)
+        equals.put('vazkii.quark.client.module.ChestSearchingModule:namesMatch(Lnet/minecraft/world/item/ItemStack;Ljava/lang/String;)Z', false)  // Quark legacy
+        equals.put('vazkii.quark.content.client.module.ChestSearchingModule:namesMatch(Lnet/minecraft/world/item/ItemStack;Ljava/lang/String;)Z', false)  // Quark
+        equals.put('org.cyclops.integrateddynamics.core.client.gui.WidgetTextFieldDropdown:lambda$refreshDropdownList$0(Lorg/cyclops/integrateddynamics/core/client/gui/IDropdownEntry;)Z', false)  // Integrated Dynamics
+
+        //Regexp
+        regExp.put('appeng.client.gui.me.fluids.FluidRepo:matchesSearch(Lappeng/client/gui/me/common/Repo$SearchMode;Ljava/util/regex/Pattern;Lappeng/api/storage/data/IAEFluidStack;)Z', false)  // Applied Energistics
+        regExp.put('appeng.client.gui.me.items.ItemRepo:matchesSearch(Lappeng/client/gui/me/common/Repo$SearchMode;Ljava/util/regex/Pattern;Lappeng/api/storage/data/IAEItemStack;)Z', false)  // Applied Energistics
+        regExp.put('org.cyclops.integrateddynamics.inventory.container.ContainerLogicProgrammerBase:lambda$static$0(Lorg/cyclops/integrateddynamics/api/logicprogrammer/ILogicProgrammerElement;Ljava/util/regex/Pattern;)Z', false)  // Integrated Dynamics 1
+        regExp.put('org.cyclops.integrateddynamics.core.inventory.container.ContainerMultipartAspects:lambda$new$0(Lorg/cyclops/integrateddynamics/api/part/aspect/IAspect;Ljava/util/regex/Pattern;)Z', false)  // Integrated Dynamics 2
+        regExp.put('org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerFluidStack:lambda$getInstanceFilterPredicate$13(Ljava/lang/String;Lnet/minecraftforge/fluids/FluidStack;)Z', false)  // Integrated Terminals
+        regExp.put('org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerFluidStack:lambda$getInstanceFilterPredicate$8(Ljava/lang/String;Lnet/minecraftforge/fluids/FluidStack;)Z', false)  // Integrated Terminals
+        regExp.put('org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerFluidStack:lambda$null$10(Ljava/lang/String;Lnet/minecraft/util/ResourceLocation;)Z', false)  // Integrated Terminals
+        regExp.put('org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$getInstanceFilterPredicate$1(Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z', false)  // Integrated Terminals
+        regExp.put('org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$getInstanceFilterPredicate$7(Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z', false)  // Integrated Terminals
+        regExp.put('org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$null$2(Ljava/lang/String;Lnet/minecraft/util/text/ITextComponent;)Z', false)  // Integrated Terminals
+        regExp.put('org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$null$4(Ljava/lang/String;Lnet/minecraft/util/ResourceLocation;)Z', false)  // Integrated Terminals
+        regExp.put('com.tom.storagemod.gui.GuiStorageTerminalBase:updateSearch()V', false) // Toms Storage
+        regExp.put('appeng.client.gui.me.search.SearchPredicates:lambda$createNamePredicate$2(Ljava/util/regex/Pattern;Lappeng/menu/me/common/GridInventoryEntry;)Z', true) //new Applied Energistics Terminals
+        regExp.put('appeng.client.gui.me.search.SearchPredicates:lambda$createTooltipPredicate$3(Lappeng/client/gui/me/search/RepoSearch;Ljava/util/regex/Pattern;Lappeng/menu/me/common/GridInventoryEntry;)Z', true) //new Applied Energistics Terminals
+        regExp.put('dev.emi.emi.search.RegexNameQuery:matches(Ldev/emi/emi/api/stack/EmiStack;)Z', false) //EMI regex search
+        regExp.put('dev.emi.emi.search.RegexTooltipQuery:matches(Ldev/emi/emi/api/stack/EmiStack;)Z', false) //EMI regex search
+
+    }
+
+    void generate() {
+
+        cleanOldClasses()
+
+        generateClasses(MIXIN_SUFFIX_CLASS_PATTERN, "_SuffixMixin", suffix)
+        generateClasses(MIXIN_CONTAINS_CLASS_PATTERN, "_ContainsMixin", contains)
+        generateClasses(MIXIN_EQUALS_CLASS_PATTERN, "_EqualsMixin", equals)
+        generateClasses(MIXIN_REGEXP_CLASS_PATTERN, "_RegexMixin", regExp)
+
+        mixinClasses.addAll(manual)
+
+        StringBuilder classes = new StringBuilder()
+        for (String mixinClass : mixinClasses) {
+            classes.append("\"")
+                    .append(mixinClass)
+                    .append("\"")
+                    .append(",")
+                    .append("\n")
+                    .append("    ")
+        }
+        classes.delete(classes.length() - 6, classes.length())
+        String jsonString = MIXIN_JSON_PATTERN.replace("MixinClasses", classes)
+        try {
+            File jsonFile = new File("src/main/resources/jecharacters.mixins.json")
+
+            try (FileWriter writer = new FileWriter(jsonFile)) {
+                writer.write(jsonString)
+            } catch (IOException ignored) {
+                println("Can't write to File : " + jsonFile.getPath())
+            }
+        } catch (FileNotFoundException ignored) {
+            println("Can't find mixin config file!")
+        }
+
+    }
+
+
+    private void cleanOldClasses() {
+        File mixinsDir = new File("src/main/java/me/towdium/jecharacters/mixins")
+        for (File file : mixinsDir.listFiles()){
+            if (file.getName().startsWith('_')){
+                if (!file.delete()){
+                    println("Can't remove generated class : " + file.getName())
+                }
+            }
+        }
+    }
+
+    private void generateClasses(String pattern, String basedName, Map<String,Boolean> methods) {
+        int index = 0
+        for (Map.Entry<String, Boolean> methodEntry : methods.entrySet()) {
+            String[] decode = decodeMethod(methodEntry.getKey())
+            if (decode.length == 2) {
+                String className = basedName + index
+                boolean isRemap = methodEntry.getKey().contains("net.minecraft")
+                File classFile = new File("src/main/java/me/towdium/jecharacters/mixins/" + className + ".java")
+                String targetMethod = decode[1]
+                String realClassCode = pattern.replace("targetClass", decode[0])
+                        .replace("targetMethod", targetMethod)
+                        .replace("ClassName", className)
+                        .replace("isRemap", Boolean.toString(isRemap))
+                        .replace("staticFlag", methodEntry.getValue() ? "static" : "")
+                try (FileWriter writer = new FileWriter(classFile)) {
+                    writer.write(realClassCode)
+                    mixinClasses.add(className)
+                    index++
+                } catch (IOException ignored) {
+                    println("Can't write File : " + classFile.getPath())
+                }
+            } else {
+                println("Invalid config syntax: " + methodEntry.getKey())
+            }
+        }
+
+    }
+
+    static String[] decodeMethod(String method) {
+        return method.split(":")
+    }
+
+}

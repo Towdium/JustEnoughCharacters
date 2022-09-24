@@ -1,20 +1,13 @@
-buildscript {
-    repositories {
-        maven { url = 'https://maven.minecraftforge.net' }
-        mavenCentral()
-    }
-    dependencies {
-        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1.+', changing: true
-    }
+plugins {
+    id 'fabric-loom' version '0.12-SNAPSHOT'
 }
-apply plugin: 'net.minecraftforge.gradle'
-apply plugin: 'eclipse'
 
 version = "1.18.2-${verspec}.${verbuild}"
 group = "me.towdium.jecharacters"
-archivesBaseName = "jecharacters"
+archivesBaseName = "jecharacters-fabric"
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+sourceCompatibility = JavaVersion.VERSION_17
+targetCompatibility = JavaVersion.VERSION_17
 
 repositories {
     mavenCentral()
@@ -27,104 +20,57 @@ configurations {
     implementation.extendsFrom shade
 }
 
-minecraft {
-    mappings channel: 'official', version: '1.18.2'
-    runs {
-        client {
-            workingDirectory project.file('run')
-            property 'forge.logging.console.level', 'debug'
-            mods {
-                jecharacters {
-                    source sourceSets.main
-                }
-            }
-        }
+dependencies {
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    mappings(loom.layered() {
+        officialMojangMappings()
+        parchment("org.parchmentmc.data:parchment-${minecraft_version}:${parchment_mappings}@zip")
+    })
 
-        server {
-            workingDirectory project.file('run')
-            property 'forge.logging.console.level', 'debug'
-            mods {
-                jecharacters {
-                    source sourceSets.main
-                }
-            }
-        }
 
-        data {
-            workingDirectory project.file('run')
-            property 'forge.logging.console.level', 'debug'
-            args '--mod', 'jecharacters', '--all', '--output', file('src/generated/resources/')
-            mods {
-                jecharacters {
-                    source sourceSets.main
-                }
-            }
-        }
+    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+    modImplementation "com.github.Towdium:PinIn:${verpinin}"
+    include "com.github.Towdium:PinIn:${verpinin}"
+
+    modImplementation "mezz.jei:jei-${minecraft_version}-fabric:${jei_version}"
+}
+
+processResources {
+    inputs.property "version", project.version
+
+    filesMatching("fabric.mod.json") {
+        expand "version": project.version
     }
 }
 
+tasks.withType(JavaCompile).configureEach {
+    it.options.release = 17
+}
+
+java {
+    withSourcesJar()
+}
+
+
+/*
 minecraft.runs.all {
     lazyToken('minecraft_classpath') {
         configurations.shade.copyRecursive().resolve().collect { it.absolutePath }.join(File.pathSeparator)
     }
 }
 
-dependencies {
-    minecraft 'net.minecraftforge:forge:1.18.2-40.1.0'
-    compileOnly fg.deobf('mezz.jei:jei-1.18.2:9.7.0.195')
-    runtimeOnly fg.deobf('mezz.jei:jei-1.18.2:9.7.0.195')
-    shade(group: 'com.github.towdium', name: 'pinin', version: "${verpinin}") {
-        transitive = false
-    }
-}
+ */
 
 test {
     useJUnitPlatform()
-}
-
-jar {
-    manifest {
-        attributes([
-                "Specification-Title": 'Just Enough Characters',
-                "Specification-Vendor": 'Towdium',
-                "Specification-Version": "${verspec}",
-                "Implementation-Title": project.name,
-                "Implementation-Version": "${verspec}.${verbuild}",
-                "Implementation-Vendor" : 'Towdium',
-                "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
-        ])
-    }
-
-    configurations.shade.each { dep ->
-        from(project.zipTree(dep)){
-            include 'me/towdium/pinin/**'
-        }
-    }
 }
 
 tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'
 }
 
-task generate(type:Exec) {
-    commandLine 'python', 'generate.py'
-}
+apply from : 'generate.gradle'
 
 compileJava.dependsOn generate
-
-task replaceResources(type: Copy) {
-    outputs.upToDateWhen { false }
-    from(sourceSets.main.resources.srcDirs) {
-        include 'META-INF/mods.toml'
-        expand 'version': version
-    }
-    into "$buildDir/resources/main/"
-}
-
-processResources {
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    from(sourceSets.main.resources.srcDirs) {
-        exclude 'META-INF/mods.toml'
-    }
-    finalizedBy replaceResources
-}
