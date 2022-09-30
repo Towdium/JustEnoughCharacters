@@ -2,7 +2,7 @@ plugins {
     id 'fabric-loom' version '0.12-SNAPSHOT'
 }
 
-version = "1.18.2-${verspec}.${verbuild}"
+version = "${minecraft_version}-${verspec}.${verbuild}"
 group = "me.towdium.jecharacters"
 archivesBaseName = "jecharacters-fabric"
 

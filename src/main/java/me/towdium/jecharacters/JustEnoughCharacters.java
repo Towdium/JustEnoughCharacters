@@ -2,7 +2,7 @@ package me.towdium.jecharacters;
 
 import me.towdium.jecharacters.utils.Greetings;
 import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.fabric.api.client.command.v1.ClientCommandManager;
+import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
@@ -23,7 +23,7 @@ public class JustEnoughCharacters implements ClientModInitializer {
         Greetings.send(logger, MODID);
         JechConfig.register();
         JechConfig.loadConfig();
-        ClientCommandManager.DISPATCHER.register(JechCommand.builder);
+        ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> dispatcher.register(JechCommand.builder));
     }
 
     /*

@@ -1,5 +1,3 @@
-import java.nio.file.Files
-
 task generate {
     new ClassGenerator().generate()
 }
@@ -127,7 +125,8 @@ class ClassGenerator {
 
 
     private final String[] manual = new String[]{
-            'manual.MixinJeiSearch'
+            'MixinJeiSearch',
+            'MixinVanillaPlainTextSearch'
     }
 
     private final Map<String, Boolean> suffix = new HashMap<>()
@@ -142,10 +141,10 @@ class ClassGenerator {
 
 
     ClassGenerator(){
-
         //suffix
-        suffix.put('net.minecraft.client.searchtree.ReloadableIdSearchTree:refresh()V', false)  // Vanilla
-        suffix.put('net.minecraft.client.searchtree.ReloadableSearchTree:refresh()V', false)  // Vanilla
+        //move to manual because we need a interface mixin
+//        suffix.put('net.minecraft.client.searchtree.ResourceLocationSearchTree:create(Ljava/util/List;Ljava/util/function/Function;)Lnet/minecraft/client/searchtree/ResourceLocationSearchTree;', false)  // Vanilla
+//        suffix.put('net.minecraft.client.searchtree.PlainTextSearchTree:create(Ljava/util/List;Ljava/util/function/Function;)Lnet/minecraft/client/searchtree/PlainTextSearchTree;', false)  // Vanilla
 
         //contains
         contains.put('com.blamejared.controlling.client.NewKeyBindsScreen:lambda$filterKeys$8(Lcom/blamejared/controlling/client/NewKeyBindsList$KeyEntry;)Z', false)  // Controlling
@@ -208,7 +207,9 @@ class ClassGenerator {
         generateClasses(MIXIN_EQUALS_CLASS_PATTERN, "_EqualsMixin", equals)
         generateClasses(MIXIN_REGEXP_CLASS_PATTERN, "_RegexMixin", regExp)
 
-        mixinClasses.addAll(manual)
+        for (String manualMixin : manual) {
+            mixinClasses.add('manual.' + manualMixin)
+        }
 
         StringBuilder classes = new StringBuilder()
         for (String mixinClass : mixinClasses) {
