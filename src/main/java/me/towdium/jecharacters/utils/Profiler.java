@@ -15,7 +15,9 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipInputStream;
 
 import static me.towdium.jecharacters.JustEnoughCharacters.logger;
 
@@ -80,7 +82,7 @@ public class Profiler {
     }
 
     private static ModContainer readInfoNew(InputStream is) {
-        JsonObject jsonObject = JsonParser.parseReader(new InputStreamReader(is, StandardCharsets.UTF_8)).getAsJsonObject();
+        JsonObject jsonObject = new JsonParser().parse(new InputStreamReader(is, StandardCharsets.UTF_8)).getAsJsonObject();
         if (jsonObject != null) {
             ModContainer mc = new ModContainer();
             mc.modid = jsonObject.has("id") ? jsonObject.get("id").getAsString() : "";
@@ -103,12 +105,16 @@ public class Profiler {
         JarContainer ret = new JarContainer();
         f.stream().forEach(entry -> {
             try (InputStream is = f.getInputStream(entry)) {
-                if (entry.getName().equals("fabric.mod.json")) ret.mods = readInfoNew(is);
+                if ("fabric.mod.json".equals(entry.getName())) ret.mods = readInfoNew(is);
                 else if (entry.getName().endsWith(".class")) {
                     long size = entry.getSize() + 4;
                     if (size > Integer.MAX_VALUE) {
                         logger.info("Class file " + entry.getName() + " in jar file " + f.getName() + " is too large, skip.");
-                    } else scanClass(is, methods);
+                    } else {
+                        scanClass(is, methods);
+                    }
+                } else if (entry.getName().endsWith(".jar")) {
+                    scanJarInJar(is, methods);
                 }
             } catch (IOException e) {
                 logger.info("Fail to read file " + entry.getName() + " in jar file " + f.getName() + ", skip.");
@@ -140,6 +146,18 @@ public class Profiler {
                 Arrays.stream(ANALYZERS).forEach(i -> i.analyze(node, classNode, methodNode, methods));
             }
         });
+    }
+
+    private static void scanJarInJar(InputStream is, EnumMap<Type, Map<String, Boolean>> methods) throws IOException {
+        ZipInputStream stream = new ZipInputStream(is);
+        ZipEntry entry;
+        while ((entry = stream.getNextEntry()) != null) {
+            if (entry.getName().endsWith(".class")) {
+                scanClass(stream, methods);
+            } else if (entry.getName().endsWith(".jar")) {
+                scanJarInJar(new ZipInputStream(stream), methods);
+            }
+        }
     }
 
     public static class Report {

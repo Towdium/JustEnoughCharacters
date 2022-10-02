@@ -2,16 +2,17 @@ plugins {
     id 'fabric-loom' version '0.12-SNAPSHOT'
 }
 
-version = "1.18.2-${verspec}.${verbuild}"
+version = "${minecraft_version}-${verspec}.${verbuild}"
 group = "me.towdium.jecharacters"
 archivesBaseName = "jecharacters-fabric"
 
-sourceCompatibility = JavaVersion.VERSION_17
-targetCompatibility = JavaVersion.VERSION_17
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
 
 repositories {
     mavenCentral()
     maven { url 'https://dvs1.progwml6.com/files/maven/' }
+    maven { url 'https://maven.parchmentmc.org' }
     maven { url 'https://jitpack.io' }
 }
 
@@ -34,7 +35,6 @@ dependencies {
     modImplementation "com.github.Towdium:PinIn:${verpinin}"
     include "com.github.Towdium:PinIn:${verpinin}"
 
-    modImplementation "mezz.jei:jei-${minecraft_version}-fabric:${jei_version}"
 }
 
 processResources {
@@ -45,23 +45,9 @@ processResources {
     }
 }
 
-tasks.withType(JavaCompile).configureEach {
-    it.options.release = 17
-}
-
 java {
     withSourcesJar()
 }
-
-
-/*
-minecraft.runs.all {
-    lazyToken('minecraft_classpath') {
-        configurations.shade.copyRecursive().resolve().collect { it.absolutePath }.join(File.pathSeparator)
-    }
-}
-
- */
 
 test {
     useJUnitPlatform()
@@ -71,6 +57,6 @@ tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'
 }
 
-apply from : 'generate.gradle'
+apply from: 'generate.gradle'
 
 compileJava.dependsOn generate

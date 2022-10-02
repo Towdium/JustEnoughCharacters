@@ -34,7 +34,7 @@ public class SimpleJsonConfig {
 
     public boolean load() {
         try (FileReader reader = new FileReader(configFile)) {
-            jsonObject = JsonParser.parseReader(reader).getAsJsonObject();
+            jsonObject = new JsonParser().parse(reader).getAsJsonObject();
         } catch (IOException e) {
             JustEnoughCharacters.logger.error("Can't read config file!");
             return false;

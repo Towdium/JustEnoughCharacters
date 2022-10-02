@@ -5,8 +5,6 @@ import me.towdium.jecharacters.JustEnoughCharacters;
 import me.towdium.pinin.DictLoader;
 import me.towdium.pinin.PinIn;
 import me.towdium.pinin.searchers.TreeSearcher;
-import mezz.jei.core.search.suffixtree.GeneralizedSuffixTree;
-import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.searchtree.SuffixArray;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -21,7 +19,6 @@ import java.util.regex.Pattern;
 import static me.towdium.pinin.searchers.Searcher.Logic.CONTAIN;
 
 @ParametersAreNonnullByDefault
-@MethodsReturnNonnullByDefault
 public class Match {
     public static final PinIn context = new PinIn(new Loader()).config().accelerate(true).commit();
     static final Pattern p = Pattern.compile("a");
@@ -82,15 +79,6 @@ public class Match {
         if (start || end) s2 = s2.substring(start ? 2 : 0, s2.length() - (end ? 2 : 0));
         return contains(s1, s2);
     }
-
-    /*
-    @SubscribeEvent
-    public static void onConfigChange(ModConfigEvent e) {
-        onConfigChange();
-    }
-
-
-     */
     public static void onConfigChange() {
         context.config().keyboard(JechConfig.enumKeyboard.keyboard)
                 .fAng2An(JechConfig.enableFAng2an).fEng2En(JechConfig.enableFEng2en)
@@ -99,34 +87,6 @@ public class Match {
                 .fU2V(JechConfig.enableFU2v).commit();
         searchers.forEach(TreeSearcher::refresh);
     }
-
-    public static class FakeTree<T> extends GeneralizedSuffixTree<T> {
-
-        TreeSearcher<T> tree = searcher();
-
-        @Override
-        public void getSearchResults(String word, Set<T> results) {
-            if (JechConfig.enableVerbose) {
-                JustEnoughCharacters.logger.info("FakeTree:search(" + word + ')');
-            }
-            results.addAll(tree.search(word));
-        }
-
-        @Override
-        public void put(String key, T value) {
-            if (JechConfig.enableVerbose) {
-                JustEnoughCharacters.logger.info("FakeTree:put(" + key + ',' + value + ')');
-            }
-            tree.put(key, value);
-        }
-
-        @Override
-        public void getAllElements(Set<T> results) {
-            results.addAll(tree.search(""));
-        }
-
-    }
-
     public static class FakeArray<T> extends SuffixArray<T> {
         TreeSearcher<T> tree = searcher();
 
