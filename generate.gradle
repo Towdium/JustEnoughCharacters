@@ -184,6 +184,8 @@ class ClassGenerator {
         contains.put('dev.emi.emi.search.TooltipQuery:matches(Ldev/emi/emi/api/stack/EmiStack;)Z', false) //EMI text search
         contains.put('red.jackf.chesttracker.gui.widgets.WItemListPanel:lambda$updateFilter$0(Lnet/minecraft/class_1799;)Z', false) // Chest Tracker
         contains.put('fi.dy.masa.malilib.gui.widgets.WidgetListBase:matchesFilter(Ljava/lang/String;Ljava/lang/String;)Z', false) // MaLiLib
+        contains.put('dev.ftb.mods.ftblibrary.config.ui.SelectItemStackScreen$ItemStackButton:shouldAdd(Ljava/lang/String;Ljava/lang/String;)Z', false) //FTB Library(FTB Quests)
+        contains.put('dev.ftb.mods.ftblibrary.ui.misc.ButtonListBaseScreen$1:add(Ldev/ftb/mods/ftblibrary/ui/Widget;)V', false) //FTB Library(FTB Quests)
 
         //equals
         equals.put('vazkii.botania.api.corporea.CorporeaRequestDefaultMatchers$CorporeaStringMatcher:equalOrContain(Ljava/lang/String;)Z', false)  // Botania (Corporea)
