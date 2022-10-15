@@ -23,5 +23,5 @@ run
 .vscode
 
 # generated
-src/main/java/me/towdium/jecharacters/mixins/_*Mixin*
+src/main/java/me/towdium/jecharacters/mixins/generated/
 src/main/resources/jecharacters.mixins.json

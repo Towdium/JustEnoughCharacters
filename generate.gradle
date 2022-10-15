@@ -17,7 +17,7 @@ class ClassGenerator {
 
 
     private static final String MIXIN_SUFFIX_CLASS_PATTERN =
-            "package me.towdium.jecharacters.mixins;\n" +
+            "package me.towdium.jecharacters.mixins.generated;\n" +
                     "\n" +
                     "import me.towdium.jecharacters.utils.Match;\n" +
                     "import net.minecraft.client.searchtree.SuffixArray;\n" +
@@ -40,7 +40,7 @@ class ClassGenerator {
                     "}"
 
     private static final String MIXIN_CONTAINS_CLASS_PATTERN =
-            "package me.towdium.jecharacters.mixins;\n" +
+            "package me.towdium.jecharacters.mixins.generated;\n" +
                     "\n" +
                     "import me.towdium.jecharacters.utils.Match;\n" +
                     "import org.spongepowered.asm.mixin.Mixin;\n" +
@@ -72,7 +72,7 @@ class ClassGenerator {
                     "}"
 
     private static final String MIXIN_EQUALS_CLASS_PATTERN =
-            "package me.towdium.jecharacters.mixins;\n" +
+            "package me.towdium.jecharacters.mixins.generated;\n" +
                     "\n" +
                     "import me.towdium.jecharacters.utils.Match;\n" +
                     "import org.spongepowered.asm.mixin.Mixin;\n" +
@@ -94,7 +94,7 @@ class ClassGenerator {
                     "}"
 
     private static final String MIXIN_REGEXP_CLASS_PATTERN =
-            "package me.towdium.jecharacters.mixins;\n" +
+            "package me.towdium.jecharacters.mixins.generated;\n" +
                     "\n" +
                     "import me.towdium.jecharacters.utils.Match;\n" +
                     "import org.spongepowered.asm.mixin.Mixin;\n" +
@@ -122,12 +122,6 @@ class ClassGenerator {
                     "    }\n" +
                     "\n" +
                     "}"
-
-
-    private final String[] manual = new String[]{
-            'MixinJeiSearch',
-            'MixinVanillaPlainTextSearch'
-    }
 
     private final Map<String, Boolean> suffix = new HashMap<>()
 
@@ -202,14 +196,12 @@ class ClassGenerator {
 
         cleanOldClasses()
 
-        generateClasses(MIXIN_SUFFIX_CLASS_PATTERN, "_SuffixMixin", suffix)
-        generateClasses(MIXIN_CONTAINS_CLASS_PATTERN, "_ContainsMixin", contains)
-        generateClasses(MIXIN_EQUALS_CLASS_PATTERN, "_EqualsMixin", equals)
-        generateClasses(MIXIN_REGEXP_CLASS_PATTERN, "_RegexMixin", regExp)
+        generateClasses(MIXIN_SUFFIX_CLASS_PATTERN, "GeneratedSuffixMixin", suffix)
+        generateClasses(MIXIN_CONTAINS_CLASS_PATTERN, "GeneratedContainsMixin", contains)
+        generateClasses(MIXIN_EQUALS_CLASS_PATTERN, "GeneratedEqualsMixin", equals)
+        generateClasses(MIXIN_REGEXP_CLASS_PATTERN, "GeneratedRegexMixin", regExp)
 
-        for (String manualMixin : manual) {
-            mixinClasses.add('manual.' + manualMixin)
-        }
+        putManualMixins()
 
         StringBuilder classes = new StringBuilder()
         for (String mixinClass : mixinClasses) {
@@ -238,9 +230,9 @@ class ClassGenerator {
 
 
     private void cleanOldClasses() {
-        File mixinsDir = new File("src/main/java/me/towdium/jecharacters/mixins")
+        File mixinsDir = new File("src/main/java/me/towdium/jecharacters/mixins/generated")
         for (File file : mixinsDir.listFiles()){
-            if (file.getName().startsWith('_')){
+            if (file.getName().startsWith('Generated')){
                 if (!file.delete()){
                     println("Can't remove generated class : " + file.getName())
                 }
@@ -255,7 +247,7 @@ class ClassGenerator {
             if (decode.length == 2) {
                 String className = basedName + index
                 boolean isRemap = methodEntry.getKey().contains("net.minecraft")
-                File classFile = new File("src/main/java/me/towdium/jecharacters/mixins/" + className + ".java")
+                File classFile = new File("src/main/java/me/towdium/jecharacters/mixins/generated/" + className + ".java")
                 String targetMethod = decode[1]
                 String realClassCode = pattern.replace("targetClass", decode[0])
                         .replace("targetMethod", targetMethod)
@@ -264,7 +256,7 @@ class ClassGenerator {
                         .replace("staticFlag", methodEntry.getValue() ? "static" : "")
                 try (FileWriter writer = new FileWriter(classFile)) {
                     writer.write(realClassCode)
-                    mixinClasses.add(className)
+                    mixinClasses.add('generated.' + className)
                     index++
                 } catch (IOException ignored) {
                     println("Can't write File : " + classFile.getPath())
@@ -274,6 +266,16 @@ class ClassGenerator {
             }
         }
 
+    }
+
+    private void putManualMixins() {
+        File mixinsDir = new File("src/main/java/me/towdium/jecharacters/mixins/manual")
+        for (File file : mixinsDir.listFiles()) {
+            if (file.getName().endsWith('.java')) {
+                String className = 'manual.' +  file.getName().replace(".java", "")
+                mixinClasses.add(className)
+            }
+        }
     }
 
     static String[] decodeMethod(String method) {
