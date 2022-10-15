@@ -239,7 +239,6 @@ public class JechConfig {
                             "io.github.elytra.copo.inventory.ContainerTerminal:updateSlots",  // Correlated legacy
                             "net.minecraft.client.gui.inventory.GuiContainerCreative:updateFilteredItems",  // vanilla creative search legacy
                             "bmp:updateFilteredItems",  // vanilla creative search legacy
-                            "appeng.client.me.ItemRepo:updateView",// AE2 Unofficial Extended Life
                             "appeng.client.gui.implementation.GuiInterfaceTerminal:refreshList",  // Applied Energistics terminal interface legacy
                             "appeng.client.gui.implementation.GuiInterfaceTerminal:itemStackMatchesSearchTerm",  // Applied Energistics terminal interface legacy
                             "appeng.client.gui.implementations.GuiInterfaceTerminal:refreshList",  // Applied Energistics terminal interface
@@ -304,7 +303,11 @@ public class JechConfig {
                             "astavie.thermallogistics.client.gui.GuiTerminalItem:updateFilter",  // Thermal Logistics
                             "com.the9grounds.aeadditions.gui.GuiTerminal:updateFluids", // AE Additions Terminal
                             "com.the9grounds.aeadditions.gui.GuiStorage:updateFluids", // AE Additions Terminal
-                            "me.desht.pneumaticcraft.common.recipes.AmadronOffer:passesQuery" //PneumaticCraft Amadron
+                            "me.desht.pneumaticcraft.common.recipes.AmadronOffer:passesQuery", //PneumaticCraft Amadron
+                            "appeng.client.me.ItemRepo:updateView", // AE2 Unofficial Extended Life(legacy)
+                            "appeng.client.me.ItemRepo:lambda$updateView$0", //AE2 Unofficial Extended Life
+                            "appeng.client.gui.implementations.GuiInterfaceConfigurationTerminal:refreshList",  //AE2 Unofficial Extended Life
+                            "appeng.client.gui.implementations.GuiInterfaceConfigurationTerminal:itemStackMatchesSearchTerm"  //AE2 Unofficial Extended Life
                     };
                 case LIST_DEFAULT_REGEXP:
                     return new String[]{
