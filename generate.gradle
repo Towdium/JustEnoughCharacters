@@ -184,7 +184,8 @@ class ClassGenerator {
         //Regexp
         regExp.put('appeng.client.gui.me.fluids.FluidRepo:matchesSearch(Lappeng/client/gui/me/common/Repo$SearchMode;Ljava/util/regex/Pattern;Lappeng/api/storage/data/IAEFluidStack;)Z', false)  // Applied Energistics
         regExp.put('appeng.client.gui.me.items.ItemRepo:matchesSearch(Lappeng/client/gui/me/common/Repo$SearchMode;Ljava/util/regex/Pattern;Lappeng/api/storage/data/IAEItemStack;)Z', false)  // Applied Energistics
-        regExp.put('com.tom.storagemod.gui.GuiStorageTerminalBase:updateSearch()V', false) // Toms Storage
+        regExp.put('com.tom.storagemod.gui.GuiStorageTerminalBase:updateSearch()V', false) // Toms Storage(Legacy)
+        regExp.put('com.tom.storagemod.gui.AbstractStorageTerminalScreen:updateSearch()V', false) // Toms Storage
         regExp.put('appeng.client.gui.me.search.SearchPredicates:lambda$createNamePredicate$2(Ljava/util/regex/Pattern;Lappeng/menu/me/common/GridInventoryEntry;)Z', true) //new Applied Energistics Terminals
         regExp.put('appeng.client.gui.me.search.SearchPredicates:lambda$createTooltipPredicate$3(Lappeng/client/gui/me/search/RepoSearch;Ljava/util/regex/Pattern;Lappeng/menu/me/common/GridInventoryEntry;)Z', true) //new Applied Energistics Terminals
         regExp.put('dev.emi.emi.search.RegexNameQuery:matches(Ldev/emi/emi/api/stack/EmiStack;)Z', false) //EMI regex search
