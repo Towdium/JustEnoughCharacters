@@ -1,7 +1,6 @@
 package me.towdium.jecharacters;
 
 import me.towdium.jecharacters.utils.Greetings;
-import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
@@ -11,7 +10,6 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLConstructModEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 
 import static me.towdium.jecharacters.JechConfig.Spell.QUANPIN;
 import static net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus.MOD;

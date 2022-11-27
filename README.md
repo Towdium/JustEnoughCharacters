@@ -30,8 +30,8 @@
 - 本模组的核心库 PinIn 中使用的拼音数据来自于 [地球拼音][6] 和 [pinyin-data][7]。
 
 [1]: https://minecraft.curseforge.com/projects/just-enough-characters
-[2]: http://cf.way2muchnoise.eu/full_just-enough-characters_downloads.svg
-[3]: http://cf.way2muchnoise.eu/versions/just-enough-characters.svg
+[2]: http://cf.way2muchnoise.eu/full_250702_downloads.svg
+[3]: http://cf.way2muchnoise.eu/versions/250702.svg
 [4]: https://img.shields.io/discord/517485644163973120.svg?logo=discord
 [5]: https://discord.gg/M3fNfTW
 [6]: https://github.com/rime/rime-terra-pinyin

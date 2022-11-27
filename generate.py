@@ -106,7 +106,8 @@ regExp = [
     'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$getInstanceFilterPredicate$7(Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z',  # Integrated Terminals
     'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$null$2(Ljava/lang/String;Lnet/minecraft/util/text/ITextComponent;)Z',  # Integrated Terminals
     'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$null$4(Ljava/lang/String;Lnet/minecraft/util/ResourceLocation;)Z',  # Integrated Terminals
-    'com.tom.storagemod.gui.GuiStorageTerminalBase:updateSearch()V', # Toms Storage
+    'com.tom.storagemod.gui.GuiStorageTerminalBase:updateSearch()V', # Toms Storage(Legacy)
+    'com.tom.storagemod.gui.AbstractStorageTerminalScreen:updateSearch()V', # Toms Storage
     'appeng.client.gui.me.search.SearchPredicates:lambda$createNamePredicate$2(Ljava/util/regex/Pattern;Lappeng/menu/me/common/GridInventoryEntry;)Z', #new Applied Energistics Terminals
     'appeng.client.gui.me.search.SearchPredicates:lambda$createTooltipPredicate$3(Lappeng/client/gui/me/search/RepoSearch;Ljava/util/regex/Pattern;Lappeng/menu/me/common/GridInventoryEntry;)Z',
 ]
