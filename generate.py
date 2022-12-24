@@ -98,6 +98,7 @@ contains = [
     'de.ellpeck.prettypipes.terminal.containers.ItemTerminalGui:lambda$updateWidgets$8(Ljava/lang/String;Lorg/apache/commons/lang3/tuple/Pair;)Z', # Pretty Pipes Terminal
     'dev.ftb.mods.ftblibrary.config.ui.SelectItemStackScreen$ItemStackButton:shouldAdd(Ljava/lang/String;Ljava/lang/String;)Z', # FTB Library(FTB Quests)
     'dev.ftb.mods.ftblibrary.ui.misc.ButtonListBaseScreen$1:add(Ldev/ftb/mods/ftblibrary/ui/Widget;)V' # FTB Library(FTB Quests)
+    'me.shedaniel.rei.impl.client.search.method.DefaultInputMethod:contains(Ljava/lang/String;Ljava/lang/String;)Z', #REI default
 ]
 equals = [
     'vazkii.botania.api.corporea.CorporeaRequestDefaultMatchers$CorporeaStringMatcher:equalOrContain(Ljava/lang/String;)Z',  # Botania (Corporea)
