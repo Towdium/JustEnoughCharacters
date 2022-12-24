@@ -25,46 +25,6 @@ public class JechConfig {
 
     private static SimpleJsonConfig config;
 
-    /*
-    static {
-
-
-
-//        b.push("General");
-//        b.comment("Keyboard for the checker to use");
-//        enumKeyboard = b.defineEnum("enumKeyboard", Spell.QUANPIN);
-//        b.comment("Set to true to enable fuzzy spelling zh <=> z");
-//        enableFZh2z = b.define("enableFZh2z", false);
-//        b.comment("Set to true to enable fuzzy spelling sh <=> s");
-//        enableFSh2s = b.define("enableFSh2s", false);
-//        b.comment("Set to true to enable fuzzy spelling ch <=> c");
-//        enableFCh2c = b.define("enableFCh2c", false);
-//        b.comment("Set to true to enable fuzzy spelling ang <=> an");
-//        enableFAng2an = b.define("enableFAng2an", false);
-//        b.comment("Set to true to enable fuzzy spelling ing <=> in");
-//        enableFIng2in = b.define("enableFIng2in", false);
-//        b.comment("Set to true to enable fuzzy spelling eng <=> en");
-//        enableFEng2en = b.define("enableFEng2en", false);
-//        b.comment("Set to true to enable fuzzy spelling u <=> v");
-//        enableFU2v = b.define("enableFU2v", false);
-//        b.comment("Set to false to disable chat message when entering world");
-//        enableChat = b.define("enableChat", true);
-//        b.comment("Set to true to disable JEI's split for search tokens");
-//        enableQuote = b.define("enableQuote", false);
-//        b.pop();
-
-//        b.push("Utilities");
-//        b.comment("List of classes to dump all the functions");
-//        listDumpClass = b.defineList("listDumpClass", Collections.emptyList(), p);
-//        b.comment("Set true to print verbose debug message");
-//        enableVerbose = b.define("enableVerbose", false);
-//        b.pop();
-//
-//        common = b.build();
-    }
-    
-     */
-
     public static void register() {
         config = new SimpleJsonConfig();
         config.putValue(GENERAL, "EnumKeyboard", Spell.QUANPIN.name());
@@ -77,7 +37,6 @@ public class JechConfig {
         config.putValue(GENERAL, "EnableFU2v", false);
         config.putValue(GENERAL, "EnableQuote", false);
         config.putValue(UTILITIES, "EnableVerbose", false);
-        config.save();
     }
 
     public static void loadConfig() {
@@ -104,7 +63,7 @@ public class JechConfig {
 
     public static void setEnableQuote(boolean enableQuote) {
         JechConfig.enableQuote = enableQuote;
-        config.setValue(GENERAL, "EnableQuote", enumKeyboard.name());
+        config.setValue(GENERAL, "EnableQuote", enableQuote);
         config.save();
     }
 
@@ -128,4 +87,13 @@ public class JechConfig {
             return keyboard;
         }
     }
+
+    public interface IKeyboardProvider {
+
+        String getName();
+
+        Keyboard getKeyboard();
+
+    }
+
 }

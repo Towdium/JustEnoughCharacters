@@ -34,7 +34,7 @@ class ClassGenerator {
                     "@Mixin(targets = \"targetClass\", remap = isRemap)\n" +
                     "public class ClassName {\n" +
                     "\n" +
-                    "    @Redirect(method = \"targetMethod\", at = @At(value = \"NEW\", target = \"net/minecraft/client/searchtree/SuffixArray\", remap = isRemap))\n" +
+                    "    @Redirect(method = \"targetMethod\", at = @At(value = \"NEW\", target = \"net/minecraft/client/searchtree/SuffixArray\", remap = true))\n" +
                     "    private staticFlag SuffixArray redirectConstructor() {\n" +
                     "        return new Match.FakeArray();\n" +
                     "    }\n" +
@@ -125,11 +125,6 @@ class ClassGenerator {
                     "\n" +
                     "}"
 
-
-    private final String[] manual = new String[]{
-            'manual.MixinJeiSearch'
-    }
-
     private final Map<String, Boolean> suffix = new HashMap<>()
 
     private final Map<String, Boolean> contains = new HashMap()
@@ -144,60 +139,66 @@ class ClassGenerator {
     ClassGenerator(){
 
         //suffix
-        suffix.put('net.minecraft.client.searchtree.ReloadableIdSearchTree:refresh()V', false)  // Vanilla
-        suffix.put('net.minecraft.client.searchtree.ReloadableSearchTree:refresh()V', false)  // Vanilla
+        suffix'net.minecraft.client.searchtree.ReloadableIdSearchTree:refresh()V' // Vanilla
+        suffix'net.minecraft.client.searchtree.ReloadableSearchTree:refresh()V'  // Vanilla
+        suffix 'dev.emi.emi.search.EmiSearch:bake()V', true //EMI Search
 
         //contains
-        contains.put('com.blamejared.controlling.client.NewKeyBindsScreen:lambda$filterKeys$8(Lcom/blamejared/controlling/client/NewKeyBindsList$KeyEntry;)Z', false)  // Controlling
-        contains.put('com.blamejared.controlling.client.NewKeyBindsScreen:lambda$filterKeys$9(Lcom/blamejared/controlling/client/NewKeyBindsList$KeyEntry;)Z', false)  // Controlling
-        contains.put('com.blamejared.controlling.client.NewKeyBindsScreen:lambda$filterKeys$8(Lcom/blamejared/controlling/client/NewKeyBindsList$KeyEntry;)Z', false)  // Controlling
-        contains.put('com.blamejared.controlling.client.NewKeyBindsScreen:filterKeys()V', false,) // Controlling
-        contains.put('de.ellpeck.actuallyadditions.mod.booklet.entry.BookletEntry:getChaptersForDisplay(Ljava/lang/String;)Ljava/util/List;', false)  // Actually Additions
-        contains.put('appeng.client.gui.me.interfaceterminal.InterfaceTerminalScreen:refreshList()V', false)  // Applied Energistics
-        contains.put('appeng.client.gui.me.interfaceterminal.InterfaceTerminalScreen:itemStackMatchesSearchTerm(Lnet/minecraft/class_1799;Ljava/lang/String;)Z', false)  // Applied Energistics
-        contains.put('me.towdium.jecalculation.utils.Utilities$I18n:contains(Ljava/lang/String;Ljava/lang/String;)Z', false)  // Just Enough Calculation
-        contains.put('vazkii.patchouli.client.book.BookEntry:isFoundByQuery(Ljava/lang/String;)Z', false)  // Patchouli (Botania)
-        contains.put('vazkii.botania.api.corporea.CorporeaRequestDefaultMatchers$CorporeaStringMatcher:equalOrContain(Ljava/lang/String;)Z', false)  // Botania (Corporea)
-        contains.put('net.blay09.mods.cookingforblockheads.container.RecipeBookContainer:search(Ljava/lang/String;)V', false)  // Cooking for Blockheads
-        contains.put('net.blay09.mods.farmingforblockheads.container.MarketClientContainer:applyFilters()V', false)  // Farming for Blockheads
-        contains.put('moze_intel.projecte.gameObjs.container.inventory.TransmutationInventory:doesItemMatchFilter(Lmoze_intel/projecte/api/ItemInfo;)Z', false)  // Project E
-        contains.put('com.mia.props.client.container.GuiDecobench:refreshButtons()V', false)  // Decofraft workbench
-        contains.put('net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen:m_98630_()V', false)  // Vanilla
-        contains.put('net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen:m_98619_(Ljava/lang/String;)V', false)  // Vanilla
-        contains.put('com.chaosthedude.naturescompass.gui.NaturesCompassScreen:processSearchTerm()V', false)  //Nature"s Compass
-        contains.put('me.shedaniel.rei.impl.client.search.argument.type.TagArgumentType:matches(Lorg/apache/commons/lang3/mutable/Mutable;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z', false)  // REI legacy
-        contains.put('me.shedaniel.rei.impl.client.search.argument.type.IdentifierArgumentType:matches(Lorg/apache/commons/lang3/mutable/Mutable;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z', false)  // REI legacy
-        contains.put('me.shedaniel.rei.impl.client.search.argument.type.ModArgumentType:matches(Lorg/apache/commons/lang3/mutable/Mutable;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z', false)  // REI legacy
-        contains.put('me.shedaniel.rei.impl.client.search.argument.type.TooltipArgumentType:matches(Lorg/apache/commons/lang3/mutable/Mutable;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z', false)  // REI legacy
-        contains.put('me.shedaniel.rei.impl.client.search.argument.type.TextArgumentType:matches(Lorg/apache/commons/lang3/mutable/Mutable;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z', false)  // REI legacy
-        contains.put('me.shedaniel.rei.impl.client.search.argument.type.IdentifierArgumentType:matches(Ljava/lang/String;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z', false) // REI
-        contains.put('me.shedaniel.rei.impl.client.search.argument.type.ModArgumentType:matches(Lme/shedaniel/rei/impl/client/search/argument/type/ModArgumentType$ModInfoPair;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z', false) // REI
-        contains.put('me.shedaniel.rei.impl.client.search.argument.type.TagArgumentType:matches([Ljava/lang/String;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z', false) // REI
-        contains.put('me.shedaniel.rei.impl.client.search.argument.type.TextArgumentType:matches(Ljava/lang/String;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z', false) // REI
-        contains.put('me.shedaniel.rei.impl.client.search.argument.type.TooltipArgumentType:matches(Ljava/lang/String;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z', false) // REI
-        contains.put('me.shedaniel.clothconfig2.forge.gui.entries.DropdownBoxEntry$DefaultDropdownMenuElement:search()V', false)  // Cloth Config
-        contains.put('me.shedaniel.clothconfig2.gui.entries.DropdownBoxEntry$DefaultDropdownMenuElement:search()V', false)  // Cloth Config
-        contains.put('mezz.jei.search.ElementSearchLowMem:matches(Ljava/lang/String;Lmezz/jei/core/search/PrefixInfo;Lmezz/jei/ingredients/IListElementInfo;)Z', false)  // JEI (low memory)
-        contains.put('com.github.klikli_dev.occultism.client.gui.storage.StorageControllerGuiBase:itemMatchesSearch(Lnet/minecraft/world/item/ItemStack;)Z', false) // Occultism
-        contains.put('com.github.klikli_dev.occultism.client.gui.storage.StorageControllerGuiBase:machineMatchesSearch(Lcom/github/klikli_dev/occultism/api/common/data/MachineReference;)Z', false) // Occultism
-        contains.put('dev.emi.emi.search.NameQuery:matches(Ldev/emi/emi/api/stack/EmiStack;)Z', false) //EMI text search
-        contains.put('dev.emi.emi.search.TooltipQuery:matches(Ldev/emi/emi/api/stack/EmiStack;)Z', false) //EMI text search
-        contains.put('red.jackf.chesttracker.gui.widgets.WItemListPanel:lambda$updateFilter$0(Lnet/minecraft/class_1799;)Z', false) // Chest Tracker
-        contains.put('fi.dy.masa.malilib.gui.widgets.WidgetListBase:matchesFilter(Ljava/lang/String;Ljava/lang/String;)Z', false) // MaLiLib
-        contains.put('dev.ftb.mods.ftblibrary.config.ui.SelectItemStackScreen$ItemStackButton:shouldAdd(Ljava/lang/String;Ljava/lang/String;)Z', false) //FTB Library(FTB Quests)
-        contains.put('dev.ftb.mods.ftblibrary.ui.misc.ButtonListBaseScreen$1:add(Ldev/ftb/mods/ftblibrary/ui/Widget;)V', false) //FTB Library(FTB Quests)
+        contains 'com.blamejared.controlling.client.NewKeyBindsScreen:lambda$filterKeys$8(Lcom/blamejared/controlling/client/NewKeyBindsList$KeyEntry;)Z'  // Controlling
+        contains 'com.blamejared.controlling.client.NewKeyBindsScreen:lambda$filterKeys$9(Lcom/blamejared/controlling/client/NewKeyBindsList$KeyEntry;)Z'  // Controlling
+        contains 'com.blamejared.controlling.client.NewKeyBindsScreen:lambda$filterKeys$8(Lcom/blamejared/controlling/client/NewKeyBindsList$KeyEntry;)Z'  // Controlling
+        contains 'com.blamejared.controlling.client.NewKeyBindsScreen:filterKeys()V' // Controlling
+        contains 'de.ellpeck.actuallyadditions.mod.booklet.entry.BookletEntry:getChaptersForDisplay(Ljava/lang/String;)Ljava/util/List;'  // Actually Additions
+        contains 'appeng.client.gui.me.interfaceterminal.InterfaceTerminalScreen:refreshList()V'  // Applied Energistics
+        contains 'appeng.client.gui.me.interfaceterminal.InterfaceTerminalScreen:itemStackMatchesSearchTerm(Lnet/minecraft/class_1799;Ljava/lang/String;)Z'  // Applied Energistics
+        contains 'me.towdium.jecalculation.utils.Utilities$I18n:contains(Ljava/lang/String;Ljava/lang/String;)Z'  // Just Enough Calculation
+        contains 'vazkii.patchouli.client.book.BookEntry:isFoundByQuery(Ljava/lang/String;)Z'  // Patchouli (Botania)
+        contains 'vazkii.botania.api.corporea.CorporeaRequestDefaultMatchers$CorporeaStringMatcher:equalOrContain(Ljava/lang/String;)Z'  // Botania (Corporea)
+        contains 'net.blay09.mods.cookingforblockheads.container.RecipeBookContainer:search(Ljava/lang/String;)V'  // Cooking for Blockheads
+        contains 'net.blay09.mods.farmingforblockheads.container.MarketClientContainer:applyFilters()V'  // Farming for Blockheads
+        contains 'moze_intel.projecte.gameObjs.container.inventory.TransmutationInventory:doesItemMatchFilter(Lmoze_intel/projecte/api/ItemInfo;)Z'  // Project E
+        contains 'com.mia.props.client.container.GuiDecobench:refreshButtons()V'  // Decofraft workbench
+        contains 'net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen:m_98630_()V'  // Vanilla
+        contains 'net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen:m_98619_(Ljava/lang/String;)V'  // Vanilla
+        contains 'com.chaosthedude.naturescompass.gui.NaturesCompassScreen:processSearchTerm()V'  //Nature"s Compass
+        contains 'me.shedaniel.rei.impl.client.search.argument.type.TagArgumentType:matches(Lorg/apache/commons/lang3/mutable/Mutable;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z'  // REI legacy
+        contains 'me.shedaniel.rei.impl.client.search.argument.type.IdentifierArgumentType:matches(Lorg/apache/commons/lang3/mutable/Mutable;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z'  // REI legacy
+        contains 'me.shedaniel.rei.impl.client.search.argument.type.ModArgumentType:matches(Lorg/apache/commons/lang3/mutable/Mutable;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z'  // REI legacy
+        contains 'me.shedaniel.rei.impl.client.search.argument.type.TooltipArgumentType:matches(Lorg/apache/commons/lang3/mutable/Mutable;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z'  // REI legacy
+        contains 'me.shedaniel.rei.impl.client.search.argument.type.TextArgumentType:matches(Lorg/apache/commons/lang3/mutable/Mutable;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z'  // REI legacy
+        contains 'me.shedaniel.rei.impl.client.search.argument.type.IdentifierArgumentType:matches(Ljava/lang/String;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z' // REI legacy
+        contains 'me.shedaniel.rei.impl.client.search.argument.type.ModArgumentType:matches(Lme/shedaniel/rei/impl/client/search/argument/type/ModArgumentType$ModInfoPair;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z' // REI legacy
+        contains 'me.shedaniel.rei.impl.client.search.argument.type.TagArgumentType:matches([Ljava/lang/String;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z' // REI legacy
+        contains 'me.shedaniel.rei.impl.client.search.argument.type.TextArgumentType:matches(Ljava/lang/String;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z' // REI legacy
+        contains 'me.shedaniel.rei.impl.client.search.argument.type.TooltipArgumentType:matches(Ljava/lang/String;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z' // REI legacy
+        contains 'me.shedaniel.rei.impl.client.search.method.DefaultInputMethod:contains(Ljava/lang/String;Ljava/lang/String;)Z' //REI default
+
+
+        contains 'me.shedaniel.clothconfig2.forge.gui.entries.DropdownBoxEntry$DefaultDropdownMenuElement:search()V'  // Cloth Config
+        contains 'me.shedaniel.clothconfig2.gui.entries.DropdownBoxEntry$DefaultDropdownMenuElement:search()V'  // Cloth Config
+        contains 'mezz.jei.search.ElementSearchLowMem:matches(Ljava/lang/String;Lmezz/jei/core/search/PrefixInfo;Lmezz/jei/ingredients/IListElementInfo;)Z'  // JEI (low memory)
+        contains 'com.github.klikli_dev.occultism.client.gui.storage.StorageControllerGuiBase:itemMatchesSearch(Lnet/minecraft/world/item/ItemStack;)Z' // Occultism
+        contains 'com.github.klikli_dev.occultism.client.gui.storage.StorageControllerGuiBase:machineMatchesSearch(Lcom/github/klikli_dev/occultism/api/common/data/MachineReference;)Z' // Occultism
+        contains 'dev.emi.emi.search.NameQuery:matches(Ldev/emi/emi/api/stack/EmiStack;)Z' //EMI text search(Leagcy)
+        contains 'dev.emi.emi.search.TooltipQuery:matches(Ldev/emi/emi/api/stack/EmiStack;)Z' //EMI text search(Leagcy)
+        contains 'red.jackf.chesttracker.gui.widgets.WItemListPanel:lambda$updateFilter$0(Lnet/minecraft/class_1799;)Z' // Chest Tracker
+        contains 'fi.dy.masa.malilib.gui.widgets.WidgetListBase:matchesFilter(Ljava/lang/String;Ljava/lang/String;)Z' // MaLiLib
+        contains 'dev.ftb.mods.ftblibrary.config.ui.SelectItemStackScreen$ItemStackButton:shouldAdd(Ljava/lang/String;Ljava/lang/String;)Z' //FTB Library(FTB Quests)
+        contains 'dev.ftb.mods.ftblibrary.ui.misc.ButtonListBaseScreen$1:add(Ldev/ftb/mods/ftblibrary/ui/Widget;)V'//FTB Library(FTB Quests)
 
         //equals
-        equals.put('vazkii.botania.api.corporea.CorporeaRequestDefaultMatchers$CorporeaStringMatcher:equalOrContain(Ljava/lang/String;)Z', false)  // Botania (Corporea)
+        equals 'vazkii.botania.api.corporea.CorporeaRequestDefaultMatchers$CorporeaStringMatcher:equalOrContain(Ljava/lang/String;)Z'  // Botania (Corporea)
 
         //Regexp
-        regExp.put('appeng.client.gui.me.fluids.FluidRepo:matchesSearch(Lappeng/client/gui/me/common/Repo$SearchMode;Ljava/util/regex/Pattern;Lappeng/api/storage/data/IAEFluidStack;)Z', false)  // Applied Energistics
-        regExp.put('appeng.client.gui.me.items.ItemRepo:matchesSearch(Lappeng/client/gui/me/common/Repo$SearchMode;Ljava/util/regex/Pattern;Lappeng/api/storage/data/IAEItemStack;)Z', false)  // Applied Energistics
-        regExp.put('com.tom.storagemod.gui.GuiStorageTerminalBase:updateSearch()V', false) // Toms Storage
-        regExp.put('appeng.client.gui.me.search.SearchPredicates:lambda$createNamePredicate$2(Ljava/util/regex/Pattern;Lappeng/menu/me/common/GridInventoryEntry;)Z', true) //new Applied Energistics Terminals
-        regExp.put('appeng.client.gui.me.search.SearchPredicates:lambda$createTooltipPredicate$3(Lappeng/client/gui/me/search/RepoSearch;Ljava/util/regex/Pattern;Lappeng/menu/me/common/GridInventoryEntry;)Z', true) //new Applied Energistics Terminals
-        regExp.put('dev.emi.emi.search.RegexNameQuery:matches(Ldev/emi/emi/api/stack/EmiStack;)Z', false) //EMI regex search
-        regExp.put('dev.emi.emi.search.RegexTooltipQuery:matches(Ldev/emi/emi/api/stack/EmiStack;)Z', false) //EMI regex search
+        regExp 'appeng.client.gui.me.fluids.FluidRepo:matchesSearch(Lappeng/client/gui/me/common/Repo$SearchMode;Ljava/util/regex/Pattern;Lappeng/api/storage/data/IAEFluidStack;)Z'  // Applied Energistics
+        regExp 'appeng.client.gui.me.items.ItemRepo:matchesSearch(Lappeng/client/gui/me/common/Repo$SearchMode;Ljava/util/regex/Pattern;Lappeng/api/storage/data/IAEItemStack;)Z'  // Applied Energistics
+        regExp 'com.tom.storagemod.gui.GuiStorageTerminalBase:updateSearch()V' // Toms Storage(Legacy)
+        regExp 'com.tom.storagemod.gui.AbstractStorageTerminalScreen:updateSearch()V' // Toms Storage
+        regExp 'appeng.client.gui.me.search.SearchPredicates:lambda$createNamePredicate$2(Ljava/util/regex/Pattern;Lappeng/menu/me/common/GridInventoryEntry;)Z', true //new Applied Energistics Terminals
+        regExp 'appeng.client.gui.me.search.SearchPredicates:lambda$createTooltipPredicate$3(Lappeng/client/gui/me/search/RepoSearch;Ljava/util/regex/Pattern;Lappeng/menu/me/common/GridInventoryEntry;)Z', true //new Applied Energistics Terminals
+        regExp 'dev.emi.emi.search.RegexNameQuery:matches(Ldev/emi/emi/api/stack/EmiStack;)Z' //EMI regex search
+        regExp 'dev.emi.emi.search.RegexTooltipQuery:matches(Ldev/emi/emi/api/stack/EmiStack;)Z' //EMI regex search
+
 
     }
 
@@ -205,12 +206,12 @@ class ClassGenerator {
 
         cleanOldClasses()
 
-        generateClasses(MIXIN_SUFFIX_CLASS_PATTERN, "_SuffixMixin", suffix)
-        generateClasses(MIXIN_CONTAINS_CLASS_PATTERN, "_ContainsMixin", contains)
-        generateClasses(MIXIN_EQUALS_CLASS_PATTERN, "_EqualsMixin", equals)
-        generateClasses(MIXIN_REGEXP_CLASS_PATTERN, "_RegexMixin", regExp)
+        generateClasses(MIXIN_SUFFIX_CLASS_PATTERN, "GeneratedSuffixMixin", suffix)
+        generateClasses(MIXIN_CONTAINS_CLASS_PATTERN, "GeneratedContainsMixin", contains)
+        generateClasses(MIXIN_EQUALS_CLASS_PATTERN, "GeneratedEqualsMixin", equals)
+        generateClasses(MIXIN_REGEXP_CLASS_PATTERN, "GeneratedRegexMixin", regExp)
 
-        mixinClasses.addAll(manual)
+        putManualMixins()
 
         StringBuilder classes = new StringBuilder()
         for (String mixinClass : mixinClasses) {
@@ -237,11 +238,41 @@ class ClassGenerator {
 
     }
 
+    void  suffix(String target) {
+        suffix(target,false)
+    }
+    void suffix(String target, boolean isStatic) {
+        suffix.put(target,isStatic)
+    }
+
+    void contains(String target) {
+        contains(target,false)
+    }
+
+    void contains(String target, boolean isStatic) {
+        contains.put(target, isStatic)
+    }
+
+    void equals(String target){
+        equals.put(target,false)
+    }
+
+    void equals(String target, boolean isStatic){
+        equals.put(target, isStatic)
+    }
+
+    void regExp(String target){
+        regExp.put(target,false)
+    }
+
+    void regExp(String target, boolean isStatic) {
+        regExp.put(target, isStatic)
+    }
 
     private void cleanOldClasses() {
-        File mixinsDir = new File("src/main/java/me/towdium/jecharacters/mixins")
+        File mixinsDir = new File("src/main/java/me/towdium/jecharacters/mixins/generated")
         for (File file : mixinsDir.listFiles()){
-            if (file.getName().startsWith('_')){
+            if (file.getName().startsWith('Generated')){
                 if (!file.delete()){
                     println("Can't remove generated class : " + file.getName())
                 }
@@ -256,7 +287,7 @@ class ClassGenerator {
             if (decode.length == 2) {
                 String className = basedName + index
                 boolean isRemap = methodEntry.getKey().contains("net.minecraft")
-                File classFile = new File("src/main/java/me/towdium/jecharacters/mixins/" + className + ".java")
+                File classFile = new File("src/main/java/me/towdium/jecharacters/mixins/generated/" + className + ".java")
                 String targetMethod = decode[1]
                 String realClassCode = pattern.replace("targetClass", decode[0])
                         .replace("targetMethod", targetMethod)
@@ -265,7 +296,7 @@ class ClassGenerator {
                         .replace("staticFlag", methodEntry.getValue() ? "static" : "")
                 try (FileWriter writer = new FileWriter(classFile)) {
                     writer.write(realClassCode)
-                    mixinClasses.add(className)
+                    mixinClasses.add('generated.' + className)
                     index++
                 } catch (IOException ignored) {
                     println("Can't write File : " + classFile.getPath())
@@ -275,6 +306,16 @@ class ClassGenerator {
             }
         }
 
+    }
+
+    private void putManualMixins() {
+        File mixinsDir = new File("src/main/java/me/towdium/jecharacters/mixins/manual")
+        for (File file : mixinsDir.listFiles()) {
+            if (file.getName().endsWith('.java')) {
+                String className = 'manual.' +  file.getName().replace(".java", "")
+                mixinClasses.add(className)
+            }
+        }
     }
 
     static String[] decodeMethod(String method) {
