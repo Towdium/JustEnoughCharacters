@@ -37,7 +37,6 @@ public class JechConfig {
         config.putValue(GENERAL, "EnableFU2v", false);
         config.putValue(GENERAL, "EnableQuote", false);
         config.putValue(UTILITIES, "EnableVerbose", false);
-        config.save();
     }
 
     public static void loadConfig() {
@@ -64,7 +63,7 @@ public class JechConfig {
 
     public static void setEnableQuote(boolean enableQuote) {
         JechConfig.enableQuote = enableQuote;
-        config.setValue(GENERAL, "EnableQuote", enumKeyboard.name());
+        config.setValue(GENERAL, "EnableQuote", enableQuote);
         config.save();
     }
 
@@ -88,4 +87,13 @@ public class JechConfig {
             return keyboard;
         }
     }
+
+    public interface IKeyboardProvider {
+
+        String getName();
+
+        Keyboard getKeyboard();
+
+    }
+
 }

@@ -25,7 +25,8 @@ import static me.towdium.jecharacters.JustEnoughCharacters.logger;
  */
 public class Profiler {
     private static final Analyzer[] ANALYZERS = new Analyzer[]{
-            new Analyzer.Construct(Type.SUFFIX, "net/minecraft/client/util/SuffixArray"),
+            //SuffixArray class
+            new Analyzer.Construct(Type.SUFFIX, "net/minecraft/class_1128"),
             new Analyzer.Invoke(
                     Type.CONTAINS, false, "java/lang/String", "contains",
                     "(Ljava/lang/CharSequence;)Z"
