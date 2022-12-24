@@ -170,6 +170,8 @@ class ClassGenerator {
         contains 'me.shedaniel.rei.impl.client.search.argument.type.TextArgumentType:matches(Ljava/lang/String;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z' // REI legacy
         contains 'me.shedaniel.rei.impl.client.search.argument.type.TooltipArgumentType:matches(Ljava/lang/String;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z' // REI legacy
         contains 'me.shedaniel.rei.impl.client.search.method.DefaultInputMethod:contains(Ljava/lang/String;Ljava/lang/String;)Z' //REI default
+        contains 'dev.ftb.mods.ftblibrary.config.ui.SelectItemStackScreen$ItemStackButton:shouldAdd(Ljava/lang/String;Ljava/lang/String;)Z' //FTB Library(FTB Quests)
+        contains 'dev.ftb.mods.ftblibrary.ui.misc.ButtonListBaseScreen$1:add(Ldev/ftb/mods/ftblibrary/ui/Widget;)V'//FTB Library(FTB Quests)
 
         contains 'me.shedaniel.clothconfig2.forge.gui.entries.DropdownBoxEntry$DefaultDropdownMenuElement:search()V'  // Cloth Config
         contains 'me.shedaniel.clothconfig2.gui.entries.DropdownBoxEntry$DefaultDropdownMenuElement:search()V'  // Cloth Config
