@@ -32,7 +32,7 @@ class ClassGenerator {
                     "@Mixin(targets = \"targetClass\", remap = isRemap)\n" +
                     "public class ClassName {\n" +
                     "\n" +
-                    "    @Redirect(method = \"targetMethod\", at = @At(value = \"NEW\", target = \"net/minecraft/client/searchtree/SuffixArray\", remap = isRemap))\n" +
+                    "    @Redirect(method = \"targetMethod\", at = @At(value = \"NEW\", target = \"net/minecraft/client/searchtree/SuffixArray\", remap = true))\n" +
                     "    private staticFlag SuffixArray redirectConstructor() {\n" +
                     "        return new Match.FakeArray();\n" +
                     "    }\n" +
