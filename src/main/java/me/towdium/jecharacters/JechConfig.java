@@ -1,5 +1,6 @@
 package me.towdium.jecharacters;
 
+import me.towdium.jecharacters.utils.Match;
 import me.towdium.pinin.Keyboard;
 
 
@@ -51,6 +52,7 @@ public class JechConfig {
         enableFU2v = config.getBoolValue(GENERAL, "EnableFU2v");
         enableQuote = config.getBoolValue(GENERAL, "EnableQuote");
         enableVerbose = config.getBoolValue(UTILITIES, "EnableVerbose");
+        Match.onConfigChange();
         config.save();
     }
 
