@@ -162,9 +162,11 @@ class ClassGenerator {
         contains.put('net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen:m_98630_()V', false)  // Vanilla
         contains.put('net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen:m_98619_(Ljava/lang/String;)V', false)  // Vanilla
         contains.put('com.chaosthedude.naturescompass.gui.NaturesCompassScreen:processSearchTerm()V', false)  //Nature"s Compass
-        contains.put('me.shedaniel.rei.impl.search.TextArgument:matches(Lorg/apache/commons/lang3/mutable/Mutable;Lme/shedaniel/rei/api/EntryStack;Ljava/lang/String;Lnet/minecraft/class_3902;)Z', false)  // REI
-        contains.put('me.shedaniel.rei.impl.search.TooltipArgument:matches(Lorg/apache/commons/lang3/mutable/Mutable;Lme/shedaniel/rei/api/EntryStack;Ljava/lang/String;Lnet/minecraft/class_3902;)Z', false)  // REI
-        contains.put('me.shedaniel.rei.impl.search.ModArgument:matches(Lorg/apache/commons/lang3/mutable/Mutable;Lme/shedaniel/rei/api/EntryStack;Ljava/lang/String;Lnet/minecraft/class_3902;)Z', false)  // REI
+        contains.put('me.shedaniel.rei.impl.search.TextArgument:matches(Lorg/apache/commons/lang3/mutable/Mutable;Lme/shedaniel/rei/api/EntryStack;Ljava/lang/String;Lnet/minecraft/class_3902;)Z', false)  // REI(Legacy)
+        contains.put('me.shedaniel.rei.impl.search.TooltipArgument:matches(Lorg/apache/commons/lang3/mutable/Mutable;Lme/shedaniel/rei/api/EntryStack;Ljava/lang/String;Lnet/minecraft/class_3902;)Z', false)  // REI(Legacy)
+        contains.put('me.shedaniel.rei.impl.search.ModArgument:matches(Lorg/apache/commons/lang3/mutable/Mutable;Lme/shedaniel/rei/api/EntryStack;Ljava/lang/String;Lnet/minecraft/class_3902;)Z', false)  // REI(Legacy)
+        contains.put('me.shedaniel.rei.impl.client.search.argument.type.TextArgumentType:matches(Ljava/lang/String;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z', false) // REI
+        contains.put('me.shedaniel.rei.impl.client.search.argument.type.TooltipArgumentType:matches(Ljava/lang/String;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z', false) // REI
         contains.put('me.shedaniel.clothconfig2.gui.widget.SearchFieldEntry:matchesSearch(Ljava/util/Iterator;)Z', false)  // Cloth Config
         contains.put('me.shedaniel.clothconfig2.gui.entries.DropdownBoxEntry$DefaultDropdownMenuElement:search()V', false)  // Cloth Config
         contains.put('mezz.jei.search.ElementSearchLowMem:matches(Ljava/lang/String;Lmezz/jei/core/search/PrefixInfo;Lmezz/jei/ingredients/IListElementInfo;)Z', false)  // JEI (low memory)

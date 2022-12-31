@@ -1,5 +1,7 @@
 package me.towdium.jecharacters;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.fabricmc.loader.api.FabricLoader;
@@ -15,6 +17,7 @@ import java.io.IOException;
  */
 public class SimpleJsonConfig {
 
+    private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
     private final File configFile;
     private JsonObject jsonObject = new JsonObject();
 
@@ -24,7 +27,7 @@ public class SimpleJsonConfig {
 
     public boolean save() {
         try (FileWriter writer = new FileWriter(configFile)) {
-            IOUtils.write(jsonObject.toString().toCharArray(), writer);
+            IOUtils.write(gson.toJson(jsonObject), writer);
         } catch (IOException e) {
             JustEnoughCharacters.logger.error("Can't save config file!");
             return false;
