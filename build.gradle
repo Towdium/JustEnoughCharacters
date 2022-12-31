@@ -89,8 +89,8 @@ sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 dependencies {
     minecraft 'net.minecraftforge:forge:1.19.2-43.1.57'
-    compileOnly fg.deobf('mezz.jei:jei-1.19.2-forge:11.4.0.286')
-    runtimeOnly fg.deobf('mezz.jei:jei-1.19.2-forge:11.4.0.286')
+    compileOnly fg.deobf('mezz.jei:jei-1.19.2-forge:11.5.0.297')
+    runtimeOnly fg.deobf('mezz.jei:jei-1.19.2-forge:11.5.0.297')
     shade(group: 'com.github.towdium', name: 'pinin', version: "${verpinin}") {
         transitive = false
     }
