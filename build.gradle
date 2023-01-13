@@ -13,6 +13,13 @@ repositories {
     mavenCentral()
     maven { url 'https://dvs1.progwml6.com/files/maven/' }
     maven { url 'https://jitpack.io' }
+    maven {
+        name "Modmaven"
+        url "https://modmaven.dev/"
+        content {
+            includeGroup 'appeng'
+        }
+    }
 }
 
 configurations {
@@ -29,6 +36,12 @@ dependencies {
 
 
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+
+    modImplementation "appeng:appliedenergistics2-fabric:12.9.2"
+
+    modImplementation("teamreborn:energy:2.0.0-beta1") {
+        exclude group: "net.fabricmc.fabric-api"
+    }
 
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
     modImplementation "com.github.Towdium:PinIn:${verpinin}"
