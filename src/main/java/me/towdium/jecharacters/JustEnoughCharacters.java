@@ -11,7 +11,7 @@ import org.apache.logging.log4j.Logger;
 
 public class JustEnoughCharacters implements ClientModInitializer {
     public static final String MODID = "jecharacters";
-    public static Logger logger = LogManager.getLogger(MODID);
+    public static final Logger logger = LogManager.getLogger(MODID);
     static boolean messageSent = false;
 
     public static void printMessage(Component message) {

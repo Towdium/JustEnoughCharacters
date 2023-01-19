@@ -15,15 +15,27 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import static me.towdium.jecharacters.JustEnoughCharacters.logger;
+
 public class JechMixinPlugin implements IMixinConfigPlugin {
 
-    public final static List<String> MIXIN_CLASSES = new ArrayList<>();
+    public volatile static List<String> MIXIN_CLASSES = new ArrayList<>();
 
     @Override
     public void onLoad(String mixinPackage) {
+        boolean success = true;
 
-        FeedFetcher.fetch();
+        logger.info("Jech is trying to download update data from network,it may take a while.");
+        logger.info("Getting mixin data from server...");
+        try {
+            new FeedFetcher().fetch();
+        } catch (IOException e) {
+            logger.error("Failed to get mixin data from server, using local data instead.");
+            success = false;
+        }
+        if (success) logger.info("Successfully got data from server.");
 
+        logger.info("Generating mixin classes...");
         try (InputStream is = JustEnoughCharacters.class.getClassLoader().getResourceAsStream("mixins.ini")) {
             if (is != null) {
                 List<String> original = IOUtils.readLines(is, StandardCharsets.UTF_8);
@@ -38,6 +50,7 @@ public class JechMixinPlugin implements IMixinConfigPlugin {
         }
 
         MixinGenerator.generate();
+        logger.info("Generating mixin classes finished!");
 
     }
 

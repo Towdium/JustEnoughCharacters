@@ -268,7 +268,7 @@ class ClassGenerator {
         } catch (FileNotFoundException ignored) {
             println("Can't find mixin data file!")
         }
-
+        println "Generating Feed"
         generateFeedJson()
 
     }
@@ -351,7 +351,7 @@ class ClassGenerator {
         generateSingleFeed(jsonObject, "contains", contains)
         generateSingleFeed(jsonObject, "equals", equals)
         generateSingleFeed(jsonObject, "regexp", regExp)
-        try (FileWriter writer = new FileWriter("src/main/resources/feed.json")) {
+        try (FileWriter writer = new FileWriter("feed.json")) {
             String json = new GsonBuilder().setPrettyPrinting().create().toJson(jsonObject)
             writer.write(json)
         }catch (IOException ignored) {

@@ -86,4 +86,4 @@ tasks.withType(JavaCompile) {
 
 apply from : 'generate.gradle'
 
-compileJava.dependsOn generate
+build.dependsOn generate
