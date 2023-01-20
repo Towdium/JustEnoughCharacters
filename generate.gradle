@@ -1,3 +1,16 @@
+import com.google.gson.GsonBuilder
+import com.google.gson.JsonArray
+import com.google.gson.JsonObject
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.google.code.gson:gson:2.8.9'
+    }
+}
+
 task generate {
     new ClassGenerator().generate()
 }
@@ -9,6 +22,7 @@ class ClassGenerator {
             "  \"required\": false,\n" +
             "  \"minVersion\": \"0.8\",\n" +
             "  \"package\": \"me.towdium.jecharacters.mixins\",\n" +
+            "  \"plugin\": \"me.towdium.jecharacters.mixins.config.JechMixinPlugin\",\n" +
             "  \"compatibilityLevel\": \"JAVA_17\",\n" +
             "  \"client\": [\n" +
             "    MixinClasses\n" +
@@ -60,8 +74,8 @@ class ClassGenerator {
                     "    }\n" +
                     "\n" +
                     "    @Redirect(method = \"targetMethod\", at = @At(value = \"INVOKE\", target = \"Lkotlin/text/StringsKt;contains(Ljava/lang/CharSequence;Ljava/lang/CharSequence;Z)Z\", remap = isRemap))\n" +
-                    "    private staticFlag boolean redirectContainsKt1(CharSequence haystack, CharSequence needle) {\n" +
-                    "        return Match.contains(haystack, needle);\n" +
+                    "    private staticFlag boolean redirectContainsKt1(CharSequence haystack, CharSequence needle, boolean ignoreCase) {\n" +
+                    "        return Match.contains(haystack, needle, ignoreCase);\n" +
                     "    }\n" +
                     "\n" +
                     "    @Redirect(method = \"targetMethod\", at = @At(value = \"INVOKE\", target = \"Lkotlin/text/StringsKt;contains(Ljava/lang/CharSequence;Ljava/lang/CharSequence;)Z\", remap = isRemap))\n" +
@@ -132,6 +146,8 @@ class ClassGenerator {
     private final Map<String, Boolean> regExp = new HashMap<>()
 
     private final List<String> mixinClasses = new ArrayList<>()
+
+    private final Map<String,Boolean> targetMap = new HashMap<>()
 
 
     ClassGenerator(){
@@ -232,6 +248,29 @@ class ClassGenerator {
             println("Can't find mixin config file!")
         }
 
+        try {
+            File jsonFile = new File("src/main/resources/mixins.ini")
+
+            try (FileWriter writer = new FileWriter(jsonFile)) {
+                for (Map.Entry<String,String> target : targetMap.entrySet()) {
+                    writer.write(target.getKey() + ":" + target.getValue() )
+                    writer.write("\n")
+                }
+                List<String> manuals = new ArrayList<>(mixinClasses)
+                manuals.removeAll(targetMap.keySet())
+                for (String manual : manuals) {
+                    writer.write(manual)
+                    writer.write("\n")
+                }
+            } catch (IOException ignored) {
+                println("Can't write to File : " + jsonFile.getPath())
+            }
+        } catch (FileNotFoundException ignored) {
+            println("Can't find mixin data file!")
+        }
+        println "Generating Feed"
+        generateFeedJson()
+
     }
 
     void  suffix(String target) {
@@ -292,7 +331,9 @@ class ClassGenerator {
                         .replace("staticFlag", methodEntry.getValue() ? "static" : "")
                 try (FileWriter writer = new FileWriter(classFile)) {
                     writer.write(realClassCode)
-                    mixinClasses.add('generated.' + className)
+                    String fullName = "generated." + className
+                    mixinClasses.add(fullName)
+                    targetMap.put(fullName, methodEntry.getKey())
                     index++
                 } catch (IOException ignored) {
                     println("Can't write File : " + classFile.getPath())
@@ -302,6 +343,36 @@ class ClassGenerator {
             }
         }
 
+    }
+
+    private void generateFeedJson(){
+        JsonObject jsonObject = new JsonObject()
+        generateSingleFeed(jsonObject, "suffix", suffix)
+        generateSingleFeed(jsonObject, "contains", contains)
+        generateSingleFeed(jsonObject, "equals", equals)
+        generateSingleFeed(jsonObject, "regexp", regExp)
+        try (FileWriter writer = new FileWriter("feed.json")) {
+            String json = new GsonBuilder().setPrettyPrinting().create().toJson(jsonObject)
+            writer.write(json)
+        }catch (IOException ignored) {
+            println("Can't write to Feed!")
+        }
+    }
+
+    private static void generateSingleFeed(JsonObject object, String key, Map<String,Boolean> data){
+        JsonArray commonArray = new JsonArray()
+        JsonArray staticArray = new JsonArray()
+        for (Map.Entry<String,Boolean> entry : data.entrySet()){
+            if(entry.getValue()) {
+                staticArray.add(entry.getKey())
+            }else {
+                commonArray.add(entry.getKey())
+            }
+        }
+        JsonObject parent = new JsonObject()
+        parent.add("common", commonArray)
+        parent.add("static", staticArray)
+        object.add(key, parent)
     }
 
     private void putManualMixins() {

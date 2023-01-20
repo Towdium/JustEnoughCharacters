@@ -21,6 +21,7 @@ build
 eclipse
 run
 .vscode
+logs
 
 # generated
 src/main/java/me/towdium/jecharacters/mixins/generated/

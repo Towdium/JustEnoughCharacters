@@ -83,14 +83,11 @@ public class Match {
         return contains(s1, s2);
     }
 
-    /*
-    @SubscribeEvent
-    public static void onConfigChange(ModConfigEvent e) {
-        onConfigChange();
+    @SuppressWarnings("rawtypes")
+    public static SuffixArray createFakeArray() {
+        return new FakeArray();
     }
 
-
-     */
     public static void onConfigChange() {
         context.config().keyboard(JechConfig.enumKeyboard.keyboard)
                 .fAng2An(JechConfig.enableFAng2an).fEng2En(JechConfig.enableFEng2en)

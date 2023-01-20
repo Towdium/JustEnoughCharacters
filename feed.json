@@ -1,0 +1,71 @@
+{
+  "suffix": {
+    "common": [],
+    "static": [
+      "dev.emi.emi.search.EmiSearch:bake()V"
+    ]
+  },
+  "contains": {
+    "common": [
+      "me.shedaniel.rei.impl.client.search.argument.type.ModArgumentType:matches(Lme/shedaniel/rei/impl/client/search/argument/type/ModArgumentType$ModInfoPair;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z",
+      "dev.ftb.mods.ftblibrary.ui.misc.ButtonListBaseScreen$1:add(Ldev/ftb/mods/ftblibrary/ui/Widget;)V",
+      "com.blamejared.controlling.client.NewKeyBindsScreen:lambda$filterKeys$8(Lcom/blamejared/controlling/client/NewKeyBindsList$KeyEntry;)Z",
+      "dev.emi.emi.search.NameQuery:matches(Ldev/emi/emi/api/stack/EmiStack;)Z",
+      "fi.dy.masa.malilib.gui.widgets.WidgetListBase:matchesFilter(Ljava/lang/String;Ljava/lang/String;)Z",
+      "vazkii.botania.api.corporea.CorporeaRequestDefaultMatchers$CorporeaStringMatcher:equalOrContain(Ljava/lang/String;)Z",
+      "com.github.klikli_dev.occultism.client.gui.storage.StorageControllerGuiBase:machineMatchesSearch(Lcom/github/klikli_dev/occultism/api/common/data/MachineReference;)Z",
+      "me.shedaniel.rei.impl.client.search.argument.type.TagArgumentType:matches([Ljava/lang/String;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z",
+      "de.ellpeck.actuallyadditions.mod.booklet.entry.BookletEntry:getChaptersForDisplay(Ljava/lang/String;)Ljava/util/List;",
+      "me.towdium.jecalculation.utils.Utilities$I18n:contains(Ljava/lang/String;Ljava/lang/String;)Z",
+      "me.shedaniel.rei.impl.client.search.argument.type.TextArgumentType:matches(Ljava/lang/String;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z",
+      "dev.emi.emi.search.TooltipQuery:matches(Ldev/emi/emi/api/stack/EmiStack;)Z",
+      "me.shedaniel.rei.impl.client.search.argument.type.TextArgumentType:matches(Lorg/apache/commons/lang3/mutable/Mutable;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z",
+      "red.jackf.chesttracker.gui.widgets.WItemListPanel:lambda$updateFilter$0(Lnet/minecraft/class_1799;)Z",
+      "com.blamejared.controlling.client.NewKeyBindsScreen:filterKeys()V",
+      "me.shedaniel.clothconfig2.forge.gui.entries.DropdownBoxEntry$DefaultDropdownMenuElement:search()V",
+      "net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen:m_98630_()V",
+      "mezz.jei.search.ElementSearchLowMem:matches(Ljava/lang/String;Lmezz/jei/core/search/PrefixInfo;Lmezz/jei/ingredients/IListElementInfo;)Z",
+      "me.shedaniel.rei.impl.client.search.argument.type.TagArgumentType:matches(Lorg/apache/commons/lang3/mutable/Mutable;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z",
+      "me.shedaniel.rei.impl.client.search.argument.type.TooltipArgumentType:matches(Lorg/apache/commons/lang3/mutable/Mutable;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z",
+      "com.mia.props.client.container.GuiDecobench:refreshButtons()V",
+      "me.shedaniel.rei.impl.client.search.argument.type.IdentifierArgumentType:matches(Ljava/lang/String;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z",
+      "net.blay09.mods.cookingforblockheads.container.RecipeBookContainer:search(Ljava/lang/String;)V",
+      "me.shedaniel.rei.impl.client.search.method.DefaultInputMethod:contains(Ljava/lang/String;Ljava/lang/String;)Z",
+      "me.shedaniel.rei.impl.client.search.argument.type.IdentifierArgumentType:matches(Lorg/apache/commons/lang3/mutable/Mutable;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z",
+      "net.blay09.mods.farmingforblockheads.container.MarketClientContainer:applyFilters()V",
+      "vazkii.patchouli.client.book.BookEntry:isFoundByQuery(Ljava/lang/String;)Z",
+      "net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen:m_98619_(Ljava/lang/String;)V",
+      "appeng.client.gui.me.interfaceterminal.InterfaceTerminalScreen:refreshList()V",
+      "moze_intel.projecte.gameObjs.container.inventory.TransmutationInventory:doesItemMatchFilter(Lmoze_intel/projecte/api/ItemInfo;)Z",
+      "appeng.client.gui.me.interfaceterminal.InterfaceTerminalScreen:itemStackMatchesSearchTerm(Lnet/minecraft/class_1799;Ljava/lang/String;)Z",
+      "com.chaosthedude.naturescompass.gui.NaturesCompassScreen:processSearchTerm()V",
+      "me.shedaniel.clothconfig2.gui.entries.DropdownBoxEntry$DefaultDropdownMenuElement:search()V",
+      "me.shedaniel.rei.impl.client.search.argument.type.TooltipArgumentType:matches(Ljava/lang/String;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z",
+      "com.github.klikli_dev.occultism.client.gui.storage.StorageControllerGuiBase:itemMatchesSearch(Lnet/minecraft/world/item/ItemStack;)Z",
+      "com.blamejared.controlling.client.NewKeyBindsScreen:lambda$filterKeys$9(Lcom/blamejared/controlling/client/NewKeyBindsList$KeyEntry;)Z",
+      "me.shedaniel.rei.impl.client.search.argument.type.ModArgumentType:matches(Lorg/apache/commons/lang3/mutable/Mutable;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z",
+      "dev.ftb.mods.ftblibrary.config.ui.SelectItemStackScreen$ItemStackButton:shouldAdd(Ljava/lang/String;Ljava/lang/String;)Z"
+    ],
+    "static": []
+  },
+  "equals": {
+    "common": [
+      "vazkii.botania.api.corporea.CorporeaRequestDefaultMatchers$CorporeaStringMatcher:equalOrContain(Ljava/lang/String;)Z"
+    ],
+    "static": []
+  },
+  "regexp": {
+    "common": [
+      "appeng.client.gui.me.fluids.FluidRepo:matchesSearch(Lappeng/client/gui/me/common/Repo$SearchMode;Ljava/util/regex/Pattern;Lappeng/api/storage/data/IAEFluidStack;)Z",
+      "com.tom.storagemod.gui.GuiStorageTerminalBase:updateSearch()V",
+      "dev.emi.emi.search.RegexNameQuery:matches(Ldev/emi/emi/api/stack/EmiStack;)Z",
+      "dev.emi.emi.search.RegexTooltipQuery:matches(Ldev/emi/emi/api/stack/EmiStack;)Z",
+      "com.tom.storagemod.gui.AbstractStorageTerminalScreen:updateSearch()V",
+      "appeng.client.gui.me.items.ItemRepo:matchesSearch(Lappeng/client/gui/me/common/Repo$SearchMode;Ljava/util/regex/Pattern;Lappeng/api/storage/data/IAEItemStack;)Z"
+    ],
+    "static": [
+      "appeng.client.gui.me.search.SearchPredicates:lambda$createTooltipPredicate$3(Lappeng/client/gui/me/search/RepoSearch;Ljava/util/regex/Pattern;Lappeng/menu/me/common/GridInventoryEntry;)Z",
+      "appeng.client.gui.me.search.SearchPredicates:lambda$createNamePredicate$2(Ljava/util/regex/Pattern;Lappeng/menu/me/common/GridInventoryEntry;)Z"
+    ]
+  }
+}

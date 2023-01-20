@@ -13,6 +13,13 @@ repositories {
     mavenCentral()
     maven { url 'https://dvs1.progwml6.com/files/maven/' }
     maven { url 'https://jitpack.io' }
+    maven {
+        name "Modmaven"
+        url "https://modmaven.dev/"
+        content {
+            includeGroup 'appeng'
+        }
+    }
 }
 
 configurations {
@@ -73,4 +80,4 @@ tasks.withType(JavaCompile) {
 
 apply from : 'generate.gradle'
 
-compileJava.dependsOn generate
+build.dependsOn generate
