@@ -2,8 +2,6 @@ package me.towdium.jecharacters.mixins.utils;
 
 import com.mojang.datafixers.util.Function6;
 import me.towdium.jecharacters.mixins.config.JechMixinPlugin;
-import net.fabricmc.loader.api.FabricLoader;
-import net.fabricmc.loader.impl.launch.FabricLauncherBase;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.objectweb.asm.AnnotationVisitor;
@@ -22,18 +20,20 @@ import static org.objectweb.asm.Opcodes.*;
 
 public class MixinGenerator {
 
-    public static void generate() {
+    public static void generate(Path jarPath) {
+        if (jarPath == null) {
+            new ClassEntry(null,null);
+            return;
+        }
         List<ClassEntry> classEntries = new ArrayList<>();
 
-        generateMixinClasses(classEntries, MixinGenerator::generateSuffix, "GeneratedSuffixMixin", true, FeedFetcher.Feed.suffix);
-        generateMixinClasses(classEntries, MixinGenerator::generateContains, "GeneratedContainsMixin", false, FeedFetcher.Feed.contains);
-        generateMixinClasses(classEntries, MixinGenerator::generateEquals, "GeneratedEqualsMixin", false, FeedFetcher.Feed.equals);
-        generateMixinClasses(classEntries, MixinGenerator::generateRegExp, "GeneratedRegexMixin", false, FeedFetcher.Feed.regexp);
+        generateMixinClasses(classEntries, MixinGenerator::generateSuffix, "GeneratedSuffixMixin", true, FeedFetcher.suffix);
+        generateMixinClasses(classEntries, MixinGenerator::generateContains, "GeneratedContainsMixin", false, FeedFetcher.contains);
+        generateMixinClasses(classEntries, MixinGenerator::generateEquals, "GeneratedEqualsMixin", false, FeedFetcher.equals);
+        generateMixinClasses(classEntries, MixinGenerator::generateRegExp, "GeneratedRegexMixin", false, FeedFetcher.regexp);
 
-        Path jarPath = FabricLoader.getInstance().getGameDir().resolve("mods").resolve("jecharacters-mixins.jar");
-//        Path jarPath = Path.of("J:\\JustEnoughCharacters-fabric\\run\\mods").resolve("jecharacters-mixins.jar");
         if (!classEntries.isEmpty()) {
-            try (ZipArchiveOutputStream out = new ZipArchiveOutputStream(jarPath.toFile())) {
+            try (ZipArchiveOutputStream out = new ZipArchiveOutputStream(jarPath)) {
 
                 for (ClassEntry entry : classEntries) {
                     out.putArchiveEntry(new ZipArchiveEntry("me/towdium/jecharacters/mixins/updated/" + entry.location.getName()));
@@ -44,10 +44,6 @@ public class MixinGenerator {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-        }
-
-        if (jarPath.toFile().exists()) {
-            FabricLauncherBase.getLauncher().addToClassPath(jarPath);
         }
     }
 

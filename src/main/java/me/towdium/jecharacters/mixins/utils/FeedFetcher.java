@@ -2,7 +2,6 @@ package me.towdium.jecharacters.mixins.utils;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.google.gson.JsonSyntaxException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -21,10 +20,19 @@ import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
 public class FeedFetcher {
 
+    public final static Map<String, Boolean> suffix = new HashMap<>();
+    public final static Map<String, Boolean> contains = new HashMap<>();
+    public final static Map<String, Boolean> equals = new HashMap<>();
+    public final static Map<String, Boolean> regexp = new HashMap<>();
+
+    public final static FeedFetcher INSTANCE = new FeedFetcher();
     private final static int TIMEOUT = 5;
     private final static String GITEE_URL = "https://gitee.com/vfyjxf/JustEnoughCharacters/raw/";
     private final static String GITHUB_URL = "https://raw.githubusercontent.com/Towdium/JustEnoughCharacters/";
     private final static String GITCODE_URL = "https://gitcode.net/cloudvf/JustEnoughCharacters/-/raw/";
+//private final static String GITEE_URL = "https://gitee.com/vfyjxf/JustEnoughCharacters/raw/auto-update/feed.json";
+//    private final static String GITHUB_URL = "https://raw.githubusercontent.com/Towdium/JustEnoughCharacters/auto-update/feed.json";
+//    private final static String GITCODE_URL = "https://gitcode.net/cloudvf/JustEnoughCharacters/-/raw/auto-update/feed.json";
     private final static String MC_VERSION = "1.19";
     private final static Logger LOGGER = LogManager.getLogger();
 
@@ -32,19 +40,19 @@ public class FeedFetcher {
     private final AtomicInteger mainCounter = new AtomicInteger(0);
     private static final AtomicReferenceFieldUpdater<FeedFetcher, String> updater = AtomicReferenceFieldUpdater.newUpdater(FeedFetcher.class, String.class, "jsonString");
 
-    public void fetch() throws IOException {
-        //Load classes in advance to prevent deadlocks caused by loading classes in network threads.
+    public boolean fetch(boolean beforeLoad) {
+        if (beforeLoad) return false;
         try {
-            JsonObject empty = JsonParser.parseString("{\"fake\": {\"array\": [\"empty\"], \"empty\":{}}}").getAsJsonObject();
-        } catch (JsonSyntaxException exception) {
-            //Do nothing.
+            String jsonString = getFeedJson();
+            JsonObject jsonObject = JsonParser.parseString(jsonString).getAsJsonObject();
+            putData(jsonObject.getAsJsonObject("suffix"), suffix);
+            putData(jsonObject.getAsJsonObject("contains"), contains);
+            putData(jsonObject.getAsJsonObject("equals"), equals);
+            putData(jsonObject.getAsJsonObject("regexp"), regexp);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
-        String jsonString = getFeedJson();
-        JsonObject jsonObject = JsonParser.parseString(jsonString).getAsJsonObject();
-        putData(jsonObject.getAsJsonObject("suffix"), Feed.suffix);
-        putData(jsonObject.getAsJsonObject("contains"), Feed.contains);
-        putData(jsonObject.getAsJsonObject("equals"), Feed.equals);
-        putData(jsonObject.getAsJsonObject("regexp"), Feed.regexp);
+        return true;
     }
 
     private void putData(JsonObject jsonObject, Map<String, Boolean> data) {
@@ -146,10 +154,4 @@ public class FeedFetcher {
                 });
     }
 
-    public static class Feed {
-        public final static Map<String, Boolean> suffix = new HashMap<>();
-        public final static Map<String, Boolean> contains = new HashMap<>();
-        public final static Map<String, Boolean> equals = new HashMap<>();
-        public final static Map<String, Boolean> regexp = new HashMap<>();
-    }
 }
