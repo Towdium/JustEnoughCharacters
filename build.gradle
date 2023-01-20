@@ -37,12 +37,6 @@ dependencies {
 
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
-    modImplementation "appeng:appliedenergistics2-fabric:12.9.2"
-
-    modImplementation("teamreborn:energy:2.0.0-beta1") {
-        exclude group: "net.fabricmc.fabric-api"
-    }
-
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
     modImplementation "com.github.Towdium:PinIn:${verpinin}"
     include "com.github.Towdium:PinIn:${verpinin}"

@@ -30,9 +30,6 @@ public class FeedFetcher {
     private final static String GITEE_URL = "https://gitee.com/vfyjxf/JustEnoughCharacters/raw/";
     private final static String GITHUB_URL = "https://raw.githubusercontent.com/Towdium/JustEnoughCharacters/";
     private final static String GITCODE_URL = "https://gitcode.net/cloudvf/JustEnoughCharacters/-/raw/";
-//private final static String GITEE_URL = "https://gitee.com/vfyjxf/JustEnoughCharacters/raw/auto-update/feed.json";
-//    private final static String GITHUB_URL = "https://raw.githubusercontent.com/Towdium/JustEnoughCharacters/auto-update/feed.json";
-//    private final static String GITCODE_URL = "https://gitcode.net/cloudvf/JustEnoughCharacters/-/raw/auto-update/feed.json";
     private final static String MC_VERSION = "1.19";
     private final static Logger LOGGER = LogManager.getLogger();
 
@@ -70,7 +67,7 @@ public class FeedFetcher {
                 "gitee", () -> getFeedJson(GITEE_URL + "fabric-" + MC_VERSION + "/feed.json", "gitee", failureTimes),
                 "coding", () -> getFeedFromCoding(failureTimes),
                 "github", () -> getFeedJson(GITHUB_URL + "fabric-" + MC_VERSION + "/feed.json", "github", failureTimes),
-                "gitcode",() ->getFeedJson(GITCODE_URL + "fabric-" + MC_VERSION + "/feed.json", "gitcode", failureTimes)
+                "gitcode", () -> getFeedJson(GITCODE_URL + "fabric-" + MC_VERSION + "/feed.json", "gitcode", failureTimes)
         );
 
         taskSupplier.values().forEach(Runnable::run);
@@ -101,7 +98,7 @@ public class FeedFetcher {
                 .followRedirects(HttpClient.Redirect.ALWAYS)
                 .build();
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create("https://cloudvf.coding.net/api/user/cloudvf/project/JustEnoughCharacters/shared-depot/JustEnoughCharacters/git/blob/auto-update/feed.json"))
+                .uri(URI.create("https://cloudvf.coding.net/api/user/cloudvf/project/JustEnoughCharacters/shared-depot/JustEnoughCharacters/git/blob/fabric-" + MC_VERSION + "/feed.json"))
                 .GET()
                 .timeout(Duration.ofSeconds(TIMEOUT))
                 .build();
