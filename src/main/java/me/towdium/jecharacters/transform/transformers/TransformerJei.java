@@ -32,7 +32,7 @@ public class TransformerJei extends Transformer.Default {
         if (JechConfig.enableForceQuote) Transformer.findMethod(n, "getElements").ifPresent(methodNode -> {
             InsnList list = methodNode.instructions;
             list.insert(list.get(3), new MethodInsnNode(Opcodes.INVOKESTATIC,
-                    "me/towdium/jecharacters/utils/Match", "wrap",
+                    "me/towdium/jecharacters/util/Match", "wrap",
                     "(Ljava/lang/String;)Ljava/lang/String;", false));
         });
     }
