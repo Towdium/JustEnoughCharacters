@@ -4,11 +4,9 @@ import com.google.gson.Gson;
 import me.towdium.jecharacters.core.JechCore;
 import net.minecraftforge.common.MinecraftForge;
 import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.Handle;
 import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.tree.AbstractInsnNode;
-import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.MethodInsnNode;
-import org.objectweb.asm.tree.TypeInsnNode;
+import org.objectweb.asm.tree.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -27,6 +25,21 @@ public class Profiler {
 
     private static final JarContainer[] EMPTY_JC = new JarContainer[]{};
     private static final String[] EMPTY_STR = new String[]{};
+
+    private static final Analyzer SUFFIX = new Analyzer.Construct(Type.SUFFIX, "net/minecraft/client/util/SuffixArray", "cgx", "cgz");
+    private static final Analyzer CONTAINS = new Analyzer.Invoke(Type.CONTAINS, false, "java/lang/String", "contains", "(Ljava/lang/CharSequence;)Z");
+    private static final List<Analyzer> STRINGKT = Arrays.asList(
+            new Analyzer.Invoke(Type.CONTAINS, true,
+                    "kotlin/text/StringsKt", "contain" +
+                    "s", "(Ljava/lang/CharSequence;Ljava/lang/CharSequence;Z)Z"),
+            new Analyzer.Invoke(
+                    Type.CONTAINS, true, "kotlin/text/StringsKt", "contains",
+                    "(Ljava/lang/CharSequence;Ljava/lang/CharSequence)Z"
+            )
+    );
+    private static final Analyzer EQUALS = new Analyzer.Invoke(Type.EQUALS, false, "java/lang/String", "equals", "(Ljava/lang/Object;)Z");
+    private static final Analyzer MATCHES = new Analyzer.Invoke(Type.REGEXP, false, "java/lang/String", "matches", "(Ljava/lang/String;)Z");
+    private static final Analyzer REGEXP = new Analyzer.Invoke(Type.REGEXP, false, "java/util/regex/Pattern", "matcher", "(Ljava/lang/CharSequence;)Ljava/util/regex/Matcher;");
 
     public static Report run() {
         File modDirectory = new File("mods");
@@ -58,6 +71,7 @@ public class Profiler {
 
     private static void scanJar(ZipFile f, Consumer<JarContainer> cbkJar) {
         ArrayList<String> methodsString = new ArrayList<>();
+        ArrayList<String> methodsEquals = new ArrayList<>();
         ArrayList<String> methodsRegExp = new ArrayList<>();
         ArrayList<String> methodsSuffix = new ArrayList<>();
         ArrayList<String> methodsStrsKt = new ArrayList<>();
@@ -70,7 +84,7 @@ public class Profiler {
                         JechCore.LOG.info("Class file " + entry.getName()
                                 + " in jar file " + f.getName() + " is too large, skip.");
                     } else {
-                        scanClass(is, methodsString::add, methodsRegExp::add, methodsSuffix::add, methodsStrsKt::add);
+                        scanClass(is, methodsString::add, methodsEquals::add, methodsRegExp::add, methodsSuffix::add, methodsStrsKt::add);
                     }
                 } catch (IOException e) {
                     JechCore.LOG.info("Fail to read file " + entry.getName()
@@ -89,8 +103,9 @@ public class Profiler {
                 }
             }
         });
-        if (!methodsString.isEmpty() || !methodsRegExp.isEmpty() || !methodsSuffix.isEmpty() || !methodsStrsKt.isEmpty()) {
+        if (!methodsString.isEmpty() || !methodsEquals.isEmpty() || !methodsRegExp.isEmpty() || !methodsSuffix.isEmpty() || !methodsStrsKt.isEmpty()) {
             ret.methodsString = methodsString.toArray(EMPTY_STR);
+            ret.methodsEquals = methodsEquals.toArray(EMPTY_STR);
             ret.methodsRegExp = methodsRegExp.toArray(EMPTY_STR);
             ret.methodsSuffix = methodsSuffix.toArray(EMPTY_STR);
             ret.methodsStrsKt = methodsStrsKt.toArray(EMPTY_STR);
@@ -98,7 +113,7 @@ public class Profiler {
         }
     }
 
-    private static void scanClass(InputStream is, Consumer<String> string, Consumer<String> regexp,
+    private static void scanClass(InputStream is, Consumer<String> string, Consumer<String> equals, Consumer<String> regexp,
                                   Consumer<String> suffix, Consumer<String> strskt) throws IOException {
         ClassNode classNode = new ClassNode();
         ClassReader classReader = new ClassReader(is);
@@ -116,35 +131,17 @@ public class Profiler {
             Iterator<AbstractInsnNode> it = methodNode.instructions.iterator();
             while (it.hasNext()) {
                 AbstractInsnNode node = it.next();
-                if (node instanceof MethodInsnNode) {
-                    MethodInsnNode mNode = ((MethodInsnNode) node);
-                    if (mNode.getOpcode() == Opcodes.INVOKEVIRTUAL && mNode.owner.equals("java/lang/String")
-                            && mNode.name.equals("contains") && mNode.desc.equals("(Ljava/lang/CharSequence;)Z")) {
-                        string.accept((classNode.name + ":" + methodNode.name + ":" + methodNode.desc).replace('/', '.'));
-                        break;
-                    } else if (mNode.getOpcode() == Opcodes.INVOKEVIRTUAL && mNode.owner.equals("java/lang/String")
-                            && mNode.name.equals("matches") && mNode.desc.equals("(Ljava/lang/String;)Z")) {
-                        regexp.accept((classNode.name + ":" + methodNode.name + ":" + methodNode.desc).replace('/', '.'));
-                        break;
-                    } else if (mNode.getOpcode() == Opcodes.INVOKEVIRTUAL && mNode.owner.equals("java/util/regex/Pattern")
-                            && mNode.name.equals("matcher")
-                            && mNode.desc.equals("(Ljava/lang/CharSequence;)Ljava/util/regex/Matcher;")) {
-                        regexp.accept((classNode.name + ":" + methodNode.name + ":" + methodNode.desc).replace('/', '.'));
-                        break;
-                    } else if (mNode.getOpcode() == Opcodes.INVOKESTATIC && mNode.owner.equals("kotlin/text/StringsKt")
-                            && mNode.name.equals("contains") && mNode.desc.equals("(Ljava/lang/CharSequence;Ljava/lang/CharSequence;Z)Z")) {
-                        strskt.accept((classNode.name + ":" + methodNode.name + ":" + methodNode.desc).replace('/', '.'));
-                        break;
-                    }
-                } else if (node instanceof TypeInsnNode) {
-                    TypeInsnNode tNode = ((TypeInsnNode) node);
-                    if (tNode.getOpcode() == Opcodes.NEW && (
-                            tNode.desc.equals("net/minecraft/client/util/SuffixArray")
-                                    || tNode.desc.equals("cgx")) || tNode.desc.equals("cgz")) {
-                        suffix.accept((classNode.name + ":" + methodNode.name + ":" + methodNode.desc)
-                                .replace('/', '.'));
-                        break;
-                    }
+                if (CONTAINS.match(node)) {
+                    string.accept((classNode.name + ":" + methodNode.name + ":" + methodNode.desc).replace('/', '.'));
+                } else if (EQUALS.match(node)) {
+                    equals.accept((classNode.name + ":" + methodNode.name + ":" + methodNode.desc).replace('/', '.'));
+                } else if (MATCHES.match(node) || REGEXP.match(node)) {
+                    regexp.accept((classNode.name + ":" + methodNode.name + ":" + methodNode.desc).replace('/', '.'));
+                } else if (STRINGKT.stream().anyMatch(analyzer -> analyzer.match(node))) {
+                    strskt.accept((classNode.name + ":" + methodNode.name + ":" + methodNode.desc).replace('/', '.'));
+                } else if (SUFFIX.match(node)) {
+                    suffix.accept((classNode.name + ":" + methodNode.name + ":" + methodNode.desc)
+                            .replace('/', '.'));
                 }
             }
         });
@@ -167,6 +164,7 @@ public class Profiler {
     private static class JarContainer {
         ModContainer[] mods;
         String[] methodsString;
+        String[] methodsEquals;
         String[] methodsRegExp;
         String[] methodsSuffix;
         String[] methodsStrsKt;
@@ -181,4 +179,83 @@ public class Profiler {
         String url;
         String[] authorList;
     }
+
+    private static abstract class Analyzer {
+        Type type;
+
+        public Analyzer(Type type) {
+            this.type = type;
+        }
+
+        public void analyze(AbstractInsnNode insn, ClassNode clazz, MethodNode method,
+                            EnumMap<Type, Set<String>> methods) {
+            if (match(insn)) {
+                methods.get(type).add(clazz.name.replace('/', '.') + ":" + method.name + method.desc);
+            }
+        }
+
+        abstract boolean match(AbstractInsnNode insn);
+
+        private static class Invoke extends Analyzer {
+            String owner;
+            String name;
+            String desc;
+            int op;
+            int tag;
+
+            public Invoke(Type type, boolean isStatic, String owner, String name, String desc) {
+                super(type);
+                op = isStatic ? Opcodes.INVOKESTATIC : Opcodes.INVOKEVIRTUAL;
+                tag = isStatic ? Opcodes.H_INVOKESTATIC : Opcodes.H_INVOKEVIRTUAL;
+                this.owner = owner;
+                this.name = name;
+                this.desc = desc;
+            }
+
+            @Override
+            boolean match(AbstractInsnNode insn) {
+                if (insn instanceof MethodInsnNode) {
+                    MethodInsnNode node = (MethodInsnNode) insn;
+                    return node.getOpcode() == op && node.owner.equals(owner) &&
+                            node.name.equals(name) && node.desc.equals(desc);
+                } else if (insn instanceof InvokeDynamicInsnNode) {
+                    InvokeDynamicInsnNode din = (InvokeDynamicInsnNode) insn;
+                    if (din.bsmArgs.length != 3) return false;
+                    Object arg = din.bsmArgs[1];
+                    if (arg instanceof Handle) {
+                        Handle handle = (Handle) arg;
+                        return handle.getTag() == tag && handle.getOwner().equals(owner) &&
+                                handle.getName().equals(name) && handle.getDesc().equals(desc);
+                    }
+                }
+                return false;
+            }
+        }
+
+        private static class Construct extends Analyzer {
+            String[] clazz;
+
+            public Construct(Type type, String... clazz) {
+                super(type);
+                this.clazz = clazz;
+            }
+
+            @Override
+            boolean match(AbstractInsnNode insn) {
+                if (insn instanceof TypeInsnNode) {
+                    TypeInsnNode tin = ((TypeInsnNode) insn);
+                    return tin.getOpcode() == Opcodes.NEW && Arrays.asList(clazz).contains(tin.desc);
+                } else return false;
+            }
+        }
+    }
+
+    enum Type {
+        CONTAINS,
+        EQUALS,
+        REGEXP,
+        SUFFIX,
+        STRINGSKT
+    }
+
 }

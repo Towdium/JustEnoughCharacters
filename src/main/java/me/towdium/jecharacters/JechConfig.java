@@ -67,15 +67,15 @@ public class JechConfig {
         for (Item item : Item.values()) item.init();
     }
 
-    public static Spell getKeyboard(String keyboardName){
-        try{
+    public static Spell getKeyboard(String keyboardName) {
+        try {
             return Spell.valueOf(keyboardName.toUpperCase());
-        }catch (IllegalArgumentException e){
+        } catch (IllegalArgumentException e) {
             return Spell.QUANPIN;
         }
     }
 
-    public static void setKeyboard(Spell keyboard){
+    public static void setKeyboard(Spell keyboard) {
         JechConfig.keyboard = keyboard;
         JechConfig.enableForceQuote = false;
         Item.STRING_KEYBOARD.getProperty().set(keyboard.name());
@@ -171,7 +171,7 @@ public class JechConfig {
                 case ENABLE_DUMP_CLASS_NAME:
                     return "Set to true to dump all the class names";
                 case STRING_KEYBOARD:
-                    return "Choose keyboard(It needs to be in all caps): QUANPIN(quanpin),  DAQIAN(phonetic/Daqian), XIAOHE(xiaohe), ZIRANMA(ziranma)";
+                    return "Choose keyboard(It needs to be in all caps): QUANPIN(quanpin),  DAQIAN(phonetic/Daqian), XIAOHE(xiaohe), ZIRANMA(ziranma), SOUGOU(sougou), GUOBIAO(guobiao) ,MICROSOFT(microsoft), PINYINPP(pinyinjiajia), ZIGUANG(ziguang)";
             }
             return "";
         }
@@ -288,6 +288,7 @@ public class JechConfig {
                             "com.mia.props.client.container.GuiDecobench:refreshButtons",  // Decofraft workbench
                             "mrriegel.storagenetwork.gui.GuiRequest:match",  // Storage Network
                             "vazkii.quark.client.feature.ChestSearchBar:lambda$namesMatch$0",  // quark chest
+                            "vazkii.quark.client.feature.ChestSearchBar:namesMatch", // quark chest
                             "logisticspipes.gui.orderer.GuiOrderer:isSearched",  // Logistics Pipes orderer
                             "logisticspipes.gui.orderer.GuiRequestTable:isSearched",  // Logistics Pipes request table
                             "us.getfluxed.controlsearch.client.gui.GuiNewControls:refreshKeys",  // Controlling
@@ -521,7 +522,10 @@ public class JechConfig {
 
     public enum Spell {
         QUANPIN(Keyboard.QUANPIN), DAQIAN(Keyboard.DAQIAN),
-        XIAOHE(Keyboard.XIAOHE), ZIRANMA(Keyboard.ZIRANMA);
+        XIAOHE(Keyboard.XIAOHE), ZIRANMA(Keyboard.ZIRANMA),
+        SOUGOU(Keyboard.SOUGOU), GUOBIAO(Keyboard.GUOBIAO),
+        MICROSOFT(Keyboard.MICROSOFT), PINYINPP(Keyboard.PINYINPP),
+        ZIGUANG(Keyboard.ZIGUANG);
 
         public final Keyboard keyboard;
 

@@ -10,7 +10,6 @@ import me.towdium.pinin.PinIn;
 import me.towdium.pinin.searchers.TreeSearcher;
 import mezz.jei.suffixtree.GeneralizedSuffixTree;
 import net.minecraft.client.util.SuffixArray;
-import net.minecraftforge.fml.client.event.ConfigChangedEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 

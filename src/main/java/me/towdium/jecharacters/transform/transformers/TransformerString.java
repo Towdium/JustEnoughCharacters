@@ -32,10 +32,22 @@ public class TransformerString extends Transformer.Configurable {
     @Override
     protected void transform(MethodNode n) {
         Transformer.transformInvoke(
-                n, "java/lang/String", "contains",
-                "me/towdium/jecharacters/util/Match", "contains",
+                n, "java/lang/String",
+                "contains",
+                "(Ljava/lang/CharSequence;)Z",
+                "me/towdium/jecharacters/util/Match",
+                "contains",
                 "(Ljava/lang/String;Ljava/lang/CharSequence;)Z",
-                false, Opcodes.INVOKESTATIC, "(Ljava/lang/Object;)Z", "(Ljava/lang/String;)Z"
+                false, Opcodes.INVOKESTATIC, Opcodes.H_INVOKESTATIC
+        );
+        Transformer.transformInvoke(
+                n, "java/lang/String",
+                "equals",
+                "me/towdium/jecharacters/util/Match",
+                "(Ljava/lang/Object;)Z",
+                "equals",
+                "(Ljava/lang/String;Ljava/lang/Object;)Z",
+                false, Opcodes.INVOKESTATIC, Opcodes.H_INVOKESTATIC
         );
     }
 }

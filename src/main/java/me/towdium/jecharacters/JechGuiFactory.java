@@ -1,7 +1,6 @@
 package me.towdium.jecharacters;
 
 import me.towdium.jecharacters.core.JechCore;
-import me.towdium.jecharacters.util.Match;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraftforge.common.config.ConfigElement;

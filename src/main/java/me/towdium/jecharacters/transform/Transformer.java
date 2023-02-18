@@ -71,6 +71,38 @@ public interface Transformer {
         return ret;
     }
 
+    static boolean transformInvoke(
+            MethodNode methodNode, String srcOwner, String srcName, String srcDesc,
+            String newOwner, String newName, String newDesc,
+            boolean isInterface, int op,int opDynamic) {
+        JechCore.LOG.info("Transforming invoke of " + srcOwner + "." + srcName +
+                " to " + newOwner + "." + newName + " in method " + methodNode.name + ".");
+
+        Iterator<AbstractInsnNode> iterator = methodNode.instructions.iterator();
+
+        boolean ret = false;
+        while (iterator.hasNext()) {
+            AbstractInsnNode node = iterator.next();
+            if (node instanceof MethodInsnNode && (node.getOpcode() == Opcodes.INVOKEVIRTUAL ||
+                    node.getOpcode() == Opcodes.INVOKESPECIAL || node.getOpcode() == Opcodes.INVOKESTATIC)) {
+                MethodInsnNode insnNode = ((MethodInsnNode) node);
+                if (insnNode.owner.equals(srcOwner) && insnNode.name.equals(srcName)) {
+                    methodNode.instructions.set(insnNode, new MethodInsnNode(op, newOwner, newName, srcDesc, isInterface));
+                    ret = true;
+                }
+            }
+            if (node instanceof InvokeDynamicInsnNode && node.getOpcode() == Opcodes.INVOKEDYNAMIC) {
+                InvokeDynamicInsnNode insnNode = ((InvokeDynamicInsnNode) node);
+                if (insnNode.bsmArgs[1] instanceof Handle) {
+                    Handle h = ((Handle) insnNode.bsmArgs[1]);
+                    if (srcOwner.equals(h.getOwner()) && srcName.equals(h.getName()) && srcDesc.equals(h.getDesc()))
+                        insnNode.bsmArgs[1] = new Handle(opDynamic, newOwner, newName, newDesc, false);
+                }
+            }
+        }
+        return ret;
+    }
+
     static void transformConstruct(MethodNode methodNode, String desc, String destNew) {
         JechCore.LOG.info("Transforming constructor of " + desc +
                 " to " + destNew + " in method " + methodNode.name + ".");

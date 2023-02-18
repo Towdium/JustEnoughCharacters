@@ -79,6 +79,21 @@ public class JechCommand extends CommandBase {
                 case "ziranma":
                     JechConfig.setKeyboard(JechConfig.Spell.ZIRANMA);
                     break;
+                case "sougou":
+                    JechConfig.setKeyboard(JechConfig.Spell.SOUGOU);
+                    break;
+                case "guobiao":
+                    JechConfig.setKeyboard(JechConfig.Spell.GUOBIAO);
+                    break;
+                case "microsoft":
+                    JechConfig.setKeyboard(JechConfig.Spell.MICROSOFT);
+                    break;
+                case "pinyinjiajia":
+                    JechConfig.setKeyboard(JechConfig.Spell.PINYINPP);
+                    break;
+                case "ziguang":
+                    JechConfig.setKeyboard(JechConfig.Spell.ZIGUANG);
+                    break;
                 default:
                     sender.sendMessage(new TextComponentTranslation("command.unknown"));
                     break;
@@ -96,7 +111,7 @@ public class JechCommand extends CommandBase {
         else if (args.length == 2 && "verbose".equals(args[0]))
             return getListOfStringsMatchingLastWord(args, "true", "false");
         else if (args.length == 2 && "keyboard".equals(args[0]))
-            return getListOfStringsMatchingLastWord(args, "quanpin", "daqian", "xiaohe", "ziranma");
+            return getListOfStringsMatchingLastWord(args, "quanpin", "daqian", "xiaohe", "ziranma", "sougou", "guobiao", "microsoft", "pinyinjiajia", "ziguang");
         else
             return Collections.emptyList();
     }
