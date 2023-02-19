@@ -73,10 +73,9 @@ public interface Transformer {
 
     static boolean transformInvoke(
             MethodNode methodNode, String srcOwner, String srcName, String srcDesc,
-            String newOwner, String newName, String newDesc,
-            boolean isInterface, int op,int opDynamic) {
+            String dstOwner, String dstName, String dstDesc) {
         JechCore.LOG.info("Transforming invoke of " + srcOwner + "." + srcName +
-                " to " + newOwner + "." + newName + " in method " + methodNode.name + ".");
+                " to " + dstOwner + "." + dstName + " in method " + methodNode.name + ".");
 
         Iterator<AbstractInsnNode> iterator = methodNode.instructions.iterator();
 
@@ -85,18 +84,20 @@ public interface Transformer {
             AbstractInsnNode node = iterator.next();
             if (node instanceof MethodInsnNode && (node.getOpcode() == Opcodes.INVOKEVIRTUAL ||
                     node.getOpcode() == Opcodes.INVOKESPECIAL || node.getOpcode() == Opcodes.INVOKESTATIC)) {
-                MethodInsnNode insnNode = ((MethodInsnNode) node);
-                if (insnNode.owner.equals(srcOwner) && insnNode.name.equals(srcName)) {
-                    methodNode.instructions.set(insnNode, new MethodInsnNode(op, newOwner, newName, srcDesc, isInterface));
+                MethodInsnNode methodInsn = ((MethodInsnNode) node);
+                if (methodInsn.owner.equals(srcOwner) && methodInsn.name.equals(srcName) && methodInsn.desc.equals(srcDesc)) {
+                    methodInsn.setOpcode(Opcodes.INVOKESTATIC);
+                    methodInsn.owner = dstOwner;
+                    methodInsn.name = dstName;
+                    methodInsn.desc = dstDesc;
                     ret = true;
                 }
-            }
-            if (node instanceof InvokeDynamicInsnNode && node.getOpcode() == Opcodes.INVOKEDYNAMIC) {
+            } else if (node instanceof InvokeDynamicInsnNode && node.getOpcode() == Opcodes.INVOKEDYNAMIC) {
                 InvokeDynamicInsnNode insnNode = ((InvokeDynamicInsnNode) node);
                 if (insnNode.bsmArgs[1] instanceof Handle) {
                     Handle h = ((Handle) insnNode.bsmArgs[1]);
                     if (srcOwner.equals(h.getOwner()) && srcName.equals(h.getName()) && srcDesc.equals(h.getDesc()))
-                        insnNode.bsmArgs[1] = new Handle(opDynamic, newOwner, newName, newDesc, false);
+                        insnNode.bsmArgs[1] = new Handle(Opcodes.H_INVOKESTATIC, dstOwner, dstName, dstDesc, false);
                 }
             }
         }
