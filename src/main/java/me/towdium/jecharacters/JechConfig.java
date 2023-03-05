@@ -76,7 +76,10 @@ public class JechConfig {
 
     public enum Spell {
         QUANPIN(Keyboard.QUANPIN), DAQIAN(Keyboard.DAQIAN),
-        XIAOHE(Keyboard.XIAOHE), ZIRANMA(Keyboard.ZIRANMA);
+        XIAOHE(Keyboard.XIAOHE), ZIRANMA(Keyboard.ZIRANMA),
+        SOUGOU(Keyboard.SOUGOU), GUOBIAO(Keyboard.GUOBIAO),
+        MICROSOFT(Keyboard.MICROSOFT), PINYINPP(Keyboard.PINYINPP),
+        ZIGUANG(Keyboard.ZIGUANG);
 
         public final Keyboard keyboard;
 

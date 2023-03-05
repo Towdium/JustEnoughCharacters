@@ -58,7 +58,12 @@ public class JechCommand {
                         .then(literal("quanpin").executes(c -> setKeyboard(Spell.QUANPIN)))
                         .then(literal("daqian").executes(c -> setKeyboard(Spell.DAQIAN)))
                         .then(literal("xiaohe").executes(c -> setKeyboard(Spell.XIAOHE)))
-                        .then(literal("ziranma").executes(c -> setKeyboard(Spell.ZIRANMA))));
+                        .then(literal("ziranma").executes(c -> setKeyboard(Spell.ZIRANMA)))
+                        .then(literal("sougou").executes(c -> setKeyboard(Spell.SOUGOU)))
+                        .then(literal("guobiao").executes(c -> setKeyboard(Spell.GUOBIAO)))
+                        .then(literal("microsoft").executes(c -> setKeyboard(Spell.MICROSOFT)))
+                        .then(literal("pinyinjiajia").executes(c -> setKeyboard(Spell.PINYINPP)))
+                        .then(literal("ziguang").executes(c -> setKeyboard(Spell.ZIGUANG))));
         dispatcher = new CommandDispatcher<>();
         dispatcher.register(builder);
     }

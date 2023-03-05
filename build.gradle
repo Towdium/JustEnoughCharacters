@@ -18,8 +18,10 @@ java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
 repositories {
     mavenCentral()
-    maven { url 'https://dvs1.progwml6.com/files/maven/' }
-    maven { url 'https://jitpack.io' }
+    maven { url = 'https://jitpack.io' }
+    maven { url = "https://dvs1.progwml6.com/files/maven/" }
+    maven { url = "https://maven.blamejared.com/" }
+    maven { url = "https://modmaven.dev" }
 }
 
 configurations {
@@ -63,17 +65,23 @@ minecraft {
     }
 }
 
-minecraft.runs.all {
+minecraft.runs.configureEach {
     lazyToken('minecraft_classpath') {
-        configurations.shade.copyRecursive().resolve().collect { it.absolutePath }.join(File.pathSeparator)
+        configurations.shade.copyRecursive()
+                .resolve()
+                .collect { it.absolutePath }
+                .join(File.pathSeparator)
     }
 }
 
 dependencies {
     minecraft 'net.minecraftforge:forge:1.18.2-40.1.0'
-    compileOnly fg.deobf('mezz.jei:jei-1.18.2:9.7.0.195')
-    runtimeOnly fg.deobf('mezz.jei:jei-1.18.2:9.7.0.195')
-    shade(group: 'com.github.towdium', name: 'pinin', version: "${verpinin}") {
+//    compileOnly fg.deobf('mezz.jei:jei-1.18.2:9.7.0.195')
+//    compileOnly fg.deobf('mezz.jei:jei-1.18.2-forge:10.2.1.1002')
+//    runtimeOnly fg.deobf('mezz.jei:jei-1.18.2:9.7.0.195')
+    runtimeOnly(fg.deobf("mezz.jei:jei-1.18.2-forge:10.2.1.1002"))
+    compileOnly(fg.deobf("mezz.jei:jei-1.18.2-forge:10.2.1.1002"))
+    shade(group: 'com.github.towdium', name: 'PinIn', version: "${verpinin}") {
         transitive = false
     }
 }
@@ -85,18 +93,18 @@ test {
 jar {
     manifest {
         attributes([
-                "Specification-Title": 'Just Enough Characters',
-                "Specification-Vendor": 'Towdium',
-                "Specification-Version": "${verspec}",
-                "Implementation-Title": project.name,
-                "Implementation-Version": "${verspec}.${verbuild}",
-                "Implementation-Vendor" : 'Towdium',
+                "Specification-Title"     : 'Just Enough Characters',
+                "Specification-Vendor"    : 'Towdium',
+                "Specification-Version"   : "${verspec}",
+                "Implementation-Title"    : project.name,
+                "Implementation-Version"  : "${verspec}.${verbuild}",
+                "Implementation-Vendor"   : 'Towdium',
                 "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
         ])
     }
 
     configurations.shade.each { dep ->
-        from(project.zipTree(dep)){
+        from(project.zipTree(dep)) {
             include 'me/towdium/pinin/**'
         }
     }
@@ -106,7 +114,7 @@ tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'
 }
 
-task generate(type:Exec) {
+task generate(type: Exec) {
     commandLine 'python', 'generate.py'
 }
 
