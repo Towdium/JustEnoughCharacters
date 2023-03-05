@@ -93,12 +93,14 @@ contains = [
     'com.minecolonies.coremod.client.gui.modules.ItemListModuleWindow:lambda$updateResources$3(Lnet/minecraft/world/item/ItemStack;)Z', # MineColonies
     'com.minecolonies.coremod.client.gui.WindowSelectRes:updateResources()V', # MineColonies
     'com.minecolonies.coremod.client.gui.modules.EntityListModuleWindow:lambda$updateResources$3(Lnet/minecraft/resources/ResourceLocation;)Z', # MineColonies
+    'com.minecolonies.coremod.client.gui.ViewFilterableList:lambda$updateResources$0(Lnet/minecraft/item/ItemStack;)Z', # MineColonies
     'me.desht.pneumaticcraft.api.crafting.recipe.AmadronRecipe:passesQuery(Ljava/lang/String;)Z', # PneumaticCraft Amadron
     'me.desht.pneumaticcraft.client.gui.ItemSearcherScreen$SearchEntry:test(Ljava/lang/String;)Z', # PneumaticCraft Item Search Upgrade
     'de.ellpeck.prettypipes.terminal.containers.ItemTerminalGui:lambda$updateWidgets$8(Ljava/lang/String;Lorg/apache/commons/lang3/tuple/Pair;)Z', # Pretty Pipes Terminal
     'dev.ftb.mods.ftblibrary.config.ui.SelectItemStackScreen$ItemStackButton:shouldAdd(Ljava/lang/String;Ljava/lang/String;)Z', # FTB Library(FTB Quests)
     'dev.ftb.mods.ftblibrary.ui.misc.ButtonListBaseScreen$1:add(Ldev/ftb/mods/ftblibrary/ui/Widget;)V' # FTB Library(FTB Quests)
     'me.shedaniel.rei.impl.client.search.method.DefaultInputMethod:contains(Ljava/lang/String;Ljava/lang/String;)Z', #REI default
+    'com.github.einjerjar.mc.keymap.client.gui.widgets.KeymapListWidget:lambda$updateFilteredList$1(Lcom/github/einjerjar/mc/keymap/client/gui/widgets/KeymapListWidget$KeymapListEntry;Ljava/lang/String;)Z' #Keymap
 ]
 equals = [
     'vazkii.botania.api.corporea.CorporeaRequestDefaultMatchers$CorporeaStringMatcher:equalOrContain(Ljava/lang/String;)Z',  # Botania (Corporea)
