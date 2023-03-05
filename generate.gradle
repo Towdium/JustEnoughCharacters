@@ -1,4 +1,5 @@
 import java.nio.file.Files
+import java.nio.file.Path
 
 task generate {
     new ClassGenerator().generate()
@@ -19,7 +20,7 @@ class ClassGenerator {
 
 
     private static final String MIXIN_SUFFIX_CLASS_PATTERN =
-            "package me.towdium.jecharacters.mixins;\n" +
+            "package me.towdium.jecharacters.mixins.generated;\n" +
                     "\n" +
                     "import me.towdium.jecharacters.utils.Match;\n" +
                     "import net.minecraft.client.searchtree.SuffixArray;\n" +
@@ -42,7 +43,7 @@ class ClassGenerator {
                     "}"
 
     private static final String MIXIN_CONTAINS_CLASS_PATTERN =
-            "package me.towdium.jecharacters.mixins;\n" +
+            "package me.towdium.jecharacters.mixins.generated;\n" +
                     "\n" +
                     "import me.towdium.jecharacters.utils.Match;\n" +
                     "import org.spongepowered.asm.mixin.Mixin;\n" +
@@ -74,7 +75,7 @@ class ClassGenerator {
                     "}"
 
     private static final String MIXIN_EQUALS_CLASS_PATTERN =
-            "package me.towdium.jecharacters.mixins;\n" +
+            "package me.towdium.jecharacters.mixins.generated;\n" +
                     "\n" +
                     "import me.towdium.jecharacters.utils.Match;\n" +
                     "import org.spongepowered.asm.mixin.Mixin;\n" +
@@ -96,7 +97,7 @@ class ClassGenerator {
                     "}"
 
     private static final String MIXIN_REGEXP_CLASS_PATTERN =
-            "package me.towdium.jecharacters.mixins;\n" +
+            "package me.towdium.jecharacters.mixins.generated;\n" +
                     "\n" +
                     "import me.towdium.jecharacters.utils.Match;\n" +
                     "import org.spongepowered.asm.mixin.Mixin;\n" +
@@ -172,7 +173,7 @@ class ClassGenerator {
         contains 'me.shedaniel.rei.impl.client.search.argument.type.TextArgumentType:matches(Ljava/lang/String;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z' // REI legacy
         contains 'me.shedaniel.rei.impl.client.search.argument.type.TooltipArgumentType:matches(Ljava/lang/String;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z' // REI legacy
         contains 'me.shedaniel.rei.impl.client.search.method.DefaultInputMethod:contains(Ljava/lang/String;Ljava/lang/String;)Z' //REI default
-
+        contains 'com.github.einjerjar.mc.keymap.client.gui.widgets.KeymapListWidget:lambda$updateFilteredList$1(Lcom/github/einjerjar/mc/keymap/client/gui/widgets/KeymapListWidget$KeymapListEntry;Ljava/lang/String;)Z' // Keymap
 
         contains 'me.shedaniel.clothconfig2.forge.gui.entries.DropdownBoxEntry$DefaultDropdownMenuElement:search()V'  // Cloth Config
         contains 'me.shedaniel.clothconfig2.gui.entries.DropdownBoxEntry$DefaultDropdownMenuElement:search()V'  // Cloth Config
@@ -205,6 +206,11 @@ class ClassGenerator {
     void generate() {
 
         cleanOldClasses()
+
+        File path = new File("src/main/java/me/towdium/jecharacters/mixins/generated")
+        if (!path.exists()) {
+            path.mkdirs()
+        }
 
         generateClasses(MIXIN_SUFFIX_CLASS_PATTERN, "GeneratedSuffixMixin", suffix)
         generateClasses(MIXIN_CONTAINS_CLASS_PATTERN, "GeneratedContainsMixin", contains)
@@ -270,9 +276,9 @@ class ClassGenerator {
     }
 
     private void cleanOldClasses() {
-        File mixinsDir = new File("src/main/java/me/towdium/jecharacters/mixins/generated")
+        File mixinsDir = new File("src/main/java/me/towdium/jecharacters/mixins")
         for (File file : mixinsDir.listFiles()){
-            if (file.getName().startsWith('Generated')){
+            if (file.getName().contains('Generated')){
                 if (!file.delete()){
                     println("Can't remove generated class : " + file.getName())
                 }
@@ -287,19 +293,19 @@ class ClassGenerator {
             if (decode.length == 2) {
                 String className = basedName + index
                 boolean isRemap = methodEntry.getKey().contains("net.minecraft")
-                File classFile = new File("src/main/java/me/towdium/jecharacters/mixins/generated/" + className + ".java")
+                Path classPath = Path.of('src/main/java/me/towdium/jecharacters/mixins/generated/' + className + '.java')
                 String targetMethod = decode[1]
                 String realClassCode = pattern.replace("targetClass", decode[0])
                         .replace("targetMethod", targetMethod)
                         .replace("ClassName", className)
                         .replace("isRemap", Boolean.toString(isRemap))
                         .replace("staticFlag", methodEntry.getValue() ? "static" : "")
-                try (FileWriter writer = new FileWriter(classFile)) {
+                try (FileWriter writer = new FileWriter(classPath.toFile())) {
                     writer.write(realClassCode)
                     mixinClasses.add('generated.' + className)
                     index++
                 } catch (IOException ignored) {
-                    println("Can't write File : " + classFile.getPath())
+                    println("Can't write File : " + classPath)
                 }
             } else {
                 println("Invalid config syntax: " + methodEntry.getKey())
