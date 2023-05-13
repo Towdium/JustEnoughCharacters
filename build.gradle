@@ -1,6 +1,7 @@
 plugins {
     id 'eclipse'
     id 'net.minecraftforge.gradle' version '5.1.+'
+    id 'com.github.johnrengelman.shadow' version '7.+'
 }
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
@@ -15,13 +16,14 @@ java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
 repositories {
     mavenCentral()
+    gradlePluginPortal()
     maven { url 'https://dvs1.progwml6.com/files/maven/' }
     maven { url 'https://jitpack.io' }
 }
 
 configurations {
     shade
-    implementation.extendsFrom shade
+    minecraftLibrary.extendsFrom shade
 }
 
 minecraft {
@@ -79,9 +81,12 @@ minecraft {
     }
 }
 
-minecraft.runs.all {
+minecraft.runs.configureEach {
     lazyToken('minecraft_classpath') {
-        configurations.shade.copyRecursive().resolve().collect { it.absolutePath }.join(File.pathSeparator)
+        configurations.shade.copyRecursive()
+                .resolve()
+                .collect { it.absolutePath }
+                .join(File.pathSeparator)
     }
 }
 
@@ -91,7 +96,7 @@ dependencies {
     minecraft 'net.minecraftforge:forge:1.19.2-43.1.57'
     compileOnly fg.deobf('mezz.jei:jei-1.19.2-forge:11.5.0.297')
     runtimeOnly fg.deobf('mezz.jei:jei-1.19.2-forge:11.5.0.297')
-    shade(group: 'com.github.towdium', name: 'pinin', version: "${verpinin}") {
+    shade(group: 'com.github.towdium', name: 'PinIn', version: "${verpinin}") {
         transitive = false
     }
 }
@@ -101,6 +106,7 @@ test {
 }
 
 jar {
+    archiveClassifier.set('slim')
     manifest {
         attributes([
                 "Specification-Title"     : 'Just Enough Characters',
@@ -113,24 +119,36 @@ jar {
         ])
     }
 
-    configurations.shade.each { dep ->
-        from(project.zipTree(dep)) {
-            include 'me/towdium/pinin/**'
-        }
-    }
+//    configurations.shade.each { dep ->
+//        from(project.zipTree(dep)) {
+//            include 'me/towdium/pinin/**'
+//        }
+//    }
+}
+
+shadowJar {
+    archiveClassifier.set("")
+    configurations = [project.configurations.shade]
+    finalizedBy 'reobfShadowJar'
+}
+
+assemble.dependsOn shadowJar
+
+reobf {
+    shadowJar {}
 }
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
 }
 
-task generate(type: Exec) {
+tasks.register('generate') {
     commandLine 'python', 'generate.py'
 }
 
 compileJava.dependsOn generate
 
-task replaceResources(type: Copy) {
+tasks.register('replaceResources') {
     outputs.upToDateWhen { false }
     from(sourceSets.main.resources.srcDirs) {
         include 'META-INF/mods.toml'
