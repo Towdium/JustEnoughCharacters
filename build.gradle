@@ -1,12 +1,6 @@
 plugins {
-    id 'eclipse'
-    id 'net.minecraftforge.gradle' version '5.1.+'
-    id 'com.github.johnrengelman.shadow' version '7.+'
+    id "dev.architectury.loom" version "1.1-SNAPSHOT"
 }
-
-java.toolchain.languageVersion = JavaLanguageVersion.of(17)
-
-println "Java: ${System.getProperty 'java.version'}, JVM: ${System.getProperty 'java.vm.version'} (${System.getProperty 'java.vendor'}), Arch: ${System.getProperty 'os.arch'}"
 
 version = "1.19.2-${verspec}.${verbuild}"
 group = "me.towdium.jecharacters"
@@ -16,87 +10,36 @@ java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
 repositories {
     mavenCentral()
-    gradlePluginPortal()
-    maven { url 'https://dvs1.progwml6.com/files/maven/' }
-    maven { url 'https://jitpack.io' }
+    maven { url = 'https://jitpack.io' }
+    maven { url = "https://dvs1.progwml6.com/files/maven/" }
+    maven { url = "https://maven.blamejared.com/" }
+    maven { url = "https://modmaven.dev" }
+    maven { url = 'https://maven.parchmentmc.org' }
 }
 
 configurations {
     shade
-    minecraftLibrary.extendsFrom shade
+    implementation.extendsFrom shade
 }
 
-minecraft {
-    mappings channel: 'official', version: '1.19.2'
-    runs {
-        client {
-            workingDirectory project.file('run')
-            property 'forge.logging.markers', 'REGISTRIES'
-            property 'forge.logging.console.level', 'debug'
-            property 'forge.enabledGameTestNamespaces', 'jecharacters'
-            mods {
-                jecharacters {
-                    source sourceSets.main
-                }
-            }
-        }
-
-        server {
-            workingDirectory project.file('run')
-            property 'forge.logging.markers', 'REGISTRIES'
-            property 'forge.logging.console.level', 'debug'
-            property 'forge.enabledGameTestNamespaces', 'jecharacters'
-            mods {
-                jecharacters {
-                    source sourceSets.main
-                }
-            }
-        }
-
-        gameTestServer {
-            workingDirectory project.file('run')
-
-            property 'forge.logging.markers', 'REGISTRIES'
-            property 'forge.logging.console.level', 'debug'
-            property 'forge.enabledGameTestNamespaces', 'jecharacters'
-
-            mods {
-                jecharacters {
-                    source sourceSets.main
-                }
-            }
-        }
-
-        data {
-            workingDirectory project.file('run')
-            property 'forge.logging.markers', 'REGISTRIES'
-            property 'forge.logging.console.level', 'debug'
-            args '--mod', 'jecharacters', '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
-            mods {
-                jecharacters {
-                    source sourceSets.main
-                }
-            }
-        }
-    }
+loom {
+    silentMojangMappingsLicense()
 }
 
-minecraft.runs.configureEach {
-    lazyToken('minecraft_classpath') {
-        configurations.shade.copyRecursive()
-                .resolve()
-                .collect { it.absolutePath }
-                .join(File.pathSeparator)
-    }
-}
-
-sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 dependencies {
-    minecraft 'net.minecraftforge:forge:1.19.2-43.1.57'
-    compileOnly fg.deobf('mezz.jei:jei-1.19.2-forge:11.5.0.297')
-    runtimeOnly fg.deobf('mezz.jei:jei-1.19.2-forge:11.5.0.297')
-    shade(group: 'com.github.towdium', name: 'PinIn', version: "${verpinin}") {
+
+    mappings loom.layered() {
+        officialMojangMappings()
+        parchment("org.parchmentmc.data:parchment-1.19.2:2022.11.27@zip")
+    }
+
+    minecraft "com.mojang:minecraft:${project.mc_version}"
+    forge "net.minecraftforge:forge:${project.forge_version}"
+    modImplementation 'mezz.jei:jei-1.19.2-forge:11.5.0.297'
+    implementation "com.github.towdium:PinIn:${verpinin}"
+    forgeRuntimeLibrary "com.github.towdium:PinIn:${verpinin}"
+    include(group: 'com.github.towdium', name: 'PinIn', version: "${verpinin}") {
         transitive = false
     }
 }
@@ -106,7 +49,6 @@ test {
 }
 
 jar {
-    archiveClassifier.set('slim')
     manifest {
         attributes([
                 "Specification-Title"     : 'Just Enough Characters',
@@ -118,49 +60,23 @@ jar {
                 "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
         ])
     }
-
-//    configurations.shade.each { dep ->
-//        from(project.zipTree(dep)) {
-//            include 'me/towdium/pinin/**'
-//        }
-//    }
-}
-
-shadowJar {
-    archiveClassifier.set("")
-    configurations = [project.configurations.shade]
-    finalizedBy 'reobfShadowJar'
-}
-
-assemble.dependsOn shadowJar
-
-reobf {
-    shadowJar {}
 }
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
 }
 
-tasks.register('generate') {
+task generate(type: Exec) {
     commandLine 'python', 'generate.py'
 }
 
 compileJava.dependsOn generate
 
-tasks.register('replaceResources') {
-    outputs.upToDateWhen { false }
-    from(sourceSets.main.resources.srcDirs) {
-        include 'META-INF/mods.toml'
-        expand 'version': version
-    }
-    into "$buildDir/resources/main/"
-}
-
 processResources {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    from(sourceSets.main.resources.srcDirs) {
-        exclude 'META-INF/mods.toml'
+    inputs.property "version", project.version
+
+    filesMatching("META-INF/mods.toml") {
+        expand "version": project.version
     }
-    finalizedBy replaceResources
 }

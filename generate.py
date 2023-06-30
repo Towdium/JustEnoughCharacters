@@ -84,10 +84,15 @@ contains = [
     'vazkii.quark.content.client.module.ChestSearchingModule:namesMatch(Lnet/minecraft/world/item/ItemStack;Ljava/lang/String;)Z',  # Quark
     'me.shedaniel.clothconfig2.forge.gui.entries.DropdownBoxEntry$DefaultDropdownMenuElement:search()V',  # Cloth Config
     'me.shedaniel.clothconfig2.gui.entries.DropdownBoxEntry$DefaultDropdownMenuElement:search()V',  # Cloth Config
-    'mezz.jei.common.search.ElementSearchLowMem:matches(Ljava/lang/String;Lmezz/jei/core/search/PrefixInfo;Lmezz/jei/common/ingredients/IListElementInfo;)Z',  # JEI (low memory)
+    'mezz.jei.common.search.ElementSearchLowMem:matches(Ljava/lang/String;Lmezz/jei/core/search/PrefixInfo;Lmezz/jei/common/ingredients/IListElementInfo;)Z',  # JEI (low memory) legacy
+    'mezz.jei.gui.search.ElementSearchLowMem:matches(Ljava/lang/String;Lmezz/jei/core/search/PrefixInfo;Lmezz/jei/gui/ingredients/IListElementInfo;)Z', # JEI (low memory) since jei-11.6.0.1016
     'com.github.klikli_dev.occultism.client.gui.storage.StorageControllerGuiBase:itemMatchesSearch(Lnet/minecraft/world/item/ItemStack;)Z', # Occultism
     'com.github.klikli_dev.occultism.client.gui.storage.StorageControllerGuiBase:machineMatchesSearch(Lcom/github/klikli_dev/occultism/api/common/data/MachineReference;)Z', # Occultism
-    'me.shedaniel.rei.impl.client.search.method.DefaultInputMethod:contains(Ljava/lang/String;Ljava/lang/String;)Z', #REI default
+    'me.shedaniel.rei.impl.client.search.method.DefaultInputMethod:contains(Ljava/lang/String;Ljava/lang/String;)Z', #REI default since rei-9.1.619
+    'appeng.client.gui.me.patternaccess.PatternAccessTermScreen:itemStackMatchesSearchTerm(Lnet/minecraft/world/item/ItemStack;Ljava/lang/String;)Z',#since Applied Energistics 2-12.9.5
+    'appeng.client.gui.me.patternaccess.PatternAccessTermScreen:refreshList()V',#since Applied Energistics 2-12.9.5
+    'com.github.einjerjar.mc.keymap.client.gui.widgets.KeymapListWidget:lambda$updateFilteredList$1(Lcom/github/einjerjar/mc/keymap/client/gui/widgets/KeymapListWidget$KeymapListEntry;Ljava/lang/String;)Z', #keymap since keymap-0.8.0
+
 ]
 equals = [
     'vazkii.botania.api.corporea.CorporeaRequestDefaultMatchers$CorporeaStringMatcher:equalOrContain(Ljava/lang/String;)Z',  # Botania (Corporea)
@@ -107,12 +112,22 @@ regExp = [
     'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$getInstanceFilterPredicate$7(Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z',  # Integrated Terminals
     'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$null$2(Ljava/lang/String;Lnet/minecraft/util/text/ITextComponent;)Z',  # Integrated Terminals
     'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$null$4(Ljava/lang/String;Lnet/minecraft/util/ResourceLocation;)Z',  # Integrated Terminals
+    'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerFluidStack:lambda$getInstanceFilterPredicate$10(Ljava/lang/String;Lnet/minecraft/tags/TagKey;)Z', #since Integrated Terminals-1.4.7
+    'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerFluidStack:lambda$getInstanceFilterPredicate$14(Ljava/lang/String;Lnet/minecraftforge/fluids/FluidStack;)Z', #since Integrated Terminals-1.4.7
+    'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerFluidStack:lambda$getInstanceFilterPredicate$8(Ljava/lang/String;Lnet/minecraftforge/fluids/FluidStack;)Z', #since Integrated Terminals-1.4.7
+    'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$getInstanceFilterPredicate$1(Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z', #since Integrated Terminals-1.4.7
+    'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$getInstanceFilterPredicate$2(Ljava/lang/String;Lnet/minecraft/network/chat/Component;)Z', #since Integrated Terminals-1.4.7
+    'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$getInstanceFilterPredicate$4(Ljava/lang/String;Lnet/minecraft/tags/TagKey;)Z', #since Integrated Terminals-1.4.7
+    'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$getInstanceFilterPredicate$8(Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z', #since Integrated Terminals-1.4.7
     'com.tom.storagemod.gui.GuiStorageTerminalBase:updateSearch()V', # Toms Storage(Legacy)
     'com.tom.storagemod.gui.AbstractStorageTerminalScreen:updateSearch()V', # Toms Storage
     'appeng.client.gui.me.search.SearchPredicates:lambda$createNamePredicate$2(Ljava/util/regex/Pattern;Lappeng/menu/me/common/GridInventoryEntry;)Z', #new Applied Energistics Terminals
     'appeng.client.gui.me.search.SearchPredicates:lambda$createTooltipPredicate$3(Lappeng/client/gui/me/search/RepoSearch;Ljava/util/regex/Pattern;Lappeng/menu/me/common/GridInventoryEntry;)Z',
     'appeng.client.gui.me.search.SearchPredicates:lambda$createNamePredicate$3(Ljava/util/regex/Pattern;Lappeng/menu/me/common/GridInventoryEntry;)Z',
     'appeng.client.gui.me.search.SearchPredicates:lambda$createTooltipPredicate$4(Lappeng/client/gui/me/search/RepoSearch;Ljava/util/regex/Pattern;Lappeng/menu/me/common/GridInventoryEntry;)Z',
+    'appeng.client.gui.me.search.SearchPredicates:lambda$createNamePredicate$3(Ljava/util/regex/Pattern;Lappeng/menu/me/common/GridInventoryEntry;)Z', #since Applied Energistics 2-12.9.5
+    'appeng.client.gui.me.search.SearchPredicates:lambda$createTooltipPredicate$4(Lappeng/client/gui/me/search/RepoSearch;Ljava/util/regex/Pattern;Lappeng/menu/me/common/GridInventoryEntry;)Z' #since Applied Energistics 2-12.9.5
+
 ]
 
 pattern = """// Generated
