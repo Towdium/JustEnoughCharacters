@@ -217,16 +217,13 @@ public class Profiler {
 
             @Override
             boolean match(AbstractInsnNode insn) {
-                if (insn instanceof MethodInsnNode) {
-                    MethodInsnNode node = (MethodInsnNode) insn;
+                if (insn instanceof MethodInsnNode node) {
                     return node.getOpcode() == op && node.owner.equals(owner) &&
                             node.name.equals(name) && node.desc.equals(desc);
-                } else if (insn instanceof InvokeDynamicInsnNode) {
-                    InvokeDynamicInsnNode din = (InvokeDynamicInsnNode) insn;
+                } else if (insn instanceof InvokeDynamicInsnNode din) {
                     if (din.bsmArgs.length != 3) return false;
                     Object arg = din.bsmArgs[1];
-                    if (arg instanceof Handle) {
-                        Handle handle = (Handle) arg;
+                    if (arg instanceof Handle handle) {
                         return handle.getTag() == tag && handle.getOwner().equals(owner) &&
                                 handle.getName().equals(name) && handle.getDesc().equals(desc);
                     }
@@ -245,8 +242,7 @@ public class Profiler {
 
             @Override
             boolean match(AbstractInsnNode insn) {
-                if (insn instanceof TypeInsnNode) {
-                    TypeInsnNode tin = ((TypeInsnNode) insn);
+                if (insn instanceof TypeInsnNode tin) {
                     return tin.getOpcode() == Opcodes.NEW && tin.desc.equals(clazz);
                 } else return false;
             }
