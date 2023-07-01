@@ -3,6 +3,7 @@ package me.towdium.jecharacters.utils;
 import com.electronwill.nightconfig.core.Config;
 import com.electronwill.nightconfig.core.file.FileConfig;
 import com.google.gson.Gson;
+import net.minecraft.client.searchtree.SuffixArray;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Handle;
 import org.objectweb.asm.Opcodes;
@@ -27,7 +28,7 @@ import static me.towdium.jecharacters.JustEnoughCharacters.logger;
  */
 public class Profiler {
     private static final Analyzer[] ANALYZERS = new Analyzer[]{
-            new Analyzer.Construct(Type.SUFFIX, "net/minecraft/client/util/SuffixArray"),
+            new Analyzer.Construct(Type.SUFFIX, SuffixArray.class.getCanonicalName().replace('.', '/')),
             new Analyzer.Invoke(
                     Type.CONTAINS, false, "java/lang/String", "contains",
                     "(Ljava/lang/CharSequence;)Z"
@@ -122,8 +123,8 @@ public class Profiler {
         JarContainer ret = new JarContainer();
         f.stream().forEach(entry -> {
             try (InputStream is = f.getInputStream(entry)) {
-                if (entry.getName().equals("META-INF/mods.toml")) ret.mods = readInfoNew(is);
-                else if (entry.getName().equals("mcmod.info")) ret.mods = readInfoOld(is);
+                if ("META-INF/mods.toml".equals(entry.getName())) ret.mods = readInfoNew(is);
+                else if ("mcmod.info".equals(entry.getName())) ret.mods = readInfoOld(is);
                 else if (entry.getName().endsWith(".class")) {
                     long size = entry.getSize() + 4;
                     if (size > Integer.MAX_VALUE) {
@@ -216,16 +217,13 @@ public class Profiler {
 
             @Override
             boolean match(AbstractInsnNode insn) {
-                if (insn instanceof MethodInsnNode) {
-                    MethodInsnNode node = (MethodInsnNode) insn;
+                if (insn instanceof MethodInsnNode node) {
                     return node.getOpcode() == op && node.owner.equals(owner) &&
                             node.name.equals(name) && node.desc.equals(desc);
-                } else if (insn instanceof InvokeDynamicInsnNode) {
-                    InvokeDynamicInsnNode din = (InvokeDynamicInsnNode) insn;
+                } else if (insn instanceof InvokeDynamicInsnNode din) {
                     if (din.bsmArgs.length != 3) return false;
                     Object arg = din.bsmArgs[1];
-                    if (arg instanceof Handle) {
-                        Handle handle = (Handle) arg;
+                    if (arg instanceof Handle handle) {
                         return handle.getTag() == tag && handle.getOwner().equals(owner) &&
                                 handle.getName().equals(name) && handle.getDesc().equals(desc);
                     }
@@ -244,8 +242,7 @@ public class Profiler {
 
             @Override
             boolean match(AbstractInsnNode insn) {
-                if (insn instanceof TypeInsnNode) {
-                    TypeInsnNode tin = ((TypeInsnNode) insn);
+                if (insn instanceof TypeInsnNode tin) {
                     return tin.getOpcode() == Opcodes.NEW && tin.desc.equals(clazz);
                 } else return false;
             }

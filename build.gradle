@@ -1,16 +1,8 @@
-buildscript {
-    repositories {
-        maven { url = 'https://maven.minecraftforge.net' }
-        mavenCentral()
-    }
-    dependencies {
-        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1.+', changing: true
-    }
+plugins {
+    id "dev.architectury.loom" version "1.1-SNAPSHOT"
 }
-apply plugin: 'net.minecraftforge.gradle'
-apply plugin: 'eclipse'
 
-version = "1.18.2-${verspec}.${verbuild}"
+version = "${mc_version}-${verspec}.${verbuild}"
 group = "me.towdium.jecharacters"
 archivesBaseName = "jecharacters"
 
@@ -22,6 +14,7 @@ repositories {
     maven { url = "https://dvs1.progwml6.com/files/maven/" }
     maven { url = "https://maven.blamejared.com/" }
     maven { url = "https://modmaven.dev" }
+    maven { url = 'https://maven.parchmentmc.org' }
 }
 
 configurations {
@@ -29,59 +22,24 @@ configurations {
     implementation.extendsFrom shade
 }
 
-minecraft {
-    mappings channel: 'official', version: '1.18.2'
-    runs {
-        client {
-            workingDirectory project.file('run')
-            property 'forge.logging.console.level', 'debug'
-            mods {
-                jecharacters {
-                    source sourceSets.main
-                }
-            }
-        }
-
-        server {
-            workingDirectory project.file('run')
-            property 'forge.logging.console.level', 'debug'
-            mods {
-                jecharacters {
-                    source sourceSets.main
-                }
-            }
-        }
-
-        data {
-            workingDirectory project.file('run')
-            property 'forge.logging.console.level', 'debug'
-            args '--mod', 'jecharacters', '--all', '--output', file('src/generated/resources/')
-            mods {
-                jecharacters {
-                    source sourceSets.main
-                }
-            }
-        }
-    }
+loom {
+    silentMojangMappingsLicense()
 }
 
-minecraft.runs.configureEach {
-    lazyToken('minecraft_classpath') {
-        configurations.shade.copyRecursive()
-                .resolve()
-                .collect { it.absolutePath }
-                .join(File.pathSeparator)
-    }
-}
 
 dependencies {
-    minecraft 'net.minecraftforge:forge:1.18.2-40.1.0'
-//    compileOnly fg.deobf('mezz.jei:jei-1.18.2:9.7.0.195')
-//    compileOnly fg.deobf('mezz.jei:jei-1.18.2-forge:10.2.1.1002')
-//    runtimeOnly fg.deobf('mezz.jei:jei-1.18.2:9.7.0.195')
-    runtimeOnly(fg.deobf("mezz.jei:jei-1.18.2-forge:10.2.1.1002"))
-    compileOnly(fg.deobf("mezz.jei:jei-1.18.2-forge:10.2.1.1002"))
-    shade(group: 'com.github.towdium', name: 'PinIn', version: "${verpinin}") {
+
+    mappings loom.layered() {
+        officialMojangMappings()
+        parchment("org.parchmentmc.data:parchment-1.19.2:2022.11.27@zip")
+    }
+
+    minecraft "com.mojang:minecraft:${project.mc_version}"
+    forge "net.minecraftforge:forge:${project.forge_version}"
+    modImplementation 'mezz.jei:jei-1.18.2-forge:10.2.1.1002'
+    implementation "com.github.towdium:PinIn:${verpinin}"
+    forgeRuntimeLibrary "com.github.towdium:PinIn:${verpinin}"
+    include(group: 'com.github.towdium', name: 'PinIn', version: "${verpinin}") {
         transitive = false
     }
 }
@@ -102,15 +60,9 @@ jar {
                 "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
         ])
     }
-
-    configurations.shade.each { dep ->
-        from(project.zipTree(dep)) {
-            include 'me/towdium/pinin/**'
-        }
-    }
 }
 
-tasks.withType(JavaCompile) {
+tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
 }
 
@@ -120,19 +72,11 @@ task generate(type: Exec) {
 
 compileJava.dependsOn generate
 
-task replaceResources(type: Copy) {
-    outputs.upToDateWhen { false }
-    from(sourceSets.main.resources.srcDirs) {
-        include 'META-INF/mods.toml'
-        expand 'version': version
-    }
-    into "$buildDir/resources/main/"
-}
-
 processResources {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    from(sourceSets.main.resources.srcDirs) {
-        exclude 'META-INF/mods.toml'
+    inputs.property "version", project.version
+
+    filesMatching("META-INF/mods.toml") {
+        expand "version": project.version
     }
-    finalizedBy replaceResources
 }

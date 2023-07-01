@@ -37,7 +37,6 @@ public class JustEnoughCharacters {
         Greetings.send(logger, MODID);
     }
 
-    @SuppressWarnings("resource")
     public static void printMessage(Component message) {
         Minecraft.getInstance().gui.getChat().addMessage(message);
     }
