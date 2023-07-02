@@ -1,8 +1,9 @@
 plugins {
+    id 'idea'
     id "dev.architectury.loom" version "1.1-SNAPSHOT"
 }
 
-version = "1.19.2-${verspec}.${verbuild}"
+version = "${mc_version}-${verspec}.${verbuild}"
 group = "me.towdium.jecharacters"
 archivesBaseName = "jecharacters"
 
@@ -31,12 +32,12 @@ dependencies {
 
     mappings loom.layered() {
         officialMojangMappings()
-        parchment("org.parchmentmc.data:parchment-1.19.2:2022.11.27@zip")
+        parchment("org.parchmentmc.data:parchment-1.20.1:2023.06.26@zip")
     }
 
     minecraft "com.mojang:minecraft:${project.mc_version}"
     forge "net.minecraftforge:forge:${project.forge_version}"
-    modImplementation 'mezz.jei:jei-1.19.2-forge:11.5.0.297'
+    modImplementation 'mezz.jei:jei-1.20.1-forge:15.2.0.22'
     implementation "com.github.towdium:PinIn:${verpinin}"
     forgeRuntimeLibrary "com.github.towdium:PinIn:${verpinin}"
     include(group: 'com.github.towdium', name: 'PinIn', version: "${verpinin}") {
@@ -48,7 +49,7 @@ test {
     useJUnitPlatform()
 }
 
-jar {
+tasks.named('jar', Jar).configure {
     manifest {
         attributes([
                 "Specification-Title"     : 'Just Enough Characters',

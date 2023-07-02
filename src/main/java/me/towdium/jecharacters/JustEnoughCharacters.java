@@ -39,7 +39,7 @@ public class JustEnoughCharacters {
     static class EventHandler {
         @SubscribeEvent
         public static void onPlayerLogin(EntityJoinLevelEvent event) {
-            if (event.getEntity() instanceof Player && event.getEntity().level.isClientSide
+            if (event.getEntity() instanceof Player && event.getLevel().isClientSide
                     && JechConfig.enableChat.get() && !messageSent
                     && (JechConfig.enumKeyboard.get() == QUANPIN)
                     && "zh_tw".equals(Minecraft.getInstance().options.languageCode)) {
