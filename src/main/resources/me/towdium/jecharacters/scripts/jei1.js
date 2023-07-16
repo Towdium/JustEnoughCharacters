@@ -4,14 +4,18 @@ function initializeCoreMod() {
         'jecharacters-jei1': {
             'target': {
                 'type': 'METHOD',
-                'class': 'mezz.jei.search.ElementSearch',
-                'methodName': 'registerPrefix',
-                'methodDesc': '(Lmezz/jei/search/PrefixInfo;)V'
+                'class': 'mezz.jei.search.ElementPrefixParser',
+                'methodName': '<clinit>',
+                'methodDesc': '()V'
             },
             'transformer': function (method) {
-                transConstruct(method,
+                transInvokeLambda(method,
                     'mezz/jei/search/suffixtree/GeneralizedSuffixTree',
-                    'me/towdium/jecharacters/utils/Match$FakeTree'
+                    '<init>',
+                    '()V',
+                    'me/towdium/jecharacters/utils/Match$FakeTree',
+                    '<init>',
+                    '()V'
                 );
                 return method;
             }

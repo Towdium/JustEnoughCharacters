@@ -8,6 +8,7 @@ import me.towdium.jecharacters.JustEnoughCharacters;
 import me.towdium.pinin.DictLoader;
 import me.towdium.pinin.PinIn;
 import me.towdium.pinin.searchers.TreeSearcher;
+import mezz.jei.ingredients.IIngredientListElementInfo;
 import mezz.jei.search.suffixtree.GeneralizedSuffixTree;
 import net.minecraft.client.util.SuffixArray;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -104,36 +105,32 @@ public class Match {
         searchers.forEach(TreeSearcher::refresh);
     }
 
-    public static class FakeTree extends GeneralizedSuffixTree {
-        TreeSearcher<Integer> tree = searcher();
-        int highestIndex = -1;
+    public static class FakeTree<T> extends GeneralizedSuffixTree<T> {
 
-        public IntSet search(String word) {
-            if (JechConfig.enableVerbose.get())
+        TreeSearcher<T> tree = searcher();
+
+        @Override
+        public void getSearchResults(String word, Set<T> results) {
+            if (JechConfig.enableVerbose.get()) {
                 JustEnoughCharacters.logger.info("FakeTree:search(" + word + ')');
-            return new IntOpenHashSet(tree.search(word));
+            }
+            results.addAll(tree.search(word));
         }
 
         @Override
-        public void put(String key, int index) throws IllegalStateException {
-            if (JechConfig.enableVerbose.get())
-                JustEnoughCharacters.logger.info("FakeTree:put(" + key + ',' + index + ')');
-            if (index < highestIndex) {
-                String err = "The input index must not be less than any of the previously " +
-                        "inserted ones. Got " + index + ", expected at least " + highestIndex;
-                throw new IllegalStateException(err);
-            } else highestIndex = index;
-            tree.put(key, index);
+        public void put(String key, T value) {
+            if (JechConfig.enableVerbose.get()) {
+                JustEnoughCharacters.logger.info("FakeTree:put(" + key + ',' + value + ')');
+            }
+            tree.put(key, value);
         }
 
         @Override
-        public int getHighestIndex() {
-            if (JechConfig.enableVerbose.get())
-                JustEnoughCharacters.logger.info("FakeTree:getHighestIndex()->" + highestIndex);
-            return highestIndex;
+        public void getAllElements(Set<T> results) {
+            results.addAll(tree.search(""));
         }
+
     }
-
 
     public static class FakeArray<T> extends SuffixArray<T> {
         TreeSearcher<T> tree = searcher();
