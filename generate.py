@@ -4,6 +4,7 @@ manual = ['jei1', 'jei2', 'jei3', 'psi']
 suffix = [
     'net.minecraft.client.searchtree.ResourceLocationSearchTree:m_235212_(Ljava/util/List;Ljava/util/function/Function;)Lnet/minecraft/client/searchtree/ResourceLocationSearchTree;',  # Vanilla
     'net.minecraft.client.searchtree.PlainTextSearchTree:m_235197_(Ljava/util/List;Ljava/util/function/Function;)Lnet/minecraft/client/searchtree/PlainTextSearchTree;', # Vanilla
+    "dev.emi.emi.search.EmiSearch:bake()V"
 ]
 contains = [
     'com.blamejared.controlling.client.gui.GuiNewControls:lambda$filterKeys$11(Lcom/blamejared/controlling/client/gui/GuiNewKeyBindingList$KeyEntry;)Z',  # Controlling
@@ -92,7 +93,8 @@ contains = [
     'appeng.client.gui.me.patternaccess.PatternAccessTermScreen:itemStackMatchesSearchTerm(Lnet/minecraft/world/item/ItemStack;Ljava/lang/String;)Z',#since Applied Energistics 2-12.9.5
     'appeng.client.gui.me.patternaccess.PatternAccessTermScreen:refreshList()V',#since Applied Energistics 2-12.9.5
     'com.github.einjerjar.mc.keymap.client.gui.widgets.KeymapListWidget:lambda$updateFilteredList$1(Lcom/github/einjerjar/mc/keymap/client/gui/widgets/KeymapListWidget$KeymapListEntry;Ljava/lang/String;)Z', #keymap since keymap-0.8.0
-
+    "dev.emi.emi.search.NameQuery:matchesUnbaked(Ldev/emi/emi/api/stack/EmiStack;)Z"
+    "dev.emi.emi.search.TooltipQuery:matchesUnbaked(Ldev/emi/emi/api/stack/EmiStack;)Z"
 ]
 equals = [
     'vazkii.botania.api.corporea.CorporeaRequestDefaultMatchers$CorporeaStringMatcher:equalOrContain(Ljava/lang/String;)Z',  # Botania (Corporea)
@@ -127,7 +129,8 @@ regExp = [
     'appeng.client.gui.me.search.SearchPredicates:lambda$createTooltipPredicate$4(Lappeng/client/gui/me/search/RepoSearch;Ljava/util/regex/Pattern;Lappeng/menu/me/common/GridInventoryEntry;)Z',
     'appeng.client.gui.me.search.SearchPredicates:lambda$createNamePredicate$3(Ljava/util/regex/Pattern;Lappeng/menu/me/common/GridInventoryEntry;)Z', #since Applied Energistics 2-12.9.5
     'appeng.client.gui.me.search.SearchPredicates:lambda$createTooltipPredicate$4(Lappeng/client/gui/me/search/RepoSearch;Ljava/util/regex/Pattern;Lappeng/menu/me/common/GridInventoryEntry;)Z' #since Applied Energistics 2-12.9.5
-
+    "dev.emi.emi.search.RegexTooltipQuery:matches(Ldev/emi/emi/api/stack/EmiStack;)Z"
+    "dev.emi.emi.search.RegexNameQuery:matches(Ldev/emi/emi/api/stack/EmiStack;)Z"
 ]
 
 pattern = """// Generated
