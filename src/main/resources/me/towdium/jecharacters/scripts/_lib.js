@@ -37,6 +37,19 @@ function transInvoke(method, srcOwner, srcName, srcDesc, dstOwner, dstName, dstD
     }
 }
 
+function transInvokeLambda(method, srcOwner, srcName, srcDesc, dstOwner, dstName, dstDesc){
+    var i = method.instructions.iterator();
+    while (i.hasNext()) {
+        var n = i.next();
+        var op = n.getOpcode();
+        if (n instanceof InsnDynamic && op === Ops.INVOKEDYNAMIC) {
+            var h = n.bsmArgs[1];
+            if (h.getOwner() === srcOwner && h.getName() === srcName && h.getDesc() === srcDesc)
+                n.bsmArgs[1] = new Handle(h.tag, dstOwner, dstName, dstDesc);
+        }
+    }
+}
+
 var transContains = function (method) {
     transInvoke(method,
         'java/lang/String',
