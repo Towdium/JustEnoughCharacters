@@ -1,0 +1,11 @@
+architectury {
+    common(project(":").enabled_platforms.split(","))
+}
+
+loom {
+}
+
+dependencies {
+    modImplementation "net.fabricmc:fabric-loader:${parent.fabric_loader_version}"
+}
+

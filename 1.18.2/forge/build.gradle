@@ -1,0 +1,91 @@
+architectury {
+    platformSetupLoomIde()
+    forge()
+}
+
+loom {
+    silentMojangMappingsLicense()
+
+    forge {
+        // Uncomment this if you have Mixin configurations
+        // mixinConfigs = [
+        //         "jecharacters.mixins.json"-
+        // ]
+
+    }
+
+    runs {
+        client {
+            runDir './run-client'
+            property 'forge.logging.console.level', 'info'
+            property 'fml.earlyprogresswindow', 'false'
+            programArgs '--username', 'Developer'
+        }
+
+        server {
+            runDir './run-server'
+            property 'forge.logging.console.level', 'info'
+            property 'fml.earlyprogresswindow', 'false'
+            programArgs '--username', 'Developer'
+        }
+
+        configureEach {
+            ideConfigGenerated(true)
+        }
+    }
+}
+
+configurations {
+    common
+    shadowCommon // Don't use shadow from the shadow plugin since it *excludes* files.
+    compileClasspath.extendsFrom common
+    runtimeClasspath.extendsFrom common
+    developmentForge.extendsFrom common
+}
+
+dependencies {
+    forge "net.minecraftforge:forge:${parent.mc_version}-${parent.forge_version}"
+    println "net.minecraftforge:forge:${parent.mc_version}-${parent.forge_version}"
+
+    common(project(path: ":${parent.mc_version}:common", configuration: "namedElements")) { transitive = false }
+    shadowCommon(project(path: ":${parent.mc_version}:common", configuration: "transformProductionForge")) { transitive = false }
+}
+
+processResources {
+    inputs.property "version", project.version
+
+    filesMatching("META-INF/mods.toml") {
+        expand "version": project.version
+    }
+}
+
+shadowJar {
+    exclude "fabric.mod.json"
+    exclude "architectury.common.json"
+
+    configurations = [project.configurations.shadowCommon]
+    archiveClassifier = "dev-shadow"
+}
+
+remapJar {
+    inputFile.set shadowJar.archiveFile
+    dependsOn shadowJar
+    archiveClassifier = null
+}
+
+jar {
+    archiveClassifier = "dev"
+}
+
+sourcesJar {
+    def commonSources = project(":${parent.mc_version}:common").sourcesJar
+    dependsOn commonSources
+    from commonSources.archiveFile.map { zipTree(it) }
+}
+
+components.java {
+    withVariantsFromConfiguration(project.configurations.shadowRuntimeElements) {
+        skip()
+    }
+}
+

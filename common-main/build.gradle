@@ -1,0 +1,14 @@
+dependencies {
+
+    compileOnly 'org.ow2.asm:asm:9.4'
+    compileOnly 'org.ow2.asm:asm-tree:9.4'
+    compileOnly 'org.jetbrains:annotations:24.0.0'
+    compileOnly 'org.apache.logging.log4j:log4j-api:2.8.1'
+    compileOnly 'com.google.code.gson:gson:2.8.9'
+    compileOnly 'com.mojang:brigadier:1.0.18'
+
+    shadow(group: 'com.github.towdium', name: 'PinIn', version: "${verpinin}") {
+        transitive = false
+    }
+
+}

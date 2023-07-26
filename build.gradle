@@ -1,52 +1,55 @@
 plugins {
-    id 'idea'
-    id "dev.architectury.loom" version "1.1-SNAPSHOT"
+    id 'java'
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
+    id "architectury-plugin" version "3.4-SNAPSHOT" apply false
+    id 'dev.architectury.loom' version '1.1-SNAPSHOT' apply false
+    id 'io.github.juuxel.loom-quiltflower' version '1.7.1' apply false
+    id "io.github.p03w.machete" version "1.+" // automatic jar compressing on build
 }
 
-version = "${mc_version}-${verspec}.${verbuild}"
 group = "me.towdium.jecharacters"
 archivesBaseName = "jecharacters"
+version = "${verspec}.${verbuild}"
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
-repositories {
-    mavenCentral()
-    maven { url = 'https://jitpack.io' }
-    maven { url = "https://dvs1.progwml6.com/files/maven/" }
-    maven { url = "https://maven.blamejared.com/" }
-    maven { url = "https://modmaven.dev" }
-    maven { url = 'https://maven.parchmentmc.org' }
+allprojects {
+    repositories {
+        mavenCentral()
+        maven { url = "https://maven.architectury.dev/" }
+        maven { url = "https://files.minecraftforge.net/maven/" }
+        maven { url = "https://maven.minecraftforge.net/" }
+        maven { url = "https://jitpack.io" }
+        maven { url = "https://dvs1.progwml6.com/files/maven/" }
+        maven { url = "https://maven.blamejared.com/" }
+        maven { url = "https://modmaven.dev" }
+        maven { url = "https://maven.parchmentmc.org" }
+        maven { url = "https://libraries.minecraft.net" }
+        maven { url = "https://maven.terraformersmc.com/releases/" }
+        maven { url = "https://repo.spongepowered.org/repository/maven-public/" }
+    }
 }
+
 
 configurations {
-    shade
-    implementation.extendsFrom shade
-}
-
-loom {
-    silentMojangMappingsLicense()
+    shadow
+    implementation.extendsFrom shadow
 }
 
 
 dependencies {
 
-    mappings loom.layered() {
-        officialMojangMappings()
-        parchment("org.parchmentmc.data:parchment-1.20.1:2023.06.26@zip")
-    }
+    compileOnly 'org.ow2.asm:asm:9.4'
+    compileOnly 'org.ow2.asm:asm-tree:9.4'
+    compileOnly 'org.jetbrains:annotations:24.0.0'
+    compileOnly 'org.apache.logging.log4j:log4j-api:2.8.1'
+    compileOnly 'com.google.code.gson:gson:2.8.9'
+    compileOnly 'com.mojang:brigadier:1.0.18'
 
-    minecraft "com.mojang:minecraft:${project.mc_version}"
-    forge "net.minecraftforge:forge:${project.forge_version}"
-    modImplementation 'mezz.jei:jei-1.20.1-forge:15.2.0.22'
-    implementation "com.github.towdium:PinIn:${verpinin}"
-    forgeRuntimeLibrary "com.github.towdium:PinIn:${verpinin}"
-    include(group: 'com.github.towdium', name: 'PinIn', version: "${verpinin}") {
+    shadow(group: 'com.github.towdium', name: 'PinIn', version: "${verpinin}") {
         transitive = false
     }
-}
 
-test {
-    useJUnitPlatform()
 }
 
 tasks.named('jar', Jar).configure {
@@ -67,17 +70,226 @@ tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
 }
 
-task generate(type: Exec) {
-    commandLine 'python', 'generate.py'
-}
+enum ProjectType {
+    MAIN,
+    ROOT,
+    COMMON,
+    FORGE,
+    FABRIC,
 
-compileJava.dependsOn generate
+    static ProjectType getType(Project p) {
+        try {
+            if (p.name.contains("main"))
+                return MAIN
+            return valueOf(p.name.toUpperCase())
+        } catch (Exception ignored) {
+            return ROOT
+        }
+    }
 
-processResources {
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    inputs.property "version", project.version
+    boolean notMain() {
+        return this != MAIN
+    }
 
-    filesMatching("META-INF/mods.toml") {
-        expand "version": project.version
+    boolean notRoot() {
+        return this != ROOT
+    }
+
+    boolean notMainOrRoot() {
+        return this != MAIN && this != ROOT
+    }
+
+    boolean isFabric() {
+        return this == FABRIC
+    }
+
+    boolean isForge() {
+        return this == FORGE
+    }
+
+    boolean isCommon() {
+        return this == COMMON
     }
 }
+
+subprojects { Project p ->
+    apply plugin: 'java'
+    apply plugin: 'com.github.johnrengelman.shadow'
+
+    def type = ProjectType.getType(p)
+    if (type.notMain()) {
+        apply plugin: 'architectury-plugin'
+        if (type.notRoot()) {
+            apply plugin: 'io.github.juuxel.loom-quiltflower'
+        }
+    }
+
+    p.extensions.create('platformInfo', PlatformInfoExtension)
+
+    java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+    java.withSourcesJar()
+
+    p.archivesBaseName = rootProject.archivesBaseName
+    p.group = rootProject.group
+    p.version = rootProject.version
+
+    if (type != ProjectType.MAIN) {
+        def mc_version = type == ProjectType.ROOT ? p.mc_version : p.getParent().mc_version
+        p.archivesBaseName += "-${mc_version}-${type.toString().toLowerCase()}"
+    }
+
+    if (type.notMainOrRoot()) {
+        p.dependencies {
+            implementation rootProject.project(":common-main")
+            if (type.isFabric()) {
+                implementation rootProject.project(":fabric-main")
+            }
+        }
+    }
+
+    p.processResources {
+        // Exclude .cache directory which is generated by DataGen.
+        exclude '.cache'
+    }
+
+    p.afterEvaluate { Project pAfter ->
+        if (type.fabric || type.forge) {
+            //source sets
+            {
+                def main = rootProject.project(":common-main")
+                pAfter.compileJava {
+                    source(main.sourceSets.main.allSource)
+                }
+                pAfter.sourcesJar {
+                    from main.sourceSets.main.allJava
+                }
+                pAfter.processResources {
+                    from main.sourceSets.main.resources
+                }
+
+                if (type.fabric) {
+                    def fabricBase = rootProject.project(":fabric-main")
+                    pAfter.compileJava {
+                        source(fabricBase.sourceSets.main.allSource)
+                    }
+                    pAfter.sourcesJar {
+                        from fabricBase.sourceSets.main.allJava
+                    }
+                    pAfter.processResources {
+                        from fabricBase.sourceSets.main.resources
+                    }
+                }
+            }
+
+            pAfter.jar {
+                archiveClassifier = "slim"
+                manifest.attributes([
+                        "Specification-Title"     : 'Just Enough Characters',
+                        "Specification-Vendor"    : 'Towdium,vfyjxf_',
+                        "Specification-Version"   : "${verspec}",
+                        "Implementation-Title"    : rootProject.name,
+                        "Implementation-Version"  : "${verspec}.${verbuild}",
+                        "Implementation-Vendor"   : 'Towdium',
+                        "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+                ])
+            }
+
+        }
+    }
+}
+/*
+subprojects { Project p ->
+    apply plugin: 'java'
+    if (!p.name.contains("main")){
+        apply plugin: "architectury-plugin"
+        apply plugin: "dev.architectury.loom"
+    }
+
+    p.extensions.create('platformInfo', PlatformInfoExtension)
+
+    java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+    java.withSourcesJar()
+
+    p.archivesBaseName = "jecharacters"
+    p.version = "-${verspec}.${verbuild}"
+
+    p.tasks.withType(JavaCompile).configureEach {
+        it.options.encoding = 'UTF-8'
+    }
+
+    p.processResources {
+        // Exclude .cache directory which is generated by DataGen.
+        exclude '.cache'
+    }
+
+    p.afterEvaluate { Project pAfter ->
+
+        //Add source which shared by all version.
+        if (pAfter != rootProject) {
+            pAfter.compileJava {
+                source(rootProject.sourceSets.main.allSource)
+            }
+            pAfter.sourcesJar {
+                from rootProject.sourceSets.main.allJava
+            }
+            pAfter.processResources {
+                from rootProject.sourceSets.main.resources
+            }
+        }
+
+        if (!pAfter.name.endsWith('base')) {
+            String baseProject = ':' + pAfter.name.substring(0, pAfter.name.indexOf('-')) + '-base'
+            pAfter.compileJava {
+                source(pAfter.project(baseProject).sourceSets.main.allSource)
+            }
+            pAfter.sourcesJar {
+                from project(baseProject).sourceSets.main.allJava
+            }
+            pAfter.processResources {
+                from project(baseProject).sourceSets.main.resources
+            }
+        }
+
+        def fabricBase = project(':fabric-base')
+        if (pAfter != fabricBase && p.name.contains('fabric')) {
+            pAfter.compileJava {
+                source(fabricBase.sourceSets.main.allSource)
+            }
+            pAfter.sourcesJar {
+                from fabricBase.sourceSets.main.allJava
+            }
+            pAfter.processResources {
+                from fabricBase.sourceSets.main.resources
+            }
+        }
+
+        if (pAfter.extensions.findByName('loom')) {
+            pAfter.loom {}
+        }
+
+
+        if (pAfter == fabricBase) return
+
+
+        def projectExt = pAfter.extensions.platformInfo as PlatformInfoExtension
+        pAfter.archivesBaseName += "-${projectExt.platform.get()}-${projectExt.minecraftVersion.get()}"
+
+        pAfter.jar {
+            archiveClassifier = "slim"
+            manifest.attributes([
+                    "Specification-Title"     : 'Just Enough Characters',
+                    "Specification-Vendor"    : 'Towdium,vfyjxf_',
+                    "Specification-Version"   : "${verspec}",
+                    "Implementation-Title"    : project.name,
+                    "Implementation-Version"  : "${verspec}.${verbuild}",
+                    "Implementation-Vendor"   : 'Towdium',
+                    "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+            ])
+        }
+
+    }
+
+}
+
+ */
+
