@@ -163,8 +163,8 @@ class ClassGenerator {
         contains 'com.blamejared.controlling.client.NewKeyBindsScreen:lambda$filterKeys$8(Lcom/blamejared/controlling/client/NewKeyBindsList$KeyEntry;)Z'  // Controlling
         contains 'com.blamejared.controlling.client.NewKeyBindsScreen:filterKeys()V' // Controlling
         contains 'de.ellpeck.actuallyadditions.mod.booklet.entry.BookletEntry:getChaptersForDisplay(Ljava/lang/String;)Ljava/util/List;'  // Actually Additions
-        contains 'appeng.client.gui.me.interfaceterminal.InterfaceTerminalScreen:refreshList()V'  // Applied Energistics
-        contains 'appeng.client.gui.me.interfaceterminal.InterfaceTerminalScreen:itemStackMatchesSearchTerm(Lnet/minecraft/class_1799;Ljava/lang/String;)Z'  // Applied Energistics
+        contains 'appeng.client.gui.me.patternaccess.PatternAccessTermScreen:refreshList()V'  // Applied Energistics
+        contains 'appeng.client.gui.me.patternaccess.PatternAccessTermScreen:itemStackMatchesSearchTerm(Lnet/minecraft/class_1799;Ljava/lang/String;)Z'  // Applied Energistics
         contains 'me.towdium.jecalculation.utils.Utilities$I18n:contains(Ljava/lang/String;Ljava/lang/String;)Z'  // Just Enough Calculation
         contains 'vazkii.patchouli.client.book.BookEntry:isFoundByQuery(Ljava/lang/String;)Z'  // Patchouli (Botania)
         contains 'vazkii.botania.api.corporea.CorporeaRequestDefaultMatchers$CorporeaStringMatcher:equalOrContain(Ljava/lang/String;)Z'  // Botania (Corporea)
@@ -207,8 +207,8 @@ class ClassGenerator {
         regExp 'appeng.client.gui.me.items.ItemRepo:matchesSearch(Lappeng/client/gui/me/common/Repo$SearchMode;Ljava/util/regex/Pattern;Lappeng/api/storage/data/IAEItemStack;)Z'  // Applied Energistics
         regExp 'com.tom.storagemod.gui.GuiStorageTerminalBase:updateSearch()V' // Toms Storage(Legacy)
         regExp 'com.tom.storagemod.gui.AbstractStorageTerminalScreen:updateSearch()V' // Toms Storage
-        regExp 'appeng.client.gui.me.search.SearchPredicates:lambda$createNamePredicate$2(Ljava/util/regex/Pattern;Lappeng/menu/me/common/GridInventoryEntry;)Z', true //new Applied Energistics Terminals
-        regExp 'appeng.client.gui.me.search.SearchPredicates:lambda$createTooltipPredicate$3(Lappeng/client/gui/me/search/RepoSearch;Ljava/util/regex/Pattern;Lappeng/menu/me/common/GridInventoryEntry;)Z', true //new Applied Energistics Terminals
+        regExp 'appeng.client.gui.me.search.SearchPredicates:lambda$createNamePredicate$3(Ljava/util/regex/Pattern;Lappeng/menu/me/common/GridInventoryEntry;)Z', true //new Applied Energistics Terminals
+        regExp 'appeng.client.gui.me.search.SearchPredicates:lambda$createTooltipPredicate$4(Lappeng/client/gui/me/search/RepoSearch;Ljava/util/regex/Pattern;Lappeng/menu/me/common/GridInventoryEntry;)Z', true //new Applied Energistics Terminals
         regExp 'dev.emi.emi.search.RegexNameQuery:matches(Ldev/emi/emi/api/stack/EmiStack;)Z' //EMI regex search
         regExp 'dev.emi.emi.search.RegexTooltipQuery:matches(Ldev/emi/emi/api/stack/EmiStack;)Z' //EMI regex search
 
