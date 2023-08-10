@@ -3,6 +3,8 @@ package me.towdium.jecharacters.transform.transformers;
 import me.towdium.jecharacters.JechConfig;
 import me.towdium.jecharacters.core.JechCore;
 import me.towdium.jecharacters.transform.Transformer;
+import mezz.jei.config.Constants;
+import net.minecraftforge.fml.common.Loader;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.InsnList;
@@ -17,7 +19,14 @@ public class TransformerJei extends Transformer.Default {
 
     @Override
     public boolean accepts(String name) {
-        return JechConfig.enableJEI && name.equals("mezz.jei.ingredients.IngredientFilter");
+        boolean loading = name.equals("mezz.jei.ingredients.IngredientFilter");
+        if (loading) {
+            boolean isJei = Loader.instance().getModList()
+                    .stream()
+                    .anyMatch(mod -> mod.getModId().equals(Constants.MOD_ID) && mod.getName().equals(Constants.NAME));
+            if (!isJei) return false;
+        }
+        return JechConfig.enableJEI && loading;
     }
 
     @Override

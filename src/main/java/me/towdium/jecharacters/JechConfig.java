@@ -308,7 +308,8 @@ public class JechConfig {
                             "appeng.client.me.ItemRepo:updateView", // AE2 Unofficial Extended Life(legacy)
                             "appeng.client.me.ItemRepo:lambda$updateView$0", //AE2 Unofficial Extended Life
                             "appeng.client.gui.implementations.GuiInterfaceConfigurationTerminal:refreshList",  //AE2 Unofficial Extended Life
-                            "appeng.client.gui.implementations.GuiInterfaceConfigurationTerminal:itemStackMatchesSearchTerm"  //AE2 Unofficial Extended Life
+                            "appeng.client.gui.implementations.GuiInterfaceConfigurationTerminal:itemStackMatchesSearchTerm",  //AE2 Unofficial Extended Life(legacy)
+                            "appeng.client.me.ItemRepo:addIAE" //AE2 Unofficial Extended Life
                     };
                 case LIST_DEFAULT_REGEXP:
                     return new String[]{

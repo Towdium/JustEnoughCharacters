@@ -11,7 +11,6 @@ import me.towdium.pinin.searchers.TreeSearcher;
 import mezz.jei.suffixtree.GeneralizedSuffixTree;
 import net.minecraft.client.util.SuffixArray;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collections;
@@ -31,7 +30,7 @@ public class Match {
     static final Pattern p = Pattern.compile("a");
     static Set<TreeSearcher<?>> searchers = Collections.newSetFromMap(new WeakHashMap<>());
 
-    private static <T> TreeSearcher<T> searcher() {
+    public static <T> TreeSearcher<T> searcher() {
         TreeSearcher<T> ret = new TreeSearcher<>(CONTAIN, context);
         searchers.add(ret);
         return ret;
@@ -92,7 +91,6 @@ public class Match {
         return matches(s1, cs.toString());
     }
 
-    @SubscribeEvent
     public static void onConfigChange() {
         context.config().keyboard(JechConfig.keyboard.get())
                 .fAng2An(JechConfig.enableFuzzyAng2an).fEng2En(JechConfig.enableFuzzyEng2en)
