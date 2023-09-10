@@ -45,7 +45,6 @@ configurations {
 
 dependencies {
     forge "net.minecraftforge:forge:${parent.mc_version}-${parent.forge_version}"
-    println "net.minecraftforge:forge:${parent.mc_version}-${parent.forge_version}"
 
     common(project(path: ":${parent.mc_version}:common", configuration: "namedElements")) { transitive = false }
     shadowCommon(project(path: ":${parent.mc_version}:common", configuration: "transformProductionForge")) { transitive = false }

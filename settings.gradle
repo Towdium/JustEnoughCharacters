@@ -41,10 +41,19 @@ pluginManagement {
         }
     }
 }
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'org.yaml:snakeyaml:2.0'
+        classpath 'com.google.code.gson:gson:2.10'
+    }
+}
 
 rootProject.name = 'JustEnoughCharacters'
 
-include('common-main','fabric-main')
+include('common-main','fabric-main','forge-main')
 include('1.16.5','1.16.5:common','1.16.5:forge','1.16.5:fabric')
 include('1.18.2','1.18.2:common','1.18.2:forge','1.18.2:fabric')
 include('1.19.2','1.19.2:common','1.19.2:forge','1.19.2:fabric')

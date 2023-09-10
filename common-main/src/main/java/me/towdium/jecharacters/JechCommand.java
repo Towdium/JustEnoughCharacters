@@ -4,7 +4,6 @@ import com.google.gson.GsonBuilder;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import me.towdium.jecharacters.JechConfig.Spell;
-import me.towdium.jecharacters.utils.Match;
 import me.towdium.jecharacters.utils.Profiler;
 
 import java.io.FileOutputStream;
@@ -16,11 +15,12 @@ import java.util.function.Function;
 
 public class JechCommand {
 
-
     public static <S> void register(
             Function<String, LiteralArgumentBuilder<S>> literal,
             CommandDispatcher<S> dispatcher,
-            Consumer<String> messageSender
+            Consumer<String> messageSender,
+            Function<Spell,Integer> keyboardSetter,
+            Runnable configSave
     ) {
         dispatcher.register(
                 literal.apply("jech")
@@ -32,34 +32,29 @@ public class JechCommand {
                         .then(literal.apply("verbose")
                                 .then(literal.apply("true").executes(c -> {
                                     JechConfig.enableVerbose = true;
+                                    configSave.run();
                                     return 0;
                                 })).then(literal.apply("false").executes(c -> {
                                     JechConfig.enableVerbose = false;
+                                    configSave.run();
                                     return 0;
                                 })))
                         .then(literal.apply("silent").executes(c -> {
                             JechConfig.enableChat = false;
+                            configSave.run();
                             return 0;
                         }))
                         .then(literal.apply("keyboard")
-                                .then(literal.apply("quanpin").executes(c -> setKeyboard(Spell.QUANPIN)))
-                                .then(literal.apply("daqian").executes(c -> setKeyboard(Spell.DAQIAN)))
-                                .then(literal.apply("xiaohe").executes(c -> setKeyboard(Spell.XIAOHE)))
-                                .then(literal.apply("ziranma").executes(c -> setKeyboard(Spell.ZIRANMA)))
-                                .then(literal.apply("sougou").executes(c -> setKeyboard(Spell.SOUGOU)))
-                                .then(literal.apply("guobiao").executes(c -> setKeyboard(Spell.GUOBIAO)))
-                                .then(literal.apply("microsoft").executes(c -> setKeyboard(Spell.MICROSOFT)))
-                                .then(literal.apply("pinyinjiajia").executes(c -> setKeyboard(Spell.PINYINPP)))
-                                .then(literal.apply("ziguang").executes(c -> setKeyboard(Spell.ZIGUANG))))
+                                .then(literal.apply("quanpin").executes(c -> keyboardSetter.apply(Spell.QUANPIN)))
+                                .then(literal.apply("daqian").executes(c -> keyboardSetter.apply(Spell.DAQIAN)))
+                                .then(literal.apply("xiaohe").executes(c -> keyboardSetter.apply(Spell.XIAOHE)))
+                                .then(literal.apply("ziranma").executes(c -> keyboardSetter.apply(Spell.ZIRANMA)))
+                                .then(literal.apply("sougou").executes(c -> keyboardSetter.apply(Spell.SOUGOU)))
+                                .then(literal.apply("guobiao").executes(c -> keyboardSetter.apply(Spell.GUOBIAO)))
+                                .then(literal.apply("microsoft").executes(c -> keyboardSetter.apply(Spell.MICROSOFT)))
+                                .then(literal.apply("pinyinjiajia").executes(c -> keyboardSetter.apply(Spell.PINYINPP)))
+                                .then(literal.apply("ziguang").executes(c -> keyboardSetter.apply(Spell.ZIGUANG))))
         );
-    }
-
-
-    private static int setKeyboard(Spell keyboard) {
-        JechConfig.enumKeyboard = keyboard;
-        JechConfig.enableQuote = false;
-        Match.onConfigChange();
-        return 0;
     }
 
     private static int profile(Consumer<String> messageSender) {

@@ -32,6 +32,7 @@ processResources {
 
 shadowJar {
     exclude "architectury.common.json"
+    exclude "mods.toml"
 
     configurations = [project.configurations.shadowCommon]
     archiveClassifier = "dev-shadow"

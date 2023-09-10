@@ -22,6 +22,9 @@
 
 尽管直到目前该项目的贡献者屈指可数，给该项目贡献代码仍然是十分简单的。如果你发现有某个模组不支持拼音搜索，你只需要执行 `/jech profile` 命令获得一份全量搜索报告，排查该模组相关的调用栈（需要亿点点技巧），然后提交上来即可。当然，如果能力有限，直接把模组名甩给我也是欢迎的。
 
+关于当前跨版本跨平台的开发，当前计划是统一使用一套全局target表，不区分平台，因为搜索代码很大程度上不是平台相关的。
+同时，每个版本维护一套版本相关的target表，防止意外情况发生（当然，它们都是在编译的时候就已经决定了的）。
+
 ## 致谢
 
 - 本模组更新到 1.16 的绝大部分工作是由 [yzl210][8] 完成的。
@@ -29,6 +32,7 @@
 - 本模组对于 1.16 的一吨 mod 的支持是由 [Death-123][12] 完成的。
 - 本模组的核心库 PinIn 中使用的拼音数据来自 [地球拼音][6] 和 [pinyin-data][7]。
 - 本模组的多版本开发模板基于[3TUSK][14]的[Paramita][15]。
+- 在Fabric平台实现使用ASM类库修改类的操作方法来自[SpASM][16]
 
 [1]: https://minecraft.curseforge.com/projects/just-enough-characters
 [2]: http://cf.way2muchnoise.eu/full_250702_downloads.svg
@@ -45,3 +49,4 @@
 [13]: https://github.com/vfyjxf
 [14]:https://github.com/3TUSK
 [15]:https://github.com/3TUSK/Paramita
+[16]:https://github.com/mineLdiver/SpASM

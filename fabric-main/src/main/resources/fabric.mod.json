@@ -16,7 +16,9 @@
   "environment": "client",
   "entrypoints": {
     "client": [
-      "me.towdium.jecharacters.JustEnoughCharacters"
+      "me.towdium.jecharacters.fabric.JustEnoughCharactersFabric"
+    ],
+    "jech:transformer":[
     ]
   },
   "mixins": [

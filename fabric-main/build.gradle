@@ -1,18 +1,16 @@
-plugins {
-    id 'idea'
-    id 'java'
-}
-
-repositories {
-    maven {
-        name = 'Fabric'
-        url = 'https://maven.fabricmc.net/'
-    }
-}
-
 dependencies {
-    compileOnly "com.google.code.gson:gson:2.8.9"
-    compileOnly "org.apache.logging.log4j:log4j-api:2.8.1"
     compileOnly "commons-io:commons-io:2.11.0"
     compileOnly "net.fabricmc:fabric-loader:0.14.11"
+    compileOnly "net.fabricmc:sponge-mixin:0.8.2+build.24"
+    api project(":common-main")
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = "UTF-8"
+
+    def targetVersion = 8
+    if (JavaVersion.current().isJava9Compatible()) {
+        options.release = targetVersion
+    }
+
 }

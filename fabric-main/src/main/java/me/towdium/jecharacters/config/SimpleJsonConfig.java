@@ -28,7 +28,7 @@ public class SimpleJsonConfig {
 
     public void sync(Consumer<SimpleJsonConfig> configSyncer) {
         if (!configFile.exists()) {
-            configFile.mkdirs();
+            configFile.getParentFile().mkdirs();
             try {
                 configFile.createNewFile();
             } catch (IOException e) {
@@ -53,7 +53,7 @@ public class SimpleJsonConfig {
 
     public boolean load() {
         try (FileReader reader = new FileReader(configFile)) {
-            jsonObject = JsonParser.parseReader(reader).getAsJsonObject();
+            jsonObject = new JsonParser().parse(reader).getAsJsonObject();
         } catch (IOException e) {
             LOGGER.error("Can't read config file!");
             return false;

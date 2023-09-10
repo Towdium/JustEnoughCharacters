@@ -1,0 +1,5 @@
+{
+  "required": true,
+  "compatibilityLevel": "JAVA_8",
+  "plugin": "me.towdium.jecharacters.mixin.JechMixinPlugin"
+}

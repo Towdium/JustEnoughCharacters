@@ -1,13 +1,13 @@
 package me.towdium.jecharacters;
 
 import me.towdium.pinin.Keyboard;
+import org.jetbrains.annotations.Nullable;
 
 public class JechConfig {
 
-
     public static final String CONFIG_FILE = "jecharacters.json";
-    public static final String GENERAL = "General";
-    public static final String UTILITIES = "Utilities";
+    public static final String GENERAL = "general";
+    public static final String UTILITIES = "utilities";
 
     public static boolean enableQuote = false;
 
@@ -23,6 +23,12 @@ public class JechConfig {
     public static boolean enableVerbose;
     public static boolean enableChat;
 
+    @Nullable
+    public static Runnable reload;
+
+    public static void tryReload() {
+        if (reload != null) reload.run();
+    }
 
     public enum Spell {
         QUANPIN(Keyboard.QUANPIN), DAQIAN(Keyboard.DAQIAN),

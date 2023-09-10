@@ -18,8 +18,8 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:${parent.fabric_loader_version}"
     modApi "net.fabricmc.fabric-api:fabric-api:${parent.fabric_api_version}"
 
-    common(project(path: ":${parent.mc_version}:common", configuration: "namedElements")) { transitive = false }
-    shadowCommon(project(path: ":${parent.mc_version}:common", configuration: "transformProductionFabric")) { transitive = false }
+    common(project(path: ":${parent.mc_version}:common", configuration: "namedElements"))
+    shadowCommon(project(path: ":${parent.mc_version}:common", configuration: "transformProductionFabric")){transitive = false}
 }
 
 processResources {
@@ -32,6 +32,7 @@ processResources {
 
 shadowJar {
     exclude "architectury.common.json"
+    exclude "mods.toml"
 
     configurations = [project.configurations.shadowCommon]
     archiveClassifier = "dev-shadow"

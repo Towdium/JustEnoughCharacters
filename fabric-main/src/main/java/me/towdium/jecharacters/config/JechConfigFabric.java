@@ -4,16 +4,19 @@ import me.towdium.jecharacters.JechConfig;
 import me.towdium.jecharacters.utils.Match;
 import net.fabricmc.loader.api.FabricLoader;
 
-public class JechConfigFabric extends JechConfig {
+import static me.towdium.jecharacters.JechConfig.GENERAL;
+import static me.towdium.jecharacters.JechConfig.UTILITIES;
 
-    public static final SimpleJsonConfig config = new SimpleJsonConfig(FabricLoader.getInstance().getConfigDir().resolve(FABRIC_PATH).toFile());
+public class JechConfigFabric  {
+
+    public static final SimpleJsonConfig config = new SimpleJsonConfig(FabricLoader.getInstance().getConfigDir().resolve(CONFIG_FILE).toFile());
 
     static {
         config.sync(JechConfigFabric::loadConfig);
     }
 
     public static void register() {
-        config.putValue(GENERAL, "EnumKeyboard", Spell.QUANPIN.name());
+        config.putValue(GENERAL, "EnumKeyboard", JechConfig.Spell.QUANPIN.name());
         config.putValue(GENERAL, "EnableFZh2z", false);
         config.putValue(GENERAL, "EnableFSh2s", false);
         config.putValue(GENERAL, "EnableFCh2c", false);
@@ -27,21 +30,21 @@ public class JechConfigFabric extends JechConfig {
 
     public static void loadConfig(SimpleJsonConfig config) {
         config.load();
-        enumKeyboard = config.getEnumValue(GENERAL, "EnumKeyboard", Spell.class);
-        enableFZh2z = config.getBoolValue(GENERAL, "EnableFZh2z");
-        enableFSh2s = config.getBoolValue(GENERAL, "EnableFSh2s");
-        enableFCh2c = config.getBoolValue(GENERAL, "EnableFCh2c");
-        enableFAng2an = config.getBoolValue(GENERAL, "EnableFAng2an");
-        enableFIng2in = config.getBoolValue(GENERAL, "EnableFIng2in");
-        enableFEng2en = config.getBoolValue(GENERAL, "EnableFEng2en");
-        enableFU2v = config.getBoolValue(GENERAL, "EnableFU2v");
-        enableQuote = config.getBoolValue(GENERAL, "EnableQuote");
-        enableVerbose = config.getBoolValue(UTILITIES, "EnableVerbose");
+        JechConfig.enumKeyboard = config.getEnumValue(GENERAL, "EnumKeyboard", Spell.class);
+        JechConfig.enableFZh2z = config.getBoolValue(GENERAL, "EnableFZh2z");
+        JechConfig.enableFSh2s = config.getBoolValue(GENERAL, "EnableFSh2s");
+        JechConfig.enableFCh2c = config.getBoolValue(GENERAL, "EnableFCh2c");
+        JechConfig.enableFAng2an = config.getBoolValue(GENERAL, "EnableFAng2an");
+        JechConfig.enableFIng2in = config.getBoolValue(GENERAL, "EnableFIng2in");
+        JechConfig.enableFEng2en = config.getBoolValue(GENERAL, "EnableFEng2en");
+        JechConfig.enableFU2v = config.getBoolValue(GENERAL, "EnableFU2v");
+        JechConfig.enableQuote = config.getBoolValue(GENERAL, "EnableQuote");
+        JechConfig.enableVerbose = config.getBoolValue(UTILITIES, "EnableVerbose");
         Match.onConfigChange();
         config.save();
     }
 
-    public static void setKeyboard(Spell enumKeyboard) {
+    public static void setKeyboard(JechConfig.Spell enumKeyboard) {
         JechConfig.enumKeyboard = enumKeyboard;
         config.setValue(GENERAL, "EnumKeyboard", enumKeyboard.name());
         config.save();
