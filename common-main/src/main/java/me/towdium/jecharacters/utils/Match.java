@@ -22,7 +22,7 @@ public class Match {
     static final Pattern p = Pattern.compile("a");
     static Set<TreeSearcher<?>> searchers = Collections.newSetFromMap(new WeakHashMap<>());
 
-    private static <T> TreeSearcher<T> searcher() {
+    public static <T> TreeSearcher<T> searcher() {
         TreeSearcher<T> ret = new TreeSearcher<>(CONTAIN, context);
         searchers.add(ret);
         return ret;

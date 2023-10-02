@@ -4,8 +4,7 @@ import me.towdium.jecharacters.JechConfig;
 import me.towdium.jecharacters.utils.Match;
 import net.fabricmc.loader.api.FabricLoader;
 
-import static me.towdium.jecharacters.JechConfig.GENERAL;
-import static me.towdium.jecharacters.JechConfig.UTILITIES;
+import static me.towdium.jecharacters.JechConfig.*;
 
 public class JechConfigFabric  {
 
@@ -30,7 +29,7 @@ public class JechConfigFabric  {
 
     public static void loadConfig(SimpleJsonConfig config) {
         config.load();
-        JechConfig.enumKeyboard = config.getEnumValue(GENERAL, "EnumKeyboard", Spell.class);
+        JechConfig.enumKeyboard = config.getEnumValue(GENERAL, "EnumKeyboard", JechConfig.Spell.class);
         JechConfig.enableFZh2z = config.getBoolValue(GENERAL, "EnableFZh2z");
         JechConfig.enableFSh2s = config.getBoolValue(GENERAL, "EnableFSh2s");
         JechConfig.enableFCh2c = config.getBoolValue(GENERAL, "EnableFCh2c");

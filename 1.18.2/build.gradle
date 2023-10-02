@@ -18,6 +18,9 @@ subprojects {
     dependencies {
         minecraft "com.mojang:minecraft:${project.mc_version}"
         mappings loom.officialMojangMappings()
+
+        compileOnly "mezz.jei:jei-${mc_version}-core:${jei_version}"
+        compileOnly "mezz.jei:jei-${mc_version}-common:${jei_version}"
     }
 }
 

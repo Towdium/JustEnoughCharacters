@@ -15,6 +15,11 @@ public interface ICustomTransformer {
 
     Set<String> targetClasses();
 
+    default boolean accept(ClassNode node) {
+        return targetClasses().contains(node.name);
+    }
+
+
     void transform(ClassNode node);
 
 }

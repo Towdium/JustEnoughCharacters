@@ -1,6 +1,7 @@
-import org.yaml.snakeyaml.Yaml
-import com.google.gson.Gson
 import com.google.gson.GsonBuilder
+import com.google.gson.JsonArray
+import com.google.gson.JsonObject
+import org.yaml.snakeyaml.Yaml
 
 plugins {
     id 'java-library'
@@ -9,6 +10,7 @@ plugins {
     id 'dev.architectury.loom' version '1.1-SNAPSHOT' apply false
     id 'io.github.juuxel.loom-quiltflower' version '1.7.1' apply false
     id "io.github.p03w.machete" version "1.+" // automatic jar compressing on build
+    id 'io.freefair.lombok' version '8.0.1' apply false
 }
 
 group = "me.towdium.jecharacters"
@@ -31,6 +33,10 @@ allprojects {
         maven { url = "https://maven.terraformersmc.com/releases/" }
         maven { url = "https://repo.spongepowered.org/repository/maven-public/" }
         maven { url = "https://modmaven.dev" }
+        maven {
+            url = "https://cursemaven.com"
+            content { includeGroup "curse.maven" }
+        }
     }
 }
 
@@ -42,6 +48,25 @@ configurations {
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
 }
+
+tasks.register('buildGeneral', Copy).configure { task ->
+    subprojects.forEach { p ->
+        if (ProjectType.getType(p) == ProjectType.ROOT) {
+            task.dependsOn(":${p.name}:forge:build")
+            task.dependsOn(":${p.name}:fabric:build")
+        }
+    }
+}
+
+subprojects.each { p ->
+    if (ProjectType.getType(p) == ProjectType.ROOT) {
+        rootProject.tasks.register("build-${p.name}", Copy).configure { task ->
+            task.dependsOn(":${p.name}:forge:build")
+            task.dependsOn(":${p.name}:fabric:build")
+        }
+    }
+}
+
 
 enum ProjectType {
     MAIN,
@@ -92,6 +117,7 @@ enum ProjectType {
 subprojects { Project p ->
     apply plugin: 'java-library'
     apply plugin: 'com.github.johnrengelman.shadow'
+    apply plugin: 'io.freefair.lombok'
 
     def type = ProjectType.getType(p)
     if (type.notMain()) {
@@ -215,12 +241,22 @@ subprojects { Project p ->
         putAll(all, yaml.load(generalConfig.text) as Map<String, List<String>>)
         putAll(all, yaml.load(versionConfig.text) as Map<String, List<String>>)
         putAll(all, yaml.load(platformConfig.text) as Map<String, List<String>>)
-        String json = new GsonBuilder().setPrettyPrinting().create().toJson(all)
+        JsonObject json = new JsonObject()
+        all.each { key, value ->
+            JsonArray array = new JsonArray()
+            value.each { array.add(it) }
+            JsonObject inner = new JsonObject()
+            inner.add("default", array)
+            inner.add("additonal", new JsonArray())
+            json.add(key, inner)
+        }
+        json.add("removals", new JsonArray())
+        String jsonStr = new GsonBuilder().setPrettyPrinting().create().toJson(json);
         if (!targetsJson.exists()) {
             targetsJson.parentFile.mkdirs()
             targetsJson.createNewFile()
         }
-        targetsJson.write(json)
+        targetsJson.write(jsonStr)
     }
     p.processResources {
         dependsOn "generateTargetsJson"

@@ -45,7 +45,7 @@ public class JechMixinPlugin implements IMixinConfigPlugin {
         Field mixinTransformerField = knotClassDelegate.getClass().getDeclaredField("mixinTransformer");
         mixinTransformerField.setAccessible(true);
         //noinspection unchecked
-        mixinTransformerField.set(knotClassDelegate, new MixinTransformerDelegate<>((T) mixinTransformerField.get(knotClassDelegate)));
+        mixinTransformerField.set(knotClassDelegate, new MixinTransformerHook<>((T) mixinTransformerField.get(knotClassDelegate)));
     }
 
     @Override

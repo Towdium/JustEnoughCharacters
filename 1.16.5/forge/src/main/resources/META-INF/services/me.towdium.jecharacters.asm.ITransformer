@@ -1,0 +1,5 @@
+me.towdium.jecharacters.asm.transformers.ContainsTransformer
+me.towdium.jecharacters.asm.transformers.EqualsTransformer
+me.towdium.jecharacters.asm.transformers.RegExpTransformer
+me.towdium.jecharacters.asm.transformers.SuffixArrayTransformer
+me.towdium.jecharacters.transformers.JeiTransformer

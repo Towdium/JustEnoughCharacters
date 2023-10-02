@@ -12,13 +12,19 @@ public class TransformTarget {
     private final String owner;
     private final String methodName;
     private final String methodDesc;
-    private final Type Type;
 
-    public TransformTarget(String owner, String methodName, String methodDesc, Type type) {
+    public TransformTarget(String owner, String methodName, String methodDesc) {
         this.owner = owner;
         this.methodName = methodName;
         this.methodDesc = methodDesc;
-        this.Type = type;
+    }
+
+    public static TransformTarget of(String target) {
+        String[] split = target.split(":", 2);
+        String owner = split[0];
+        String methodName = split[1].substring(0, split[1].indexOf("("));
+        String methodDesc = split[1].substring(split[1].indexOf("("));
+        return new TransformTarget(owner, methodName, methodDesc);
     }
 
     public String getOwner() {
@@ -31,10 +37,6 @@ public class TransformTarget {
 
     public String getMethodDesc() {
         return methodDesc;
-    }
-
-    public Type getType() {
-        return Type;
     }
 
     public boolean matches(String owner, MethodNode methodNode) {
@@ -68,17 +70,6 @@ public class TransformTarget {
                 ", methodName='" + methodName + '\'' +
                 ", methodDesc='" + methodDesc + '\'' +
                 '}';
-    }
-
-    public enum Type {
-        /**
-         * This type is special,
-         * we need to provide SuffixArray's full name because it has different name in different versions.
-         */
-        SUFFIX,
-        CONTAINS,
-        EQUALS,
-        REGEXP
     }
 
 }

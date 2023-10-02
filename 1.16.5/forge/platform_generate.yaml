@@ -1,6 +1,8 @@
 "suffix": [
 ]
 "contains": [
+  "thaumcraft.client.gui.GuiResearchBrowser:updateSearch:()V", #Thaumcraft
+  "mezz.jei.search.ElementSearchLowMem:matches(Ljava/lang/String;Lmezz/jei/search/PrefixInfo;Lmezz/jei/ingredients/IIngredientListElementInfo;)Z", #JEI (low memory)
 ]
 "equals": [
 ]

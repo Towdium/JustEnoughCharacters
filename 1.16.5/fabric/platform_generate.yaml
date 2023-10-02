@@ -1,8 +1,14 @@
 "suffix": [
 ]
 "contains": [
+  "me.shedaniel.clothconfig2.gui.widget.SearchFieldEntry:matchesSearch(Ljava/util/Iterator;)Z", #Cloth Config
+  "com.blamejared.controlling.client.gui.ControlsSettingsGuiNew:lambda$filterKeys$8(Lcom/blamejared/controlling/client/gui/KeyBindingListWidgetNew$KeyEntry;)Z", #Controlling
+  "com.blamejared.controlling.client.gui.ControlsSettingsGuiNew:lambda$filterKeys$7(Lcom/blamejared/controlling/client/gui/KeyBindingListWidgetNew$KeyEntry;)Z", #Controlling
+  "com.blamejared.controlling.client.gui.ControlsSettingsGuiNew:lambda$filterKeys$6(Lcom/blamejared/controlling/client/gui/KeyBindingListWidgetNew$KeyEntry;)Z", #Controlling
 ]
 "equals": [
 ]
 "regExp": [
+  "appeng.client.gui.me.search.SearchPredicates:lambda$createNamePredicate$2(Ljava/util/regex/Pattern;Lappeng/menu/me/common/GridInventoryEntry;)Z", #new Applied Energistics Terminals
+  "appeng.client.gui.me.search.SearchPredicates:lambda$createTooltipPredicate$3(Lappeng/client/gui/me/search/RepoSearch;Ljava/util/regex/Pattern;Lappeng/menu/me/common/GridInventoryEntry;)Z", #new Applied Energistics Terminals
 ]

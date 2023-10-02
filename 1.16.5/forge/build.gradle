@@ -42,6 +42,8 @@ dependencies {
 
     common(project(path: ":${parent.mc_version}:common", configuration: "namedElements")) { transitive = false }
     shadowCommon(project(path: ":${parent.mc_version}:common", configuration: "transformProductionForge")) { transitive = false }
+
+    modImplementation "curse.maven:jei-238222:4371666"//jei-7.8.0.1009
 }
 
 processResources {

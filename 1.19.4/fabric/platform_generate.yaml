@@ -1,8 +1,21 @@
 "suffix": [
 ]
 "contains": [
+  "com.blamejared.controlling.client.NewKeyBindsScreen:filterKeys()V", #Controlling
+  "dev.ftb.mods.ftblibrary.ui.misc.ButtonListBaseScreen$1:add(Ldev/ftb/mods/ftblibrary/ui/Widget;)V", #FTB Library(FTB Quests)
+  "com.blamejared.controlling.client.NewKeyBindsScreen:lambda$filterKeys$8(Lcom/blamejared/controlling/client/NewKeyBindsList$KeyEntry;)Z", #Controlling
+  "com.blamejared.controlling.client.NewKeyBindsScreen:lambda$filterKeys$9(Lcom/blamejared/controlling/client/NewKeyBindsList$KeyEntry;)Z", #Controlling
+  "dev.ftb.mods.ftblibrary.config.ui.SelectItemStackScreen$ItemStackButton:shouldAdd(Ljava/lang/String;Ljava/lang/String;)Z", #FTB Library(FTB Quests)
+  "dev.emi.emi.search.NameQuery:matches(Ldev/emi/emi/api/stack/EmiStack;)Z", #EMI text search(Leagcy)
+  "dev.emi.emi.search.TooltipQuery:matches(Ldev/emi/emi/api/stack/EmiStack;)Z", #EMI text search(Leagcy)
+  "appeng.client.gui.me.patternaccess.PatternAccessTermScreen:refreshList()V", #Applied Energistics
 ]
 "equals": [
 ]
 "regExp": [
+  "dev.emi.emi.search.RegexTooltipQuery:matches(Ldev/emi/emi/api/stack/EmiStack;)Z", #EMI regex search
+  "com.tom.storagemod.gui.AbstractStorageTerminalScreen:updateSearch()V", #Toms Storage
+  "appeng.client.gui.me.search.SearchPredicates:lambda$createNamePredicate$3(Ljava/util/regex/Pattern;Lappeng/menu/me/common/GridInventoryEntry;)Z", #new Applied Energistics Terminals
+  "appeng.client.gui.me.search.SearchPredicates:lambda$createTooltipPredicate$4(Lappeng/client/gui/me/search/RepoSearch;Ljava/util/regex/Pattern;Lappeng/menu/me/common/GridInventoryEntry;)Z", #new Applied Energistics Terminals
+  "dev.emi.emi.search.RegexNameQuery:matches(Ldev/emi/emi/api/stack/EmiStack;)Z", #EMI regex searc
 ]
