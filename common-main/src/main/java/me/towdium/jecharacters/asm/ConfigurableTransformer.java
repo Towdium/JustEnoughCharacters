@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodNode;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -34,12 +35,12 @@ public abstract class ConfigurableTransformer implements ITransformer {
 
     @Override
     public Set<String> targetClasses() {
-        return null;
+        return Collections.unmodifiableSet(targets.keySet());
     }
 
     @Override
-    public boolean accept(ClassNode node) {
-        return targets.containsKey(node.name);
+    public boolean accept(String className) {
+        return targets.containsKey(className);
     }
 
     @Override

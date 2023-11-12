@@ -1,6 +1,5 @@
 package me.towdium.jecharacters.asm;
 
-
 import me.towdium.jecharacters.annotations.MethodsReturnNonnullByDefault;
 import me.towdium.jecharacters.annotations.ParametersAreNonnullByDefault;
 import org.objectweb.asm.tree.MethodNode;
@@ -20,6 +19,7 @@ public class TransformTarget {
     }
 
     public static TransformTarget of(String target) {
+        target = target.replace(".", "/");
         String[] split = target.split(":", 2);
         String owner = split[0];
         String methodName = split[1].substring(0, split[1].indexOf("("));
@@ -40,7 +40,8 @@ public class TransformTarget {
     }
 
     public boolean matches(String owner, MethodNode methodNode) {
-        return this.owner.equals(owner) & methodNode.name.equals(methodName) && methodNode.desc.equals(methodDesc);
+        return this.owner.equals(owner) & methodNode.name.equals(methodName)
+                && methodNode.desc.equals(methodDesc);
     }
 
     @Override
@@ -65,11 +66,16 @@ public class TransformTarget {
 
     @Override
     public String toString() {
-        return "TransformTarget{" +
-                "owner='" + owner + '\'' +
-                ", methodName='" + methodName + '\'' +
-                ", methodDesc='" + methodDesc + '\'' +
-                '}';
+        return "TransformTarget{"
+                + "owner='"
+                + owner
+                + '\''
+                + ", methodName='"
+                + methodName
+                + '\''
+                + ", methodDesc='"
+                + methodDesc
+                + '\''
+                + '}';
     }
-
 }

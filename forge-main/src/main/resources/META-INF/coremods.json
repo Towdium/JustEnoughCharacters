@@ -1,0 +1,4 @@
+{
+  "common_transformer": "coremods/common_transformer.js",
+  "jei_transformer": "coremods/jei_transformer.js"
+}

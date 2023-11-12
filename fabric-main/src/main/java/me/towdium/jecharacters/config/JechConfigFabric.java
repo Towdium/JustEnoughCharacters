@@ -6,13 +6,9 @@ import net.fabricmc.loader.api.FabricLoader;
 
 import static me.towdium.jecharacters.JechConfig.*;
 
-public class JechConfigFabric  {
+public class JechConfigFabric {
 
     public static final SimpleJsonConfig config = new SimpleJsonConfig(FabricLoader.getInstance().getConfigDir().resolve(CONFIG_FILE).toFile());
-
-    static {
-        config.sync(JechConfigFabric::loadConfig);
-    }
 
     public static void register() {
         config.putValue(GENERAL, "EnumKeyboard", JechConfig.Spell.QUANPIN.name());
@@ -27,7 +23,7 @@ public class JechConfigFabric  {
         config.putValue(UTILITIES, "EnableVerbose", false);
     }
 
-    public static void loadConfig(SimpleJsonConfig config) {
+    public static void loadConfig() {
         config.load();
         JechConfig.enumKeyboard = config.getEnumValue(GENERAL, "EnumKeyboard", JechConfig.Spell.class);
         JechConfig.enableFZh2z = config.getBoolValue(GENERAL, "EnableFZh2z");
@@ -40,6 +36,20 @@ public class JechConfigFabric  {
         JechConfig.enableQuote = config.getBoolValue(GENERAL, "EnableQuote");
         JechConfig.enableVerbose = config.getBoolValue(UTILITIES, "EnableVerbose");
         Match.onConfigChange();
+        config.save();
+    }
+
+    public static void save() {
+        config.setValue(GENERAL, "EnumKeyboard", JechConfig.enumKeyboard.name());
+        config.setValue(GENERAL, "EnableFZh2z", JechConfig.enableFZh2z);
+        config.setValue(GENERAL, "EnableFSh2s", JechConfig.enableFSh2s);
+        config.setValue(GENERAL, "EnableFCh2c", JechConfig.enableFCh2c);
+        config.setValue(GENERAL, "EnableFAng2an", JechConfig.enableFAng2an);
+        config.setValue(GENERAL, "EnableFIng2in", JechConfig.enableFIng2in);
+        config.setValue(GENERAL, "EnableFEng2en", JechConfig.enableFEng2en);
+        config.setValue(GENERAL, "EnableFU2v", JechConfig.enableFU2v);
+        config.setValue(GENERAL, "EnableQuote", JechConfig.enableQuote);
+        config.setValue(UTILITIES, "EnableVerbose", JechConfig.enableVerbose);
         config.save();
     }
 

@@ -1,4 +1,6 @@
 "suffix": [
+  "net.minecraft.client.searchtree.ReloadableIdSearchTree:func_194040_a()V", #Vanilla
+  "net.minecraft.client.searchtree.ReloadableSearchTree:func_194040_a()V", #Vanilla
 ]
 "contains": [
   "thaumcraft.client.gui.GuiResearchBrowser:updateSearch:()V", #Thaumcraft

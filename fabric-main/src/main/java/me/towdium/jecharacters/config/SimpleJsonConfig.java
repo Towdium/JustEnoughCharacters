@@ -12,6 +12,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.function.Consumer;
 
 public class SimpleJsonConfig {
@@ -52,11 +53,21 @@ public class SimpleJsonConfig {
     }
 
     public boolean load() {
+        try {
+            if (Files.readAllLines(configFile.toPath()).isEmpty()) {
+                save();
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         try (FileReader reader = new FileReader(configFile)) {
             jsonObject = new JsonParser().parse(reader).getAsJsonObject();
         } catch (IOException e) {
             LOGGER.error("Can't read config file!");
             return false;
+        } catch (IllegalStateException e) {
+            LOGGER.error("Can't read config file!");
+            jsonObject = new JsonObject();
         }
         return true;
     }

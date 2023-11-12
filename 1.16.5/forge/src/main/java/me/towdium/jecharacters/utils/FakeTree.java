@@ -33,5 +33,4 @@ public class FakeTree<T> extends GeneralizedSuffixTree<T> {
     public void getAllElements(Set<T> results) {
         results.addAll(tree.search(""));
     }
-
 }

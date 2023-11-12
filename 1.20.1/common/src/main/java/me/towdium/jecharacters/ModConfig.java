@@ -18,5 +18,4 @@ public class ModConfig {
     public static void save() {
         throw new AssertionError();
     }
-
 }

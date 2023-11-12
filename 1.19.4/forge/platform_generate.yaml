@@ -1,4 +1,5 @@
 "suffix": [
+  "net.minecraft.client.searchtree.PlainTextSearchTree:m_235197_(Ljava/util/List;Ljava/util/function/Function;)Lnet/minecraft/client/searchtree/PlainTextSearchTree;", #Vanilla
 ]
 "contains": [
 ]

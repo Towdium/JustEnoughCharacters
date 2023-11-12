@@ -7,7 +7,6 @@ import mezz.jei.core.search.suffixtree.GeneralizedSuffixTree;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
-import java.util.Set;
 import java.util.function.Consumer;
 
 @SuppressWarnings("unused")

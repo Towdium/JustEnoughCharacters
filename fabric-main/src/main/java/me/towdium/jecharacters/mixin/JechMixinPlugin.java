@@ -1,6 +1,9 @@
 package me.towdium.jecharacters.mixin;
 
 import com.google.common.collect.ImmutableList;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import me.towdium.jecharacters.asm.ITransformer;
 import me.towdium.jecharacters.asm.JechClassTransformer;
 import net.fabricmc.loader.api.FabricLoader;
 import org.jetbrains.annotations.NotNull;
@@ -10,7 +13,10 @@ import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 import org.spongepowered.asm.mixin.transformer.IMixinTransformer;
 import org.spongepowered.asm.transformers.TreeTransformer;
 
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.lang.reflect.Field;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Set;
 
@@ -19,7 +25,7 @@ import java.util.Set;
  */
 public class JechMixinPlugin implements IMixinConfigPlugin {
 
-    static final ImmutableList<JechClassTransformer> TRANSFORMERS = entrypoint("transformer", JechClassTransformer.class);
+    static final ImmutableList<ITransformer> TRANSFORMERS = entrypoint("transformer", ITransformer.class);
 
     public JechMixinPlugin() {
 
@@ -44,8 +50,14 @@ public class JechMixinPlugin implements IMixinConfigPlugin {
         Object knotClassDelegate = knotClassDelegateField.get(knotClassLoader);
         Field mixinTransformerField = knotClassDelegate.getClass().getDeclaredField("mixinTransformer");
         mixinTransformerField.setAccessible(true);
+        InputStream is = JechClassTransformer.class.getClassLoader().getResourceAsStream("me/towdium/jecharacters/targets.json");
+        if (is == null) {
+            throw new RuntimeException("Could not find targets.json. JechTransformer will not be loaded.");
+        }
+        JsonObject targets = new JsonParser().parse(new InputStreamReader(is, StandardCharsets.UTF_8)).getAsJsonObject();
+
         //noinspection unchecked
-        mixinTransformerField.set(knotClassDelegate, new MixinTransformerHook<>((T) mixinTransformerField.get(knotClassDelegate)));
+        mixinTransformerField.set(knotClassDelegate, new MixinTransformerHook<>((T) mixinTransformerField.get(knotClassDelegate), new JechClassTransformer(TRANSFORMERS, targets)));
     }
 
     @Override

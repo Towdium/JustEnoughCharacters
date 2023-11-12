@@ -8,5 +8,4 @@ public class ModCommand {
     public static int setKeyboard(JechConfig.Spell keyboard) {
         throw new AssertionError();
     }
-
 }

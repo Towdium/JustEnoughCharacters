@@ -1,4 +1,5 @@
 "suffix": [
+  "net.minecraft.class_7454:method_43796(Ljava/util/List;Ljava/util/function/Function;)Lnet/minecraft/class_7454;",
 ]
 "contains": [
   "com.blamejared.controlling.client.NewKeyBindsScreen:filterKeys()V", #Controlling

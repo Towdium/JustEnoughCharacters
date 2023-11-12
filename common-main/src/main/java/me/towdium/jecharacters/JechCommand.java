@@ -12,14 +12,13 @@ import java.io.OutputStreamWriter;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-
 public class JechCommand {
 
     public static <S> void register(
             Function<String, LiteralArgumentBuilder<S>> literal,
             CommandDispatcher<S> dispatcher,
             Consumer<String> messageSender,
-            Function<Spell,Integer> keyboardSetter,
+            Function<Spell, Integer> keyboardSetter,
             Runnable configSave
     ) {
         dispatcher.register(

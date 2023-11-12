@@ -25,13 +25,8 @@ allprojects {
     apply plugin: "java"
     apply plugin: "architectury-plugin"
 
+    java.toolchain.languageVersion = JavaLanguageVersion.of(8)
     tasks.withType(JavaCompile).configureEach {
         options.encoding = "UTF-8"
-
-        def targetVersion = 8
-        if (JavaVersion.current().isJava9Compatible()) {
-            options.release = targetVersion
-        }
-
     }
 }

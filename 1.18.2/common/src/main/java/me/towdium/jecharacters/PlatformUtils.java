@@ -13,5 +13,4 @@ public class PlatformUtils {
     public static boolean isModLoaded(String modid) {
         return false;
     }
-
 }

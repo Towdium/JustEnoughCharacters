@@ -17,15 +17,18 @@ public class JustEnoughCharactersForge {
     static boolean messageSent = false;
 
     public JustEnoughCharactersForge() {
-        JustEnoughCharacters.init(new CommandDispatcher<>(), LiteralArgumentBuilder::literal);
+        JustEnoughCharacters.init();
+        JustEnoughCharacters.registerCommand(new CommandDispatcher<>(), LiteralArgumentBuilder::literal);
     }
 
     @Mod.EventBusSubscriber
     static class EventHandler {
         @SubscribeEvent
         public static void onPlayerLogin(EntityJoinLevelEvent event) {
-            if (event.getEntity() instanceof Player && event.getEntity().level.isClientSide
-                    && JechConfig.enableChat && !messageSent
+            if (event.getEntity() instanceof Player
+                    && event.getEntity().level.isClientSide
+                    && JechConfig.enableChat
+                    && !messageSent
                     && (JechConfig.enumKeyboard == JechConfig.Spell.QUANPIN)
                     && Minecraft.getInstance().options.languageCode.equals("zh_tw")) {
                 PlatformUtils.sendMessage("jecharacters.chat.taiwan");
@@ -33,5 +36,4 @@ public class JustEnoughCharactersForge {
             }
         }
     }
-
 }

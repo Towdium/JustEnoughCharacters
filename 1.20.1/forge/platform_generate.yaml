@@ -1,4 +1,6 @@
 "suffix": [
+  "net.minecraft.client.searchtree.PlainTextSearchTree:m_235197_(Ljava/util/List;Ljava/util/function/Function;)Lnet/minecraft/client/searchtree/PlainTextSearchTree;",
+  "net.minecraft.client.searchtree.ResourceLocationSearchTree:m_235212_(Ljava/util/List;Ljava/util/function/Function;)Lnet/minecraft/client/searchtree/ResourceLocationSearchTree;", #Vanilla
 ]
 "contains": [
   "thaumcraft.client.gui.GuiResearchBrowser:updateSearch:()V", #Thaumcraft

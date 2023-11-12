@@ -5,20 +5,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.Delegate;
 import lombok.experimental.FieldDefaults;
 import me.towdium.jecharacters.asm.JechClassTransformer;
-import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.tree.ClassNode;
-import org.spongepowered.asm.mixin.MixinEnvironment;
 import org.spongepowered.asm.mixin.transformer.IMixinTransformer;
-import org.spongepowered.asm.mixin.transformer.ext.IExtensionRegistry;
 import org.spongepowered.asm.transformers.TreeTransformer;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
-import java.util.List;
 import java.util.Objects;
-
 
 @FieldDefaults(
         level = AccessLevel.PRIVATE,
@@ -35,9 +30,11 @@ class MixinTransformerDelegate<T extends TreeTransformer & IMixinTransformer> ex
 class MixinTransformerHook<T extends TreeTransformer & IMixinTransformer> extends MixinTransformerDelegate<T> {
 
     private final Deque<String> transformationStack = new ArrayDeque<>();
+    private final JechClassTransformer transformer;
 
-    MixinTransformerHook(T delegate) {
+    MixinTransformerHook(T delegate, JechClassTransformer transformer) {
         super(delegate);
+        this.transformer = transformer;
     }
 
     @Override
@@ -46,12 +43,15 @@ class MixinTransformerHook<T extends TreeTransformer & IMixinTransformer> extend
             return super.transformClassBytes(name, transformedName, basicClass);
         transformationStack.push(name);
         basicClass = super.transformClassBytes(name, transformedName, basicClass);
+        String internalName = name.replace('.', '/');
+        boolean shouldTransform = transformer.getTransformers().stream().anyMatch(it -> it.accept(internalName));
+        if (!shouldTransform) return basicClass;
         //transform class bytes
         ClassNode classNode = new ClassNode();
         ClassReader classReader = new ClassReader(basicClass);
         classReader.accept(classNode, 0);
-        JechClassTransformer.INSTANCE.transform(classNode);
-        ClassWriter classWriter = new ClassWriter(ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES);
+        transformer.transform(classNode);
+        ClassWriter classWriter = new ClassWriter(ClassWriter.COMPUTE_MAXS);
         classNode.accept(classWriter);
         basicClass = classWriter.toByteArray();
         transformationStack.pop();

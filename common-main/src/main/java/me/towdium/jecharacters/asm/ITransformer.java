@@ -133,7 +133,7 @@ public interface ITransformer {
     static MethodNode transformSuffix(MethodNode method, String suffixClass) {
         transformConstruct(method,
                 suffixClass,
-                "me/towdium/jecharacters/utils/Match$FakeArray"
+                "me/towdium/jecharacters/utils/FakeArray"
         );
         return method;
     }
@@ -174,14 +174,16 @@ public interface ITransformer {
         return node;
     }
 
+    default String internalName(ClassNode node) {
+        return node.name.replace('/', '.');
+    }
 
-    default boolean accept(ClassNode node) {
+    default boolean accept(String className) {
         return false;
     }
 
     void init(JsonObject config, Set<String> removal);
 
     Set<String> targetClasses();
-
 
 }

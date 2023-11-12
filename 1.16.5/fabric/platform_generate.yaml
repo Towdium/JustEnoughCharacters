@@ -1,4 +1,6 @@
 "suffix": [
+  "net.minecraft.class_1121:method_4799()V", #Vanilla
+  "net.minecraft.class_1126:method_4799()V", #Vanilla
 ]
 "contains": [
   "me.shedaniel.clothconfig2.gui.widget.SearchFieldEntry:matchesSearch(Ljava/util/Iterator;)Z", #Cloth Config

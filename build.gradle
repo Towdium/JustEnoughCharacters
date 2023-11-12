@@ -1,6 +1,7 @@
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
+import com.google.gson.JsonPrimitive
 import org.yaml.snakeyaml.Yaml
 
 plugins {
@@ -17,15 +18,12 @@ group = "me.towdium.jecharacters"
 archivesBaseName = "jecharacters"
 version = "${verspec}.${verbuild}"
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(17)
-
 allprojects {
     repositories {
         mavenCentral()
+        mavenLocal()
         maven { url = "https://maven.architectury.dev/" }
-        maven { url = "https://files.minecraftforge.net/maven/" }
         maven { url = "https://maven.minecraftforge.net/" }
-        maven { url = "https://jitpack.io" }
         maven { url = "https://maven.blamejared.com/" }
         maven { url = "https://modmaven.dev" }
         maven { url = "https://maven.parchmentmc.org" }
@@ -37,6 +35,7 @@ allprojects {
             url = "https://cursemaven.com"
             content { includeGroup "curse.maven" }
         }
+        maven { url = "https://www.jitpack.io" }
     }
 }
 
@@ -91,6 +90,10 @@ enum ProjectType {
 
     boolean notRoot() {
         return this != ROOT
+    }
+
+    boolean isRoot() {
+        return this == ROOT
     }
 
     boolean notMainOrRoot() {
@@ -164,7 +167,10 @@ subprojects { Project p ->
                     compileOnly rootProject.project(":fabric-main")
                 }
                 if (type.forge) {
-                    compileOnly rootProject.project(":forge-main")
+
+                    if (!pAfter.path.contains("1.16.5")) {
+                        compileOnly rootProject.project(":forge-main")
+                    }
                 }
             }
         }
@@ -195,7 +201,7 @@ subprojects { Project p ->
                         from fabricBase.sourceSets.main.resources
                     }
                 }
-                if (type.forge) {
+                if (type.forge && !pAfter.path.contains("1.16.5")) {
                     def forgeBase = rootProject.project(":forge-main")
                     pAfter.compileJava {
                         source(forgeBase.sourceSets.main.allSource)
@@ -218,7 +224,8 @@ subprojects { Project p ->
                         "Implementation-Title"    : rootProject.name,
                         "Implementation-Version"  : "${verspec}.${verbuild}",
                         "Implementation-Vendor"   : 'Towdium',
-                        "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+                        "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
+                        "Automatic-Module-Name"   : "jecharacters"
                 ])
             }
 
@@ -229,6 +236,7 @@ subprojects { Project p ->
 subprojects { Project p ->
     def type = ProjectType.getType(p)
     if (!type.impl) return
+    if (p.path.contains("1.16.5")) return
 
     def targetsJson = p.file("build/resources/main/me/towdium/jecharacters/targets.json")
 
@@ -247,10 +255,11 @@ subprojects { Project p ->
             value.each { array.add(it) }
             JsonObject inner = new JsonObject()
             inner.add("default", array)
-            inner.add("additonal", new JsonArray())
+            inner.add("additional", new JsonArray())
             json.add(key, inner)
         }
         json.add("removals", new JsonArray())
+        if (type.forge) json.add("suffixClassName", new JsonPrimitive(p.suffixClassName))
         String jsonStr = new GsonBuilder().setPrettyPrinting().create().toJson(json);
         if (!targetsJson.exists()) {
             targetsJson.parentFile.mkdirs()

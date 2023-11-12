@@ -231,7 +231,7 @@ public class Profiler {
                     MethodInsnNode node = (MethodInsnNode) insn;
                     return node.getOpcode() == op && node.owner.equals(owner) &&
                             node.name.equals(name) && node.desc.equals(desc);
-                } else if (insn instanceof InvokeDynamicInsnNode ) {
+                } else if (insn instanceof InvokeDynamicInsnNode) {
                     InvokeDynamicInsnNode din = (InvokeDynamicInsnNode) insn;
                     if (din.bsmArgs.length != 3) return false;
                     Object arg = din.bsmArgs[1];

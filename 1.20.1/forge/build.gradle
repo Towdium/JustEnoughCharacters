@@ -6,13 +6,13 @@ architectury {
 loom {
     silentMojangMappingsLicense()
 
-    forge {
-        // Uncomment this if you have Mixin configurations
-        // mixinConfigs = [
-        //         "jecharacters.mixins.json"-
-        // ]
-
-    }
+//    forge {
+//         Uncomment this if you have Mixin configurations
+//         mixinConfigs = [
+//                 "jecharacters.mixins.json"
+//         ]
+//
+//    }
 
     runs {
         client {

@@ -15,8 +15,8 @@ import java.util.Set;
 public class JeiTransformer implements ITransformer {
 
     private static final Set<String> targets = new HashSet<>(Arrays.asList(
-            "mezz.jei.search.ElementPrefixParser",
-            "mezz.jei.ingredients.IngredientFilter"
+            "mezz/jei/search/ElementPrefixParser",
+            "mezz/jei/ingredients/IngredientFilter"
     ));
 
     @Override
@@ -37,7 +37,7 @@ public class JeiTransformer implements ITransformer {
                         "mezz/jei/search/suffixtree/GeneralizedSuffixTree",
                         "<init>",
                         "()V",
-                        "me/towdium/jecharacters/utils/Match$FakeTree",
+                        "me/towdium/jecharacters/utils/FakeTree",
                         "<init>",
                         "()V"
                 ));
@@ -53,6 +53,7 @@ public class JeiTransformer implements ITransformer {
                                         list.insert(insnNode.getPrevious(), new MethodInsnNode(Opcodes.INVOKESTATIC,
                                                 "me/towdium/jecharacters/utils/Match", "wrap",
                                                 "(Ljava/lang/String;)Ljava/lang/String;", false));
+                                        return;
                                     }
                                 }
                             }
@@ -63,8 +64,8 @@ public class JeiTransformer implements ITransformer {
     }
 
     @Override
-    public boolean accept(ClassNode node) {
-        return targets.contains(node.name);
+    public boolean accept(String className) {
+        return targets.contains(className);
     }
 
     @Override

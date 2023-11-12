@@ -15,11 +15,15 @@ public class JustEnoughCharacters {
     public static final String MODID = "jecharacters";
     public static final Logger logger = LogManager.getLogger("JustEnoughCharacters");
 
-    public static <S> void init(CommandDispatcher<S> dispatcher, Function<String, LiteralArgumentBuilder<S>> literal) {
+    public static void init() {
         Greetings.send(logger, MODID, PlatformUtils::isModLoaded);
-        JechCommand.register(literal, dispatcher, PlatformUtils::sendMessage, ModCommand::setKeyboard, ModConfig::save);
         ModConfig.register();
+        ModConfig.reload();
         JechClassTransformer.suffixClassName = getSuffixClassName();
+    }
+
+    public static <S> void registerCommand(CommandDispatcher<S> dispatcher, Function<String, LiteralArgumentBuilder<S>> literal) {
+        JechCommand.register(literal, dispatcher, PlatformUtils::sendMessage, ModCommand::setKeyboard, ModConfig::save);
     }
 
     @ExpectPlatform

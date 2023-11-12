@@ -1,4 +1,8 @@
 "suffix": [
+  "net.minecraft.client.searchtree.ReloadableIdSearchTree:m_7729_()V", #Minecraft
+  "net.minecraft.client.searchtree.ReloadableSearchTree:m_7729_()V", #Minecraft
+  "net.minecraft.client.searchtree.ReloadableIdSearchTree:refresh()V", #Minecraft
+  "net.minecraft.client.searchtree.ReloadableSearchTree:refresh()V", #Minecraft
 ]
 "contains": [
   "me.desht.pneumaticcraft.client.gui.ItemSearcherScreen$SearchEntry:test(Ljava/lang/String;)Z", #PneumaticCraft Item Search Upgrade

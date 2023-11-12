@@ -36,8 +36,7 @@ public class ClassTransformer implements ITransformer<ClassNode> {
 
     @Override
     public @NotNull Set<Target> targets() {
-        return transformer.getTransformers()
-                .stream()
+        return transformer.getTransformers().stream()
                 .flatMap(it -> it.targetClasses().stream())
                 .map(Target::targetClass)
                 .collect(Collectors.toSet());

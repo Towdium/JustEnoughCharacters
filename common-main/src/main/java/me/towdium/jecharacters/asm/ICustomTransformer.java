@@ -19,7 +19,5 @@ public interface ICustomTransformer {
         return targetClasses().contains(node.name);
     }
 
-
     void transform(ClassNode node);
-
 }

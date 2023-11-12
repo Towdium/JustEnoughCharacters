@@ -1,4 +1,6 @@
 "suffix": [
+  "net.minecraft.class_1121:refresh()V", #Vanilla
+  "net.minecraft.class_1126:refresh()V", #Vanilla
 ]
 "contains": [
   "com.blamejared.controlling.client.NewKeyBindsScreen:filterKeys()V", #Controlling

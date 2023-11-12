@@ -10,7 +10,8 @@ public class JustEnoughCharactersFabric implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
-        JustEnoughCharacters.init(ClientCommandManager.DISPATCHER, ClientCommandManager::literal);
+        JustEnoughCharacters.init();
+        JustEnoughCharacters.registerCommand(ClientCommandManager.DISPATCHER, ClientCommandManager::literal);
         JechConfig.reload = ModConfigImpl::reload;
     }
 }
