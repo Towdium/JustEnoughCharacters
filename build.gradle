@@ -236,8 +236,6 @@ subprojects { Project p ->
 subprojects { Project p ->
     def type = ProjectType.getType(p)
     if (!type.impl) return
-    if (p.path.contains("1.16.5")) return
-
     def targetsJson = p.file("build/resources/main/me/towdium/jecharacters/targets.json")
 
     p.tasks.register("generateTargetsJson") {
@@ -259,7 +257,7 @@ subprojects { Project p ->
             json.add(key, inner)
         }
         json.add("removals", new JsonArray())
-        if (type.forge) json.add("suffixClassName", new JsonPrimitive(p.suffixClassName))
+        json.add("suffixClassName", new JsonPrimitive(p.suffixClassName))
         String jsonStr = new GsonBuilder().setPrettyPrinting().create().toJson(json);
         if (!targetsJson.exists()) {
             targetsJson.parentFile.mkdirs()

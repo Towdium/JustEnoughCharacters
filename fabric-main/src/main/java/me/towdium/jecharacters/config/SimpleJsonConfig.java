@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import net.fabricmc.loader.api.FabricLoader;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -15,6 +16,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.function.Consumer;
 
+import static me.towdium.jecharacters.JechConfig.CONFIG_FILE;
+
 public class SimpleJsonConfig {
 
     private static final Logger LOGGER = LogManager.getLogger("Jech Config");
@@ -23,8 +26,16 @@ public class SimpleJsonConfig {
     private final File configFile;
     private JsonObject jsonObject = new JsonObject();
 
-    public SimpleJsonConfig(File configFile) {
-        this.configFile = configFile;
+    public SimpleJsonConfig() {
+        this.configFile = FabricLoader.getInstance().getConfigDir().resolve(CONFIG_FILE).toFile();
+        if (!configFile.exists()) {
+            LOGGER.info("Config file not found, creating new one...");
+            try {
+                configFile.createNewFile();
+            } catch (IOException e) {
+                LOGGER.error("Can't create config file!");
+            }
+        }
     }
 
     public void sync(Consumer<SimpleJsonConfig> configSyncer) {

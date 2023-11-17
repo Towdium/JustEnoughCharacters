@@ -40,6 +40,7 @@ public class JechClassTransformer {
             });
             transformers.forEach(it -> it.init(json, removals));
         }
+        suffixClassName = json.get("suffixClassName").getAsString();
     }
 
     public boolean transform(ClassNode node) {

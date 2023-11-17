@@ -2,23 +2,28 @@ package me.towdium.jecharacters.config;
 
 import me.towdium.jecharacters.JechConfig;
 import me.towdium.jecharacters.utils.Match;
-import net.fabricmc.loader.api.FabricLoader;
 
-import static me.towdium.jecharacters.JechConfig.*;
+import static me.towdium.jecharacters.JechConfig.GENERAL;
+import static me.towdium.jecharacters.JechConfig.UTILITIES;
 
 public class JechConfigFabric {
 
-    public static final SimpleJsonConfig config = new SimpleJsonConfig(FabricLoader.getInstance().getConfigDir().resolve(CONFIG_FILE).toFile());
+    private static SimpleJsonConfig config;
+
+    public static SimpleJsonConfig getConfig() {
+        return config;
+    }
 
     public static void register() {
+        config = new SimpleJsonConfig();
         config.putValue(GENERAL, "EnumKeyboard", JechConfig.Spell.QUANPIN.name());
-        config.putValue(GENERAL, "EnableFZh2z", false);
-        config.putValue(GENERAL, "EnableFSh2s", false);
-        config.putValue(GENERAL, "EnableFCh2c", false);
-        config.putValue(GENERAL, "EnableFAng2an", false);
-        config.putValue(GENERAL, "EnableFIng2in", false);
-        config.putValue(GENERAL, "EnableFEng2en", false);
-        config.putValue(GENERAL, "EnableFU2v", false);
+        config.putValue(GENERAL, "EnableFZh2z", true);
+        config.putValue(GENERAL, "EnableFSh2s", true);
+        config.putValue(GENERAL, "EnableFCh2c", true);
+        config.putValue(GENERAL, "EnableFAng2an", true);
+        config.putValue(GENERAL, "EnableFIng2in", true);
+        config.putValue(GENERAL, "EnableFEng2en", true);
+        config.putValue(GENERAL, "EnableFU2v", true);
         config.putValue(GENERAL, "EnableQuote", false);
         config.putValue(UTILITIES, "EnableVerbose", false);
     }

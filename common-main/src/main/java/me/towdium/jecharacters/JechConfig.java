@@ -12,13 +12,13 @@ public class JechConfig {
     public static boolean enableQuote = false;
 
     public static Spell enumKeyboard = Spell.QUANPIN;
-    public static boolean enableFZh2z = false;
-    public static boolean enableFSh2s = false;
-    public static boolean enableFCh2c = false;
-    public static boolean enableFAng2an = false;
-    public static boolean enableFIng2in = false;
-    public static boolean enableFEng2en = false;
-    public static boolean enableFU2v = false;
+    public static boolean enableFZh2z = true;
+    public static boolean enableFSh2s = true;
+    public static boolean enableFCh2c = true;
+    public static boolean enableFAng2an = true;
+    public static boolean enableFIng2in = true;
+    public static boolean enableFEng2en = true;
+    public static boolean enableFU2v = true;
 
     public static boolean enableVerbose;
     public static boolean enableChat;
