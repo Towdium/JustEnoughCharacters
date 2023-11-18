@@ -62,13 +62,12 @@ public class Profiler {
             )
     ));
 
+    private static final List<String> infoFiles = Arrays.asList(
+            "fabric.mod.json", "META-INF/mods.toml"
+    );
+
     @Nullable
     private static Profiler instance;
-
-    /**
-     * The file name relative to the resource directory.
-     */
-    private final String infoFile;
 
     @NotNull
     public static Profiler getInstance() {
@@ -77,14 +76,13 @@ public class Profiler {
         return instance;
     }
 
-    public static Profiler init(String infoFile, Class<?> suffixArray) {
-        if (instance == null) instance = new Profiler(infoFile, suffixArray);
+    public static Profiler init(String suffixArray) {
+        if (instance == null) instance = new Profiler(suffixArray);
         return instance;
     }
 
-    private Profiler(String infoFile, Class<?> suffixArray) {
-        this.infoFile = infoFile;
-        ANALYZERS.add(new Analyzer.Construct(Type.SUFFIX, suffixArray.getCanonicalName().replace('.', '/')));
+    private Profiler(String suffixArray) {
+        ANALYZERS.add(new Analyzer.Construct(Type.SUFFIX, suffixArray.replace('.', '/')));
         instance = this;
     }
 
@@ -134,7 +132,7 @@ public class Profiler {
         JarContainer ret = new JarContainer();
         f.stream().forEach(entry -> {
             try (InputStream is = f.getInputStream(entry)) {
-                if (infoFile.equals(entry.getName())) ret.mods = readInfo(is);
+                if (infoFiles.stream().anyMatch(s -> s.equals(entry.getName()))) ret.mods = readInfo(is);
                 else if (entry.getName().endsWith(".class")) {
                     long size = entry.getSize() + 4;
                     if (size > Integer.MAX_VALUE) {

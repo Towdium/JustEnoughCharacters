@@ -2,6 +2,7 @@ package me.towdium.jecharacters.asm;
 
 import com.google.gson.JsonObject;
 import me.towdium.jecharacters.annotations.ParametersAreNonnullByDefault;
+import me.towdium.jecharacters.utils.Profiler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.objectweb.asm.tree.ClassNode;
@@ -41,6 +42,7 @@ public class JechClassTransformer {
             transformers.forEach(it -> it.init(json, removals));
         }
         suffixClassName = json.get("suffixClassName").getAsString();
+        Profiler.init(json.get("suffixClassName").getAsString());
     }
 
     public boolean transform(ClassNode node) {

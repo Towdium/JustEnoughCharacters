@@ -43,6 +43,7 @@ public class JechMixinPlugin implements IMixinConfigPlugin {
         return ImmutableList.copyOf(FabricLoader.getInstance().getEntrypoints("jech:" + key, entrypointClass));
     }
 
+    @SuppressWarnings("unchecked")
     private static <T extends TreeTransformer & IMixinTransformer> void hook() throws NoSuchFieldException, IllegalAccessException {
         ClassLoader knotClassLoader = JechMixinPlugin.class.getClassLoader();
         Field knotClassDelegateField = knotClassLoader.getClass().getDeclaredField("delegate");
@@ -56,7 +57,6 @@ public class JechMixinPlugin implements IMixinConfigPlugin {
         }
         JsonObject targets = new JsonParser().parse(new InputStreamReader(is, StandardCharsets.UTF_8)).getAsJsonObject();
 
-        //noinspection unchecked
         mixinTransformerField.set(knotClassDelegate, new MixinTransformerHook<>((T) mixinTransformerField.get(knotClassDelegate), new JechClassTransformer(TRANSFORMERS, targets)));
     }
 
