@@ -13,46 +13,46 @@ import java.util.function.Function;
 
 public class JechCommand {
 
-    public static <S> void register(
+    public static <S> LiteralArgumentBuilder<S> register(
             Function<String, LiteralArgumentBuilder<S>> literal,
             CommandDispatcher<S> dispatcher,
             Consumer<String> messageSender,
             Function<Spell, Integer> keyboardSetter,
             Runnable configSave
     ) {
-        dispatcher.register(
-                literal.apply("jech")
-                        .executes((c) -> {
-                            messageSender.accept("jecharacters.chat.help");
-                            return 0;
-                        })
-                        .then(literal.apply("profile").executes(c -> profile(messageSender)))
-                        .then(literal.apply("verbose")
-                                .then(literal.apply("true").executes(c -> {
-                                    JechConfig.enableVerbose = true;
-                                    configSave.run();
-                                    return 0;
-                                })).then(literal.apply("false").executes(c -> {
-                                    JechConfig.enableVerbose = false;
-                                    configSave.run();
-                                    return 0;
-                                })))
-                        .then(literal.apply("silent").executes(c -> {
-                            JechConfig.enableChat = false;
+        LiteralArgumentBuilder<S> builder = literal.apply("jech")
+                .executes((c) -> {
+                    messageSender.accept("jecharacters.chat.help");
+                    return 0;
+                })
+                .then(literal.apply("profile").executes(c -> profile(messageSender)))
+                .then(literal.apply("verbose")
+                        .then(literal.apply("true").executes(c -> {
+                            JechConfig.enableVerbose = true;
                             configSave.run();
                             return 0;
-                        }))
-                        .then(literal.apply("keyboard")
-                                .then(literal.apply("quanpin").executes(c -> keyboardSetter.apply(Spell.QUANPIN)))
-                                .then(literal.apply("daqian").executes(c -> keyboardSetter.apply(Spell.DAQIAN)))
-                                .then(literal.apply("xiaohe").executes(c -> keyboardSetter.apply(Spell.XIAOHE)))
-                                .then(literal.apply("ziranma").executes(c -> keyboardSetter.apply(Spell.ZIRANMA)))
-                                .then(literal.apply("sougou").executes(c -> keyboardSetter.apply(Spell.SOUGOU)))
-                                .then(literal.apply("guobiao").executes(c -> keyboardSetter.apply(Spell.GUOBIAO)))
-                                .then(literal.apply("microsoft").executes(c -> keyboardSetter.apply(Spell.MICROSOFT)))
-                                .then(literal.apply("pinyinjiajia").executes(c -> keyboardSetter.apply(Spell.PINYINPP)))
-                                .then(literal.apply("ziguang").executes(c -> keyboardSetter.apply(Spell.ZIGUANG))))
-        );
+                        })).then(literal.apply("false").executes(c -> {
+                            JechConfig.enableVerbose = false;
+                            configSave.run();
+                            return 0;
+                        })))
+                .then(literal.apply("silent").executes(c -> {
+                    JechConfig.enableChat = false;
+                    configSave.run();
+                    return 0;
+                }))
+                .then(literal.apply("keyboard")
+                        .then(literal.apply("quanpin").executes(c -> keyboardSetter.apply(Spell.QUANPIN)))
+                        .then(literal.apply("daqian").executes(c -> keyboardSetter.apply(Spell.DAQIAN)))
+                        .then(literal.apply("xiaohe").executes(c -> keyboardSetter.apply(Spell.XIAOHE)))
+                        .then(literal.apply("ziranma").executes(c -> keyboardSetter.apply(Spell.ZIRANMA)))
+                        .then(literal.apply("sougou").executes(c -> keyboardSetter.apply(Spell.SOUGOU)))
+                        .then(literal.apply("guobiao").executes(c -> keyboardSetter.apply(Spell.GUOBIAO)))
+                        .then(literal.apply("microsoft").executes(c -> keyboardSetter.apply(Spell.MICROSOFT)))
+                        .then(literal.apply("pinyinjiajia").executes(c -> keyboardSetter.apply(Spell.PINYINPP)))
+                        .then(literal.apply("ziguang").executes(c -> keyboardSetter.apply(Spell.ZIGUANG))));
+        dispatcher.register(builder);
+        return builder;
     }
 
     private static int profile(Consumer<String> messageSender) {

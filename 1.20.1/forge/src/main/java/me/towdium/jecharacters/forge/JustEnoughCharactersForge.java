@@ -1,6 +1,5 @@
 package me.towdium.jecharacters.forge;
 
-import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import me.towdium.jecharacters.JechConfig;
 import me.towdium.jecharacters.JustEnoughCharacters;
@@ -10,6 +9,7 @@ import me.towdium.jecharacters.utils.Profiler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.searchtree.SuffixArray;
 import net.minecraft.world.entity.player.Player;
+import net.minecraftforge.client.event.RegisterClientCommandsEvent;
 import net.minecraftforge.event.entity.EntityJoinLevelEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -21,7 +21,6 @@ public class JustEnoughCharactersForge {
 
     public JustEnoughCharactersForge() {
         JustEnoughCharacters.init();
-        JustEnoughCharacters.registerCommand(new CommandDispatcher<>(), LiteralArgumentBuilder::literal);
         Profiler.init(new ForgeInfoReader(), SuffixArray.class.getCanonicalName());
     }
 
@@ -38,6 +37,10 @@ public class JustEnoughCharactersForge {
                 PlatformUtils.sendMessage("jecharacters.chat.taiwan");
                 messageSent = true;
             }
+        }
+        @SubscribeEvent
+        public static void onClientCommandRegister(RegisterClientCommandsEvent event) {
+            JustEnoughCharacters.registerCommand(event.getDispatcher(), LiteralArgumentBuilder::literal);
         }
     }
 }

@@ -18,12 +18,13 @@ public class ForgeInfoReader implements Profiler.InfoReader {
         try {
             p = Files.createTempFile("jecharacters", ".toml");
             Files.copy(is, p, REPLACE_EXISTING);
-            FileConfig c = FileConfig.of(p);
-            c.load();
-            Collection<Config> mods = c.get("mods");
-            return mods.stream()
-                    .map(i -> new Profiler.ModContainer(i.get("modId"), i.get("displayName"), i.get("version")))
-                    .toArray(Profiler.ModContainer[]::new);
+            try (FileConfig c = FileConfig.of(p)) {
+                c.load();
+                Collection<Config> mods = c.get("mods");
+                return mods.stream()
+                        .map(i -> new Profiler.ModContainer(i.get("modId"), i.get("displayName"), i.get("version")))
+                        .toArray(Profiler.ModContainer[]::new);
+            }
         } catch (IOException e) {
             Profiler.LOGGER.error("Failed to read forge mod list.");
             return null;

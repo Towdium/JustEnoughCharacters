@@ -19,8 +19,8 @@ public class JustEnoughCharacters {
         ModConfig.reload();
     }
 
-    public static <S> void registerCommand(CommandDispatcher<S> dispatcher, Function<String, LiteralArgumentBuilder<S>> literal) {
-        JechCommand.register(literal, dispatcher, PlatformUtils::sendMessage, ModCommand::setKeyboard, ModConfig::save);
+    public static <S> LiteralArgumentBuilder<S> registerCommand(CommandDispatcher<S> dispatcher, Function<String, LiteralArgumentBuilder<S>> literal) {
+        return JechCommand.register(literal, dispatcher, PlatformUtils::sendMessage, ModCommand::setKeyboard, ModConfig::save);
     }
 
 }

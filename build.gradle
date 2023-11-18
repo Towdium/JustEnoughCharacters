@@ -242,15 +242,31 @@ subprojects { Project p ->
         def generalConfig = p.rootProject.file("generate.yaml")
         def versionConfig = p.parent.file("version_generate.yaml")
         def platformConfig = p.file("platform_generate.yaml")
+        def mapping = p.rootProject.file("mapping.yaml")
         Yaml yaml = new Yaml()
         Map<String, Set<String>> all = new HashMap<>()
+        Map<String, List<Map<String, String>>> mappings = yaml.load(mapping.text) as Map<String, List<Map<String, String>>>
         putAll(all, yaml.load(generalConfig.text) as Map<String, List<String>>)
         putAll(all, yaml.load(versionConfig.text) as Map<String, List<String>>)
         putAll(all, yaml.load(platformConfig.text) as Map<String, List<String>>)
         JsonObject json = new JsonObject()
         all.each { key, value ->
             JsonArray array = new JsonArray()
-            value.each { array.add(it) }
+            for (target in value) {
+                def remap = target
+                mappings.entrySet().forEach {
+                    if (target.contains(it.key)) {
+                        if (type.fabric) {
+                            remap = target.replace(it.key, getMapping("intermediary", it.value))
+                        }
+                        if (type.forge && p.path.contains("1.16.5")) {
+                            remap = target.replace(it.key, getMapping("mcp", it.value))
+                        }
+                    }
+                }
+                if (type.fabric && containsForgeFluidStack(remap)) continue
+                array.add(remap)
+            }
             JsonObject inner = new JsonObject()
             inner.add("default", array)
             inner.add("additional", new JsonArray())
@@ -258,7 +274,7 @@ subprojects { Project p ->
         }
         json.add("removals", new JsonArray())
         json.add("suffixClassName", new JsonPrimitive(p.suffixClassName))
-        String jsonStr = new GsonBuilder().setPrettyPrinting().create().toJson(json);
+        String jsonStr = new GsonBuilder().setPrettyPrinting().create().toJson(json)
         if (!targetsJson.exists()) {
             targetsJson.parentFile.mkdirs()
             targetsJson.createNewFile()
@@ -274,8 +290,16 @@ subprojects { Project p ->
 
 static void putAll(Map<String, Set<String>> map, Map<String, List<String>> list) {
     list.entrySet().each { entry ->
-        map.computeIfAbsent(entry.key, k -> new HashSet<>()).addAll(entry.value)
+        map.computeIfAbsent(entry.key, k -> new TreeSet<>()).addAll(entry.value)
     }
+}
+
+static boolean containsForgeFluidStack(String s) {
+    return s.contains("Lnet/minecraftforge/fluids/FluidStack")
+}
+
+static String getMapping(String namespace, List<Map<String, String>> list) {
+    return list.find { (it.keySet().contains(namespace)) }.get(namespace)
 }
 
 

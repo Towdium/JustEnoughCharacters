@@ -64,21 +64,45 @@
   "net.blay09.mods.cookingforblockheads.container.RecipeBookContainer:search(Ljava/lang/String;)V", #Cooking for Blockheads
   "logisticspipes.gui.orderer.GuiRequestTable:isSearched(Ljava/lang/String;Ljava/lang/String;)Z", #Logistics Pipes
   "me.shedaniel.clothconfig2.gui.entries.DropdownBoxEntry$DefaultDropdownMenuElement:search()V", #Cloth Config
+  "com.github.glodblock.epp.client.gui.GuiExPatternTerminal:refreshList()V", #ExtendedAE
+  "com.github.glodblock.epp.client.gui.GuiExPatternTerminal:itemStackMatchesSearchTerm(Lnet/minecraft/world/item/ItemStack;Ljava/lang/String;Z)Z", #ExtendedAE
+  'com.github.klikli_dev.occultism.client.gui.storage.StorageControllerGuiBase:itemMatchesSearch(Lnet/minecraft/world/item/ItemStack;)Z', # Occultism legacy
+  'com.github.klikli_dev.occultism.client.gui.storage.StorageControllerGuiBase:machineMatchesSearch(Lcom/github/klikli_dev/occultism/api/common/data/MachineReference;)Z', # Occultism legacy
+  'com.klikli_dev.occultism.client.gui.storage.StorageControllerGuiBase:itemMatchesSearch(Lnet/minecraft/world/item/ItemStack;)Z', # Occultism
+  'com.klikli_dev.occultism.client.gui.storage.StorageControllerGuiBase:machineMatchesSearch(Lcom/klikli_dev/occultism/api/common/data/MachineReference;)Z', # Occultism
+  'appeng.client.gui.me.patternaccess.PatternAccessTermScreen:itemStackMatchesSearchTerm(Lnet/minecraft/world/item/ItemStack;Ljava/lang/String;)Z', # Applied Energistics 2(Since 12.9.8)
+  'appeng.client.gui.me.patternaccess.PatternAccessTermScreen:refreshList()V', # Applied Energistics 2(Since 12.9.8)
+  'dev.emi.emi.search.NameQuery:matchesUnbaked(Ldev/emi/emi/api/stack/EmiStack;)Z', # EMI text search(since 1.0.24+1.20.2)
+  'dev.emi.emi.search.TooltipQuery:matchesUnbaked(Ldev/emi/emi/api/stack/EmiStack;)Z', # EMI text search(since 1.0.24+1.20.2)
+  'dev.emi.emi.search.RegexNameQuery:matches(Ldev/emi/emi/api/stack/EmiStack;)Z', # EMI regex search(since 1.0.24+1.20.2)
+  'dev.emi.emi.search.RegexTooltipQuery:matches(Ldev/emi/emi/api/stack/EmiStack;)Z', # EMI regex search(since 1.0.24+1.20.2)
+  'com.chaosthedude.explorerscompass.gui.ExplorersCompassScreen:processSearchTerm()V', # Explorers Compass(since 1.16.5-2.0.2)
+  'ml.pkom.itemalchemy.gui.screen.AlchemyTableScreenHandler:sortBySearch()V', # Item Alchemy(since 0.7.6)
+
 ]
 "equals": [
-  "org.cyclops.integrateddynamics.core.client.gui.WidgetTextFieldDropdown:lambda$refreshDropdownList$0(Lorg/cyclops/integrateddynamics/core/client/gui/IDropdownEntry;)Z", #Integrated Dynamics
-  "vazkii.botania.api.corporea.CorporeaRequestDefaultMatchers$CorporeaStringMatcher:equalOrContain(Ljava/lang/String;)Z", #Botania (Corporea)
+  'org.cyclops.integrateddynamics.core.client.gui.WidgetTextFieldDropdown:lambda$refreshDropdownList$0(Lorg/cyclops/integrateddynamics/core/client/gui/IDropdownEntry;)Z', #Integrated Dynamics
+  'vazkii.botania.api.corporea.CorporeaRequestDefaultMatchers$CorporeaStringMatcher:equalOrContain(Ljava/lang/String;)Z', #Botania (Corporea)
 ]
 "regExp": [
-  "appeng.client.gui.me.search.SearchPredicates:lambda$createNamePredicate$3(Ljava/util/regex/Pattern;Lappeng/menu/me/common/GridInventoryEntry;)Z", #since Applied Energistics 2-12.9.5
-  "dev.emi.emi.search.RegexTooltipQuery:matches(Ldev/emi/emi/api/stack/EmiStack;)Z", #EMI regex search
-  "com.tom.storagemod.gui.AbstractStorageTerminalScreen:updateSearch()V", #Toms Storage
-  "appeng.client.gui.me.items.ItemRepo:matchesSearch(Lappeng/client/gui/me/common/Repo$SearchMode;Ljava/util/regex/Pattern;Lappeng/api/storage/data/IAEItemStack;)Z", #Applied Energistics
-  "org.cyclops.integrateddynamics.inventory.container.ContainerLogicProgrammerBase:lambda$static$0(Lorg/cyclops/integrateddynamics/api/logicprogrammer/ILogicProgrammerElement;Ljava/util/regex/Pattern;)Z", #Integrated Dynamics 1
-  "org.cyclops.integrateddynamics.core.inventory.container.ContainerMultipartAspects:lambda$new$0(Lorg/cyclops/integrateddynamics/api/part/aspect/IAspect;Ljava/util/regex/Pattern;)Z", #Integrated Dynamics 2
-  "appeng.client.gui.me.search.SearchPredicates:lambda$createNamePredicate$2(Ljava/util/regex/Pattern;Lappeng/menu/me/common/GridInventoryEntry;)Z", #new Applied Energistics Terminals
-  "appeng.client.gui.me.search.SearchPredicates:lambda$createTooltipPredicate$4(Lappeng/client/gui/me/search/RepoSearch;Ljava/util/regex/Pattern;Lappeng/menu/me/common/GridInventoryEntry;)Z", #since Applied Energistics 2-12.9.5
-  "com.tom.storagemod.gui.GuiStorageTerminalBase:updateSearch()V", #Toms Storage
-  "appeng.client.gui.me.fluids.FluidRepo:matchesSearch(Lappeng/client/gui/me/common/Repo$SearchMode;Ljava/util/regex/Pattern;Lappeng/api/storage/data/IAEFluidStack;)Z", #Applied Energistics
-  "dev.emi.emi.search.RegexNameQuery:matches(Ldev/emi/emi/api/stack/EmiStack;)Z", #
+  'appeng.client.gui.me.search.SearchPredicates:lambda$createNamePredicate$3(Ljava/util/regex/Pattern;Lappeng/menu/me/common/GridInventoryEntry;)Z', #since Applied Energistics 2-12.9.5
+  'dev.emi.emi.search.RegexTooltipQuery:matches(Ldev/emi/emi/api/stack/EmiStack;)Z', #EMI regex search
+  'com.tom.storagemod.gui.AbstractStorageTerminalScreen:updateSearch()V', #Toms Storage
+  'appeng.client.gui.me.items.ItemRepo:matchesSearch(Lappeng/client/gui/me/common/Repo$SearchMode;Ljava/util/regex/Pattern;Lappeng/api/storage/data/IAEItemStack;)Z', #Applied Energistics
+  'org.cyclops.integrateddynamics.inventory.container.ContainerLogicProgrammerBase:lambda$static$0(Lorg/cyclops/integrateddynamics/api/logicprogrammer/ILogicProgrammerElement;Ljava/util/regex/Pattern;)Z', #Integrated Dynamics 1
+  'org.cyclops.integrateddynamics.core.inventory.container.ContainerMultipartAspects:lambda$new$0(Lorg/cyclops/integrateddynamics/api/part/aspect/IAspect;Ljava/util/regex/Pattern;)Z', #Integrated Dynamics 2
+  'appeng.client.gui.me.search.SearchPredicates:lambda$createNamePredicate$2(Ljava/util/regex/Pattern;Lappeng/menu/me/common/GridInventoryEntry;)Z', #new Applied Energistics Terminals
+  'appeng.client.gui.me.search.SearchPredicates:lambda$createTooltipPredicate$4(Lappeng/client/gui/me/search/RepoSearch;Ljava/util/regex/Pattern;Lappeng/menu/me/common/GridInventoryEntry;)Z', #since Applied Energistics 2-12.9.5
+  'com.tom.storagemod.gui.GuiStorageTerminalBase:updateSearch()V', #Toms Storage
+  'appeng.client.gui.me.fluids.FluidRepo:matchesSearch(Lappeng/client/gui/me/common/Repo$SearchMode;Ljava/util/regex/Pattern;Lappeng/api/storage/data/IAEFluidStack;)Z', #Applied Energistics
+  'dev.emi.emi.search.RegexNameQuery:matches(Ldev/emi/emi/api/stack/EmiStack;)Z', #emi regex search
+  'appeng.client.gui.me.search.SearchPredicates:lambda$createNamePredicate$3(Ljava/util/regex/Pattern;Lappeng/menu/me/common/GridInventoryEntry;)Z', #Applied Energistics 2(Since 12.9.8)
+  'appeng.client.gui.me.search.SearchPredicates:lambda$createTooltipPredicate$4(Lappeng/client/gui/me/search/RepoSearch;Ljava/util/regex/Pattern;Lappeng/menu/me/common/GridInventoryEntry;)Z', #Applied Energistics 2(Since 12.9.8)
+  'com.hollingsworth.arsnouveau.client.container.AbstractStorageTerminalScreen:updateSearch()V', #Ars Nouveau (since 1.19.2-3.21.4)
+  'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$getInstanceFilterPredicate$8(Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z', #Integrated Terminals(since 1.19.2-1.4.10)
+  'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$getInstanceFilterPredicate$1(Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z', #Integrated Terminals(since 1.19.2-1.4.10)
+  'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$getInstanceFilterPredicate$2(Ljava/lang/String;Lnet/minecraft/network/chat/Component;)Z', #Integrated Terminals(since 1.19.2-1.4.10)
+  'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerFluidStack:lambda$getInstanceFilterPredicate$14(Ljava/lang/String;Lnet/minecraftforge/fluids/FluidStack;)Z', #Integrated Terminals(since 1.19.2-1.4.10)
+  'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerFluidStack:lambda$getInstanceFilterPredicate$8(Ljava/lang/String;Lnet/minecraftforge/fluids/FluidStack;)Z', #Integrated Terminals(since 1.19.2-1.4.10)
+  'ml.pkom.itemalchemy.gui.screen.AlchemyTableScreenHandler:sortBySearch()V' #ItemAlchemy(since 0.7.6)
 ]
