@@ -25,7 +25,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Consumer;
+import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipInputStream;
 
 /**
  * Author: Towdium
@@ -69,6 +71,8 @@ public class Profiler {
     @Nullable
     private static Profiler instance;
 
+    private final InfoReader infoReader;
+
     @NotNull
     public static Profiler getInstance() {
         if (instance == null)
@@ -76,13 +80,14 @@ public class Profiler {
         return instance;
     }
 
-    public static Profiler init(String suffixArray) {
-        if (instance == null) instance = new Profiler(suffixArray);
+    public static Profiler init(InfoReader reader, String suffixArray) {
+        if (instance == null) instance = new Profiler(reader, suffixArray);
         return instance;
     }
 
-    private Profiler(String suffixArray) {
+    private Profiler(InfoReader reader, String suffixArray) {
         ANALYZERS.add(new Analyzer.Construct(Type.SUFFIX, suffixArray.replace('.', '/')));
+        infoReader = reader;
         instance = this;
     }
 
@@ -121,10 +126,6 @@ public class Profiler {
         return jcs;
     }
 
-    protected ModContainer[] readInfo(InputStream is) {
-        return new ModContainer[0];
-    }
-
     private void scanJar(ZipFile f, Consumer<JarContainer> cbkJar) {
         EnumMap<Type, Set<String>> methods = new EnumMap<>(Type.class);
         for (Type t : Type.values()) methods.put(t, new TreeSet<>());
@@ -132,12 +133,14 @@ public class Profiler {
         JarContainer ret = new JarContainer();
         f.stream().forEach(entry -> {
             try (InputStream is = f.getInputStream(entry)) {
-                if (infoFiles.stream().anyMatch(s -> s.equals(entry.getName()))) ret.mods = readInfo(is);
+                if (infoFiles.stream().anyMatch(s -> s.equals(entry.getName()))) ret.mods = infoReader.readInfo(is);
                 else if (entry.getName().endsWith(".class")) {
                     long size = entry.getSize() + 4;
                     if (size > Integer.MAX_VALUE) {
                         LOGGER.info("Class file " + entry.getName() + " in jar file " + f.getName() + " is too large, skip.");
                     } else scanClass(is, methods);
+                } else if (entry.getName().endsWith(".jar")) {
+                    scanJarInJar(is, methods);
                 }
             } catch (IOException e) {
                 LOGGER.info("Fail to read file " + entry.getName() + " in jar file " + f.getName() + ", skip.");
@@ -171,6 +174,18 @@ public class Profiler {
         });
     }
 
+    private void scanJarInJar(InputStream is, EnumMap<Type, Set<String>> methods) throws IOException {
+        ZipInputStream stream = new ZipInputStream(is);
+        ZipEntry entry;
+        while ((entry = stream.getNextEntry()) != null) {
+            if (entry.getName().endsWith(".class")) {
+                scanClass(stream, methods);
+            } else if (entry.getName().endsWith(".jar")) {
+                scanJarInJar(new ZipInputStream(stream), methods);
+            }
+        }
+    }
+
     public static class Report {
         List<JarContainer> jars;
     }
@@ -185,10 +200,20 @@ public class Profiler {
     }
 
     @SuppressWarnings("unused")
-    private static class ModContainer {
+    public static class ModContainer {
         String modid;
         String name;
         String version;
+
+        public ModContainer(String modid, String name, String version) {
+            this.modid = modid;
+            this.name = name;
+            this.version = version;
+        }
+    }
+
+    public interface InfoReader {
+        ModContainer[] readInfo(InputStream is);
     }
 
     private static abstract class Analyzer {

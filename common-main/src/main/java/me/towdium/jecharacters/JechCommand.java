@@ -1,6 +1,5 @@
 package me.towdium.jecharacters;
 
-import com.google.gson.GsonBuilder;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import me.towdium.jecharacters.JechConfig.Spell;
@@ -59,10 +58,9 @@ public class JechCommand {
     private static int profile(Consumer<String> messageSender) {
         Thread t = new Thread(() -> {
             messageSender.accept("jecharacters.chat.start");
-            Profiler.Report r = Profiler.getInstance().run();
             try (FileOutputStream fos = new FileOutputStream("logs/jecharacters.txt")) {
                 OutputStreamWriter osw = new OutputStreamWriter(fos);
-                osw.write(new GsonBuilder().setPrettyPrinting().create().toJson(r));
+                osw.write(Profiler.runAsJson());
                 osw.flush();
                 messageSender.accept("jecharacters.chat.saved");
             } catch (IOException e) {

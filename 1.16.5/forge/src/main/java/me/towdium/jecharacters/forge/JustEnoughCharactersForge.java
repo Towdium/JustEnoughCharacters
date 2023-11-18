@@ -5,7 +5,10 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import me.towdium.jecharacters.JechConfig;
 import me.towdium.jecharacters.JustEnoughCharacters;
 import me.towdium.jecharacters.PlatformUtils;
+import me.towdium.jecharacters.utils.ForgeInfoReader;
+import me.towdium.jecharacters.utils.Profiler;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.searchtree.SuffixArray;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -19,6 +22,7 @@ public class JustEnoughCharactersForge {
     public JustEnoughCharactersForge() {
         JustEnoughCharacters.init();
         JustEnoughCharacters.registerCommand(new CommandDispatcher<>(), LiteralArgumentBuilder::literal);
+        Profiler.init(new ForgeInfoReader(), SuffixArray.class.getCanonicalName());
     }
 
     @Mod.EventBusSubscriber
