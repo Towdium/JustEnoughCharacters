@@ -13,6 +13,11 @@ import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 public class ForgeInfoReader implements Profiler.InfoReader {
     @Override
+    public Profiler.Plafform getPlatform() {
+        return Profiler.Plafform.FORGE;
+    }
+
+    @Override
     public Profiler.ModContainer[] readInfo(InputStream is) {
         Path p = null;
         try {

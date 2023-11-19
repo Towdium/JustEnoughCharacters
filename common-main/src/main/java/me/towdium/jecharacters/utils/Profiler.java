@@ -21,7 +21,9 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Consumer;
@@ -64,9 +66,12 @@ public class Profiler {
             )
     ));
 
-    private static final List<String> infoFiles = Arrays.asList(
-            "fabric.mod.json", "META-INF/mods.toml"
-    );
+    private static final Map<Plafform, String> infoFiles = new HashMap<>();
+
+    static {
+        infoFiles.put(Plafform.FABRIC, "fabric.mod.json");
+        infoFiles.put(Plafform.FORGE, "META-INF/mods.toml");
+    }
 
     @Nullable
     private static Profiler instance;
@@ -133,7 +138,8 @@ public class Profiler {
         JarContainer ret = new JarContainer();
         f.stream().forEach(entry -> {
             try (InputStream is = f.getInputStream(entry)) {
-                if (infoFiles.stream().anyMatch(s -> s.equals(entry.getName()))) ret.mods = infoReader.readInfo(is);
+                if (entry.getName().equals(infoFiles.get(infoReader.getPlatform())))
+                    ret.mods = infoReader.readInfo(is);
                 else if (entry.getName().endsWith(".class")) {
                     long size = entry.getSize() + 4;
                     if (size > Integer.MAX_VALUE) {
@@ -213,6 +219,9 @@ public class Profiler {
     }
 
     public interface InfoReader {
+
+        Plafform getPlatform();
+
         ModContainer[] readInfo(InputStream is);
     }
 
@@ -291,5 +300,10 @@ public class Profiler {
         EQUALS,
         REGEXP,
         SUFFIX
+    }
+
+    public enum Plafform {
+        FABRIC,
+        FORGE
     }
 }

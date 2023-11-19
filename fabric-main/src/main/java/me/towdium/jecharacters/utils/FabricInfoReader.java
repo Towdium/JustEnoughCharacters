@@ -10,6 +10,11 @@ import java.nio.charset.StandardCharsets;
 
 public class FabricInfoReader implements Profiler.InfoReader {
     @Override
+    public Profiler.Plafform getPlatform() {
+        return Profiler.Plafform.FABRIC;
+    }
+
+    @Override
     public Profiler.ModContainer[] readInfo(InputStream is) {
         JsonObject jsonObject = new JsonParser().parse(new InputStreamReader(is, StandardCharsets.UTF_8)).getAsJsonObject();
         if (jsonObject != null) {

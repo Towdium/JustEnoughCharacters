@@ -48,11 +48,20 @@ tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
 }
 
-tasks.register('buildGeneral', Copy).configure { task ->
+tasks.register('buildAll', Copy).configure { task ->
     subprojects.forEach { p ->
         if (ProjectType.getType(p) == ProjectType.ROOT) {
             task.dependsOn(":${p.name}:forge:build")
             task.dependsOn(":${p.name}:fabric:build")
+        }
+    }
+}
+
+tasks.register("cleanBuild", Delete).configure { task ->
+    subprojects.forEach { p ->
+        if (ProjectType.getType(p) == ProjectType.ROOT) {
+            delete("${p.projectDir}/forge/build/libs")
+            delete("${p.projectDir}/fabric/build/libs")
         }
     }
 }
@@ -135,7 +144,7 @@ subprojects { Project p ->
 
     p.archivesBaseName = rootProject.archivesBaseName
     p.group = rootProject.group
-    p.version = rootProject.version
+    p.version = "${verspec}.${verbuild}"
 
     if (type != ProjectType.MAIN) {
         def mc_version = type == ProjectType.ROOT ? p.mc_version : p.getParent().mc_version
