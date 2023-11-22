@@ -1,4 +1,4 @@
-package me.towdium.jecharacters.utils;
+package me.towdium.jecharacters;
 
 public final class Constants {
 
