@@ -255,9 +255,9 @@ subprojects { Project p ->
         Yaml yaml = new Yaml()
         Map<String, Set<String>> all = new HashMap<>()
         Map<String, List<Map<String, String>>> mappings = yaml.load(mapping.text) as Map<String, List<Map<String, String>>>
-        putAll(all, yaml.load(generalConfig.text) as Map<String, List<String>>)
-        putAll(all, yaml.load(versionConfig.text) as Map<String, List<String>>)
-        putAll(all, yaml.load(platformConfig.text) as Map<String, List<String>>)
+        putAll(yaml, generalConfig, all)
+        putAll(yaml, versionConfig, all)
+        putAll(yaml, platformConfig, all)
         JsonObject json = new JsonObject()
         all.each { key, value ->
             JsonArray array = new JsonArray()
@@ -297,9 +297,27 @@ subprojects { Project p ->
 }
 
 
-static void putAll(Map<String, Set<String>> map, Map<String, List<String>> list) {
-    list.entrySet().each { entry ->
-        map.computeIfAbsent(entry.key, k -> new TreeSet<>()).addAll(entry.value)
+static void putAll(Yaml yaml, File configFile, Map<String, List<String>> map) {
+    if (!configFile.exists()) return
+    Map<String, List<String>> list = yaml.load(configFile.text) as Map<String, List<String>>
+    try {
+        list.entrySet().each { entry ->
+            def checked = entry.value.findAll { checkTargetFormat(it) }
+            map.computeIfAbsent(entry.key, k -> new TreeSet<>()).addAll(checked)
+        }
+    } catch (Exception e) {
+        throw new IllegalArgumentException("Invalid config from file: ${configFile.name}, ${e.message}")
+    }
+
+}
+
+static boolean checkTargetFormat(String target) {
+    String[] split = target.split(':')
+    if (split.length != 2)
+        throw new IllegalArgumentException("Invalid target: \"${target}\", must be in format 'namespace:name'")
+    split.each { s ->
+        if (s.contains(" "))
+            throw new IllegalArgumentException("Invalid target: \"${target}\", spaces are not allowed")
     }
 }
 

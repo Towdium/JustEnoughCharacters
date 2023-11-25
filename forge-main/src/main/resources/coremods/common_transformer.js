@@ -17,11 +17,11 @@ function initializeCoreMod() {
 function addTarget(ret, type, data, removal, suffixClass) {
     var all = []
     var defaultArray = data['default']
-    for ( i = 0; i < defaultArray.length; i++) {
+    for (i = 0; i < defaultArray.length; i++) {
         all.push(defaultArray[i])
     }
     var additional = data['additional']
-    for ( i = 0; i < additional.length; i++) {
+    for (i = 0; i < additional.length; i++) {
         all.push(additional[i])
     }
     var targets = []
@@ -58,6 +58,7 @@ function addTarget(ret, type, data, removal, suffixClass) {
 }
 
 function getTransformerFunc(type, suffixClass) {
+    type = type.toLowerCase()
     if (type === 'contains')
         return transContains
     if (type === "equals")

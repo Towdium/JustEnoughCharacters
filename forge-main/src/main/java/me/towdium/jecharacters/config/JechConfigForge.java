@@ -92,4 +92,12 @@ public class JechConfigForge {
         common.save();
     }
 
+    public static void setKeyboard(JechConfig.Spell keyboard) {
+        enumKeyboard.set(keyboard);
+    }
+
+    public static void setEnableQuote(boolean enableQuote) {
+        JechConfigForge.enableQuote.set(enableQuote);
+    }
+
 }
