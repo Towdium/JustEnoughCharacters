@@ -3,6 +3,7 @@ package me.towdium.jecharacters;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import me.towdium.jecharacters.utils.Greetings;
+import me.towdium.jecharacters.utils.Match;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -17,6 +18,7 @@ public class JustEnoughCharacters {
         Greetings.send(logger, MODID, PlatformUtils::isModLoaded);
         ModConfig.register();
         ModConfig.reload();
+        Match.onConfigChange();
     }
 
     public static <S> void registerCommand(CommandDispatcher<S> dispatcher, Function<String, LiteralArgumentBuilder<S>> literal) {

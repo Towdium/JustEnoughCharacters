@@ -297,7 +297,7 @@ subprojects { Project p ->
 }
 
 
-static void putAll(Yaml yaml, File configFile, Map<String, List<String>> map) {
+static void putAll(Yaml yaml, File configFile, Map<String, Set<String>> map) {
     if (!configFile.exists()) return
     Map<String, List<String>> list = yaml.load(configFile.text) as Map<String, List<String>>
     try {
@@ -328,5 +328,3 @@ static boolean containsForgeFluidStack(String s) {
 static String getMapping(String namespace, List<Map<String, String>> list) {
     return list.find { (it.keySet().contains(namespace)) }.get(namespace)
 }
-
-

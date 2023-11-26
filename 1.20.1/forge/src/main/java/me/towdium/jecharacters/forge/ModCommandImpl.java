@@ -8,6 +8,7 @@ public class ModCommandImpl {
     public static int setKeyboard(JechConfig.Spell keyboard) {
         JechConfigForge.setKeyboard(keyboard);
         JechConfigForge.setEnableQuote(false);
+        ModConfigImpl.save();
         ModConfigImpl.reload();
         Match.onConfigChange();
         return 0;

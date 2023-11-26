@@ -1,6 +1,7 @@
 package me.towdium.jecharacters.config;
 
 import me.towdium.jecharacters.JechConfig;
+import me.towdium.jecharacters.utils.Match;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.loading.FMLPaths;
@@ -75,6 +76,7 @@ public class JechConfigForge {
         JechConfig.enableChat = enableChat.get();
         JechConfig.enableQuote = enableQuote.get();
         JechConfig.enableVerbose = enableVerbose.get();
+        Match.onConfigChange();
     }
 
     public static void save() {
@@ -93,10 +95,12 @@ public class JechConfigForge {
     }
 
     public static void setKeyboard(JechConfig.Spell keyboard) {
+        JechConfig.enumKeyboard = keyboard;
         enumKeyboard.set(keyboard);
     }
 
     public static void setEnableQuote(boolean enableQuote) {
+        JechConfig.enableQuote = enableQuote;
         JechConfigForge.enableQuote.set(enableQuote);
     }
 
