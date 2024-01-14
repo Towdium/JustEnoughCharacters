@@ -78,6 +78,7 @@
   'dev.emi.emi.search.RegexTooltipQuery:matches(Ldev/emi/emi/api/stack/EmiStack;)Z', # EMI regex search(since 1.0.24+1.20.2)
   'com.chaosthedude.explorerscompass.gui.ExplorersCompassScreen:processSearchTerm()V', # Explorers Compass(since 1.16.5-2.0.2)
   'ml.pkom.itemalchemy.gui.screen.AlchemyTableScreenHandler:sortBySearch()V', # Item Alchemy(since 0.7.6)
+  'com.lothrazar.storagenetwork.gui.NetworkWidget:doesStackMatchSearch(Lnet/minecraft/world/item/ItemStack;)Z', #Simple Storage Network(since 1.70)
 
 ]
 "equals": [
