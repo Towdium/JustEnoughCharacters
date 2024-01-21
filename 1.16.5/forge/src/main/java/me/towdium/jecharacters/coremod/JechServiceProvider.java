@@ -61,11 +61,6 @@ public class JechServiceProvider implements ITransformationService {
     @SuppressWarnings("rawtypes")
     @Override
     public @NotNull List<ITransformer> transformers() {
-        try {
-            Thread.sleep(5000);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
         List<me.towdium.jecharacters.asm.ITransformer> transformers = StreamSupport.stream(ServiceLoader.load(me.towdium.jecharacters.asm.ITransformer.class, this.getClass().getClassLoader()).spliterator(), false)
                 .collect(Collectors.toList());
         InputStream is = getClass().getClassLoader().getResourceAsStream("me/towdium/jecharacters/targets.json");
