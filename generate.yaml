@@ -79,7 +79,11 @@
   'com.chaosthedude.explorerscompass.gui.ExplorersCompassScreen:processSearchTerm()V', # Explorers Compass(since 1.16.5-2.0.2)
   'ml.pkom.itemalchemy.gui.screen.AlchemyTableScreenHandler:sortBySearch()V', # Item Alchemy(since 0.7.6)
   'com.lothrazar.storagenetwork.gui.NetworkWidget:doesStackMatchSearch(Lnet/minecraft/world/item/ItemStack;)Z', #Simple Storage Network(since 1.70)
-
+  'pro.mikey.xray.gui.GuiSelectionScreen:lambda$updateSearch$8(Lpro/mikey/xray/utils/BlockData;)Z',
+  'de.ellpeck.prettypipes.terminal.containers.ItemTerminalGui:lambda$updateWidgets$8(Ljava/lang/String;Lorg/apache/commons/lang3/tuple/Pair;)Z', # Pretty Pipes(since 1.15.0)
+  'mcjty.rftoolsstorage.modules.scanner.blocks.StorageScannerTileEntity:lambda$makeSearchPredicate$30(Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z', #RFTools Storage(since 1.20-5.0.2)
+  'mcjty.rftoolsstorage.modules.modularstorage.client.GuiModularStorage:lambda$updateList$6(Ljava/lang/String;Ljava/util/List;Ljava/util/concurrent/atomic/AtomicInteger;Lnet/minecraftforge/items/IItemHandler;)V',#RFTools Storage(since 1.20-5.0.2)
+  'com.lothrazar.storagenetwork.gui.NetworkWidget:doesStackMatchSearch(Lnet/minecraft/world/item/ItemStack;)Z', #Simple Storage Network(since 1.10.0)
 ]
 "equals": [
   'org.cyclops.integrateddynamics.core.client.gui.WidgetTextFieldDropdown:lambda$refreshDropdownList$0(Lorg/cyclops/integrateddynamics/core/client/gui/IDropdownEntry;)Z', #Integrated Dynamics
