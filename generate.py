@@ -80,6 +80,7 @@ contains = [
     'com.minecolonies.coremod.client.gui.WindowSelectRes:updateResources()V', #MineColonies since 1.18.2-1.0.1440-ALPHA
     'com.chaosthedude.naturescompass.gui.NaturesCompassScreen:processSearchTerm()V',  #Nature's Compass
     'com.hollingsworth.arsnouveau.client.gui.book.GuiSpellBook:onSearchChanged(Ljava/lang/String;)V',  #Ars Nouveau
+    'com.hollingsworth.arsnouveau.client.gui.book.GlyphUnlockMenu:onSearchChanged(Ljava/lang/String;Lcom/hollingsworth/arsnouveau/client/gui/book/GlyphUnlockMenu$Filter;)V',  #Ars Nouveau
     'me.shedaniel.rei.impl.client.search.argument.type.TagArgumentType:matches(Lorg/apache/commons/lang3/mutable/Mutable;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z',  # REI legacy
     'me.shedaniel.rei.impl.client.search.argument.type.IdentifierArgumentType:matches(Lorg/apache/commons/lang3/mutable/Mutable;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z',  # REI legacy
     'me.shedaniel.rei.impl.client.search.argument.type.ModArgumentType:matches(Lorg/apache/commons/lang3/mutable/Mutable;Lme/shedaniel/rei/api/common/entry/EntryStack;Ljava/lang/String;Lnet/minecraft/util/Unit;)Z',  # REI legacy
