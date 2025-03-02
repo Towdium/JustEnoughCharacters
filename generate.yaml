@@ -93,6 +93,7 @@
   'appeng.client.gui.me.search.TooltipsSearchPredicate:test(Lappeng/menu/me/common/GridInventoryEntry;)Z', #Applied Energistics 2(since 15.2.4)
   "com.robertx22.age_of_exile.gui.screens.stat_gui.StatScreen:lambda$init$9(Ljava/lang/String;Lcom/robertx22/age_of_exile/database/data/stats/Stat;)Z", # Mine And Slash stat search
   "com.robertx22.age_of_exile.gui.screens.skill_tree.buttons.PerkButton:lambda$renderWidget$2(Ljava/lang/String;Lcom/robertx22/age_of_exile/database/OptScaleExactStat;)Z", # Mine And Slash talent search
+  "net.mehvahdjukaar.sawmill.FilterableRecipe:matchFilter(Ljava/lang/String;)Z", # Sawmill
 
 ]
 "equals": [
