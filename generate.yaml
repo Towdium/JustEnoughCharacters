@@ -89,6 +89,8 @@
   "com.robertx22.age_of_exile.gui.screens.skill_tree.buttons.PerkButton:lambda$renderWidget$1(Ljava/lang/String;Lcom/robertx22/age_of_exile/database/OptScaleExactStat;)Z", # Mine And Slash talent search
   'appeng.client.gui.me.search.NameSearchPredicate:test(Lappeng/menu/me/common/GridInventoryEntry;)Z', #Applied Energistics 2(since 15.2.4)
   'appeng.client.gui.me.search.TooltipsSearchPredicate:test(Lappeng/menu/me/common/GridInventoryEntry;)Z', #Applied Energistics 2(since 15.2.4)
+  "com.simibubi.create.content.logistics.stockTicker.StockKeeperRequestScreen:lambda$refreshSearchResults$1(Ljava/lang/String;Lnet/minecraft/tags/TagKey;)Z", #Create 6.0.0
+  "com.simibubi.create.content.logistics.stockTicker.StockKeeperRequestScreen:refreshSearchResults(Z)V", #Create 6.0.0
 ]
 "equals": [
   'org.cyclops.integrateddynamics.core.client.gui.WidgetTextFieldDropdown:lambda$refreshDropdownList$0(Lorg/cyclops/integrateddynamics/core/client/gui/IDropdownEntry;)Z', #Integrated Dynamics
