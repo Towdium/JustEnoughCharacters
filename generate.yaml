@@ -95,6 +95,7 @@
   "com.robertx22.age_of_exile.gui.screens.skill_tree.buttons.PerkButton:lambda$renderWidget$2(Ljava/lang/String;Lcom/robertx22/age_of_exile/database/OptScaleExactStat;)Z", # Mine And Slash talent search
   "net.mehvahdjukaar.sawmill.FilterableRecipe:matchFilter(Ljava/lang/String;)Z", # Sawmill
   "net.blay09.mods.farmingforblockheads.menu.MarketClientMenu:applyFilters()V", # Farming for Blockheads
+  "shadows.apotheosis.ench.library.EnchLibraryScreen:isAllowedBySearch(Lit/unimi/dsi/fastutil/objects/Object2IntMap$Entry;)Z", # Apotheosis
 ]
 "equals": [
   'org.cyclops.integrateddynamics.core.client.gui.WidgetTextFieldDropdown:lambda$refreshDropdownList$0(Lorg/cyclops/integrateddynamics/core/client/gui/IDropdownEntry;)Z', #Integrated Dynamics
