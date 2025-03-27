@@ -8,9 +8,9 @@
     "Towdium,vfyjxf_"
   ],
   "contact": {
-    "homepage": "https://github.com/Towdium/JustEnoughCaracters",
-    "issues": "https://github.com/Towdium/JustEnoughCaracters/issues",
-    "sources": "https://github.com/Towdium/JustEnoughCaracters"
+    "homepage": "https://github.com/Towdium/JustEnoughCharacters",
+    "issues": "https://github.com/Towdium/JustEnoughCharacters/issues",
+    "sources": "https://github.com/Towdium/JustEnoughCharacters"
   },
   "license": "MIT License",
   "environment": "client",
