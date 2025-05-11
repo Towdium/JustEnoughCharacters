@@ -91,6 +91,8 @@
   'appeng.client.gui.me.search.TooltipsSearchPredicate:test(Lappeng/menu/me/common/GridInventoryEntry;)Z', #Applied Energistics 2(since 15.2.4)
   "com.simibubi.create.content.logistics.stockTicker.StockKeeperRequestScreen:lambda$refreshSearchResults$1(Ljava/lang/String;Lnet/minecraft/tags/TagKey;)Z", #Create 6.0.0
   "com.simibubi.create.content.logistics.stockTicker.StockKeeperRequestScreen:refreshSearchResults(Z)V", #Create 6.0.0
+  "net.blay09.mods.farmingforblockheads.menu.MarketMenu:searchMatches(Lnet/minecraft/world/item/crafting/RecipeHolder;)Z", # Farming for Blockheads (Since MC1.21.1)
+  "net.blay09.mods.cookingforblockheads.menu.KitchenMenu:searchMatches(Lnet/blay09/mods/cookingforblockheads/crafting/RecipeWithStatus;)Z", # Cooking for Blockheads (Since MC1.21.1)
 ]
 "equals": [
   'org.cyclops.integrateddynamics.core.client.gui.WidgetTextFieldDropdown:lambda$refreshDropdownList$0(Lorg/cyclops/integrateddynamics/core/client/gui/IDropdownEntry;)Z', #Integrated Dynamics
@@ -106,6 +108,8 @@
   'appeng.client.gui.me.search.SearchPredicates:lambda$createNamePredicate$2(Ljava/util/regex/Pattern;Lappeng/menu/me/common/GridInventoryEntry;)Z', #new Applied Energistics Terminals
   'appeng.client.gui.me.search.SearchPredicates:lambda$createTooltipPredicate$4(Lappeng/client/gui/me/search/RepoSearch;Ljava/util/regex/Pattern;Lappeng/menu/me/common/GridInventoryEntry;)Z', #since Applied Energistics 2-12.9.5
   'com.tom.storagemod.gui.GuiStorageTerminalBase:updateSearch()V', #Toms Storage
+  'com.tom.storagemod.screen.AbstractStorageTerminalScreen:lambda$updateSearch$16(Ljava/util/regex/Pattern;Lcom/tom/storagemod/inventory/StoredItemStack;)Z', #Toms Storage (since MC1.21.1)
+  'com.tom.storagemod.screen.AbstractStorageTerminalScreen:lambda$updateSearch$15(Ljava/util/regex/Pattern;Lcom/tom/storagemod/inventory/StoredItemStack;)Z', #Toms Storage (since MC1.21.1)
   'appeng.client.gui.me.fluids.FluidRepo:matchesSearch(Lappeng/client/gui/me/common/Repo$SearchMode;Ljava/util/regex/Pattern;Lappeng/api/storage/data/IAEFluidStack;)Z', #Applied Energistics
   'dev.emi.emi.search.RegexNameQuery:matches(Ldev/emi/emi/api/stack/EmiStack;)Z', #emi regex search
   'appeng.client.gui.me.search.SearchPredicates:lambda$createNamePredicate$3(Ljava/util/regex/Pattern;Lappeng/menu/me/common/GridInventoryEntry;)Z', #Applied Energistics 2(Since 12.9.8)
