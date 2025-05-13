@@ -94,6 +94,10 @@
   "dev.shadowsoffire.apothic_enchanting.library.EnchLibraryScreen:isAllowedBySearch(Lit/unimi/dsi/fastutil/objects/Object2IntMap$Entry;)Z", # Apothic Enchanting (since 1.21.1-1.4.1)
   "com.refinedmods.refinedstorage.common.grid.query.GridQueryParser:lambda$attributeMatch$6(Ljava/lang/String;Ljava/lang/String;)Z", #Refined Storage (since v2.0.0-beta.2)
   "com.refinedmods.refinedstorage.common.grid.query.GridQueryParser:lambda$parseLiteral$8(Lcom/refinedmods/refinedstorage/query/parser/node/LiteralNode;Lcom/refinedmods/refinedstorage/api/resource/repository/ResourceRepository;Lcom/refinedmods/refinedstorage/common/api/grid/view/GridResource;)Z", #Refined Storage (since v2.0.0-beta.2)
+  "net.p3pp3rf1y.sophisticatedcore.client.gui.StorageScreenBase:lambda$new$1(Lnet/minecraft/world/item/ItemStack;)Z", #Refined Storage (since v2.0.0-beta.2)
+  "net.p3pp3rf1y.sophisticatedcore.client.gui.StorageScreenBase:lambda$updateSearchFilter$4(Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z", #Sophisticated Core (since 1.21.1-1.3.37.974)
+  "net.p3pp3rf1y.sophisticatedcore.client.gui.StorageScreenBase:lambda$updateSearchFilter$5(Ljava/lang/String;Lnet/minecraft/network/chat/Component;)Z", #Sophisticated Core (since 1.21.1-1.3.37.974)
+  "net.p3pp3rf1y.sophisticatedcore.client.gui.StorageScreenBase:lambda$updateSearchFilter$7(Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z" #Sophisticated Core (since 1.21.1-1.3.37.974)
 ]
 "equals": [
   'org.cyclops.integrateddynamics.core.client.gui.WidgetTextFieldDropdown:lambda$refreshDropdownList$0(Lorg/cyclops/integrateddynamics/core/client/gui/IDropdownEntry;)Z', #Integrated Dynamics
