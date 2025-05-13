@@ -21,23 +21,19 @@
   "fi.dy.masa.malilib.gui.widgets.WidgetListBase:matchesFilter(Ljava/lang/String;Ljava/lang/String;)Z", #MaLiLib
   "mezz.jei.gui.search.ElementSearchLowMem:matches(Ljava/lang/String;Lmezz/jei/core/search/PrefixInfo;Lmezz/jei/gui/ingredients/IListElementInfo;)Z", #JEI (low memory) since jei-11.6.0.1016
   "com.github.einjerjar.mc.keymap.client.gui.widgets.KeymapListWidget:lambda$updateFilteredList$1(Lcom/github/einjerjar/mc/keymap/client/gui/widgets/KeymapListWidget$KeymapListEntry;Ljava/lang/String;)Z", #Keymap since 0.8.0-beta.1
-  "com.refinedmods.refinedstorage.screen.grid.filtering.ModGridFilter:test(Lcom/refinedmods/refinedstorage/screen/grid/stack/IGridStack;)Z", #Refined Storage
   "hellfirepvp.astralsorcery.client.screen.journal.ScreenJournalPerkTree:updateSearchHighlight()V", #Astral Sorcery
-  "com.refinedmods.refinedstorage.screen.grid.filtering.TooltipGridFilter:test(Lcom/refinedmods/refinedstorage/screen/grid/stack/IGridStack;)Z", #Refined Storage
   "com.github.klikli_dev.occultism.client.gui.storage.StorageControllerGuiBase:machineMatchesSearch(Lcom/github/klikli_dev/occultism/api/common/data/MachineReference;)Z", #Occultism
   "com.rwtema.extrautils2.transfernodes.TileIndexer$ContainerIndexer$WidgetItemRefButton:lambda$getRef$0([Ljava/lang/String;Lcom/rwtema/extrautils2/utils/datastructures/ItemRef;)Z", #Extra Utilities
   "vazkii.botania.api.corporea.CorporeaRequestDefaultMatchers$CorporeaStringMatcher:equalOrContain(Ljava/lang/String;)Z", #Botania (Corporea)
   "com.mia.props.client.container.GuiDecobench:refreshButtons()V", #Decofraft workbench
   "vazkii.patchouli.client.book.BookEntry:isFoundByQuery(Ljava/lang/String;)Z", #Patchouli (Botania)
   "sonar.logistics.core.tiles.readers.items.GuiInventoryReader:getGridList()Ljava/util/List;", #Practical Logistics
-  "com.refinedmods.refinedstorage.screen.grid.filtering.NameGridFilter:test(Lcom/refinedmods/refinedstorage/screen/grid/stack/IGridStack;)Z", #Refined Storage
   "mekanism.common.content.qio.SearchQueryParser$QueryType:lambda$null$5(Ljava/lang/String;Ljava/lang/String;)Z", #Mekanism (QIO)
   "moze_intel.projecte.gameObjs.container.inventory.TransmutationInventory:doesItemMatchFilter(Lmoze_intel/projecte/api/ItemInfo;)Z", #Project E
   "logisticspipes.gui.orderer.GuiOrderer:isSearched(Ljava/lang/String;Ljava/lang/String;)Z", #Logistics Pipes
   "sonar.logistics.core.tiles.readers.fluids.GuiFluidReader:getGridList()Ljava/util/List;", #Practical Logistics
   "dev.emi.emi.search.TooltipQuery:matches(Ldev/emi/emi/api/stack/EmiStack;)Z", #EMI text search(Leagcy)
   "com.blamejared.controlling.client.gui.GuiNewControls:lambda$filterKeys$11(Lcom/blamejared/controlling/client/gui/GuiNewKeyBindingList$KeyEntry;)Z", #Controlling
-  "com.refinedmods.refinedstorage.screen.grid.filtering.TagGridFilter:lambda$test$0(Ljava/lang/String;)Z", #Refined Storage
   "hellfirepvp.astralsorcery.client.screen.journal.ScreenJournalProgression:onSearchTextInput()V", #Astral Sorcery
   "betterquesting.api2.client.gui.panels.lists.CanvasFileDirectory:queryMatches(Ljava/io/File;Ljava/lang/String;Ljava/util/ArrayDeque;)V", #Better Questing
   "com.blamejared.controlling.client.gui.GuiNewControls:lambda$filterKeys$10(Lcom/blamejared/controlling/client/gui/GuiNewKeyBindingList$KeyEntry;)Z", #Controlling legacy
@@ -96,6 +92,8 @@
   "mekanism.common.content.qio.SearchQueryParser$QueryType:lambda$static$3(Ljava/lang/String;Ljava/lang/String;)Z", #Mekanism (QIO) (since 1.21.1-10.7.14)
   "mekanism.common.content.qio.SearchQueryParser$QueryType:lambda$static$5(Ljava/lang/String;Ljava/lang/String;)Z", #Mekanism (QIO) (since 1.21.1-10.7.14)
   "dev.shadowsoffire.apothic_enchanting.library.EnchLibraryScreen:isAllowedBySearch(Lit/unimi/dsi/fastutil/objects/Object2IntMap$Entry;)Z", # Apothic Enchanting (since 1.21.1-1.4.1)
+  "com.refinedmods.refinedstorage.common.grid.query.GridQueryParser:lambda$attributeMatch$6(Ljava/lang/String;Ljava/lang/String;)Z", #Refined Storage (since v2.0.0-beta.2)
+  "com.refinedmods.refinedstorage.common.grid.query.GridQueryParser:lambda$parseLiteral$8(Lcom/refinedmods/refinedstorage/query/parser/node/LiteralNode;Lcom/refinedmods/refinedstorage/api/resource/repository/ResourceRepository;Lcom/refinedmods/refinedstorage/common/api/grid/view/GridResource;)Z", #Refined Storage (since v2.0.0-beta.2)
 ]
 "equals": [
   'org.cyclops.integrateddynamics.core.client.gui.WidgetTextFieldDropdown:lambda$refreshDropdownList$0(Lorg/cyclops/integrateddynamics/core/client/gui/IDropdownEntry;)Z', #Integrated Dynamics
