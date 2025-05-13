@@ -91,6 +91,10 @@
   'appeng.client.gui.me.search.TooltipsSearchPredicate:test(Lappeng/menu/me/common/GridInventoryEntry;)Z', #Applied Energistics 2(since 15.2.4)
   "com.simibubi.create.content.logistics.stockTicker.StockKeeperRequestScreen:lambda$refreshSearchResults$1(Ljava/lang/String;Lnet/minecraft/tags/TagKey;)Z", #Create 6.0.0
   "com.simibubi.create.content.logistics.stockTicker.StockKeeperRequestScreen:refreshSearchResults(Z)V", #Create 6.0.0
+  "mekanism.common.content.qio.SearchQueryParser$QueryType:lambda$static$0(Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z", #Mekanism (QIO) (since 1.21.1-10.7.14)
+  "mekanism.common.content.qio.SearchQueryParser$QueryType:lambda$static$1(Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z", #Mekanism (QIO) (since 1.21.1-10.7.14)
+  "mekanism.common.content.qio.SearchQueryParser$QueryType:lambda$static$3(Ljava/lang/String;Ljava/lang/String;)Z", #Mekanism (QIO) (since 1.21.1-10.7.14)
+  "mekanism.common.content.qio.SearchQueryParser$QueryType:lambda$static$5(Ljava/lang/String;Ljava/lang/String;)Z", #Mekanism (QIO) (since 1.21.1-10.7.14)
 ]
 "equals": [
   'org.cyclops.integrateddynamics.core.client.gui.WidgetTextFieldDropdown:lambda$refreshDropdownList$0(Lorg/cyclops/integrateddynamics/core/client/gui/IDropdownEntry;)Z', #Integrated Dynamics
