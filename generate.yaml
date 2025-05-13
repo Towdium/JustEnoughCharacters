@@ -95,6 +95,7 @@
   "mekanism.common.content.qio.SearchQueryParser$QueryType:lambda$static$1(Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z", #Mekanism (QIO) (since 1.21.1-10.7.14)
   "mekanism.common.content.qio.SearchQueryParser$QueryType:lambda$static$3(Ljava/lang/String;Ljava/lang/String;)Z", #Mekanism (QIO) (since 1.21.1-10.7.14)
   "mekanism.common.content.qio.SearchQueryParser$QueryType:lambda$static$5(Ljava/lang/String;Ljava/lang/String;)Z", #Mekanism (QIO) (since 1.21.1-10.7.14)
+  "dev.shadowsoffire.apothic_enchanting.library.EnchLibraryScreen:isAllowedBySearch(Lit/unimi/dsi/fastutil/objects/Object2IntMap$Entry;)Z", # Apothic Enchanting (since 1.21.1-1.4.1)
 ]
 "equals": [
   'org.cyclops.integrateddynamics.core.client.gui.WidgetTextFieldDropdown:lambda$refreshDropdownList$0(Lorg/cyclops/integrateddynamics/core/client/gui/IDropdownEntry;)Z', #Integrated Dynamics
