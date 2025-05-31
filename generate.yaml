@@ -30,10 +30,10 @@
   "com.mia.props.client.container.GuiDecobench:refreshButtons()V", #Decofraft workbench
   "vazkii.patchouli.client.book.BookEntry:isFoundByQuery(Ljava/lang/String;)Z", #Patchouli (Botania)
   "sonar.logistics.core.tiles.readers.items.GuiInventoryReader:getGridList()Ljava/util/List;", #Practical Logistics
-  "mekanism.common.content.qio.SearchQueryParser$QueryType$1:matches(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/player/Player;Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z", # Mekanism (Since 10.4.16.80)
-  "mekanism.common.content.qio.SearchQueryParser$QueryType$2:matches(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/player/Player;Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z", # Mekanism (Since 10.4.16.80)
-  "mekanism.common.content.qio.SearchQueryParser$QueryType$3:matches(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/player/Player;Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z", # Mekanism (Since 10.4.16.80)
-  "mekanism.common.content.qio.SearchQueryParser$QueryType$4:matches(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/player/Player;Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z", # Mekanism (Since 10.4.16.80)
+  "mekanism.common.content.qio.SearchQueryParser$QueryType$1:matches(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/player/Player;Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z", # Mekanism (QIO) (Since 10.4.16.80)
+  "mekanism.common.content.qio.SearchQueryParser$QueryType$2:matches(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/player/Player;Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z", # Mekanism (QIO) (Since 10.4.16.80)
+  "mekanism.common.content.qio.SearchQueryParser$QueryType$3:matches(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/player/Player;Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z", # Mekanism (QIO) (Since 10.4.16.80)
+  "mekanism.common.content.qio.SearchQueryParser$QueryType$4:matches(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/player/Player;Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z", # Mekanism (QIO) (Since 10.4.16.80)
   "moze_intel.projecte.gameObjs.container.inventory.TransmutationInventory:doesItemMatchFilter(Lmoze_intel/projecte/api/ItemInfo;)Z", #Project E
   "logisticspipes.gui.orderer.GuiOrderer:isSearched(Ljava/lang/String;Ljava/lang/String;)Z", #Logistics Pipes
   "sonar.logistics.core.tiles.readers.fluids.GuiFluidReader:getGridList()Ljava/util/List;", #Practical Logistics
@@ -105,10 +105,22 @@
   "com.hollingsworth.arsnouveau.client.container.AbstractStorageTerminalScreen:lambda$updateSearch$11(Ljava/lang/String;Ljava/lang/String;)Z", # Ars Nouveau (Bookwyrm Lectern) (Since 1.21.1-5.8.3)
   "com.hollingsworth.arsnouveau.client.container.AbstractStorageTerminalScreen:updateSearch()V", # Ars Nouveau (Bookwyrm Lectern) (Since 1.21.1-5.8.3)
   "net.blay09.mods.waystones.client.gui.screen.WaystoneSelectionScreenBase:updateList()V", #Waystones
+  "dev.ftb.mods.ftbfiltersystem.client.gui.ItemConfigScreen$SearchEntry:test(Ljava/lang/String;)Z", # FTB Filter System
+  "blue.endless.jankson.impl.serializer.CommentSerializer:print(Ljava/lang/StringBuilder;Ljava/lang/String;IZZ)V", # Fzzy Config
+  "me.shedaniel.clothconfig2.gui.widget.SearchFieldEntry:matchesSearch(Ljava/util/Iterator;)Z", # Cloth Config
+  "com.almostreliable.merequester.client.RequesterTerminalScreen:keyMatchesSearchQuery(Lappeng/api/stacks/AEKey;Ljava/lang/String;)Z", # ME Requester
+  "dev.isxander.yacl3.gui.controllers.ActionController$ActionControllerElement:matchesSearch(Ljava/lang/String;)Z", # YetAnotherConfigLib
+  "dev.isxander.yacl3.gui.controllers.ControllerWidget:matchesSearch(Ljava/lang/String;)Z", # YetAnotherConfigLib
+  "dev.isxander.yacl3.gui.controllers.LabelController$LabelControllerElement:matchesSearch(Ljava/lang/String;)Z", # YetAnotherConfigLib
+  "dev.isxander.yacl3.gui.controllers.ListEntryWidget:matchesSearch(Ljava/lang/String;)Z", # YetAnotherConfigLib
+  "com.teamresourceful.resourcefulconfig.client.utils.ConfigSearching:fulfillsSearch(Ljava/lang/String;Ljava/util/function/Function;)Z.", #Resourceful Config
+  "me.desht.pneumaticcraft.api.crafting.recipe.AmadronRecipe:passesQuery(Ljava/lang/String;)Z", # PneumaticCraft (Amadron)
+  "me.desht.pneumaticcraft.client.gui.ItemSearcherScreen$SearchEntry:test(Ljava/lang/String;)Z", # PneumaticCraft
   "com.refinedmods.refinedstorage.common.grid.query.GridQueryParser:lambda$attributeMatch$6(Ljava/lang/String;Ljava/lang/String;)Z", #Refined Storage (since v2.0.0-beta.2)
   "com.refinedmods.refinedstorage.common.grid.query.GridQueryParser:lambda$parseLiteral$8(Lcom/refinedmods/refinedstorage/query/parser/node/LiteralNode;Lcom/refinedmods/refinedstorage/api/resource/repository/ResourceRepository;Lcom/refinedmods/refinedstorage/common/api/grid/view/GridResource;)Z" #Refined Storage (since v2.0.0-beta.2)
 ]
 "equals": [
+  "me.shedaniel.clothconfig2.gui.entries.TextFieldListEntry:isMatchDefault(Ljava/lang/String;)Z", # Cloth Config
   'org.cyclops.integrateddynamics.core.client.gui.WidgetTextFieldDropdown:lambda$refreshDropdownList$0(Lorg/cyclops/integrateddynamics/core/client/gui/IDropdownEntry;)Z', #Integrated Dynamics
   'vazkii.botania.api.corporea.CorporeaRequestDefaultMatchers$CorporeaStringMatcher:equalOrContain(Ljava/lang/String;)Z', #Botania (Corporea)
 ]
