@@ -87,6 +87,8 @@
   'appeng.client.gui.me.search.TooltipsSearchPredicate:test(Lappeng/menu/me/common/GridInventoryEntry;)Z', #Applied Energistics 2(since 15.2.4)
   "com.simibubi.create.content.logistics.stockTicker.StockKeeperRequestScreen:lambda$refreshSearchResults$1(Ljava/lang/String;Lnet/minecraft/tags/TagKey;)Z", #Create 6.0.0
   "com.simibubi.create.content.logistics.stockTicker.StockKeeperRequestScreen:refreshSearchResults(Z)V", #Create 6.0.0
+  "net.blay09.mods.farmingforblockheads.menu.MarketMenu:searchMatches(Lnet/minecraft/world/item/crafting/RecipeHolder;)Z", # Farming for Blockheads (Since MC1.21.1)
+  "net.blay09.mods.cookingforblockheads.menu.KitchenMenu:searchMatches(Lnet/blay09/mods/cookingforblockheads/crafting/RecipeWithStatus;)Z", # Cooking for Blockheads (Since MC1.21.1)
   "snownee.jade.gui.config.OptionsList:updateSearch(Ljava/lang/String;)V", # Jade
   "com.klikli_dev.modonomicon.book.entries.BookEntry:matchesQuery(Ljava/lang/String;)Z", # Modonomicon
   "com.klikli_dev.modonomicon.book.page.BookEntityPage:matchesQuery(Ljava/lang/String;)Z", # Modonomicon
@@ -113,13 +115,14 @@
   "dev.isxander.yacl3.gui.controllers.ControllerWidget:matchesSearch(Ljava/lang/String;)Z", # YetAnotherConfigLib
   "dev.isxander.yacl3.gui.controllers.LabelController$LabelControllerElement:matchesSearch(Ljava/lang/String;)Z", # YetAnotherConfigLib
   "dev.isxander.yacl3.gui.controllers.ListEntryWidget:matchesSearch(Ljava/lang/String;)Z", # YetAnotherConfigLib
-  "com.teamresourceful.resourcefulconfig.client.utils.ConfigSearching:fulfillsSearch(Ljava/lang/String;Ljava/util/function/Function;)Z.", #Resourceful Config
+  "com.teamresourceful.resourcefulconfig.client.utils.ConfigSearching:fulfillsSearch(Ljava/lang/String;Ljava/util/function/Function;)Z", #Resourceful Config
   "me.desht.pneumaticcraft.api.crafting.recipe.AmadronRecipe:passesQuery(Ljava/lang/String;)Z", # PneumaticCraft (Amadron)
   "me.desht.pneumaticcraft.client.gui.ItemSearcherScreen$SearchEntry:test(Ljava/lang/String;)Z", # PneumaticCraft
   "com.refinedmods.refinedstorage.common.grid.query.GridQueryParser:lambda$attributeMatch$6(Ljava/lang/String;Ljava/lang/String;)Z", #Refined Storage (since v2.0.0-beta.2)
   "com.refinedmods.refinedstorage.common.grid.query.GridQueryParser:lambda$parseLiteral$8(Lcom/refinedmods/refinedstorage/query/parser/node/LiteralNode;Lcom/refinedmods/refinedstorage/api/resource/repository/ResourceRepository;Lcom/refinedmods/refinedstorage/common/api/grid/view/GridResource;)Z" #Refined Storage (since v2.0.0-beta.2)
 ]
 "equals": [
+  "com.hollingsworth.arsnouveau.client.container.AbstractStorageTerminalScreen:updateSearch()V", # Ars Nouveau  (Bookwyrm Lectern) (Since 1.21.1-5.8.3)
   "me.shedaniel.clothconfig2.gui.entries.TextFieldListEntry:isMatchDefault(Ljava/lang/String;)Z", # Cloth Config
   'org.cyclops.integrateddynamics.core.client.gui.WidgetTextFieldDropdown:lambda$refreshDropdownList$0(Lorg/cyclops/integrateddynamics/core/client/gui/IDropdownEntry;)Z', #Integrated Dynamics
   'vazkii.botania.api.corporea.CorporeaRequestDefaultMatchers$CorporeaStringMatcher:equalOrContain(Ljava/lang/String;)Z', #Botania (Corporea)
@@ -138,7 +141,6 @@
   'dev.emi.emi.search.RegexNameQuery:matches(Ldev/emi/emi/api/stack/EmiStack;)Z', #emi regex search
   'appeng.client.gui.me.search.SearchPredicates:lambda$createNamePredicate$3(Ljava/util/regex/Pattern;Lappeng/menu/me/common/GridInventoryEntry;)Z', #Applied Energistics 2(Since 12.9.8)
   'appeng.client.gui.me.search.SearchPredicates:lambda$createTooltipPredicate$4(Lappeng/client/gui/me/search/RepoSearch;Ljava/util/regex/Pattern;Lappeng/menu/me/common/GridInventoryEntry;)Z', #Applied Energistics 2(Since 12.9.8)
-  'com.hollingsworth.arsnouveau.client.container.AbstractStorageTerminalScreen:updateSearch()V', #Ars Nouveau (since 1.19.2-3.21.4)
   'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$getInstanceFilterPredicate$4(Ljava/lang/String;Lnet/minecraft/tags/TagKey;)Z', #Integrated Terminals(since 1.21.1-1.6.9)
   'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$getInstanceFilterPredicate$1(Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z', #Integrated Terminals(since 1.21.1-1.6.9)
   'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$getInstanceFilterPredicate$7(Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z', #Integrated Terminals(since 1.21.1-1.6.9)
@@ -146,5 +148,7 @@
   'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerFluidStack:lambda$getInstanceFilterPredicate$10(Ljava/lang/String;Lnet/minecraft/tags/TagKey;)Z', #Integrated Terminals(since 1.21.1-1.6.9)
   'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerFluidStack:lambda$getInstanceFilterPredicate$13(Ljava/lang/String;Lnet/neoforged/neoforge/fluids/FluidStack;)Z', #Integrated Terminals(since 1.21.1-1.6.9)
   'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerFluidStack:lambda$getInstanceFilterPredicate$8(Ljava/lang/String;Lnet/neoforged/neoforge/fluids/FluidStack;)Z', #Integrated Terminals(since 1.21.1-1.6.9)
-  'ml.pkom.itemalchemy.gui.screen.AlchemyTableScreenHandler:sortBySearch()V' #ItemAlchemy(since 0.7.6)
+  'ml.pkom.itemalchemy.gui.screen.AlchemyTableScreenHandler:sortBySearch()V', #ItemAlchemy(since 0.7.6)
+  'com.tom.storagemod.screen.AbstractStorageTerminalScreen:lambda$updateSearch$16(Ljava/util/regex/Pattern;Lcom/tom/storagemod/inventory/StoredItemStack;)Z', #Toms Storage (since MC1.21.1)
+  'com.tom.storagemod.screen.AbstractStorageTerminalScreen:lambda$updateSearch$15(Ljava/util/regex/Pattern;Lcom/tom/storagemod/inventory/StoredItemStack;)Z' #Toms Storage (since MC1.21.1)
 ]
