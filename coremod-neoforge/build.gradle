@@ -1,5 +1,6 @@
 plugins {
     id 'java'
+    id 'dev.vfyjxf.gradle.jech'
 }
 
 java {
@@ -43,7 +44,3 @@ compileJava {
 processResources {
     from project(":coremod-common").sourceSets.main.resources
 }
-
-apply from: "$rootDir/gradle/scripts/generate.gradle"
-
-jar.dependsOn(generateTargetsJson)

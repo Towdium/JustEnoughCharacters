@@ -1,0 +1,24 @@
+plugins{
+    id 'java-gradle-plugin'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compileOnly gradleApi()
+    implementation('org.yaml:snakeyaml:2.0')
+    implementation('com.google.code.gson:gson:2.10.1')
+}
+
+gradlePlugin {
+    plugins {
+        "jech"{
+            id = "dev.vfyjxf.gradle.jech"
+            displayName = "Jech Builtin Gradle Plugin"
+            description = "A Gradle plugin for Jech project management."
+            implementationClass = "dev.vfyjxf.gradle.JechBuiltinPlugin"
+        }
+    }
+}

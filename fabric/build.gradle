@@ -2,6 +2,7 @@ plugins {
     id "fabric-loom"
     id 'java-library'
     id 'idea'
+    id 'dev.vfyjxf.gradle.jech'
 }
 
 version = "${verspec}.${verbuild}"
@@ -52,10 +53,6 @@ java {
     sourceCompatibility = JavaVersion.VERSION_21
     targetCompatibility = JavaVersion.VERSION_21
 }
-
-apply from: "$rootDir/gradle/scripts/generate.gradle"
-
-jar.dependsOn(generateTargetsJson)
 
 idea {
     module {
