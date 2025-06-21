@@ -98,6 +98,8 @@
   "net.mehvahdjukaar.sawmill.FilterableRecipe:matchFilter(Ljava/lang/String;)Z", # Sawmill
   "net.blay09.mods.farmingforblockheads.menu.MarketClientMenu:applyFilters()V", # Farming for Blockheads
   "shadows.apotheosis.ench.library.EnchLibraryScreen:isAllowedBySearch(Lit/unimi/dsi/fastutil/objects/Object2IntMap$Entry;)Z", # Apotheosis
+  "mcjty.rftoolsstorage.modules.scanner.blocks.StorageScannerTileEntity:lambda$makeSearchPredicate$29(Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z", #RFTools Storage(since 1.20-5.0.2)
+  "mcjty.rftoolsstorage.modules.modularstorage.client.GuiModularStorage:lambda$updateList$6(Ljava/lang/String;Ljava/util/List;Ljava/util/concurrent/atomic/AtomicInteger;Lnet/minecraftforge/items/IItemHandler;)V", #RFTools Storage(since 1.20-5.0.2)
 ]
 "equals": [
   'org.cyclops.integrateddynamics.core.client.gui.WidgetTextFieldDropdown:lambda$refreshDropdownList$0(Lorg/cyclops/integrateddynamics/core/client/gui/IDropdownEntry;)Z', #Integrated Dynamics
