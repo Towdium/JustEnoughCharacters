@@ -116,6 +116,7 @@
   "dev.ftb.mods.ftblibrary.ui.misc.AbstractButtonListScreen$ButtonPanel:add(Ldev/ftb/mods/ftblibrary/ui/Widget;)V", #FTB Library(Since 2101.1.14)
   "dev.ftb.mods.ftblibrary.ui.misc.ButtonListBaseScreen$ButtonPanel:add(Ldev/ftb/mods/ftblibrary/ui/Widget;)V",  #FTB Library(Since 2101.1.14)
   "journeymap.client.ui.waypointmanager.WaypointManager:lambda$getWaypointsForGroup$18(Ljourneymap/client/ui/waypointmanager/waypoint/WaypointSlot;)Z",#Journeymap (Since 6.00)
+  "com.blamejared.searchables.api.SearchableComponent:lambda$create$2(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/Boolean;", # Searchables&Controlling (Since 1.0.2)
 ]
 "equals": [
   "com.hollingsworth.arsnouveau.client.container.AbstractStorageTerminalScreen:updateSearch()V", # Ars Nouveau  (Bookwyrm Lectern) (Since 1.21.1-5.8.3)
@@ -132,7 +133,6 @@
   "com.refinedmods.refinedstorage.neoforge.ConfigImpl$SimpleEnergyUsageEntryImpl:\u003cinit\u003e(Lcom/refinedmods/refinedstorage/neoforge/ConfigImpl;Ljava/lang/String;J)V",
   "com.refinedmods.refinedstorage.query.lexer.LexerTokenMappings:findMapping(Lcom/refinedmods/refinedstorage/query/lexer/LexerPosition;Lcom/refinedmods/refinedstorage/query/lexer/Source;)Lcom/refinedmods/refinedstorage/query/lexer/LexerTokenMapping;",
   "com.refinedmods.refinedstorage.query.parser.Parser:parseParen()Lcom/refinedmods/refinedstorage/query/parser/node/Node;",
-  "com.blamejared.controlling.api.DisplayMode:lambda$static$2(Lcom/blamejared/controlling/api/entries/IKeyEntry;)Z", # Controlling (Since 22.0.5-1.21.4)
 ]
 "regExp": [
   'appeng.client.gui.me.search.SearchPredicates:lambda$createNamePredicate$3(Ljava/util/regex/Pattern;Lappeng/menu/me/common/GridInventoryEntry;)Z', #Applied Energistics (Since 2-12.9.5)
