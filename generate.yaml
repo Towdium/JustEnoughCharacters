@@ -104,10 +104,12 @@
   "com.refinedmods.refinedstorage.common.grid.query.GridQueryParser:lambda$attributeMatch$6(Ljava/lang/String;Ljava/lang/String;)Z", # Refined Storage (Since v2.0.0-beta.2)
   "com.refinedmods.refinedstorage.common.grid.query.GridQueryParser:lambda$parseLiteral$8(Lcom/refinedmods/refinedstorage/query/parser/node/LiteralNode;Lcom/refinedmods/refinedstorage/api/resource/repository/ResourceRepository;Lcom/refinedmods/refinedstorage/common/api/grid/view/GridResource;)Z", # Refined Storage (Since v2.0.0-beta.2)
   "com.refinedmods.refinedstorage.common.autocrafting.autocraftermanager.AutocrafterManagerContainerMenu$SubViewGroup:hasResource(Ljava/lang/String;Lcom/refinedmods/refinedstorage/api/resource/ResourceKey;)Z",  #refinedstorage-neoforge-2.0.0-beta.2
-  "com.refinedmods.refinedstorage.common.autocrafting.autocraftermanager.AutocrafterManagerContainerMenu$ViewGroup:nameContains(Ljava/lang/String;)Z",
-  "com.refinedmods.refinedstorage.common.autocrafting.patterngrid.AlternativeContainerMenu:lambda$filter$1(Ljava/lang/String;Lcom/refinedmods/refinedstorage/common/autocrafting/patterngrid/Alternative;)V",
-  "com.refinedmods.refinedstorage.common.grid.query.GridQueryParser:lambda$attributeMatch$6(Ljava/lang/String;Ljava/lang/String;)Z",
-  "com.refinedmods.refinedstorage.common.grid.query.GridQueryParser:lambda$parseLiteral$8(Lcom/refinedmods/refinedstorage/query/parser/node/LiteralNode;Lcom/refinedmods/refinedstorage/api/resource/repository/ResourceRepository;Lcom/refinedmods/refinedstorage/common/api/grid/view/GridResource;)Z"
+  "com.refinedmods.refinedstorage.common.autocrafting.autocraftermanager.AutocrafterManagerContainerMenu$ViewGroup:nameContains(Ljava/lang/String;)Z",# Refined Storage (Since v2.0.0-beta.2)
+  "com.refinedmods.refinedstorage.common.autocrafting.patterngrid.AlternativeContainerMenu:lambda$filter$1(Ljava/lang/String;Lcom/refinedmods/refinedstorage/common/autocrafting/patterngrid/Alternative;)V",# Refined Storage (Since v2.0.0-beta.2)
+  "com.refinedmods.refinedstorage.common.grid.query.GridQueryParser:lambda$attributeMatch$6(Ljava/lang/String;Ljava/lang/String;)Z",# Refined Storage (Since v2.0.0-beta.2)
+  "com.refinedmods.refinedstorage.common.grid.query.GridQueryParser:lambda$parseLiteral$8(Lcom/refinedmods/refinedstorage/query/parser/node/LiteralNode;Lcom/refinedmods/refinedstorage/api/resource/repository/ResourceRepository;Lcom/refinedmods/refinedstorage/common/api/grid/view/GridResource;)Z",# Refined Storage (Since v2.0.0-beta.2)
+  "dev.dubhe.anvilcraft.client.gui.screen.ActiveSilencerScreen:lambda$onSearchTextChange$0(Ljava/lang/String;Lit/unimi/dsi/fastutil/Pair;)Z",#AnvilCraft
+  "dev.dubhe.anvilcraft.client.gui.screen.ActiveSilencerScreen:lambda$onSearchTextChange$6(Lit/unimi/dsi/fastutil/Pair;)Z"#AnvilCraft
 ]
 "equals": [
   "com.hollingsworth.arsnouveau.client.container.AbstractStorageTerminalScreen:updateSearch()V", # Ars Nouveau  (Bookwyrm Lectern) (Since 1.21.1-5.8.3)
