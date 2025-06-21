@@ -54,6 +54,11 @@ public class Profiler {
                     "(Ljava/lang/CharSequence;Ljava/lang/CharSequence)Z"
             ),
             new Analyzer.Invoke(
+                    Type.CONTAINS, true,
+                    "org/apache/commons/lang3/StringUtils", "containsIgnoreCase",
+                    "(Ljava/lang/CharSequence;Ljava/lang/CharSequence;)Z"
+            ),
+            new Analyzer.Invoke(
                     Type.EQUALS, false, "java/lang/String", "equals",
                     "(Ljava/lang/Object;)Z"
             ),
