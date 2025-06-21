@@ -3,13 +3,7 @@ package me.towdium.jecharacters.asm;
 import com.google.gson.JsonObject;
 import org.objectweb.asm.Handle;
 import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.tree.AbstractInsnNode;
-import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.InsnNode;
-import org.objectweb.asm.tree.InvokeDynamicInsnNode;
-import org.objectweb.asm.tree.MethodInsnNode;
-import org.objectweb.asm.tree.MethodNode;
-import org.objectweb.asm.tree.TypeInsnNode;
+import org.objectweb.asm.tree.*;
 
 import java.util.Optional;
 import java.util.Set;
@@ -123,6 +117,14 @@ public interface ITransformer {
                 "kotlin/text/StringsKt",
                 "contains",
                 "(Ljava/lang/CharSequence;Ljava/lang/CharSequence)Z",
+                "me/towdium/jecharacters/utils/Match",
+                "contains",
+                "(Ljava/lang/CharSequence;Ljava/lang/CharSequence)Z"
+        );
+        transformInvoke(method,
+                "org/apache/commons/lang3/StringUtils",
+                "containsIgnoreCase",
+                "(Ljava/lang/CharSequence;Ljava/lang/CharSequence;)Z",
                 "me/towdium/jecharacters/utils/Match",
                 "contains",
                 "(Ljava/lang/CharSequence;Ljava/lang/CharSequence)Z"
