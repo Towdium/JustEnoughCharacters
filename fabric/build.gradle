@@ -9,7 +9,7 @@ version = "${verspec}.${verbuild}"
 group = 'me.towdium.jecharacters'
 
 base {
-    archivesName = mod_id + '-fabric'
+    archivesName = mod_id + '-' + minecraft_version + '-fabric'
 }
 
 dependencies {

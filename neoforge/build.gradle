@@ -8,7 +8,7 @@ plugins {
 version = "${verspec}.${verbuild}"
 
 base {
-    archivesName = mod_id + '-neoforge'
+    archivesName = mod_id + '-' + minecraft_version + '-neoforge'
 }
 neoForge {
     version = neo_version
