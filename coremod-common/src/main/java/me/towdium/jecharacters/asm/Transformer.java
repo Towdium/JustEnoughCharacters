@@ -113,10 +113,10 @@ public interface Transformer {
         transformInvoke(method,
                 "kotlin/text/StringsKt",
                 "contains",
-                "(Ljava/lang/CharSequence;Ljava/lang/CharSequence)Z",
+                "(Ljava/lang/CharSequence;Ljava/lang/CharSequence;)Z",
                 "me/towdium/jecharacters/utils/Match",
                 "contains",
-                "(Ljava/lang/CharSequence;Ljava/lang/CharSequence)Z"
+                "(Ljava/lang/CharSequence;Ljava/lang/CharSequence;)Z"
         );
         transformInvoke(method,
                 "org/apache/commons/lang3/StringUtils",
@@ -124,7 +124,7 @@ public interface Transformer {
                 "(Ljava/lang/CharSequence;Ljava/lang/CharSequence;)Z",
                 "me/towdium/jecharacters/utils/Match",
                 "contains",
-                "(Ljava/lang/CharSequence;Ljava/lang/CharSequence)Z"
+                "(Ljava/lang/CharSequence;Ljava/lang/CharSequence;)Z"
         );
         return method;
     }
