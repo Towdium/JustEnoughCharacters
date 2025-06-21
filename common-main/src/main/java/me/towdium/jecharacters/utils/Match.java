@@ -38,6 +38,7 @@ public class Match {
     }
 
     public static boolean contains(String s, CharSequence cs) {
+        if (s == null || cs == null) return false;
         boolean b = context.contains(s, cs.toString());
         if (JechConfig.enableVerbose)
             LOGGER.info("contains(" + s + ',' + cs + ")->" + b);
@@ -45,6 +46,7 @@ public class Match {
     }
 
     public static boolean contains(CharSequence a, CharSequence b, boolean c) {
+        if (a == null || b == null) return false;
         if (c) return contains(a.toString().toLowerCase(), b.toString().toLowerCase());
         else return contains(a, b);
     }
