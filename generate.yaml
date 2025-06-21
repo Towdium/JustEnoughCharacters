@@ -117,6 +117,8 @@
   "dev.ftb.mods.ftblibrary.ui.misc.ButtonListBaseScreen$ButtonPanel:add(Ldev/ftb/mods/ftblibrary/ui/Widget;)V",  #FTB Library(Since 2101.1.14)
   "journeymap.client.ui.waypointmanager.WaypointManager:lambda$getWaypointsForGroup$18(Ljourneymap/client/ui/waypointmanager/waypoint/WaypointSlot;)Z",#Journeymap (Since 6.00)
   "com.blamejared.searchables.api.SearchableComponent:lambda$create$2(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/Boolean;", # Searchables&Controlling (Since 1.0.2)
+  "earth.terrarium.tempad.client.screen.tempad.PortalSetupScreen:initLocationPanel(Learth/terrarium/olympus/client/ui/ClearableGridLayout;)V", # Tempad (Since3.0.4)
+  "earth.terrarium.tempad.client.screen.tempad.TeleportScreen:initLocationPanel(Learth/terrarium/olympus/client/ui/ClearableGridLayout;)V", # Tempad (Since3.0.4)
 ]
 "equals": [
   "com.hollingsworth.arsnouveau.client.container.AbstractStorageTerminalScreen:updateSearch()V", # Ars Nouveau  (Bookwyrm Lectern) (Since 1.21.1-5.8.3)
