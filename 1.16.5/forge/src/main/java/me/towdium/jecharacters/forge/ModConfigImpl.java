@@ -2,17 +2,20 @@ package me.towdium.jecharacters.forge;
 
 import me.towdium.jecharacters.JechConfig;
 import me.towdium.jecharacters.JechConfig.Spell;
+import me.towdium.jecharacters.utils.Match;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.common.ForgeConfigSpec.BooleanValue;
 import net.minecraftforge.common.ForgeConfigSpec.EnumValue;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModLoadingContext;
+import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLPaths;
 
 import static net.minecraftforge.fml.config.ModConfig.Type.COMMON;
 
+@Mod.EventBusSubscriber(modid = "jecharacters", bus = Mod.EventBusSubscriber.Bus.MOD)
 public class ModConfigImpl {
 
     private static final String PATH = "jecharacters.toml";
@@ -71,7 +74,7 @@ public class ModConfigImpl {
     }
 
     @SubscribeEvent
-    public static void onReload(ModConfig.ModConfigEvent event){
+    public static void onLoad(ModConfig.Loading event) {
         if (event.getConfig().getSpec() == ModConfigImpl.common) {
             reload();
         }
@@ -89,6 +92,7 @@ public class ModConfigImpl {
         JechConfig.enableChat = enableChat.get();
         JechConfig.enableQuote = enableQuote.get();
         JechConfig.enableVerbose = enableVerbose.get();
+        Match.onConfigChange();
     }
 
     public static void save() {
