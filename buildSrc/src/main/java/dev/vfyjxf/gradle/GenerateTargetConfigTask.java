@@ -46,7 +46,6 @@ public abstract class GenerateTargetConfigTask extends DefaultTask {
             Map<String, String> mappings = mappingFile.exists() && mappingFile.isFile() ?
                     yaml.load(Files.readString(mappingFile.toPath())) : new HashMap<>();
             var project = getProject();
-            var buildPath = project.getLayout().getBuildDirectory().getAsFile().get().toPath();
             Path targetsJsonPath = getConfigFile().getAsFile().get().toPath();
             boolean fabric = project.getName().contains("fabric");
 
@@ -105,12 +104,26 @@ public abstract class GenerateTargetConfigTask extends DefaultTask {
 
             //endregion
             //region write to file
-            String jsonStr = new GsonBuilder().setPrettyPrinting().create().toJson(targetsJson);
+            Gson gson = new GsonBuilder()
+                    .setPrettyPrinting()
+                    .create();
+            String jsonStr = gson.toJson(targetsJson);
+            File jsonFile = targetsJsonPath.toFile();
+            if (jsonFile.exists()) {
+                if (!jsonFile.delete()) {
+                    throw new RuntimeException("Failed to delete existing targets.json file: " + jsonFile.getAbsolutePath());
+                }
+            }
             Files.writeString(targetsJsonPath,
                     jsonStr,
                     StandardCharsets.UTF_8,
                     StandardOpenOption.CREATE, StandardOpenOption.WRITE
             );
+            try {
+                JsonParser.parseString(Files.readString(targetsJsonPath));
+            } catch (JsonSyntaxException e) {
+                throw new RuntimeException(e);
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
