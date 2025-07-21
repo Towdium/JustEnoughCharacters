@@ -62,8 +62,8 @@
   'com.lothrazar.storagenetwork.gui.NetworkWidget:doesStackMatchSearch(Lnet/minecraft/world/item/ItemStack;)Z', #Simple Storage Network(Since 1.70)
   'pro.mikey.xray.gui.GuiSelectionScreen:lambda$updateSearch$8(Lpro/mikey/xray/utils/BlockData;)Z',
   'de.ellpeck.prettypipes.terminal.containers.ItemTerminalGui:lambda$updateWidgets$8(Ljava/lang/String;Lorg/apache/commons/lang3/tuple/Pair;)Z', # Pretty Pipes(Since 1.15.0)
-  'mcjty.rftoolsstorage.modules.scanner.blocks.StorageScannerTileEntity:lambda$makeSearchPredicate$30(Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z', #RFTools Storage (Since 1.20-5.0.2)
-  'mcjty.rftoolsstorage.modules.modularstorage.client.GuiModularStorage:lambda$updateList$6(Ljava/lang/String;Ljava/util/List;Ljava/util/concurrent/atomic/AtomicInteger;Lnet/minecraftforge/items/IItemHandler;)V', #RFTools Storage (Since 1.20-5.0.2)
+  "mcjty.rftoolsstorage.modules.modularstorage.client.GuiModularStorage:updateList()V",  # RFTools Storage (Since 1.21-6.0.1)
+  "mcjty.rftoolsstorage.modules.scanner.blocks.StorageScannerTileEntity:lambda$makeSearchPredicate$31(Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z"  # RFTools Storage (Since 1.21-6.0.1)
   'com.lothrazar.storagenetwork.gui.NetworkWidget:doesStackMatchSearch(Lnet/minecraft/world/item/ItemStack;)Z', #Simple Storage Network(Since 1.10.0)
   "com.robertx22.age_of_exile.gui.screens.skill_tree.buttons.PerkButton:lambda$renderWidget$1(Ljava/lang/String;Lcom/robertx22/age_of_exile/database/OptScaleExactStat;)Z", # Mine And Slash talent search
   'appeng.client.gui.me.search.NameSearchPredicate:test(Lappeng/menu/me/common/GridInventoryEntry;)Z', # Applied Energistics 2(Since 15.2.4)
