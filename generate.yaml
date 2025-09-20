@@ -115,6 +115,7 @@
   "com.aranaira.magichem.gui.AlchemicalNexusScreen:updateDisplayedRecipes(Ljava/lang/String;)V", # magichem start: various recipe searchers
   "com.aranaira.magichem.gui.CentrifugeScreen:updateDisplayedRecipes(Ljava/lang/String;)V", # magichem
   "com.aranaira.magichem.gui.CircleFabricationScreen:updateDisplayedRecipes(Ljava/lang/String;)V", # magichem
+  "com.aranaira.magichem.gui.CodexMateriaScreen:updateDisplayedMateria(Ljava/lang/String;)V", # magichem
   "com.aranaira.magichem.gui.FuseryScreen:updateDisplayedRecipes(Ljava/lang/String;)V", # magichem
   "com.aranaira.magichem.gui.GrandCentrifugeScreen:updateDisplayedRecipes(Ljava/lang/String;)V", # magichem
   "com.aranaira.magichem.gui.GrandCircleFabricationScreen:updateDisplayedRecipes(Ljava/lang/String;)V", # magichem
