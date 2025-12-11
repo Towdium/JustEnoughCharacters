@@ -137,6 +137,15 @@
   "com.mna.guide.GuideBookEntries:lambda$searchEntries$2(Ljava/lang/String;Lcom/mna/guide/interfaces/IEntrySection;)Z", # mna
   "com.mna.guide.GuideBookEntries:lambda$searchEntries$5(Lnet/minecraft/client/Minecraft;Ljava/lang/String;Ljava/util/HashMap;Lcom/mna/guide/RelatedRecipe;)V", # mna end
   "dev.emi.emi.screen.widget.config.ConfigEntryWidget:isVisible()Z", #EMi Config(since 1.1.22+1.21.1+neoforge)
+  "moze_intel.projecte.utils.text.SearchQueryParser$QueryType$1:matches(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/player/Player;Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z", # Project E(since 1.1.0-1.21.1)
+  "moze_intel.projecte.utils.text.SearchQueryParser$QueryType$2:matches(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/player/Player;Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z", # Project E(since 1.1.0-1.21.1)
+  "moze_intel.projecte.utils.text.SearchQueryParser$QueryType$3:matches(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/player/Player;Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z", # Project E(since 1.1.0-1.21.1)
+  "moze_intel.projecte.utils.text.SearchQueryParser$QueryType$4:lambda$matches$0(Ljava/lang/String;Lnet/minecraft/tags/TagKey;)Z", # Project E(since 1.1.0-1.21.1)
+  "org.ae2LabeledPatterns.menus.LabeledPatternAccessTerminalScreen:itemStackMatchesSearchTerm(Lnet/minecraft/world/item/ItemStack;Ljava/lang/String;)Z", #AE2 Labeled Patterns
+  "org.ae2LabeledPatterns.menus.LabeledPatternAccessTerminalScreen:refreshList()V", #AE2 Labeled Patterns
+  "fr.loxoz.csearcher.gui.SearchScreen:stackSearch(Lfr/loxoz/csearcher/core/CachedStack;Ljava/lang/String;)Z", #ContainerSearcher(since 0.3.1+mc1.21.1)
+  "com.terraformersmc.mod_menu.util.mod.ModSearch:lambda$authorMatches$5(Ljava/lang/String;Ljava/lang/String;)Z", # Better ModList(since 1.1.20-1.21.1)
+  "com.terraformersmc.mod_menu.util.mod.ModSearch:passesFilters(Lcom/terraformersmc/mod_menu/gui/ModsScreen;Lcom/terraformersmc/mod_menu/util/mod/Mod;Ljava/lang/String;)I",# Better ModList(since 1.1.20-1.21.1)
 ]
 "equals": [
   "com.hollingsworth.arsnouveau.client.container.AbstractStorageTerminalScreen:updateSearch()V", # Ars Nouveau  (Bookwyrm Lectern) (Since 1.21.1-5.8.3)
