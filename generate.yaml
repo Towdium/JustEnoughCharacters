@@ -49,6 +49,7 @@
   "me.shedaniel.clothconfig2.gui.entries.DropdownBoxEntry$DefaultDropdownMenuElement:search()V", #Cloth Config
   "com.glodblock.github.extendedae.client.gui.GuiExPatternTerminal:refreshList()V", # ExtendedAE (Since 1.20-1.0.0-forge)
   "com.glodblock.github.extendedae.client.gui.GuiExPatternTerminal:itemStackMatchesSearchTerm(Lnet/minecraft/world/item/ItemStack;Ljava/lang/String;Z)Z", # ExtendedAE(Since 1.20-1.0.0-forge)
+  "com.glodblock.github.extendedae.client.gui.GuiAssemblerMatrix:itemStackMatchesSearchTerm(Lnet/minecraft/world/item/ItemStack;Ljava/lang/String;)Z", #  ExtendedAE (Assembler Matrix)
   'com.klikli_dev.occultism.client.gui.storage.StorageControllerGuiBase:itemMatchesSearch(Lnet/minecraft/world/item/ItemStack;)Z', # Occultism
   'com.klikli_dev.occultism.client.gui.storage.StorageControllerGuiBase:machineMatchesSearch(Lcom/klikli_dev/occultism/api/common/data/MachineReference;)Z', # Occultism
   'appeng.client.gui.me.patternaccess.PatternAccessTermScreen:itemStackMatchesSearchTerm(Lnet/minecraft/world/item/ItemStack;Ljava/lang/String;)Z', # Applied Energistics 2(Since 12.9.8)
