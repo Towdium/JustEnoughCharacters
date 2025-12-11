@@ -64,7 +64,7 @@
   'pro.mikey.xray.gui.GuiSelectionScreen:lambda$updateSearch$8(Lpro/mikey/xray/utils/BlockData;)Z',
   'de.ellpeck.prettypipes.terminal.containers.ItemTerminalGui:lambda$updateWidgets$8(Ljava/lang/String;Lorg/apache/commons/lang3/tuple/Pair;)Z', # Pretty Pipes(Since 1.15.0)
   "mcjty.rftoolsstorage.modules.modularstorage.client.GuiModularStorage:updateList()V",  # RFTools Storage (Since 1.21-6.0.1)
-  "mcjty.rftoolsstorage.modules.scanner.blocks.StorageScannerTileEntity:lambda$makeSearchPredicate$31(Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z"  # RFTools Storage (Since 1.21-6.0.1)
+  "mcjty.rftoolsstorage.modules.scanner.blocks.StorageScannerTileEntity:lambda$makeSearchPredicate$31(Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z",  # RFTools Storage (Since 1.21-6.0.1)
   'com.lothrazar.storagenetwork.gui.NetworkWidget:doesStackMatchSearch(Lnet/minecraft/world/item/ItemStack;)Z', #Simple Storage Network(Since 1.10.0)
   "com.robertx22.age_of_exile.gui.screens.skill_tree.buttons.PerkButton:lambda$renderWidget$1(Ljava/lang/String;Lcom/robertx22/age_of_exile/database/OptScaleExactStat;)Z", # Mine And Slash talent search
   'appeng.client.gui.me.search.NameSearchPredicate:test(Lappeng/menu/me/common/GridInventoryEntry;)Z', # Applied Energistics 2(Since 15.2.4)
@@ -120,6 +120,27 @@
   "com.blamejared.searchables.api.SearchableComponent:lambda$create$2(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/Boolean;", # Searchables&Controlling (Since 1.0.2)
   "earth.terrarium.tempad.client.screen.tempad.PortalSetupScreen:initLocationPanel(Learth/terrarium/olympus/client/ui/ClearableGridLayout;)V", # Tempad (Since3.0.4)
   "earth.terrarium.tempad.client.screen.tempad.TeleportScreen:initLocationPanel(Learth/terrarium/olympus/client/ui/ClearableGridLayout;)V", # Tempad (Since3.0.4)
+  "me.shedaniel.rei.impl.client.search.method.DefaultInputMethod:contains(Ljava/lang/String;Ljava/lang/String;)Z", # REI (Since 12.1.785)
+  "com.aranaira.magichem.gui.AlchemicalNexusScreen:updateDisplayedRecipes(Ljava/lang/String;)V", # magichem start: various recipe searchers
+  "com.aranaira.magichem.gui.CentrifugeScreen:updateDisplayedRecipes(Ljava/lang/String;)V", # magichem
+  "com.aranaira.magichem.gui.CircleFabricationScreen:updateDisplayedRecipes(Ljava/lang/String;)V", # magichem
+  "com.aranaira.magichem.gui.CodexMateriaScreen:updateDisplayedMateria(Ljava/lang/String;)V", # magichem
+  "com.aranaira.magichem.gui.FuseryScreen:updateDisplayedRecipes(Ljava/lang/String;)V", # magichem
+  "com.aranaira.magichem.gui.GrandCentrifugeScreen:updateDisplayedRecipes(Ljava/lang/String;)V", # magichem
+  "com.aranaira.magichem.gui.GrandCircleFabricationScreen:updateDisplayedRecipes(Ljava/lang/String;)V", # magichem
+  "com.aranaira.magichem.gui.GrandFuseryScreen:updateDisplayedRecipes(Ljava/lang/String;)V", # magichem
+  "com.aranaira.magichem.gui.MateriaManifestScreen:updateMateriaOptionsByTextFilter()V", # magichem
+  "com.aranaira.magichem.gui.MirrorLabyrinthScreen:updateMateriaOptionsByTextFilter()V", # magichem end
+  "com.mna.gui.block.GuiLodestarV2$CommandScrollList:lambda$setFilter$0(Lcom/mna/api/entities/construct/ai/ConstructTask;)Z", # mna start: yet another bunch of search bars
+  "com.mna.gui.entity.GuiWanderingWizard$WanderingWizardOffersList:lambda$reInit$0(Ljava/lang/String;Lnet/minecraft/network/chat/Component;)Z", # mna
+  "com.mna.gui.widgets.SpellPartList:bySearchTerm(Lcom/mna/api/spells/base/ISpellComponent;)Z", # mna
+  "com.mna.guide.GuideBookEntries:lambda$searchEntries$2(Ljava/lang/String;Lcom/mna/guide/interfaces/IEntrySection;)Z", # mna
+  "com.mna.guide.GuideBookEntries:lambda$searchEntries$5(Lnet/minecraft/client/Minecraft;Ljava/lang/String;Ljava/util/HashMap;Lcom/mna/guide/RelatedRecipe;)V", # mna end
+  "dev.emi.emi.screen.widget.config.ConfigEntryWidget:isVisible()Z", #EMi Config(since 1.1.22+1.21.1+neoforge)
+  "moze_intel.projecte.utils.text.SearchQueryParser$QueryType$1:matches(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/player/Player;Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z", # Project E(since 1.1.0-1.21.1)
+  "moze_intel.projecte.utils.text.SearchQueryParser$QueryType$2:matches(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/player/Player;Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z", # Project E(since 1.1.0-1.21.1)
+  "moze_intel.projecte.utils.text.SearchQueryParser$QueryType$3:matches(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/player/Player;Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z", # Project E(since 1.1.0-1.21.1)
+  "moze_intel.projecte.utils.text.SearchQueryParser$QueryType$4:lambda$matches$0(Ljava/lang/String;Lnet/minecraft/tags/TagKey;)Z", # Project E(since 1.1.0-1.21.1)
 ]
 "equals": [
   "com.hollingsworth.arsnouveau.client.container.AbstractStorageTerminalScreen:updateSearch()V", # Ars Nouveau  (Bookwyrm Lectern) (Since 1.21.1-5.8.3)
