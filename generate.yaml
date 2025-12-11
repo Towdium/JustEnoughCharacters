@@ -141,6 +141,8 @@
   "moze_intel.projecte.utils.text.SearchQueryParser$QueryType$2:matches(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/player/Player;Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z", # Project E(since 1.1.0-1.21.1)
   "moze_intel.projecte.utils.text.SearchQueryParser$QueryType$3:matches(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/player/Player;Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z", # Project E(since 1.1.0-1.21.1)
   "moze_intel.projecte.utils.text.SearchQueryParser$QueryType$4:lambda$matches$0(Ljava/lang/String;Lnet/minecraft/tags/TagKey;)Z", # Project E(since 1.1.0-1.21.1)
+  "org.ae2LabeledPatterns.menus.LabeledPatternAccessTerminalScreen:itemStackMatchesSearchTerm(Lnet/minecraft/world/item/ItemStack;Ljava/lang/String;)Z", #AE2 Labeled Patterns
+  "org.ae2LabeledPatterns.menus.LabeledPatternAccessTerminalScreen:refreshList()V", #AE2 Labeled Patterns
 ]
 "equals": [
   "com.hollingsworth.arsnouveau.client.container.AbstractStorageTerminalScreen:updateSearch()V", # Ars Nouveau  (Bookwyrm Lectern) (Since 1.21.1-5.8.3)
