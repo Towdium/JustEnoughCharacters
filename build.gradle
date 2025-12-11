@@ -162,7 +162,7 @@ subprojects { Project p ->
         if (type.notRoot()) {
             pAfter.dependencies {
                 if (pAfter.configurations.findByName("shadowCommon")) {
-                    shadowCommon(group: 'com.github.towdium', name: 'PinIn', version: "${verpinin}") {
+                    shadowCommon(group: 'dev.ghostflyby', name: 'PinIn', version: "${verpinin}") {
                         transitive = false
                     }
                 }

@@ -108,6 +108,25 @@ public class Match {
             feed.accept('\uE910', new String[]{"fu1"});    // 钅夫
             feed.accept('\uE912', new String[]{"li4"});    // 钅立
         }
+
+        @Override
+        public void loadCodePoints(CodePointConsumer feed) {
+            feed.accept("𬭛".codePointAt(0), new String[]{"bo1"});
+            feed.accept("鿔".codePointAt(0), new String[]{"ge1"});
+            feed.accept("𫟼".codePointAt(0), new String[]{"da2"});
+            feed.accept("𬭊".codePointAt(0), new String[]{"du4"});
+            feed.accept("𫓧".codePointAt(0), new String[]{"fu1"});
+            feed.accept("𬭶".codePointAt(0), new String[]{"hei1"});
+            feed.accept("𫟷".codePointAt(0), new String[]{"li4"});
+            feed.accept("鿏".codePointAt(0), new String[]{"mai4"});
+            feed.accept("鿭".codePointAt(0), new String[]{"ni3"});
+            feed.accept("鿫".codePointAt(0), new String[]{"ao4"});
+            feed.accept("𬬭".codePointAt(0), new String[]{"lun2"});
+            feed.accept("𬬻".codePointAt(0), new String[]{"lu2"});
+            feed.accept("𬭳".codePointAt(0), new String[]{"xi3"});
+            feed.accept("鿬".codePointAt(0), new String[]{"tian2"});
+
+        }
     }
 
 }

@@ -112,6 +112,7 @@
   "com.simibubi.create.content.logistics.stockTicker.StockKeeperRequestScreen:refreshSearchResults(Z)V", #Create 6.0.0
   "net.blay09.mods.farmingforblockheads.menu.MarketClientMenu:applyFilters()V", # Farming for Blockheads(since 14.0.2-1.20.1)
   "com.blamejared.searchables.api.SearchableComponent:lambda$create$2(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/Boolean;", # Searchables&Controlling (Since 1.0.2)
+  "me.shedaniel.rei.impl.client.search.method.DefaultInputMethod:contains(Ljava/lang/String;Ljava/lang/String;)Z",# REI (Since 12.1.785)
   "com.aranaira.magichem.gui.AlchemicalNexusScreen:updateDisplayedRecipes(Ljava/lang/String;)V", # magichem start: various recipe searchers
   "com.aranaira.magichem.gui.CentrifugeScreen:updateDisplayedRecipes(Ljava/lang/String;)V", # magichem
   "com.aranaira.magichem.gui.CircleFabricationScreen:updateDisplayedRecipes(Ljava/lang/String;)V", # magichem
@@ -127,6 +128,7 @@
   "com.mna.gui.widgets.SpellPartList:bySearchTerm(Lcom/mna/api/spells/base/ISpellComponent;)Z", # mna
   "com.mna.guide.GuideBookEntries:lambda$searchEntries$2(Ljava/lang/String;Lcom/mna/guide/interfaces/IEntrySection;)Z", # mna
   "com.mna.guide.GuideBookEntries:lambda$searchEntries$5(Lnet/minecraft/client/Minecraft;Ljava/lang/String;Ljava/util/HashMap;Lcom/mna/guide/RelatedRecipe;)V", # mna end
+  "dev.emi.emi.screen.widget.config.ConfigEntryWidget:isVisible()Z", #EMi Config(since 1.1.22+1.21.1+neoforge)
 ]
 "equals": [
   'org.cyclops.integrateddynamics.core.client.gui.WidgetTextFieldDropdown:lambda$refreshDropdownList$0(Lorg/cyclops/integrateddynamics/core/client/gui/IDropdownEntry;)Z', #Integrated Dynamics

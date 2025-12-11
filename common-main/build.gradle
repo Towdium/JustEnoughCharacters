@@ -7,7 +7,7 @@ dependencies {
     api 'com.google.code.gson:gson:2.8.0'
     api 'com.mojang:brigadier:1.0.18'
 
-    api(group: 'com.github.towdium', name: 'PinIn', version: "${verpinin}") {
+    api(group: 'dev.ghostflyby', name: 'PinIn', version: "${verpinin}") {
         transitive = false
     }
 
