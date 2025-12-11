@@ -21,6 +21,7 @@ subprojects {
 
         compileOnly "mezz.jei:jei-${mc_version}-core:${jei_version}"
         compileOnly "mezz.jei:jei-${mc_version}-gui:${jei_version}"
+        compileOnly "mezz.jei:jei-${mc_version}-common:${jei_version}"
     }
 }
 

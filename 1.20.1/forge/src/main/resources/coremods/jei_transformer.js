@@ -21,6 +21,15 @@ function initializeCoreMod() {
             },
             'transformer': transform
         },
+        'jei-Parser-3':{
+            'target': {
+                'type': 'METHOD',
+                'class': 'mezz.jei.gui.search.ElementPrefixParser',
+                'methodName': "<init>",
+                'methodDesc': '(Lmezz/jei/api/runtime/IIngredientManager;Lmezz/jei/common/config/IIngredientFilterConfig;Lmezz/jei/api/helpers/IColorHelper;)V'
+            },
+            'transformer': transform
+        },
         'jei-filter': {
             'target': {
                 'type': 'METHOD',
