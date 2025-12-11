@@ -41,7 +41,7 @@ public class JustEnoughCharactersForge {
         @SubscribeEvent
         public static void onPlayerLogin(EntityJoinLevelEvent event) {
             if (event.getEntity() instanceof Player &&
-                    event.getLevel().isClientSide &&
+                event.getLevel().isClientSide() &&
                     JechConfig.enableChat && !messageSent &&
                     (JechConfig.enumKeyboard == QUANPIN) &&
                     "zh_tw".equals(Minecraft.getInstance().options.languageCode)) {

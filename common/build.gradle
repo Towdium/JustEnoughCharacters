@@ -28,6 +28,7 @@ dependencies {
     compileOnly "mezz.jei:jei-${minecraft_version}-common:${jei_version}"
     compileOnly "mezz.jei:jei-${minecraft_version}-core:${jei_version}"
     compileOnly "mezz.jei:jei-${minecraft_version}-gui:${jei_version}"
+    compileOnly 'org.appliedenergistics:guideme:21.1.12'
 }
 
 idea {

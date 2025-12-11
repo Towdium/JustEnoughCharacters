@@ -49,6 +49,11 @@ class MixinTransformerDelegate<T extends TreeTransformer & IMixinTransformer> ex
     }
 
     @Override
+    public boolean couldTransformClass(MixinEnvironment environment, String name) {
+        return delegate.couldTransformClass(environment, name);
+    }
+
+    @Override
     public byte[] generateClass(MixinEnvironment environment, String name) {
         return delegate.generateClass(environment, name);
     }

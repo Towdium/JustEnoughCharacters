@@ -30,7 +30,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly 'net.neoforged.fancymodloader:loader:4.0.1'
+    compileOnly 'net.neoforged.fancymodloader:loader:10.0.32'
     implementation project(":coremod-common")
     compileOnly 'org.jetbrains:annotations:24.1.0'
     compileOnly 'com.google.auto.service:auto-service-annotations:1.1.1'
