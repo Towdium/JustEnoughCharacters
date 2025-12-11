@@ -14,7 +14,7 @@ public class JustEnoughCharacters {
     public static boolean messageSent = false;
 
     public static void printMessage(Component message) {
-        Minecraft.getInstance().gui.getChat().addMessage(message);
+        Minecraft.getInstance().schedule(() -> Minecraft.getInstance().gui.getChat().addMessage(message));
     }
 
 }
