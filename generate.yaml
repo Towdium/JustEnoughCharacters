@@ -136,6 +136,7 @@
   "com.mna.gui.widgets.SpellPartList:bySearchTerm(Lcom/mna/api/spells/base/ISpellComponent;)Z", # mna
   "com.mna.guide.GuideBookEntries:lambda$searchEntries$2(Ljava/lang/String;Lcom/mna/guide/interfaces/IEntrySection;)Z", # mna
   "com.mna.guide.GuideBookEntries:lambda$searchEntries$5(Lnet/minecraft/client/Minecraft;Ljava/lang/String;Ljava/util/HashMap;Lcom/mna/guide/RelatedRecipe;)V", # mna end
+  "dev.emi.emi.screen.widget.config.ConfigEntryWidget:isVisible()Z", #EMi Config(since 1.1.22+1.21.1+neoforge)
 ]
 "equals": [
   "com.hollingsworth.arsnouveau.client.container.AbstractStorageTerminalScreen:updateSearch()V", # Ars Nouveau  (Bookwyrm Lectern) (Since 1.21.1-5.8.3)
