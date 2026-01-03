@@ -8,7 +8,11 @@
 "contains": [
   "net.blay09.mods.farmingforblockheads.container.MarketClientContainer:applyFilters()V", #Farming for Blockheads
   "com.blamejared.controlling.client.NewKeyBindsScreen:filterKeys()V", #Controlling
-  "dev.ftb.mods.ftblibrary.ui.misc.ButtonListBaseScreen$1:add(Ldev/ftb/mods/ftblibrary/ui/Widget;)V", #FTB Library(FTB Quests)
+  "dev.ftb.mods.ftblibrary.ui.misc.ButtonListBaseScreen$1:add(Ldev/ftb/mods/ftblibrary/ui/Widget;)V", #FTB Library(FTB Quests) legacy
+  "dev.ftb.mods.ftblibrary.ui.misc.ButtonListBaseScreen$ButtonPanel:add(Ldev/ftb/mods/ftblibrary/ui/Widget;)V", #FTB Library(FTB Quests) (since 2001.2.12+1.20.1)
+  "dev.ftb.mods.ftblibrary.ui.misc.AbstractButtonListScreen$ButtonPanel:add(Ldev/ftb/mods/ftblibrary/ui/Widget;)V", #FTB Library(FTB Quests) (since 2001.2.12+1.20.1)
+  "dev.ftb.mods.ftblibrary.config.ui.SelectFluidScreen$FluidStackButton:shouldAdd(Ljava/lang/String;)Z", #FTB Library (since 2001.2.12+1.20.1)
+  "dev.ftb.mods.ftblibrary.config.ui.SelectImageResourceScreen$ImageButton:shouldAdd(Ljava/lang/String;)Z", #FTB Library (since 2001.2.12+1.20.1)
   "binnie.core.machines.storage.SearchDialog:updateSearch()V", #Binnie Core
   "com.chaosthedude.naturescompass.gui.NaturesCompassScreen:processSearchTerm()V", #Nature"s Compass
   "blusunrize.lib.manual.gui.GuiManual:func_73869_a(CI)V", #Immersive Engineering
@@ -53,7 +57,7 @@
   "com.blamejared.controlling.client.gui.GuiNewControls:lambda$filterKeys$9(Lcom/blamejared/controlling/client/gui/GuiNewKeyBindingList$KeyEntry;)Z", #Controlling legacy
   "blusunrize.lib.manual.ManualPages$Crafting:listForSearch(Ljava/lang/String;)Z", #Immersive Engineering
   "blusunrize.immersiveengineering.api.ManualPageBlueprint:listForSearch(Ljava/lang/String;)Z", #Immersive Engineering
-  "dev.ftb.mods.ftblibrary.config.ui.SelectItemStackScreen$ItemStackButton:shouldAdd(Ljava/lang/String;Ljava/lang/String;)Z", #FTB Library(FTB Quests)
+  "dev.ftb.mods.ftblibrary.config.ui.SelectItemStackScreen$ItemStackButton:shouldAdd(Ljava/lang/String;)Z", #FTB Library(FTB Quests) legacy (two params was incorrect, removed)
   "dev.emi.emi.search.NameQuery:matches(Ldev/emi/emi/api/stack/EmiStack;)Z", #EMI text search(Leagcy)
   "appeng.client.gui.me.interfaceterminal.InterfaceTerminalScreen:refreshList()V", #Applied Energistics
   "blusunrize.lib.manual.ManualPages$ItemDisplay:listForSearch(Ljava/lang/String;)Z", #Immersive Engineering
