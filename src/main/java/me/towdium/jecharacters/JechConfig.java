@@ -330,7 +330,8 @@ public class JechConfig {
                             "thaumicenergistics.client.gui.helpers.MERepo:searchName",  // Thaumic Energistics
                             "thaumicenergistics.client.gui.helpers.MERepo:searchTooltip",  // Thaumic Energistics
                             "thaumicenergistics.client.gui.helpers.MERepo:searchMod",  // Thaumic Energistics
-                            "thaumicenergistics.client.gui.helpers.MERepo:lambda$searchAspects$5"  // Thaumic Energistics
+                            "thaumicenergistics.client.gui.helpers.MERepo:lambda$searchAspects$5",  // Thaumic Energistics
+                            "appeng.client.me.ItemRepo:addIAE" //AE2 Unofficial Extended Life
                     };
                 case LIST_DEFAULT_SUFFIX:
                     return new String[]{
