@@ -126,7 +126,8 @@
   "com.aranaira.magichem.gui.GrandCircleFabricationScreen:updateDisplayedRecipes(Ljava/lang/String;)V", # magichem
   "com.aranaira.magichem.gui.GrandFuseryScreen:updateDisplayedRecipes(Ljava/lang/String;)V", # magichem
   "com.aranaira.magichem.gui.MateriaManifestScreen:updateMateriaOptionsByTextFilter()V", # magichem
-  "com.aranaira.magichem.gui.MirrorLabyrinthScreen:updateMateriaOptionsByTextFilter()V", # magichem end
+  "com.aranaira.magichem.gui.MirrorLabyrinthScreen:updateMateriaOptionsByTextFilter()V", # magichem
+  "com.aranaira.magichem.gui.PrimeAggregatorScreen:updateDisplayedRecipes(Ljava/lang/String;)V" # magichem end
   "com.mna.gui.block.GuiLodestarV2$CommandScrollList:lambda$setFilter$0(Lcom/mna/api/entities/construct/ai/ConstructTask;)Z", # mna start: yet another bunch of search bars
   "com.mna.gui.entity.GuiWanderingWizard$WanderingWizardOffersList:lambda$reInit$0(Ljava/lang/String;Lnet/minecraft/network/chat/Component;)Z", # mna
   "com.mna.gui.widgets.SpellPartList:bySearchTerm(Lcom/mna/api/spells/base/ISpellComponent;)Z", # mna
