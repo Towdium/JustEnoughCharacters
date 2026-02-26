@@ -76,6 +76,7 @@
   "com.github.glodblock.epp.client.gui.GuiExPatternTerminal:itemStackMatchesSearchTerm(Lnet/minecraft/world/item/ItemStack;Ljava/lang/String;Z)Z", #ExtendedAE legacy
   "com.glodblock.github.extendedae.client.gui.GuiExPatternTerminal:refreshList()V", #ExtendedAE(since 1.20-1.0.0-forge)
   "com.glodblock.github.extendedae.client.gui.GuiExPatternTerminal:itemStackMatchesSearchTerm(Lnet/minecraft/world/item/ItemStack;Ljava/lang/String;Z)Z", #ExtendedAE(since 1.20-1.0.0-forge)
+  "com.glodblock.github.extendedae.util.FCUtil:compareTokens(Ljava/util/List;Ljava/util/List;)Z", #ExtendedAE(since 1.20-1.4.10-forge, 1.21-2.2.28-neoforge)
   'com.github.klikli_dev.occultism.client.gui.storage.StorageControllerGuiBase:itemMatchesSearch(Lnet/minecraft/world/item/ItemStack;)Z', # Occultism legacy
   'com.github.klikli_dev.occultism.client.gui.storage.StorageControllerGuiBase:machineMatchesSearch(Lcom/github/klikli_dev/occultism/api/common/data/MachineReference;)Z', # Occultism legacy
   'com.klikli_dev.occultism.client.gui.storage.StorageControllerGuiBase:itemMatchesSearch(Lnet/minecraft/world/item/ItemStack;)Z', # Occultism
