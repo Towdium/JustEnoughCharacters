@@ -1,5 +1,5 @@
 plugins {
-    id "fabric-loom"
+    id "net.fabricmc.fabric-loom"
     id 'java-library'
     id 'idea'
     id 'dev.vfyjxf.gradle.jech'
@@ -15,14 +15,13 @@ base {
 dependencies {
     // To change the versions see the gradle.properties file
     minecraft "com.mojang:minecraft:${minecraft_version}"
-    mappings loom.officialMojangMappings()
     compileOnly project(':common')
     implementation "com.github.towdium:PinIn:${verpinin}"
     include "com.github.Towdium:PinIn:${verpinin}"
     implementation project(":coremod-common")
     compileOnly "mezz.jei:jei-${minecraft_version}-core:${jei_version}"
-    modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
-    modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
+    implementation  "net.fabricmc:fabric-loader:${fabric_loader_version}"
+    implementation  "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
     compileOnly 'com.google.auto.service:auto-service-annotations:1.1.1'
     annotationProcessor 'com.google.auto.service:auto-service:1.1.1'
 }
@@ -46,12 +45,12 @@ processResources {
 }
 
 tasks.withType(JavaCompile).configureEach {
-    it.options.release = 21
+    it.options.release = 25
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
+    sourceCompatibility = JavaVersion.VERSION_25
+    targetCompatibility = JavaVersion.VERSION_25
 }
 
 idea {

@@ -28,13 +28,6 @@ var generateTargetsJson = tasks.register("generateTargetsJson") {
         JsonArray array = new JsonArray()
         for (target in value) {
             def remap = target
-            mappings.entrySet().forEach {
-                if (target.contains(it.key)) {
-                    if (isFabric) {
-                        remap = target.replace(it.key, mappings.getOrDefault(it.key, it.key))
-                    }
-                }
-            }
             if (isFabric && containsNeoFluidStack(remap)) continue
             array.add(remap)
         }

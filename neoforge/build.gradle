@@ -29,11 +29,6 @@ neoForge {
         }
     }
 
-    parchment {
-        minecraftVersion = parchment_minecraft_version
-        mappingsVersion = parchment_mappings_version
-    }
-
     mods {
         "${mod_id}" {
             sourceSet(sourceSets.main)
