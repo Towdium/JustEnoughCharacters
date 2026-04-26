@@ -163,6 +163,8 @@
   "earth.terrarium.chipped.common.menus.WorkbenchMenu:lambda$updateResults$0(Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)V", # Chipped
   "com.supermartijn642.rechiseled.screen.BaseChiselingContainerScreen:doesItemMatchSearch(Lnet/minecraft/world/item/Item;)Z", # Rechiseled
   "com.github.alexthe668.cloudstorage.inventory.CloudChestMenu:matchesSearch(Lnet/minecraft/world/entity/player/Player;Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z", # Cloud Storage
+  "me.codexadrian.tempad.client.gui.ConsolidatedScreen:lambda$init$4(Ljava/lang/String;Lme/codexadrian/tempad/common/data/LocationData;)Z", # Tempad (since 2.3.4 1.20.1)
+  "com.gregtechceu.gtceu.api.gui.widget.ProspectingMapWidget:search(Ljava/lang/String;Ljava/util/function/Consumer;)V", # GregTech CEu Modern
 ]
 "equals": [
   "com.hollingsworth.arsnouveau.client.container.AbstractStorageTerminalScreen:updateSearch()V", # Ars Nouveau (Bookwyrm Lectern) (Since 1.20.1-4.12.7)
