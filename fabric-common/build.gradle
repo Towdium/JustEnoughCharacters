@@ -1,0 +1,48 @@
+plugins {
+    id 'net.neoforged.moddev'
+    id 'java-library'
+    id 'idea'
+}
+
+neoForge {
+    neoFormVersion = neo_form_version
+}
+
+
+dependencies {
+    compileOnly "com.github.towdium:PinIn:${verpinin}"
+    implementation ('org.ow2.asm:asm:9.6'){
+        version {
+            strictly '[9.6,)'
+            prefer '9.6'
+        }
+    }
+    implementation 'org.ow2.asm:asm-tree:9.6'
+    compileOnly project(':common')
+    implementation "com.github.towdium:PinIn:${verpinin}"
+    implementation project(":coremod-common")
+    compileOnly "net.fabricmc:sponge-mixin:0.16.5+mixin.0.8.7"
+    compileOnly "mezz.jei:jei-${minecraft_version}-common-api:${jei_version}"
+    compileOnly "mezz.jei:jei-${minecraft_version}-common:${jei_version}"
+    compileOnly "mezz.jei:jei-${minecraft_version}-core:${jei_version}"
+    compileOnly "mezz.jei:jei-${minecraft_version}-gui:${jei_version}"
+    implementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
+    compileOnly 'com.google.auto.service:auto-service-annotations:1.1.1'
+    annotationProcessor 'com.google.auto.service:auto-service:1.1.1'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    it.options.release = 21
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+idea {
+    module {
+        downloadSources = true
+        downloadJavadoc = true
+    }
+}

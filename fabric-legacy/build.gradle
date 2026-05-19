@@ -17,12 +17,14 @@ dependencies {
     minecraft "com.mojang:minecraft:${minecraft_version}"
     mappings loom.officialMojangMappings()
     compileOnly project(':common')
+    compileOnly project(':fabric-common')
     implementation "com.github.towdium:PinIn:${verpinin}"
     include "com.github.Towdium:PinIn:${verpinin}"
     implementation project(":coremod-common")
     compileOnly "mezz.jei:jei-${minecraft_version}-core:${jei_version}"
     modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
+
     compileOnly 'com.google.auto.service:auto-service-annotations:1.1.1'
     annotationProcessor 'com.google.auto.service:auto-service:1.1.1'
 }
@@ -30,11 +32,13 @@ dependencies {
 compileJava {
     source(project(":common").sourceSets.main.allSource)
     source(project(":coremod-common").sourceSets.main.allSource)
+    source(project(":fabric-common").sourceSets.main.allSource)
 }
 
 processResources {
     from project(":common").sourceSets.main.resources
     from project(":coremod-common").sourceSets.main.resources
+    from project(":fabric-common").sourceSets.main.resources
 }
 
 processResources {

@@ -45,7 +45,7 @@ public class JustEnoughCharactersForge {
                     JechConfig.enableChat && !messageSent &&
                     (JechConfig.enumKeyboard == QUANPIN) &&
                     "zh_tw".equals(Minecraft.getInstance().options.languageCode)) {
-                printMessage(Component.translatable("jecharacters.chat.taiwan"));
+                printMessage("jecharacters.chat.taiwan");
                 messageSent = true;
             }
         }

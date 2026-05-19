@@ -6,7 +6,6 @@ import me.towdium.jecharacters.config.JechConfig.Spell;
 import me.towdium.jecharacters.config.JechConfigAction;
 import me.towdium.jecharacters.utils.Profiler;
 import net.minecraft.commands.SharedSuggestionProvider;
-import net.minecraft.network.chat.Component;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -30,7 +29,7 @@ public class JechCommand {
 
         builder = literal("jech")
                 .executes((c) -> {
-                    printMessage(Component.translatable("jecharacters.chat.help"));
+                    printMessage("jecharacters.chat.help");
                     return 0;
                 }).then(literal("profile").executes(c -> profile()))
                 .then(literal("verbose")
@@ -61,15 +60,15 @@ public class JechCommand {
 
     private static int profile() {
         Thread t = new Thread(() -> {
-            printMessage(Component.translatable("jecharacters.chat.start"));
+            printMessage("jecharacters.chat.start");
             Profiler.Report r = Profiler.getInstance().run();
             try (FileOutputStream fos = new FileOutputStream("logs/jecharacters.txt")) {
                 OutputStreamWriter osw = new OutputStreamWriter(fos);
                 osw.write(new GsonBuilder().setPrettyPrinting().create().toJson(r));
                 osw.flush();
-                printMessage(Component.translatable("jecharacters.chat.saved"));
+                printMessage("jecharacters.chat.saved");
             } catch (IOException e) {
-                printMessage(Component.translatable("jecharacters.chat.error"));
+                printMessage("jecharacters.chat.error");
             }
         });
         t.setPriority(Thread.MIN_PRIORITY);

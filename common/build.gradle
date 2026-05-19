@@ -8,9 +8,6 @@ neoForge {
     neoFormVersion = neo_form_version
 
     runs {
-        client {
-            client()
-        }
     }
 
     parchment {
@@ -22,8 +19,8 @@ neoForge {
 
 dependencies {
     compileOnly "com.github.towdium:PinIn:${verpinin}"
-    implementation 'org.ow2.asm:asm:9.6'
-    implementation 'org.ow2.asm:asm-tree:9.6'
+    compileOnly 'org.ow2.asm:asm:9.6'
+    compileOnly 'org.ow2.asm:asm-tree:9.6'
     compileOnly "mezz.jei:jei-${minecraft_version}-common-api:${jei_version}"
     compileOnly "mezz.jei:jei-${minecraft_version}-common:${jei_version}"
     compileOnly "mezz.jei:jei-${minecraft_version}-core:${jei_version}"

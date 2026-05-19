@@ -1,0 +1,61 @@
+plugins {
+	id 'net.fabricmc.fabric-loom'
+    id 'dev.vfyjxf.gradle.jech'
+}
+
+version = "${verspec}.${verbuild}"
+group = 'me.towdium.jecharacters'
+base {
+    archivesName = mod_id + '-' + minecraft_version + '-fabric'
+}
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
+
+dependencies {
+    include "com.github.Towdium:PinIn:${verpinin}"
+    implementation "com.github.towdium:PinIn:${verpinin}"
+	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    compileOnly project(':common')
+    compileOnly(project(":fabric-common"))
+    implementation project(":coremod-common")
+    compileOnly "mezz.jei:jei-${rootProject.minecraft_version}-core:${rootProject.jei_version}"
+	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
+	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+    compileOnly 'com.google.auto.service:auto-service-annotations:1.1.1'
+    annotationProcessor 'com.google.auto.service:auto-service:1.1.1'
+}
+
+compileJava {
+    source(project(":common").sourceSets.main.allSource)
+    source(project(":coremod-common").sourceSets.main.allSource)
+    source(project(":fabric-common").sourceSets.main.allSource)
+    source(project(":common-unobfuscated").sourceSets.main.allSource)
+}
+
+processResources {
+    from project(":common").sourceSets.main.resources
+    from project(":coremod-common").sourceSets.main.resources
+    from project(":fabric-common").sourceSets.main.resources
+    from project(":common-unobfuscated").sourceSets.main.resources
+}
+
+
+processResources {
+	inputs.property "version", project.version
+
+	filesMatching("fabric.mod.json") {
+		expand "version": inputs.properties.version
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	it.options.release = 25
+}
+
+java {
+	sourceCompatibility = JavaVersion.VERSION_25
+	targetCompatibility = JavaVersion.VERSION_25
+}

@@ -11,7 +11,7 @@ base {
     archivesName = mod_id + '-' + minecraft_version + '-neoforge'
 }
 neoForge {
-    version = neo_version
+    version = "26.1.2.59-beta"
 
     def at = project(':common').file('src/main/resources/META-INF/accesstransformer.cfg')
     if (at.exists()) {
@@ -48,18 +48,20 @@ dependencies {
 
     jarJar(project(':coremod-neoforge'))
     jarJar(implementation("com.github.towdium:PinIn:${verpinin}"))
-    localRuntime "mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}"
-    compileOnly "mezz.jei:jei-${minecraft_version}-core:${jei_version}"
+    localRuntime "mezz.jei:jei-26.1.2-neoforge:29.6.2.31"
+    compileOnly "mezz.jei:jei-26.1.2-core:29.6.2.31"
     compileOnly 'com.google.auto.service:auto-service-annotations:1.1.1'
     annotationProcessor 'com.google.auto.service:auto-service:1.1.1'
 }
 
 compileJava {
     source(project(":common").sourceSets.main.allSource)
+    source(project(":common-unobfuscated").sourceSets.main.allSource)
 }
 
 processResources {
     from project(":common").sourceSets.main.resources
+    from project(":common-unobfuscated").sourceSets.main.resources
 }
 
 

@@ -1,0 +1,7 @@
+{
+  "jecharacters.chat.start": "開始分析模組文件。",
+  "jecharacters.chat.saved": "完成！分析報告已保存至 logs/jecharacters.txt。",
+  "jecharacters.chat.error": "寫入文檔時出現了一個問題。",
+  "jecharacters.chat.taiwan": " §e[Just Enough Characters] §f檢測到您正在使用繁體中文。\n    切換至注音輸入法，請執行 /jech keyboard daqian\n    关闭此消息，請執行 /jech silent",
+  "jecharacters.chat.help": "/jech [profile] / [verbose true/false]"
+}

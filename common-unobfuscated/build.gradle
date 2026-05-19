@@ -1,0 +1,23 @@
+plugins {
+    id 'net.neoforged.moddev'
+    id 'java-library'
+    id 'idea'
+}
+
+neoForge {
+    neoFormVersion = '26.1.2-1'
+}
+
+
+dependencies {
+    compileOnly(project(":common"))
+    compileOnly 'com.google.auto.service:auto-service-annotations:1.1.1'
+    annotationProcessor 'com.google.auto.service:auto-service:1.1.1'
+}
+
+idea {
+    module {
+        downloadSources = true
+        downloadJavadoc = true
+    }
+}

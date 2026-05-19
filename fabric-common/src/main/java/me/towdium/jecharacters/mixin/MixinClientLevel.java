@@ -4,7 +4,6 @@ import me.towdium.jecharacters.JustEnoughCharacters;
 import me.towdium.jecharacters.config.JechConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import org.spongepowered.asm.mixin.Mixin;
@@ -24,7 +23,7 @@ public class MixinClientLevel {
                 && JechConfig.enableChat && !JustEnoughCharacters.messageSent
                 && (JechConfig.enumKeyboard == QUANPIN)
                 && Minecraft.getInstance().options.languageCode.equals("zh_tw")) {
-            printMessage(Component.translatable("jecharacters.chat.taiwan"));
+            printMessage("jecharacters.chat.taiwan");
             JustEnoughCharacters.messageSent = true;
         }
     }
