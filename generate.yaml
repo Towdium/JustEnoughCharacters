@@ -37,6 +37,7 @@
   "betterquesting.api2.client.gui.panels.lists.CanvasFileDirectory:queryMatches(Ljava/io/File;Ljava/lang/String;Ljava/util/ArrayDeque;)V", #Better Questing
   "com.hollingsworth.arsnouveau.client.gui.book.GuiSpellBook:onSearchChanged(Ljava/lang/String;)V", #Ars Nouveau
   "com.hollingsworth.arsnouveau.client.gui.book.GlyphUnlockMenu:onSearchChanged(Ljava/lang/String;)V", #Ars Nouveau (1.20.1-4.0.0)
+  "com.github.ars_zero.client.gui.AbstractMultiPhaseCastDeviceScreen:onSearchChanged(Ljava/lang/String;)V", #Ars Zero (1.21.1)
   "dev.emi.emi.search.NameQuery:matches(Ldev/emi/emi/api/stack/EmiStack;)Z", #EMI text search(Leagcy)
   "appeng.client.gui.me.interfaceterminal.InterfaceTerminalScreen:refreshList()V", #Applied Energistics
   "mcjty.rftools.items.netmonitor.GuiNetworkMonitor:populateList()V", #RF Tools
