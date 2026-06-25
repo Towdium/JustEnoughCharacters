@@ -56,7 +56,7 @@
   "com.glodblock.github.extendedae.client.gui.GuiExPatternTerminal:refreshList()V", # ExtendedAE (Legacy, Since 1.20-1.0.0-forge)
   "com.glodblock.github.extendedae.client.gui.GuiExPatternTerminal:itemStackMatchesSearchTerm(Lnet/minecraft/world/item/ItemStack;Ljava/lang/String;Z)Z", # ExtendedAE (Legacy, Since 1.20-1.0.0-forge)
   "com.glodblock.github.extendedae.client.gui.GuiAssemblerMatrix:itemStackMatchesSearchTerm(Lnet/minecraft/world/item/ItemStack;Ljava/lang/String;)Z", # ExtendedAE (Legacy, Assembler Matrix, since 1.21)
-  "com.glodblock.github.extendedae.util.FCUtil:compareTokens(Ljava/util/List;Ljava/util/List;)Z", # ExtendedAE(since 1.20-1.4.10-forge, 1.21-2.2.28-neoforge)
+  "com.glodblock.github.extendedae.util.FCUtil:compareTokens(Ljava/util/List;Ljava/util/List;)Z", # ExtendedAE (since 1.20-1.4.10-forge, 1.21-2.2.28-neoforge)
   "net.pedroksl.advanced_ae.client.gui.QuantumCrafterTermScreen:itemStackMatchesSearchTerm(Lnet/minecraft/world/item/ItemStack;Ljava/lang/String;)Z", # Advanced AE (Quantum Crafter Terminal,since 26.1.2-alpha)
   'com.klikli_dev.occultism.client.gui.storage.StorageControllerGuiBase:itemMatchesSearch(Lnet/minecraft/world/item/ItemStack;)Z', # Occultism
   'com.klikli_dev.occultism.client.gui.storage.StorageControllerGuiBase:machineMatchesSearch(Lcom/klikli_dev/occultism/api/common/data/MachineReference;)Z', # Occultism
@@ -208,7 +208,8 @@
   "org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStackClient:lambda$getInstanceFilterPredicate$0(Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z", # Integrated Terminals (since 26.1.2-1.33.2)
   "org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStackClient:lambda$getInstanceFilterPredicate$2(Ljava/lang/String;Lnet/minecraft/network/chat/Component;)Z", # Integrated Terminals (since 26.1.2-1.33.2)
   "org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStackClient:lambda$getInstanceFilterPredicate$4(Ljava/lang/String;Lnet/minecraft/tags/TagKey;)Z", # Integrated Terminals (since 26.1.2-1.33.2)
-  "org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStackClient:lambda$getInstanceFilterPredicate$6(Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z", # Integrated Terminals (since 26.1.2-1.33.2)  'ml.pkom.itemalchemy.gui.screen.AlchemyTableScreenHandler:sortBySearch()V', # ItemAlchemy(Since 0.7.6)
+  "org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStackClient:lambda$getInstanceFilterPredicate$6(Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z", # Integrated Terminals (since 26.1.2-1.33.2)
+  'ml.pkom.itemalchemy.gui.screen.AlchemyTableScreenHandler:sortBySearch()V', # ItemAlchemy(Since 0.7.6)
   'com.tom.storagemod.screen.AbstractStorageTerminalScreen:lambda$updateSearch$16(Ljava/util/regex/Pattern;Lcom/tom/storagemod/inventory/StoredItemStack;)Z', # Tom's Simple Storage Mod (Since MC1.21.1)
   'com.tom.storagemod.screen.AbstractStorageTerminalScreen:lambda$updateSearch$15(Ljava/util/regex/Pattern;Lcom/tom/storagemod/inventory/StoredItemStack;)Z', # Tom's Simple Storage Mod (Since MC1.21.1)
   "com.spaceagle17.irissearch.ShaderSearchEngine:computeMatchTier(Ljava/lang/String;Ljava/lang/String;)I", # IrisSearch (since 1.0.1)
