@@ -4,6 +4,8 @@
   "net.minecraft.class_1129:plainText(Ljava/util/List;Ljava/util/function/Function;)Lnet/minecraft/class_1129;",
 ]
 "contains": [
+  "net.minecraft.client.gui.screens.worldselection.WorldSelectionList:filterAccepts(Ljava/lang/String;Lnet/minecraft/world/level/storage/LevelSummary;)Z", # Minecraft World Selection List Search
+  "net.minecraft.class_528:method_43453(Ljava/lang/String;Lnet/minecraft/class_34;)Z", # Minecraft World Selection List Search (Fabric, Intermediary Mapping)
   "binnie.core.machines.storage.SearchDialog:updateSearch()V", #Binnie Core
   "com.chaosthedude.naturescompass.gui.NaturesCompassScreen:processSearchTerm()V", #Natures Compass
   "blusunrize.lib.manual.ManualElementItem:listForSearch(Ljava/lang/String;)Z", # Immersive Engineering (Since 1.21.1-12.3.1-189)
@@ -153,7 +155,8 @@
   "com.kreidev.cmpackagecouriers.StockTickerIntegration:rewriteAddressIfNeeded(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/item/ItemStack;)V", # Create More: Package Couriers
   "ru.zznty.create_factory_abstractions.api.generic.search.GenericSearch:lambda$search$1(Ljava/lang/String;Lnet/minecraft/tags/TagKey;)Z", # Create Factory Logistics & Create More: Package Couriers
   "ru.zznty.create_factory_abstractions.api.generic.search.GenericSearch:search(Lru/zznty/create_factory_abstractions/api/generic/search/CategoriesProvider;Ljava/lang/String;II)Lru/zznty/create_factory_abstractions/api/generic/search/GenericSearch$SearchResult;", # Create Factory Logistics & Create More: Package Couriers
-  "com.mrcrayfish.furniture.refurbished.client.gui.screen.PostBoxScreen:lambda$updateSearchFilter$4(Lcom/mrcrayfish/furniture/refurbished/mail/IMailbox;)Z" # MrCrayfish's Furniture Mod: Refurbished (post box)
+  "com.mrcrayfish.furniture.refurbished.client.gui.screen.PostBoxScreen:lambda$updateSearchFilter$4(Lcom/mrcrayfish/furniture/refurbished/mail/IMailbox;)Z", # MrCrayfish's Furniture Mod: Refurbished (post box)
+  "com.spaceagle17.irissearch.ShaderSearchEngine:computeMatchTier(Ljava/lang/String;Ljava/lang/String;)I", # IrisSearch (since 1.0.1)
 ]
 "equals": [
   "com.hollingsworth.arsnouveau.client.container.AbstractStorageTerminalScreen:updateSearch()V", # Ars Nouveau  (Bookwyrm Lectern) (Since 1.21.1-5.8.3)
@@ -175,11 +178,11 @@
 "regExp": [
   'appeng.client.gui.me.search.SearchPredicates:lambda$createNamePredicate$3(Ljava/util/regex/Pattern;Lappeng/menu/me/common/GridInventoryEntry;)Z', #Applied Energistics (Since 2-12.9.5)
   'dev.emi.emi.search.RegexTooltipQuery:matches(Ldev/emi/emi/api/stack/EmiStack;)Z', #EMI regex search
-  'com.tom.storagemod.gui.AbstractStorageTerminalScreen:updateSearch()V', #Toms Storage
+  'com.tom.storagemod.gui.AbstractStorageTerminalScreen:updateSearch()V', # Tom's Simple Storage Mod
   'org.cyclops.integrateddynamics.inventory.container.ContainerLogicProgrammerBase:lambda$static$0(Lorg/cyclops/integrateddynamics/api/logicprogrammer/ILogicProgrammerElement;Ljava/util/regex/Pattern;)Z', #Integrated Dynamics 1
   'org.cyclops.integrateddynamics.core.inventory.container.ContainerMultipartAspects:lambda$new$0(Lorg/cyclops/integrateddynamics/api/part/aspect/IAspect;Ljava/util/regex/Pattern;)Z', #Integrated Dynamics 2
   'appeng.client.gui.me.search.SearchPredicates:lambda$createTooltipPredicate$4(Lappeng/client/gui/me/search/RepoSearch;Ljava/util/regex/Pattern;Lappeng/menu/me/common/GridInventoryEntry;)Z', #Applied Energistics (Since 2-12.9.5)
-  'com.tom.storagemod.gui.GuiStorageTerminalBase:updateSearch()V', #Toms Storage
+  'com.tom.storagemod.gui.GuiStorageTerminalBase:updateSearch()V', # Tom's Simple Storage Mod
   'dev.emi.emi.search.RegexNameQuery:matches(Ldev/emi/emi/api/stack/EmiStack;)Z', #emi regex search
   'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$getInstanceFilterPredicate$4(Ljava/lang/String;Lnet/minecraft/tags/TagKey;)Z', # Integrated Terminals(Since 1.21.1-1.6.9)
   'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$getInstanceFilterPredicate$1(Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z', # Integrated Terminals(Since 1.21.1-1.6.9)
@@ -189,6 +192,7 @@
   'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerFluidStack:lambda$getInstanceFilterPredicate$13(Ljava/lang/String;Lnet/neoforged/neoforge/fluids/FluidStack;)Z', # Integrated Terminals(Since 1.21.1-1.6.9)
   'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerFluidStack:lambda$getInstanceFilterPredicate$8(Ljava/lang/String;Lnet/neoforged/neoforge/fluids/FluidStack;)Z', # Integrated Terminals(Since 1.21.1-1.6.9)
   'ml.pkom.itemalchemy.gui.screen.AlchemyTableScreenHandler:sortBySearch()V', # ItemAlchemy(Since 0.7.6)
-  'com.tom.storagemod.screen.AbstractStorageTerminalScreen:lambda$updateSearch$16(Ljava/util/regex/Pattern;Lcom/tom/storagemod/inventory/StoredItemStack;)Z', # Toms Storage (Since MC1.21.1)
-  'com.tom.storagemod.screen.AbstractStorageTerminalScreen:lambda$updateSearch$15(Ljava/util/regex/Pattern;Lcom/tom/storagemod/inventory/StoredItemStack;)Z' # Toms Storage (Since MC1.21.1)
+  'com.tom.storagemod.screen.AbstractStorageTerminalScreen:lambda$updateSearch$16(Ljava/util/regex/Pattern;Lcom/tom/storagemod/inventory/StoredItemStack;)Z', # Tom's Simple Storage Mod (Since MC1.21.1)
+  'com.tom.storagemod.screen.AbstractStorageTerminalScreen:lambda$updateSearch$15(Ljava/util/regex/Pattern;Lcom/tom/storagemod/inventory/StoredItemStack;)Z', # Tom's Simple Storage Mod (Since MC1.21.1)
+  "com.spaceagle17.irissearch.ShaderSearchEngine:computeMatchTier(Ljava/lang/String;Ljava/lang/String;)I", # IrisSearch (since 1.0.1)
 ]
