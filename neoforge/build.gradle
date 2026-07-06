@@ -53,9 +53,6 @@ dependencies {
     jarJar(implementation("com.github.towdium:PinIn:${verpinin}"))
     clientAdditionalRuntimeClasspath "com.github.towdium:PinIn:${verpinin}"
     localRuntime "mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}"
-    compileOnly('net.mezzdev:suffixtree:1.1.0') {
-        transitive = false
-    }
     compileOnly 'com.google.auto.service:auto-service-annotations:1.1.1'
     annotationProcessor 'com.google.auto.service:auto-service:1.1.1'
 }
