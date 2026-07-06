@@ -20,7 +20,7 @@ public class FabricInfoReader implements Profiler.InfoReader {
         if (jsonObject != null) {
             Profiler.ModContainer mc = new Profiler.ModContainer(
                     jsonObject.has("id") ? jsonObject.get("id").getAsString() : "",
-                    jsonObject.has("name") ? jsonObject.get("displayName").getAsString() : "",
+                    jsonObject.has("name") ? jsonObject.get("name").getAsString() : "",
                     jsonObject.has("version") ? jsonObject.get("version").getAsString() : ""
             );
             return new Profiler.ModContainer[]{mc};
