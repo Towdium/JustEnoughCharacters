@@ -25,9 +25,12 @@ dependencies {
     implementation 'org.ow2.asm:asm:9.6'
     implementation 'org.ow2.asm:asm-tree:9.6'
     compileOnly "mezz.jei:jei-${minecraft_version}-common-api:${jei_version}"
+    compileOnlyApi "mezz.jei:jei-${minecraft_version}-core:19.27.0.346"
     compileOnly "mezz.jei:jei-${minecraft_version}-common:${jei_version}"
-    compileOnly "mezz.jei:jei-${minecraft_version}-core:${jei_version}"
     compileOnly "mezz.jei:jei-${minecraft_version}-gui:${jei_version}"
+    compileOnlyApi('net.mezzdev:suffixtree:1.1.0') {
+        transitive = false
+    }
 }
 
 idea {
