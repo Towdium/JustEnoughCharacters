@@ -3,7 +3,7 @@ package me.towdium.jecharacters.utils;
 import me.towdium.jecharacters.JustEnoughCharacters;
 import me.towdium.jecharacters.config.JechConfig;
 import me.towdium.pinin.searchers.TreeSearcher;
-import mezz.jei.core.search.suffixtree.GeneralizedSuffixTree;
+import net.mezzdev.suffixtree.GeneralizedSuffixTree;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;

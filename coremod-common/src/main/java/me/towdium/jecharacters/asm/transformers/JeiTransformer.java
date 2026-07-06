@@ -17,7 +17,8 @@ public class JeiTransformer implements Transformer {
 
     private static final Set<String> targets = new HashSet<>(List.of(
             "mezz/jei/gui/search/ElementPrefixParser",
-            "mezz/jei/gui/ingredients/IngredientFilter"
+            "mezz/jei/gui/ingredients/IngredientFilter",
+            "mezz/jei/common/search/GeneralizedSuffixTreeSearchStorage"
     ));
 
     @Override
@@ -41,6 +42,12 @@ public class JeiTransformer implements Transformer {
                         "me/towdium/jecharacters/utils/FakeTree",
                         "<init>",
                         "()V"
+                ));
+
+        Transformer.findMethod(node, "<init>", "()V")
+                .ifPresent(method -> Transformer.transformConstruct(method,
+                        "net/mezzdev/suffixtree/GeneralizedSuffixTree",
+                        "me/towdium/jecharacters/utils/FakeTree"
                 ));
 
         Transformer.findMethod(node, "parseSearchTokens", "(Ljava/lang/String;)Lmezz/jei/gui/ingredients/IngredientFilter$SearchTokens;")
