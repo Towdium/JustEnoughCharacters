@@ -10,10 +10,10 @@
   "net.minecraft.class_528:method_43453(Ljava/lang/String;Lnet/minecraft/class_34;)Z", # Minecraft World Selection List Search (Fabric, Legacy, Intermediary Mappings)
   "net.minecraft.client.gui.screens.worldselection.AbstractGameRulesScreen$RuleList:toLowerCaseMatchesFilter(Ljava/lang/String;Ljava/lang/String;)Z", # Minecraft Gamerule Screen Search (sinse 26.1)
   "binnie.core.machines.storage.SearchDialog:updateSearch()V", #Binnie Core
-  "com.chaosthedude.naturescompass.gui.NaturesCompassScreen:processSearchTerm()V", #Natures Compass
+  "com.chaosthedude.naturescompass.gui.NaturesCompassScreen:processSearchTerm()V", # Nature's Compass
   "blusunrize.lib.manual.ManualElementItem:listForSearch(Ljava/lang/String;)Z", # Immersive Engineering (Since 1.21.1-12.3.1-189)
-  "blusunrize.lib.manual.ManualUtils:listStack(Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z", # Immersive Engineering  (Since 1.21.1-12.3.1-189)
-  "blusunrize.lib.manual.gui.ManualScreen:lambda$updateSearch$2(Ljava/lang/String;Ljava/util/ArrayList;Ljava/util/Set;Lblusunrize/lib/manual/Tree$AbstractNode;)V", # Immersive Engineering  (Since 1.21.1-12.3.1-189)
+  "blusunrize.lib.manual.ManualUtils:listStack(Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z", # Immersive Engineering (Since 1.21.1-12.3.1-189)
+  "blusunrize.lib.manual.gui.ManualScreen:lambda$updateSearch$2(Ljava/lang/String;Ljava/util/ArrayList;Ljava/util/Set;Lblusunrize/lib/manual/Tree$AbstractNode;)V", # Immersive Engineering (Since 1.21.1-12.3.1-189)
   "org.cyclops.integrateddynamics.core.client.gui.WidgetTextFieldDropdown:refreshDropdownList()V", #Integrated Dynamics
   "betterquesting.api2.client.gui.panels.lists.CanvasQuestDatabase:queryMatches(Lbetterquesting/api2/storage/DBEntry;Ljava/lang/String;Ljava/util/ArrayDeque;)V", #Better Questing
   "com.minecolonies.core.client.gui.WindowHutAllInventory:lambda$updateResources$2(Lcom/minecolonies/api/crafting/ItemStorage;)Z", # Minecolonies (Since 1.1.978-1.21.1)
@@ -71,8 +71,8 @@
   'com.lothrazar.storagenetwork.gui.NetworkWidget:doesStackMatchSearch(Lnet/minecraft/world/item/ItemStack;)Z', #Simple Storage Network(Since 1.70)
   'pro.mikey.xray.gui.GuiSelectionScreen:lambda$updateSearch$8(Lpro/mikey/xray/utils/BlockData;)Z',
   'de.ellpeck.prettypipes.terminal.containers.ItemTerminalGui:lambda$updateWidgets$8(Ljava/lang/String;Lorg/apache/commons/lang3/tuple/Pair;)Z', # Pretty Pipes(Since 1.15.0)
-  "mcjty.rftoolsstorage.modules.modularstorage.client.GuiModularStorage:updateList()V",  # RFTools Storage (Since 1.21-6.0.1)
-  "mcjty.rftoolsstorage.modules.scanner.blocks.StorageScannerTileEntity:lambda$makeSearchPredicate$31(Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z",  # RFTools Storage (Since 1.21-6.0.1)
+  "mcjty.rftoolsstorage.modules.modularstorage.client.GuiModularStorage:updateList()V", # RFTools Storage (Since 1.21-6.0.1)
+  "mcjty.rftoolsstorage.modules.scanner.blocks.StorageScannerTileEntity:lambda$makeSearchPredicate$31(Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z", # RFTools Storage (Since 1.21-6.0.1)
   'com.lothrazar.storagenetwork.gui.NetworkWidget:doesStackMatchSearch(Lnet/minecraft/world/item/ItemStack;)Z', #Simple Storage Network(Since 1.10.0)
   "com.robertx22.age_of_exile.gui.screens.skill_tree.buttons.PerkButton:lambda$renderWidget$1(Ljava/lang/String;Lcom/robertx22/age_of_exile/database/OptScaleExactStat;)Z", # Mine And Slash talent search
   'appeng.client.gui.me.search.NameSearchPredicate:test(Lappeng/menu/me/common/GridInventoryEntry;)Z', # Applied Energistics 2(Since 15.2.4)
@@ -108,7 +108,7 @@
   "com.hollingsworth.arsnouveau.client.container.AbstractStorageTerminalScreen:lambda$updateSearch$10(Ljava/lang/String;Ljava/lang/String;)Z", # Ars Nouveau (Bookwyrm Lectern) (Since 1.21.1-5.8.3)
   "com.hollingsworth.arsnouveau.client.container.AbstractStorageTerminalScreen:lambda$updateSearch$11(Ljava/lang/String;Ljava/lang/String;)Z", # Ars Nouveau (Bookwyrm Lectern) (Since 1.21.1-5.8.3)
   "com.hollingsworth.arsnouveau.client.container.AbstractStorageTerminalScreen:updateSearch()V", # Ars Nouveau (Bookwyrm Lectern) (Since 1.21.1-5.8.3)
-  "net.blay09.mods.waystones.client.gui.screen.WaystoneSelectionScreenBase:updateList()V", #Waystones
+  "net.blay09.mods.waystones.client.gui.screen.WaystoneSelectionScreenBase:updateList()V", # Waystones
   "dev.ftb.mods.ftbfiltersystem.client.gui.ItemConfigScreen$SearchEntry:test(Ljava/lang/String;)Z", # FTB Filter System
   "blue.endless.jankson.impl.serializer.CommentSerializer:print(Ljava/lang/StringBuilder;Ljava/lang/String;IZZ)V", # Fzzy Config
   "me.shedaniel.clothconfig2.gui.widget.SearchFieldEntry:matchesSearch(Ljava/util/Iterator;)Z", # Cloth Config
@@ -122,7 +122,7 @@
   "me.desht.pneumaticcraft.client.gui.ItemSearcherScreen$SearchEntry:test(Ljava/lang/String;)Z", # PneumaticCraft
   "com.refinedmods.refinedstorage.common.grid.query.GridQueryParser:lambda$attributeMatch$6(Ljava/lang/String;Ljava/lang/String;)Z", # Refined Storage (Since v2.0.0-beta.2)
   "com.refinedmods.refinedstorage.common.grid.query.GridQueryParser:lambda$parseLiteral$8(Lcom/refinedmods/refinedstorage/query/parser/node/LiteralNode;Lcom/refinedmods/refinedstorage/api/resource/repository/ResourceRepository;Lcom/refinedmods/refinedstorage/common/api/grid/view/GridResource;)Z", # Refined Storage (Since v2.0.0-beta.2)
-  "com.refinedmods.refinedstorage.common.autocrafting.autocraftermanager.AutocrafterManagerContainerMenu$SubViewGroup:hasResource(Ljava/lang/String;Lcom/refinedmods/refinedstorage/api/resource/ResourceKey;)Z",  #refinedstorage-neoforge-2.0.0-beta.2
+  "com.refinedmods.refinedstorage.common.autocrafting.autocraftermanager.AutocrafterManagerContainerMenu$SubViewGroup:hasResource(Ljava/lang/String;Lcom/refinedmods/refinedstorage/api/resource/ResourceKey;)Z", #refinedstorage-neoforge-2.0.0-beta.2
   "com.refinedmods.refinedstorage.common.autocrafting.autocraftermanager.AutocrafterManagerContainerMenu$ViewGroup:nameContains(Ljava/lang/String;)Z",# Refined Storage (Since v2.0.0-beta.2)
   "com.refinedmods.refinedstorage.common.autocrafting.patterngrid.AlternativeContainerMenu:lambda$filter$1(Ljava/lang/String;Lcom/refinedmods/refinedstorage/common/autocrafting/patterngrid/Alternative;)V",# Refined Storage (Since v2.0.0-beta.2)
   "com.refinedmods.refinedstorage.common.grid.query.GridQueryParser:lambda$attributeMatch$6(Ljava/lang/String;Ljava/lang/String;)Z",# Refined Storage (Since v2.0.0-beta.2)
@@ -134,9 +134,9 @@
   "red.jackf.chesttracker.impl.util.ItemStacks:namePredicate(Lnet/minecraft/class_1799;Ljava/lang/String;)Z", # Chest Tracker (Since 2.6.7+1.21.4)
   "red.jackf.chesttracker.impl.util.ItemStacks:tooltipPredicate(Lnet/minecraft/class_1799;Ljava/lang/String;)Z", # Chest Tracker (Since 2.6.7+1.21.4)
   "net.blay09.mods.farmingforblockheads.menu.MarketMenu:searchMatches(Lnet/minecraft/world/item/crafting/display/RecipeDisplayEntry;)Z", # Farming for Blockheads (Since 21.4.5)
-  "dev.ftb.mods.ftblibrary.ui.misc.AbstractButtonListScreen$ButtonPanel:add(Ldev/ftb/mods/ftblibrary/ui/Widget;)V", #FTB Library(Since 2101.1.14)
-  "dev.ftb.mods.ftblibrary.ui.misc.ButtonListBaseScreen$ButtonPanel:add(Ldev/ftb/mods/ftblibrary/ui/Widget;)V",  #FTB Library(Since 2101.1.14)
-  "journeymap.client.ui.waypointmanager.WaypointManager:lambda$getWaypointsForGroup$18(Ljourneymap/client/ui/waypointmanager/waypoint/WaypointSlot;)Z",#Journeymap (Since 6.00)
+  "dev.ftb.mods.ftblibrary.ui.misc.AbstractButtonListScreen$ButtonPanel:add(Ldev/ftb/mods/ftblibrary/ui/Widget;)V", # FTB Library(Since 2101.1.14)
+  "dev.ftb.mods.ftblibrary.ui.misc.ButtonListBaseScreen$ButtonPanel:add(Ldev/ftb/mods/ftblibrary/ui/Widget;)V", # FTB Library(Since 2101.1.14)
+  "journeymap.client.ui.waypointmanager.WaypointManager:lambda$getWaypointsForGroup$18(Ljourneymap/client/ui/waypointmanager/waypoint/WaypointSlot;)Z", # Journeymap (Since 6.00)
   "com.blamejared.searchables.api.SearchableComponent:lambda$create$2(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/Boolean;", # Searchables&Controlling (Since 1.0.2)
   "earth.terrarium.tempad.client.screen.tempad.PortalSetupScreen:initLocationPanel(Learth/terrarium/olympus/client/ui/ClearableGridLayout;)V", # Tempad (Since3.0.4)
   "earth.terrarium.tempad.client.screen.tempad.TeleportScreen:initLocationPanel(Learth/terrarium/olympus/client/ui/ClearableGridLayout;)V", # Tempad (Since3.0.4)
@@ -156,14 +156,14 @@
   "com.mna.gui.widgets.SpellPartList:bySearchTerm(Lcom/mna/api/spells/base/ISpellComponent;)Z", # mna
   "com.mna.guide.GuideBookEntries:lambda$searchEntries$2(Ljava/lang/String;Lcom/mna/guide/interfaces/IEntrySection;)Z", # mna
   "com.mna.guide.GuideBookEntries:lambda$searchEntries$5(Lnet/minecraft/client/Minecraft;Ljava/lang/String;Ljava/util/HashMap;Lcom/mna/guide/RelatedRecipe;)V", # mna end
-  "dev.emi.emi.screen.widget.config.ConfigEntryWidget:isVisible()Z", #EMi Config(since 1.1.22+1.21.1+neoforge)
+  "dev.emi.emi.screen.widget.config.ConfigEntryWidget:isVisible()Z", # EMi Config(since 1.1.22+1.21.1+neoforge)
   "moze_intel.projecte.utils.text.SearchQueryParser$QueryType$1:matches(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/player/Player;Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z", # Project E(since 1.1.0-1.21.1)
   "moze_intel.projecte.utils.text.SearchQueryParser$QueryType$2:matches(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/player/Player;Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z", # Project E(since 1.1.0-1.21.1)
   "moze_intel.projecte.utils.text.SearchQueryParser$QueryType$3:matches(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/player/Player;Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z", # Project E(since 1.1.0-1.21.1)
   "moze_intel.projecte.utils.text.SearchQueryParser$QueryType$4:lambda$matches$0(Ljava/lang/String;Lnet/minecraft/tags/TagKey;)Z", # Project E(since 1.1.0-1.21.1)
   "org.ae2LabeledPatterns.menus.LabeledPatternAccessTerminalScreen:itemStackMatchesSearchTerm(Lnet/minecraft/world/item/ItemStack;Ljava/lang/String;)Z", #AE2 Labeled Patterns
   "org.ae2LabeledPatterns.menus.LabeledPatternAccessTerminalScreen:refreshList()V", #AE2 Labeled Patterns
-  "fr.loxoz.csearcher.gui.SearchScreen:stackSearch(Lfr/loxoz/csearcher/core/CachedStack;Ljava/lang/String;)Z", #ContainerSearcher(since 0.3.1+mc1.21.1)
+  "fr.loxoz.csearcher.gui.SearchScreen:stackSearch(Lfr/loxoz/csearcher/core/CachedStack;Ljava/lang/String;)Z", # ContainerSearcher(since 0.3.1+mc1.21.1)
   "com.terraformersmc.mod_menu.util.mod.ModSearch:lambda$authorMatches$5(Ljava/lang/String;Ljava/lang/String;)Z", # Better ModList(since 1.1.20-1.21.1)
   "com.terraformersmc.mod_menu.util.mod.ModSearch:passesFilters(Lcom/terraformersmc/mod_menu/gui/ModsScreen;Lcom/terraformersmc/mod_menu/util/mod/Mod;Ljava/lang/String;)I",# Better ModList(since 1.1.20-1.21.1)
   "earth.terrarium.chipped.common.menus.WorkbenchMenu:lambda$updateResults$0(Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)V", # Chipped
@@ -183,11 +183,11 @@
   "com.moakiee.ae2lt.client.gui.FrequencyScreen:lambda$filteredFrequencies$0(Ljava/lang/String;Lcom/moakiee/ae2lt/client/ClientFrequencyCache$CachedFrequency;)Z", # AE2 Lightning Tech (since 1.0.1alpha-26.1.2neoforge)
 ]
 "equals": [
-  "com.hollingsworth.arsnouveau.client.container.AbstractStorageTerminalScreen:updateSearch()V", # Ars Nouveau  (Bookwyrm Lectern) (Since 1.21.1-5.8.3)
+  "com.hollingsworth.arsnouveau.client.container.AbstractStorageTerminalScreen:updateSearch()V", # Ars Nouveau (Bookwyrm Lectern) (Since 1.21.1-5.8.3)
   "me.shedaniel.clothconfig2.gui.entries.TextFieldListEntry:isMatchDefault(Ljava/lang/String;)Z", # Cloth Config
   'org.cyclops.integrateddynamics.core.client.gui.WidgetTextFieldDropdown:lambda$refreshDropdownList$0(Lorg/cyclops/integrateddynamics/core/client/gui/IDropdownEntry;)Z', #Integrated Dynamics
   'vazkii.botania.api.corporea.CorporeaRequestDefaultMatchers$CorporeaStringMatcher:equalOrContain(Ljava/lang/String;)Z', # Botania (Corporea)
-  "com.refinedmods.refinedstorage.common.grid.query.GridQueryParser:parseBinOp(Lcom/refinedmods/refinedstorage/query/parser/node/BinOpNode;)Lcom/refinedmods/refinedstorage/api/resource/repository/ResourceRepositoryFilter;",       #refinedstorage-neoforge-2.0.0-beta.2
+  "com.refinedmods.refinedstorage.common.grid.query.GridQueryParser:parseBinOp(Lcom/refinedmods/refinedstorage/query/parser/node/BinOpNode;)Lcom/refinedmods/refinedstorage/api/resource/repository/ResourceRepositoryFilter;", #refinedstorage-neoforge-2.0.0-beta.2
   "com.refinedmods.refinedstorage.common.grid.query.GridQueryParser:parseUnaryOp(Lcom/refinedmods/refinedstorage/query/parser/node/UnaryOpNode;)Lcom/refinedmods/refinedstorage/api/resource/repository/ResourceRepositoryFilter;",
   "com.refinedmods.refinedstorage.common.grid.screen.AbstractGridScreen:trySynchronizeToGrid()V",
   "com.refinedmods.refinedstorage.common.support.widget.History:save(Ljava/lang/String;)Z",
