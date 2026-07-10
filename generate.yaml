@@ -4,7 +4,7 @@
 
 "suffix": [
   "dev.emi.emi.search.EmiSearch:bake()V", #EMI Search
-  "me.fzzyhmstrs.fzzy_config.util.Searcher:searchDesc_delegate$lambda$3(Lme/fzzyhmstrs/fzzy_config/util/Searcher;)Lnet/minecraft/client/searchtree/SuffixArray;", # Fzzy Config  (since 0.7.6+1.20.1+forge)
+  "me.fzzyhmstrs.fzzy_config.util.Searcher:searchDesc_delegate$lambda$3(Lme/fzzyhmstrs/fzzy_config/util/Searcher;)Lnet/minecraft/client/searchtree/SuffixArray;", # Fzzy Config (since 0.7.6+1.20.1+forge)
   "me.fzzyhmstrs.fzzy_config.util.Searcher:search_delegate$lambda$0(Lme/fzzyhmstrs/fzzy_config/util/Searcher;)Lnet/minecraft/client/searchtree/SuffixArray;" # Fzzy Config (since 0.7.6+1.20.1+forge)
 ]
 "contains": [
@@ -168,7 +168,7 @@
   "com.gregtechceu.gtceu.api.gui.widget.ProspectingMapWidget:search(Ljava/lang/String;Ljava/util/function/Consumer;)V", # GregTech CEu Modern
   "net.fayebeard.bookffamiliars.GUI.FamiliarBookScreen:updateDropdown()V", # Book Of Familiars (since 1.20.1-2.1.1)
   "com.spaceagle17.irissearch.engine.ShaderOptionsSearchEngine:computeMatchTier(Ljava/lang/String;Ljava/lang/String;)I", # Iris & Oculus Search (since 1.4.1)
-  "com.spaceagle17.irissearch.engine.ShaderOptionsSearchEngine:matchesPrefixRange(Ljava/util/NavigableMap;Ljava/lang/String;Ljava/lang/String;)Z",  # Iris & Oculus Search (since 1.4.2)
+  "com.spaceagle17.irissearch.engine.ShaderOptionsSearchEngine:matchesPrefixRange(Ljava/util/NavigableMap;Ljava/lang/String;Ljava/lang/String;)Z", # Iris & Oculus Search (since 1.4.2)
 ]
 "equals": [
   "com.hollingsworth.arsnouveau.client.container.AbstractStorageTerminalScreen:updateSearch()V", # Ars Nouveau (Bookwyrm Lectern) (Since 1.20.1-4.12.7)
@@ -194,7 +194,7 @@
   'appeng.client.gui.me.search.SearchPredicates:lambda$createTooltipPredicate$4(Lappeng/client/gui/me/search/RepoSearch;Ljava/util/regex/Pattern;Lappeng/menu/me/common/GridInventoryEntry;)Z', #Applied Energistics 2(Since 12.9.8)
   'com.hollingsworth.arsnouveau.client.container.AbstractStorageTerminalScreen:updateSearch()V', #Ars Nouveau (since 1.19.2-3.21.4)
   "com.spaceagle17.irissearch.engine.ShaderOptionsSearchEngine:computeMatchTier(Ljava/lang/String;Ljava/lang/String;)I", # Iris & Oculus Search (since 1.4.1)
-  "com.spaceagle17.irissearch.engine.ShaderOptionsSearchEngine:matchesPrefixRange(Ljava/util/NavigableMap;Ljava/lang/String;Ljava/lang/String;)Z",  # Iris & Oculus Search (since 1.4.2)
+  "com.spaceagle17.irissearch.engine.ShaderOptionsSearchEngine:matchesPrefixRange(Ljava/util/NavigableMap;Ljava/lang/String;Ljava/lang/String;)Z", # Iris & Oculus Search (since 1.4.2)
   'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$getInstanceFilterPredicate$8(Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z', #Integrated Terminals(since 1.19.2-1.4.10)
   'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$getInstanceFilterPredicate$1(Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z', #Integrated Terminals(since 1.19.2-1.4.10)
   'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$getInstanceFilterPredicate$2(Ljava/lang/String;Lnet/minecraft/network/chat/Component;)Z', #Integrated Terminals(since 1.19.2-1.4.10)
