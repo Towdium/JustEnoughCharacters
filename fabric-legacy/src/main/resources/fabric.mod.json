@@ -26,7 +26,8 @@
       "me.towdium.jecharacters.asm.transformers.EqualsTransformer",
       "me.towdium.jecharacters.asm.transformers.RegExpTransformer",
       "me.towdium.jecharacters.asm.transformers.SuffixArrayTransformer",
-      "me.towdium.jecharacters.asm.transformers.JeiTransformer"
+      "me.towdium.jecharacters.asm.transformers.JeiTransformer",
+      "me.towdium.jecharacters.asm.transformers.HexcessibleTransformer"
     ]
   },
   "mixins": [
