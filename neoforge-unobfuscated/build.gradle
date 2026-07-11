@@ -70,6 +70,11 @@ dependencies {
     jarJar(implementation("com.github.towdium:PinIn:${verpinin}"))
     localRuntime "mezz.jei:jei-26.1.2-neoforge:${jei_unobfuscated_version}"
     compileOnly "mezz.jei:jei-26.1.2-common-api:${jei_unobfuscated_version}"
+    compileOnly "mezz.jei:jei-${minecraft_version}-core:29.6.2.31"
+    compileOnly "mezz.jei:jei-${minecraft_version}-common:29.15.0.45"
+    compileOnly('net.mezzdev:suffixtree:1.1.0') {
+        transitive = false
+    }
     compileOnly 'com.google.auto.service:auto-service-annotations:1.1.1'
     annotationProcessor 'com.google.auto.service:auto-service:1.1.1'
 }
