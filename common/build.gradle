@@ -21,10 +21,12 @@ dependencies {
     compileOnly "com.github.towdium:PinIn:${verpinin}"
     compileOnly 'org.ow2.asm:asm:9.6'
     compileOnly 'org.ow2.asm:asm-tree:9.6'
+    compileOnly('net.mezzdev:suffixtree:1.1.0') {
+        transitive = false
+    }
+    compileOnly "mezz.jei:jei-1.21.11-core:27.4.0.22"
+    compileOnly "mezz.jei:jei-1.21.11-core:27.4.0.24"
     compileOnly "mezz.jei:jei-${minecraft_version}-common-api:${jei_version}"
-    compileOnly "mezz.jei:jei-${minecraft_version}-common:${jei_version}"
-    compileOnly "mezz.jei:jei-${minecraft_version}-core:${jei_version}"
-    compileOnly "mezz.jei:jei-${minecraft_version}-gui:${jei_version}"
     compileOnly 'org.appliedenergistics:guideme:21.1.12'
 }
 

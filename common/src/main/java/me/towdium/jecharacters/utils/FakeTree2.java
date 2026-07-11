@@ -3,7 +3,7 @@ package me.towdium.jecharacters.utils;
 import me.towdium.jecharacters.JustEnoughCharacters;
 import me.towdium.jecharacters.config.JechConfig;
 import me.towdium.pinin.searchers.TreeSearcher;
-import mezz.jei.core.search.suffixtree.GeneralizedSuffixTree;
+import net.mezzdev.suffixtree.GeneralizedSuffixTree;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
@@ -11,7 +11,7 @@ import java.util.function.Consumer;
 
 import static me.towdium.jecharacters.utils.Match.searcher;
 
-public class FakeTree<T> extends GeneralizedSuffixTree<T> {
+public class FakeTree2<T> extends GeneralizedSuffixTree<T> {
 
     TreeSearcher<T> tree = searcher();
 
