@@ -21,7 +21,8 @@ dependencies {
     compileOnly project(':common')
     compileOnly(project(":fabric-common"))
     implementation project(":coremod-common")
-    compileOnly "mezz.jei:jei-${rootProject.minecraft_version}-core:${rootProject.jei_version}"
+    compileOnly "mezz.jei:jei-${project.minecraft_version}-common-api:${jei_unobfuscated_version}"
+    runtimeOnly "mezz.jei:jei-${project.minecraft_version}-fabric:${jei_unobfuscated_version}"
 	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
 	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
     compileOnly 'com.google.auto.service:auto-service-annotations:1.1.1'

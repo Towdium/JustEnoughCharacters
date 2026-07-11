@@ -6,6 +6,7 @@ plugins {
 }
 
 version = "${verspec}.${verbuild}"
+def quickPlaySingleplayerWorld = providers.gradleProperty("quickPlaySingleplayerWorld")
 
 base {
     archivesName = mod_id + '-' + minecraft_version + '-neoforge'
@@ -24,6 +25,15 @@ neoForge {
             systemProperty 'forge.logging.markers', 'REGISTRIES'
             logLevel = org.slf4j.event.Level.DEBUG
         }
+
+        client {
+            client()
+            gameDirectory = project.layout.projectDirectory.dir("run/client/Dev")
+            if (quickPlaySingleplayerWorld.isPresent()) {
+                programArgument "--quickPlaySingleplayer"
+                programArgument quickPlaySingleplayerWorld.get()
+            }
+        }
     }
 
     parchment {
@@ -39,6 +49,16 @@ neoForge {
 }
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
+tasks.withType(JavaCompile).configureEach {
+    options.release = 21
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
 configurations {
     runtimeClasspath.extendsFrom localRuntime
 }
@@ -49,7 +69,7 @@ dependencies {
     jarJar(project(':coremod-neoforge'))
     jarJar(implementation("com.github.towdium:PinIn:${verpinin}"))
     localRuntime "mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}"
-    compileOnly "mezz.jei:jei-${minecraft_version}-core:${jei_version}"
+    compileOnly "mezz.jei:jei-${minecraft_version}-common-api:${jei_version}"
     compileOnly 'com.google.auto.service:auto-service-annotations:1.1.1'
     annotationProcessor 'com.google.auto.service:auto-service:1.1.1'
 }

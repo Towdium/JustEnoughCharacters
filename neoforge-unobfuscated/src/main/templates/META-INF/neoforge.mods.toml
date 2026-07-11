@@ -13,5 +13,10 @@ credits = "Thanks to TartaricAcid, 3TUSK, Seraph_JACK, Snownee and many people f
 authors = "Towdium, yzl210, Death-123, vfyjxf_"
 description = "Pinyin search for JEI and more."
 
-
+[[dependencies.${mod_id}]]
+modId = "jei"
+type = "optional"
+versionRange = "[29.16.0.46,)"
+ordering = "AFTER"
+side = "CLIENT"
 

@@ -18,12 +18,14 @@
     "client": [
       "me.towdium.jecharacters.JustEnoughCharactersFabric"
     ],
+    "jei_mod_plugin": [
+      "me.towdium.jecharacters.JechJeiPlugin"
+    ],
     "jech:transformer": [
       "me.towdium.jecharacters.asm.transformers.ContainsTransformer",
       "me.towdium.jecharacters.asm.transformers.EqualsTransformer",
       "me.towdium.jecharacters.asm.transformers.RegExpTransformer",
-      "me.towdium.jecharacters.asm.transformers.SuffixArrayTransformer",
-      "me.towdium.jecharacters.asm.transformers.JeiTransformer"
+      "me.towdium.jecharacters.asm.transformers.SuffixArrayTransformer"
     ]
   },
   "mixins": [
@@ -34,5 +36,8 @@
     "fabric": "*",
     "minecraft": ">=1.16.5",
     "java": ">=8"
+  },
+  "breaks": {
+    "jei": "<26.3.0.31"
   }
 }

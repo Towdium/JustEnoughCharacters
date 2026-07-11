@@ -2,7 +2,7 @@ package dev.vfyjxf.gradle;
 
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
-import org.gradle.api.tasks.bundling.Jar;
+import org.gradle.language.jvm.tasks.ProcessResources;
 import org.jetbrains.annotations.NotNull;
 
 public class JechBuiltinPlugin implements Plugin<Project> {
@@ -17,8 +17,8 @@ public class JechBuiltinPlugin implements Plugin<Project> {
             var outputDir = project.getLayout().getBuildDirectory().file("jech-cache/targets.json");
             task.getConfigFile().set(outputDir);
         });
-        project.getTasks().named("jar", Jar.class, jar -> {
-            jar.from(generateTargetConfig, copySpec -> {
+        project.getTasks().named("processResources", ProcessResources.class, processResources -> {
+            processResources.from(generateTargetConfig, copySpec -> {
                 copySpec.into("me/towdium/jecharacters");
             });
         });

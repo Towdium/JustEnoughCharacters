@@ -21,7 +21,8 @@ dependencies {
     implementation "com.github.towdium:PinIn:${verpinin}"
     include "com.github.Towdium:PinIn:${verpinin}"
     implementation project(":coremod-common")
-    compileOnly "mezz.jei:jei-${minecraft_version}-core:${jei_version}"
+    compileOnly "mezz.jei:jei-${minecraft_version}-common-api:${jei_version}"
+    modRuntimeOnly "mezz.jei:jei-${minecraft_version}-fabric:${jei_version}"
     modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
 
