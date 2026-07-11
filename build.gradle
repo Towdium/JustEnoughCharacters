@@ -218,8 +218,34 @@ subprojects { Project p ->
                     pAfter.sourcesJar {
                         from forgeBase.sourceSets.main.allJava
                     }
+
+                    def discoveredCoremodScripts = pAfter.files()
+                    [pAfter.sourceSets.main.resources,
+                     forgeBase.sourceSets.main.resources].each { resourceSet ->
+                        resourceSet.srcDirs.each { File resourceDirectory ->
+                            discoveredCoremodScripts.from(
+                                    pAfter.fileTree(resourceDirectory) {
+                                        include 'coremods/**/*_transformer.js'
+                                    }
+                            )
+                        }
+                    }
+
+                    def generatedCoremodsResources = pAfter.layout.buildDirectory.dir('generated/resources/coremods')
+                    def generateCoremodsJson = pAfter.tasks.register(
+                            'generateCoremodsJson',
+                            GenerateCoremodsJson
+                    ) {
+                        coremodScripts.from(discoveredCoremodScripts)
+                        outputFile.set(generatedCoremodsResources.map {
+                            it.file('META-INF/coremods.json')
+                        })
+                    }
                     pAfter.processResources {
-                        from forgeBase.sourceSets.main.resources
+                        dependsOn(generateCoremodsJson)
+
+                        from(forgeBase.sourceSets.main.resources)
+                        from(generatedCoremodsResources)
                     }
                 }
             }
@@ -327,4 +353,61 @@ static boolean containsForgeFluidStack(String s) {
 
 static String getMapping(String namespace, List<Map<String, String>> list) {
     return list.find { (it.keySet().contains(namespace)) }.get(namespace)
+}
+
+abstract class GenerateCoremodsJson extends DefaultTask {
+
+    @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
+    abstract ConfigurableFileCollection getCoremodScripts()
+
+    @OutputFile
+    abstract RegularFileProperty getOutputFile()
+
+    @TaskAction
+    void generate() {
+        Map<String, String> entries = new TreeMap<>()
+
+        coremodScripts.files
+                .findAll(File::isFile)
+                .sort { first, second -> GenerateCoremodsJson.normalizePath(first) <=> GenerateCoremodsJson.normalizePath(second) }
+                .each { File script ->
+                    String absolutePath = GenerateCoremodsJson.normalizePath(script)
+                    int coremodsIndex = absolutePath.lastIndexOf('/coremods/')
+
+                    if (coremodsIndex < 0) {
+                        throw new GradleException("CoreMod script is not inside a coremods directory: ${script}")
+                    }
+                    String resourcePath =
+                            absolutePath.substring(coremodsIndex + 1)
+
+                    String fileName = script.name
+                    String identifier = fileName.substring(0, fileName.length() - '.js'.length())
+
+                    String previous = entries.putIfAbsent(identifier, resourcePath)
+                    if (previous != null && previous != resourcePath) {
+                        throw new GradleException("Duplicate CoreMod identifier '${identifier}': " + "'${previous}' and '${resourcePath}'")
+                    }
+                }
+
+        JsonObject json = new JsonObject()
+
+        entries.each { String identifier, String resourcePath ->
+            json.addProperty(identifier, resourcePath)
+        }
+
+        File output = outputFile.get().asFile
+        output.parentFile.mkdirs()
+
+        String content = new GsonBuilder()
+                .setPrettyPrinting()
+                .create()
+                .toJson(json)
+
+        output.setText(content + System.lineSeparator(), 'UTF-8')
+    }
+
+    private static String normalizePath(File file) {
+        return file.absolutePath.replace(File.separator, '/')
+    }
 }
