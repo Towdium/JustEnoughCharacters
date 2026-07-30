@@ -26,7 +26,7 @@ function initializeCoreMod() {
                         injected.add(new VarInsnNode(Opcodes.ALOAD, 1));
                         injected.add(new MethodInsnNode(
                             Opcodes.INVOKESTATIC,
-                            'me/towdium/jecharacters/forge/utils/HexcessibleHooks',
+                            'me/towdium/jecharacters/utils/HexcessibleHooks',
                             'mergeScore',
                             '(ILjava/lang/String;Ljava/lang/String;)I',
                             false));
