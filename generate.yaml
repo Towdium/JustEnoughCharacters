@@ -167,16 +167,18 @@
   "me.codexadrian.tempad.client.gui.ConsolidatedScreen:lambda$init$4(Ljava/lang/String;Lme/codexadrian/tempad/common/data/LocationData;)Z", # Tempad (since 2.3.4 1.20.1)
   "com.gregtechceu.gtceu.api.gui.widget.ProspectingMapWidget:search(Ljava/lang/String;Ljava/util/function/Consumer;)V", # GregTech CEu Modern
   "net.fayebeard.bookffamiliars.GUI.FamiliarBookScreen:updateDropdown()V", # Book Of Familiars (since 1.20.1-2.1.1)
-  "com.spaceagle17.irissearch.engine.ShaderOptionsSearchEngine:computeMatchTier(Ljava/lang/String;Ljava/lang/String;)I", # Iris & Oculus Search (since 1.4.1)
-  "com.spaceagle17.irissearch.engine.ShaderOptionsSearchEngine:matchesPrefixRange(Ljava/util/NavigableMap;Ljava/lang/String;Ljava/lang/String;)Z", # Iris & Oculus Search (since 1.4.2)
+  "com.spaceagle17.irissearch.engine.IrisShaderPackTranslations:matchesPrefixRange(Ljava/util/NavigableMap;Ljava/lang/String;Ljava/lang/String;)Z", # Iris & Oculus Search (since 1.5.1)
+  "com.spaceagle17.irissearch.engine.ShaderOptionsSearchEngine:scanQueryStringTier(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)I", # Iris & Oculus Search (since 1.5.1)
+  "com.spaceagle17.irissearch.engine.ShaderPackSearchEngine:computeIsPopular(Ljava/lang/String;)Z", # Iris & Oculus Search (since 1.5.1)
+  "journeymap.client.ui.waypointmanager.WaypointManagerQueryService:lambda$buildWaypointRows$6(Ljava/lang/String;Ljourneymap/client/waypoint/ClientWaypointImpl;)Z", # JourneyMap (since 1.20.1-6.0.0-beta.6+forge)
+  "fr.loxoz.csearcher.gui.GuiSearch:stackSearch(Lfr/loxoz/csearcher/core/CachedStack;Ljava/lang/String;)Z", # ContainerSearcher (since 0.2.1+mc1.20.1)
+  "infinityitemeditor.screen.WheelScreen:filter()V", # Infinity Item Editor (since 1.2.4 1.16.5)
 ]
 "equals": [
   "com.hollingsworth.arsnouveau.client.container.AbstractStorageTerminalScreen:updateSearch()V", # Ars Nouveau (Bookwyrm Lectern) (Since 1.20.1-4.12.7)
   "me.shedaniel.clothconfig2.gui.entries.TextFieldListEntry:isMatchDefault(Ljava/lang/String;)Z", # Cloth Config (since 11.1.136+forge 1.20.1)
   'org.cyclops.integrateddynamics.core.client.gui.WidgetTextFieldDropdown:lambda$refreshDropdownList$0(Lorg/cyclops/integrateddynamics/core/client/gui/IDropdownEntry;)Z', #Integrated Dynamics
   'vazkii.botania.api.corporea.CorporeaRequestDefaultMatchers$CorporeaStringMatcher:equalOrContain(Ljava/lang/String;)Z', #Botania (Corporea)
-  "com.spaceagle17.irissearch.engine.ShaderOptionsSearchEngine:computeMatchTier(Ljava/lang/String;Ljava/lang/String;)I", # Iris & Oculus Search (since 1.4.1)
-  "com.spaceagle17.irissearch.engine.ShaderPackSearchEngine:computeMatchTier(Ljava/lang/String;Ljava/lang/String;)I", # Iris & Oculus Search (since 1.4.1)
 ]
 "regExp": [
   'appeng.client.gui.me.search.SearchPredicates:lambda$createNamePredicate$3(Ljava/util/regex/Pattern;Lappeng/menu/me/common/GridInventoryEntry;)Z', #since Applied Energistics 2-12.9.5
@@ -193,8 +195,6 @@
   'appeng.client.gui.me.search.SearchPredicates:lambda$createNamePredicate$3(Ljava/util/regex/Pattern;Lappeng/menu/me/common/GridInventoryEntry;)Z', #Applied Energistics 2(Since 12.9.8)
   'appeng.client.gui.me.search.SearchPredicates:lambda$createTooltipPredicate$4(Lappeng/client/gui/me/search/RepoSearch;Ljava/util/regex/Pattern;Lappeng/menu/me/common/GridInventoryEntry;)Z', #Applied Energistics 2(Since 12.9.8)
   'com.hollingsworth.arsnouveau.client.container.AbstractStorageTerminalScreen:updateSearch()V', #Ars Nouveau (since 1.19.2-3.21.4)
-  "com.spaceagle17.irissearch.engine.ShaderOptionsSearchEngine:computeMatchTier(Ljava/lang/String;Ljava/lang/String;)I", # Iris & Oculus Search (since 1.4.1)
-  "com.spaceagle17.irissearch.engine.ShaderOptionsSearchEngine:matchesPrefixRange(Ljava/util/NavigableMap;Ljava/lang/String;Ljava/lang/String;)Z", # Iris & Oculus Search (since 1.4.2)
   'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$getInstanceFilterPredicate$8(Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z', #Integrated Terminals(since 1.19.2-1.4.10)
   'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$getInstanceFilterPredicate$1(Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z', #Integrated Terminals(since 1.19.2-1.4.10)
   'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$getInstanceFilterPredicate$2(Ljava/lang/String;Lnet/minecraft/network/chat/Component;)Z', #Integrated Terminals(since 1.19.2-1.4.10)
