@@ -170,7 +170,7 @@
   "com.spaceagle17.irissearch.engine.IrisShaderPackTranslations:matchesPrefixRange(Ljava/util/NavigableMap;Ljava/lang/String;Ljava/lang/String;)Z", # Iris & Oculus Search (since 1.5.1)
   "com.spaceagle17.irissearch.engine.ShaderOptionsSearchEngine:scanQueryStringTier(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)I", # Iris & Oculus Search (since 1.5.1)
   "com.spaceagle17.irissearch.engine.ShaderPackSearchEngine:computeIsPopular(Ljava/lang/String;)Z", # Iris & Oculus Search (since 1.5.1)
-  "journeymap.client.ui.waypointmanager.WaypointManagerQueryService:lambda$buildWaypointRows$6(Ljava/lang/String;Ljourneymap/client/waypoint/ClientWaypointImpl;)Z", # JourneyMap (since 1.20.1-6.0.0-beta.6+forge)
+  "journeymap.client.ui.waypointmanager.WaypointManagerQueryService:lambda$buildWaypointRows$6(Ljava/lang/String;Ljourneymap/client/waypoint/ClientWaypointImpl;)Z", # JourneyMap (Waypoint Search, since 1.20.1-6.0.0-beta.6+forge)
   "fr.loxoz.csearcher.gui.GuiSearch:stackSearch(Lfr/loxoz/csearcher/core/CachedStack;Ljava/lang/String;)Z", # ContainerSearcher (since 0.2.1+mc1.20.1)
   "infinityitemeditor.screen.WheelScreen:filter()V", # Infinity Item Editor (since 1.2.4 1.16.5)
 ]
