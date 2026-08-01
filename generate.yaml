@@ -8,7 +8,7 @@
 "contains": [
   "net.minecraft.client.gui.screens.worldselection.WorldSelectionList:filterAccepts(Ljava/lang/String;Lnet/minecraft/world/level/storage/LevelSummary;)Z", # Minecraft World Selection List Search
   "net.minecraft.class_528:method_43453(Ljava/lang/String;Lnet/minecraft/class_34;)Z", # Minecraft World Selection List Search (Fabric, Legacy, Intermediary Mappings)
-  "net.minecraft.client.gui.screens.worldselection.AbstractGameRulesScreen$RuleList:toLowerCaseMatchesFilter(Ljava/lang/String;Ljava/lang/String;)Z", # Minecraft Gamerule Screen Search (sinse 26.1)
+  "net.minecraft.client.gui.screens.worldselection.AbstractGameRulesScreen$RuleList:toLowerCaseMatchesFilter(Ljava/lang/String;Ljava/lang/String;)Z", # Minecraft Gamerule Screen Search (since 26.1)
   "binnie.core.machines.storage.SearchDialog:updateSearch()V", #Binnie Core
   "com.chaosthedude.naturescompass.gui.NaturesCompassScreen:processSearchTerm()V", # Nature's Compass
   "blusunrize.lib.manual.ManualElementItem:listForSearch(Ljava/lang/String;)Z", # Immersive Engineering (Since 1.21.1-12.3.1-189)
