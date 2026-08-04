@@ -329,6 +329,7 @@ public class JechConfig {
                             "crazypants.enderio.invpanel.client.AbstractItemEntryFilter$NameEntryFilter:matches",  // Ender IO (Inventory Panel)
                             "mezz.jei.search.ElementSearchLowMem:matches",  // Had Enough Items (Low Memory)
                             "com.brandon3055.projectintelligence.client.gui.guielements.GuiPartPageList:doesPageMatchSearch",  // Project Intelligence
+                            "mcjty.xnet.blocks.controller.gui.GuiController:populateList",  // Xnet
                             "mcjty.xnet.blocks.controller.gui.GuiController:matchesSearch",  // Znet (Xnet fork)
                             "com.github.mrnerdy42.keywizard.gui.GuiBindingList:lambda$filterBindingsByName$6",  // Keyboard Wizard
                             "mrnerdy42.keywizard.gui.GuiBindingList:lambda$filterBindingsByName$14",  // Keyboard Wizard CE
