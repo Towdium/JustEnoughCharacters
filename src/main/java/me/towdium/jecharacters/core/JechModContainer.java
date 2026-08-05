@@ -34,7 +34,7 @@ public class JechModContainer extends DummyModContainer {
         ModMetadata meta = getMetadata();
         meta.modId = "jecharacters";
         meta.name = "Just Enough Characters";
-        meta.version = "@VERSION@";
+        meta.version = VersionInfo.version;
         meta.authorList = Collections.singletonList("Towdium");
         meta.description = "Help JEI read Pinyin";
         meta.url = "https://minecraft.curseforge.com/projects/just-enough-characters";

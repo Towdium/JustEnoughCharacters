@@ -1,73 +1,115 @@
-buildscript {
-    repositories {
-        jcenter()
-        maven { url = "http://files.minecraftforge.net/maven" }
-    }
-    dependencies {
-        classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
-    }
+plugins {
+    id 'java'
+    id 'net.minecraftforge.gradle' version "${gradle_version}"
+    id 'net.minecraftforge.renamer' version '1.1.7'
 }
-apply plugin: 'net.minecraftforge.gradle.forge'
 
 version = "${mc_version}-${proj_version}"
-group= "me.towdium.jecharacters"
-archivesBaseName = "jecharacters"
-
-//noinspection GroovyAssignabilityCheck
-tasks.withType(JavaCompile) {
-    options.encoding = 'UTF-8'
+group = "me.towdium.jecharacters"
+base {
+    archivesName = "jecharacters"
 }
 
-compileJava {
-    sourceCompatibility = targetCompatibility = '1.8'
-}
+java.toolchain.languageVersion = JavaLanguageVersion.of(8)
 
 minecraft {
-    version = "1.12.2-14.23.5.2838"
-    runDir = "run"
-    mappings = "snapshot_20180410"
+    mappings channel: 'snapshot', version: mapping_version
+    runs {
+        register('client') {
+            workingDir = file('run')
+        }
+        register('server') {
+            args '--nogui'
+            workingDir = file('run')
+        }
+    }
+}
 
-    replace '@VERSION@', project.version
+repositories {
+    minecraft.mavenizer(it)
+    maven fg.forgeMaven
+    maven fg.minecraftLibsMaven
+    mavenCentral()
+    maven { url = 'https://repo.cleanroommc.com/releases' }
+    maven { url = 'https://dvs1.progwml6.com/files/maven' }
+    maven { url = 'https://modmaven.dev' }
 }
 
 configurations {
     shade
-    compile.extendsFrom shade
+    implementation.extendsFrom shade
 }
 
 dependencies {
-    compile 'mezz.jei:jei_1.12.2:4.16.1.301'
-    shade files("libs/PinIn-1.6.0-all.jar")
-    testCompile 'org.junit.jupiter:junit-jupiter-api:5.2.0'
+    implementation minecraft.dependency("net.minecraftforge:forge:${minecraft_version}-${forge_version}")
+    // Both JEI line mods are compileOnly; drop the mod jar into run/mods for dev runs
+    // (loading both on the runtime classpath would clash on the mod id "jei").
+    // HEI must be declared first so its mezz.jei.api types win on the compile classpath.
+    compileOnly "mezz:jei:${hei_version}"                // Had Enough Items (new search API)
+    compileOnly "mezz.jei:jei_1.12.2:${jei_version}"     // legacy JEI
+    shade files('libs/PinIn-1.6.0-all.jar')
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.2.0'
 }
 
-repositories {
-    mavenCentral()
-    maven { url = "https://dvs1.progwml6.com/files/maven" }
-    maven { url = "modmaven.k-4u.nl" }
+// ForgeGradle 7 has no `minecraft.replace`, so the @VERSION@ tokens in the sources are
+// replaced by generating a VersionInfo class before compilation.
+def versionInfoDir = layout.buildDirectory.dir('generated/versionInfo/java')
+
+tasks.register('generateVersionInfo') {
+    outputs.dir(versionInfoDir)
+    inputs.property('version', project.version)
+    doLast {
+        def file = versionInfoDir.get().file('me/towdium/jecharacters/core/VersionInfo.java').asFile
+        file.parentFile.mkdirs()
+        // The literal is passed through notInline(...), so the field initializer is not a
+        // compile-time constant expression and javac cannot inline it into referencing classes.
+        file.text = "package me.towdium.jecharacters.core;\n" +
+                "\n" +
+                "/** Generated from build.gradle, do not edit. */\n" +
+                "public class VersionInfo {\n" +
+                "    public static final String version = notInline(\"${project.version}\");\n" +
+                "\n" +
+                "    private static String notInline(String s) {\n" +
+                "        return s;\n" +
+                "    }\n" +
+                "}\n"
+    }
 }
+
+sourceSets.main.java.srcDir(versionInfoDir)
+tasks.named('compileJava') { dependsOn 'generateVersionInfo' }
 
 processResources {
     inputs.property "version", project.version
-    inputs.property "mcversion", project.minecraft.version
+    inputs.property "mcversion", "${minecraft_version}-${forge_version}"
 
-    from(sourceSets.main.resources.srcDirs) {
-        include 'mcmod.info'
-        expand 'version':project.version, 'mcversion':project.minecraft.version
-    }
-
-    from(sourceSets.main.resources.srcDirs) {
-        exclude 'mcmod.info'
+    filesMatching('mcmod.info') {
+        expand 'version': project.version, 'mcversion': "${minecraft_version}-${forge_version}"
     }
 }
 
 jar {
     manifest {
         attributes 'FMLCorePlugin': 'me.towdium.jecharacters.core.JechCore'
+        attributes 'FMLCorePluginContainsFMLMod': 'true'
     }
     configurations.shade.each { dep ->
         from(project.zipTree(dep)) {
             include 'me/towdium/pinin/**'
         }
     }
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+// Reobfuscate the mod jar from MCP names to SRG names, required for 1.12.2 at runtime.
+// See https://github.com/MinecraftForge/MDKExamples/tree/master/obfuscation/fg7
+renamer.mappings.from minecraft.dependency.toSrgFile
+
+// Creates the 'renameJar' task, producing 'jecharacters-<version>-srg.jar'.
+renamer.classes(tasks.named('jar', Jar)) {
+    map.from minecraft.dependency.toSrgFile
+    archiveClassifier = 'srg'
 }

@@ -2,6 +2,7 @@ package me.towdium.jecharacters.util;
 
 import com.google.gson.Gson;
 import me.towdium.jecharacters.core.JechCore;
+import me.towdium.jecharacters.core.VersionInfo;
 import net.minecraftforge.common.MinecraftForge;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Handle;
@@ -149,7 +150,7 @@ public class Profiler {
 
     @SuppressWarnings("unused")
     public static class Report {
-        String version = "@VERSION@";
+        String version = VersionInfo.version;
         String mcversion = MinecraftForge.MC_VERSION;
         String date;
         JarContainer[] jars;

@@ -15,7 +15,7 @@ import java.util.Map;
 public class JechCore implements IFMLLoadingPlugin {
     public static final String MODID = "jecharacters";
     public static final Logger LOG = LogManager.getLogger(MODID);
-    public static final String VERSION = "@VERSION@";
+    public static final String VERSION = VersionInfo.version;
     public static File source;
     public static boolean INITIALIZED = false;
 
