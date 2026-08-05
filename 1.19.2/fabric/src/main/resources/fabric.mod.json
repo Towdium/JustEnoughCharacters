@@ -18,6 +18,9 @@
     "client": [
       "me.towdium.jecharacters.fabric.JustEnoughCharactersFabric"
     ],
+    "jei_mod_plugin": [
+      "me.towdium.jecharacters.JechJeiPlugin"
+    ],
     "jech:transformer": [
       "me.towdium.jecharacters.asm.transformers.ContainsTransformer",
       "me.towdium.jecharacters.asm.transformers.EqualsTransformer",

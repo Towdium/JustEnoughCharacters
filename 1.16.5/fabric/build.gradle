@@ -20,8 +20,6 @@ dependencies {
 
     common(project(path: ":${parent.mc_version}:common", configuration: "namedElements"))
     shadowCommon(project(path: ":${parent.mc_version}:common", configuration: "transformProductionFabric")) { transitive = false }
-
-    modImplementation "curse.maven:jei-238222:4593546"
 }
 
 processResources {
