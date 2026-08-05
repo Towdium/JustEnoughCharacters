@@ -281,6 +281,8 @@ public class JechConfig {
                             "betterquesting.api2.client.gui.panels.lists.CanvasFluidDatabase:queryMatches",  // BetterQuesting fluid search
                             "betterquesting.api2.client.gui.panels.lists.CanvasItemDatabase:queryMatches",  // BetterQuesting item search
                             "betterquesting.api2.client.gui.panels.lists.CanvasQuestDatabase:queryMatches",  // BetterQuesting quest search
+                            "betterquesting.client.gui2.editors.tasks.CanvasAdvancementSearch:queryMatches",  // Better Questing Unofficial (Editor Advancement Search)
+                            "betterquesting.client.gui2.editors.GuiTaskEditor$1:queryMatches",  // Better Questing Unofficial (Editor Search)
                             "com.elytradev.correlated.C28n:contains",  // Correlated
                             "vswe.stevesfactory.components.ComponentMenuContainer$2:updateSearch",  // Steve's Factory Manager container search
                             "vswe.stevesfactory.components.ComponentMenuFluid:updateSearch",  // Steve's Factory Manager fluid search
@@ -296,20 +298,57 @@ public class JechConfig {
                             "net.blay09.mods.farmingforblockheads.container.ContainerMarketClient:applyFilters",  // Farming for Blockheads
                             "mrriegel.storagenetwork.gui.GuiContainerStorageInventory:doesStackMatchSearch",  // simple storage network storage
                             "mrriegel.storagenetwork.gui.fb.GuiFastNetworkCrafter:doesStackMatchSearch",  // simple storage network crafting
-                            "com.feed_the_beast.ftblib.lib.gui.misc.GuiButtonListBase$1:add",  // FTB quests quest search
-                            "com.feed_the_beast.ftblib.lib.gui.misc.GuiSelectItemStack$ItemStackButton:shouldAdd",  // FTB quests item search
-                            "com.latmod.mods.projectex.gui.GuiTableBase:updateValidItemList",  // Project EX
+                            "com.feed_the_beast.ftblib.lib.gui.misc.GuiButtonListBase$1:add",  // FTB Quests (quest search, double-tap Shift)
+                            "com.feed_the_beast.ftblib.lib.gui.misc.GuiSelectItemStack$ItemStackButton:shouldAdd",  // FTB quests (Edit mode item search)
+                            "com.latmod.mods.projectex.gui.GuiTableBase:updateValidItemList",  // Project EX & ProjectEZ
                             "amerifrance.guideapi.gui.GuiSearch:getMatches",  // Guide-API
                             "thaumcraft.client.gui.GuiResearchBrowser:updateSearch",  // Thaumcraft
                             "astavie.thermallogistics.client.gui.GuiTerminalItem:updateFilter",  // Thermal Logistics
                             "com.the9grounds.aeadditions.gui.GuiTerminal:updateFluids", // AE Additions Terminal
                             "com.the9grounds.aeadditions.gui.GuiStorage:updateFluids", // AE Additions Terminal
-                            "me.desht.pneumaticcraft.common.recipes.AmadronOffer:passesQuery", //PneumaticCraft Amadron
+                            "me.desht.pneumaticcraft.common.recipes.AmadronOffer:passesQuery",  // PneumaticCraft (Amadron)
+                            "me.desht.pneumaticcraft.client.gui.GuiSearcher$SearchEntry:test",  // PneumaticCraft (Item Search)
+                            "me.desht.pneumaticcraft.client.gui.programmer.GuiProgWidgetLiquidFilter:addValidFluids",  // PneumaticCraft (Fluid Search)
                             "appeng.client.me.ItemRepo:updateView", // AE2 Unofficial Extended Life(legacy)
                             "appeng.client.me.ItemRepo:lambda$updateView$0", //AE2 Unofficial Extended Life
                             "appeng.client.gui.implementations.GuiInterfaceConfigurationTerminal:refreshList",  //AE2 Unofficial Extended Life
                             "appeng.client.gui.implementations.GuiInterfaceConfigurationTerminal:itemStackMatchesSearchTerm",  //AE2 Unofficial Extended Life(legacy)
-                            "appeng.client.me.ItemRepo:addIAE" //AE2 Unofficial Extended Life
+                            "appeng.client.me.ItemRepo:addIAE", //AE2 Unofficial Extended Life
+                            "ruukas.infinityeditor.gui.GuiEnchanting:filterEnchantments",  // Infinity Item Editor (Enchanting)
+                            "ruukas.infinityeditor.gui.GuiPick:func_73866_w_",  // Infinity Item Editor (pick item)
+                            "ruukas.infinityeditor.gui.GuiPotion:filterPotions",  // Infinity Item Editor (Potion)
+                            "com.supermobtracker.client.gui.GuiMobTracker$MobListWidget:lambda$rebuildFiltered$1",  // Super Mob Tracker
+                            "com.chaosthedude.naturescompass.gui.GuiNaturesCompass:processSearchTerm",  // Nature's Compass
+                            "journeymap.client.ui.waypointmanager.WaypointManagerQueryService:lambda$buildWaypointRows$7",  // JourneyMap (Waypoint Search, since 1.12.2-6.0.0-beta.3)
+                            "vazkii.patchouli.client.book.BookEntry:isFoundByQuery",  // Patchouli
+                            "dev.emi.emi.search.NameQuery:matchesUnbaked",  // retroEMI Forge (search)
+                            "dev.emi.emi.search.TooltipQuery:matchesUnbaked",  // retroEMI Forge (Tooltip Search)
+                            "dev.emi.emi.screen.widget.config.ConfigEntryWidget:isVisible",  // retroEMI Forge (Config Search)
+                            "com.xray.gui.manage.GuiBlockListScrollable:reloadBlocks",  // Advanced Xray
+                            "com.xray.gui.GuiSelectionScreen:lambda$updateSearch$0",  // Advanced Xray
+                            "crazypants.enderio.invpanel.client.AbstractItemEntryFilter$NameEntryFilter:matches",  // Ender IO (Inventory Panel)
+                            "mezz.jei.search.ElementSearchLowMem:matches",  // Had Enough Items (Low Memory)
+                            "com.brandon3055.projectintelligence.client.gui.guielements.GuiPartPageList:doesPageMatchSearch",  // Project Intelligence
+                            "mcjty.xnet.blocks.controller.gui.GuiController:populateList",  // Xnet
+                            "mcjty.xnet.blocks.controller.gui.GuiController:matchesSearch",  // Znet (Xnet fork)
+                            "com.github.mrnerdy42.keywizard.gui.GuiBindingList:lambda$filterBindingsByName$6",  // Keyboard Wizard
+                            "mrnerdy42.keywizard.gui.GuiBindingList:lambda$filterBindingsByName$14",  // Keyboard Wizard CE
+                            "com.latmod.mods.itemfilters.gui.GuiEditStringValueFilter:updateVariants",  // Item Filters
+                            "io.github.phantamanta44.threng.inventory.ContainerBigAssembler$Page$SlotPage:matchesQuery",  // Lazy AE2 (Mass Assembly Chamber)
+                            "com.fuzs.gamblingstyle.client.gui.data.TradingRecipeList:lambda$search$1",  // Gambling Style
+                            "wolforce.vaultopic.Searcher:isValid",  // Vaultopic (V.I.E.W)
+                            "vswe.superfactory.components.ComponentMenuContainer$2:getSearchResults",  // Super Factory Manager (Container Search)
+                            "vswe.superfactory.components.ComponentMenuFluid:updateSearch",  // Super Factory Manager (Fluid Search)
+                            "com.mekeng.github.client.gui.GuiGasInterfaceConfigurationTerminal:gasStackMatchesSearchTerm",  // Mekanism Energistics (Gas Terminal)
+                            "mekanism.common.content.qio.QIOSearchQueryParser$QueryType:lambda$static$3",  // Mekanism CE Unofficial (QIO)
+                            "mekanism.common.content.qio.QIOSearchQueryParser$QueryType:lambda$static$2",  // Mekanism CE Unofficial (QIO)
+                            "mekanism.common.content.qio.QIOSearchQueryParser$QueryType:lambda$static$1",  // Mekanism CE Unofficial (QIO)
+                            "mekanism.common.content.qio.QIOSearchQueryParser$QueryType:lambda$static$0",  // Mekanism CE Unofficial (QIO)
+                            "com.cellterminal.gui.handler.TerminalDataManager:storageBusMatchesSearchFilter",  // Cell Terminal (ME Storage Bus Search)
+                            "com.cellterminal.gui.handler.TerminalDataManager:cellMatchesSearchFilter",  // Cell Terminal (Cell Search)
+                            "com.cellterminal.client.AdvancedSearchParser:hasWildcards",  // Cell Terminal (Advanced Search)
+                            "com.cellterminal.client.AdvancedSearchParser:compareSingleString",  // Cell Terminal (Advanced Search)
+                            "electroblob.wizardry.spell.Spell:matches"  // Electroblob's Wizardry (Lectern)
                     };
                 case LIST_DEFAULT_REGEXP:
                     return new String[]{
@@ -331,7 +370,10 @@ public class JechConfig {
                             "thaumicenergistics.client.gui.helpers.MERepo:searchTooltip",  // Thaumic Energistics
                             "thaumicenergistics.client.gui.helpers.MERepo:searchMod",  // Thaumic Energistics
                             "thaumicenergistics.client.gui.helpers.MERepo:lambda$searchAspects$5",  // Thaumic Energistics
-                            "appeng.client.me.ItemRepo:addIAE" //AE2 Unofficial Extended Life
+                            "appeng.client.me.ItemRepo:addIAE", //AE2 Unofficial Extended Life
+                            "dev.emi.emi.search.RegexNameQuery:matches",  // retroEMI Forge (Regex Search)
+                            "dev.emi.emi.search.RegexTooltipQuery:matches",  // retroEMI Forge (Regex Tooltip Search)
+                            "vswe.superfactory.util.SearchUtil$Query:lambda$new$0"  // Super Factory Manager (item Search)
                     };
                 case LIST_DEFAULT_SUFFIX:
                     return new String[]{
