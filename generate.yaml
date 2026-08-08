@@ -24,8 +24,9 @@
   "com.chaosthedude.naturescompass.gui.NaturesCompassScreen:processSearchTerm()V", # Nature‘s Compass
   "org.cyclops.integrateddynamics.core.client.gui.WidgetTextFieldDropdown:refreshDropdownList()V", #Integrated Dynamics
   "betterquesting.api2.client.gui.panels.lists.CanvasQuestDatabase:queryMatches(Lbetterquesting/api2/storage/DBEntry;Ljava/lang/String;Ljava/util/ArrayDeque;)V", #Better Questing
-  "com.minecolonies.coremod.client.gui.WindowHutAllInventory:lambda$updateResources$1(Lcom/minecolonies/api/crafting/ItemStorage;)Z", # MineColonies (Legacy)
-  "com.minecolonies.core.client.gui.WindowHutAllInventory:lambda$updateResources$2(Lcom/minecolonies/api/crafting/ItemStorage;)Z", # Minecolonies (Since 1.20.1-1.1.1215-snapshot)
+  "com.minecolonies.coremod.client.gui.WindowHutAllInventory:lambda$updateResources$1(Lcom/minecolonies/api/crafting/ItemStorage;)Z", # MineColonies (Legacy, Warehouse)
+  "com.minecolonies.coremod.client.gui.WindowHutAllInventory:lambda$updateResources$2(Lcom/minecolonies/api/crafting/ItemStorage;)Z", # MineColonies (Warehouse, since 1.16.5-1.0.978)
+  "com.minecolonies.core.client.gui.WindowHutAllInventory:lambda$updateResources$2(Lcom/minecolonies/api/crafting/ItemStorage;)Z", # Minecolonies (Warehouse, since 1.20.1-1.1.1215-snapshot)
   "sonar.logistics.core.items.wirelessstoragereader.GuiWirelessStorageReader:getGridList()Ljava/util/List;", #Practical Logistics
   "me.shedaniel.clothconfig2.forge.gui.entries.DropdownBoxEntry$DefaultDropdownMenuElement:search()V", #Cloth Config (Legacy)
   "me.shedaniel.clothconfig2.gui.entries.DropdownBoxEntry$DefaultDropdownMenuElement:search()V", # Cloth Config
