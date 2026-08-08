@@ -185,7 +185,7 @@
   "journeymap.client.ui.waypointmanager.WaypointManagerQueryService:lambda$buildWaypointRows$7(Ljava/lang/String;Ljourneymap/client/waypoint/ClientWaypointImpl;)Z", # JourneyMap (Waypoint Search, since 1.16.5-6.0.0+forge)
   "fr.loxoz.csearcher.gui.GuiSearch:stackSearch(Lfr/loxoz/csearcher/core/CachedStack;Ljava/lang/String;)Z", # ContainerSearcher (since 0.2.1+mc1.20.1)
   "infinityitemeditor.screen.WheelScreen:filter()V", # Infinity Item Editor (since 1.2.4 1.16.5)
-  "fuzs.configmenusforge.client.gui.data.IEntryData:mayInclude(Ljava/lang/String;)Z",
+  "fuzs.configmenusforge.client.gui.data.IEntryData:mayInclude(Ljava/lang/String;)Z", # Forge Config Screens (since v1.2.0-1.16.5)
   "net.darkhax.tips.gui.TipsList:matchSearch(Lnet/darkhax/tips/data/tip/ITip;Ljava/lang/String;)Z", # Tips (Config Search, since 1.16.5-4.0.18)
   "com.resourcefulbees.resourcefulbees.client.gui.widget.ButtonList:reduceList(Ljava/lang/String;Ljava/lang/String;Lcom/resourcefulbees/resourcefulbees/client/gui/screen/beepedia/BeepediaPage;)V", # Resourceful Bees (Beepedia,since 1.16.5-0.10.7)
   "harmonised.pmmo.gui.ListScreen:updateListFilter()V", # Project MMO (since 1.16.5-3.69.0)
