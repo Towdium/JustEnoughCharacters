@@ -5,14 +5,14 @@ plugins {
 }
 
 neoForge {
-    neoFormVersion = '26.1.2-1'
+    neoFormVersion = '26.2-2'
 }
 
 
 dependencies {
     compileOnly(project(":common"))
     compileOnly "com.github.towdium:PinIn:${verpinin}"
-    compileOnly "mezz.jei:jei-26.1.2-common-api:${jei_unobfuscated_version}"
+    compileOnly "mezz.jei:jei-26.2-common-api:${jei_unobfuscated_version}"
     compileOnly 'com.google.auto.service:auto-service-annotations:1.1.1'
     annotationProcessor 'com.google.auto.service:auto-service:1.1.1'
 }

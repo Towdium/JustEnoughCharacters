@@ -21,9 +21,11 @@ dependencies {
     compileOnly project(':common')
     compileOnly(project(":fabric-common"))
     implementation project(":coremod-common")
-    compileOnly "mezz.jei:jei-${project.minecraft_version}-common-api:${jei_unobfuscated_version}"
-    compileOnly "mezz.jei:jei-${minecraft_version}-core:29.6.2.31"
-    compileOnly "mezz.jei:jei-${minecraft_version}-common:29.15.0.45"
+    compileOnly "mezz.jei:jei-${minecraft_version}-common-api:${jei_unobfuscated_version}"
+    compileOnly "mezz.jei:jei-${minecraft_version}-core:30.1.0.12"
+    compileOnly "mezz.jei:jei-${minecraft_version}-common:30.16.0.132"
+    // JEI 30.x removed mezz.jei.core.search.suffixtree; this pinned old core provides it for FakeTree compile only (compileOnly, not packaged)
+    compileOnly "mezz.jei:jei-26.1.2-core:29.6.2.31"
     compileOnly('net.mezzdev:suffixtree:1.1.0') {
         transitive = false
     }
