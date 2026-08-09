@@ -8,7 +8,7 @@ pluginManagement {
 }
 
 plugins {
-    id 'org.gradle.toolchains.foojay-resolver-convention' version '0.8.0'
+    id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
 }
 
 include('common', 'fabric-common', 'neoforge', 'coremod-common', 'coremod-neoforge', 'common-unobfuscated', 'fabric-unobfuscated', 'fabric-legacy', 'neoforge-unobfuscated')
