@@ -12,6 +12,7 @@ subprojects { Project subproject ->
         maven { url = "https://maven.blamejared.com/" }
         maven { url = "https://modmaven.dev" }
         maven { url = 'https://maven.parchmentmc.org' }
+        maven { url = "https://maven.fabricmc.net/" }
     }
 
     tasks.withType(JavaCompile).configureEach {
