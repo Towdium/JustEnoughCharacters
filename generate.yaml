@@ -23,7 +23,7 @@
   "dev.ftb.extendedexchange.client.gui:updateValidItemList()V", # FTB Extended Exchange (since 1802.2.7)
   "binnie.core.machines.storage.SearchDialog:updateSearch()V", # Binnie Core
   "com.chaosthedude.naturescompass.gui.NaturesCompassScreen:processSearchTerm()V", # Nature‘s Compass
-  'com.chaosthedude.explorerscompass.gui.ExplorersCompassScreen:processSearchTerm()V', # Explorers Compass (since 1.16.5-2.0.2)
+  'com.chaosthedude.explorerscompass.gui.ExplorersCompassScreen:processSearchTerm()V', # Explorer's Compass (since 1.16.5-2.0.2)
   "org.cyclops.integrateddynamics.core.client.gui.WidgetTextFieldDropdown:refreshDropdownList()V", # Integrated Dynamics
   "betterquesting.api2.client.gui.panels.lists.CanvasQuestDatabase:queryMatches(Lbetterquesting/api2/storage/DBEntry;Ljava/lang/String;Ljava/util/ArrayDeque;)V", # Better Questing
   "betterquesting.api2.client.gui.panels.lists.CanvasFileDirectory:queryMatches(Ljava/io/File;Ljava/lang/String;Ljava/util/ArrayDeque;)V", # Better Questing
@@ -79,6 +79,7 @@
   "com.blamejared.searchables.api.SearchableComponent:lambda$create$2(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/Boolean;", # Searchables & Controlling (Since 1.0.2)
   "mrnerdy42.keywizard.gui.KeyBindingListWidget:lambda$filterBindingsByName$0([Ljava/lang/String;Lnet/minecraft/client/settings/KeyBinding;)Z", # Keyboard Wizard (since 2.0.1 1.16.5)
   "committee.nova.mkw.gui.KeyBindingListWidget:lambda$filterBindingsByName$0([Ljava/lang/String;Lnet/minecraft/client/settings/KeyBinding;)Z", # Keyboard Wizard CE (since 1.16.5-1.0.2beta)
+  "committee.nova.mkw.gui.KeyBindingListWidget:lambda$filterBindingsByName$1([Ljava/lang/String;Lnet/minecraft/client/KeyMapping;)Z", # Keyboard Wizard CE (since 1.20.1-1.0.2beta)
   "com.gmail.rawlxxxviii.visual_keybinder.ui_list.DefaultKeyBindsList:isFilterMatch(Ljava/lang/String;Ljava/lang/String;)Z", # Raw's Visual keybinder (since 1.20.1 - 0.1.12)
   "hellfirepvp.astralsorcery.client.screen.journal.ScreenJournalProgression:onSearchTextInput()V", # Astral Sorcery
   "com.hollingsworth.arsnouveau.client.gui.book.GuiSpellBook:onSearchChanged(Ljava/lang/String;)V", # Ars Nouveau
@@ -106,7 +107,7 @@
   'mcjty.rftoolsstorage.modules.scanner.blocks.StorageScannerTileEntity:lambda$makeSearchPredicate$30(Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z', # RFTools Storage (since 1.20-5.0.2)
   "mcjty.rftoolsstorage.modules.modularstorage.client.GuiModularStorage:lambda$updateList$6(Ljava/lang/String;Ljava/util/List;Ljava/util/concurrent/atomic/AtomicInteger;Lnet/minecraftforge/items/IItemHandler;)V", # RFTools Storage (since 1.20-5.0.2)
   "mcjty.rftoolsdim.modules.workbench.client.GuiWorkbench:dimletMatches(Ljava/lang/String;Lmcjty/rftoolsdim/modules/dimlets/client/DimletClientHelper$DimletWithInfo;)Z", # RFTools Dimensions (Dimlet Workbench, since 1.20-11.0.11 & 1.16-7.0.21)
-  "mcjty.xnet.modules.controller.client.GuiController:populateList()V", # XNet (since 1.20-6.1.7)
+  "mcjty.xnet.modules.controller.client.GuiController:populateList()V", # XNet (since 1.20-6.1.7 & 1.16-3.0.17)
   "de.ellpeck.actuallyadditions.mod.booklet.entry.BookletEntry:fitsFilter(Lde/ellpeck/actuallyadditions/api/booklet/IBookletPage;Ljava/lang/String;)Z", # Actually Additions (Manual)
   "com.ma.guide.GuideBookEntries:lambda$null$1(Ljava/lang/String;Lcom/ma/guide/interfaces/IEntrySection;)Z", #Mana and Artifice
   "com.github.glodblock.epp.client.gui.GuiExPatternTerminal:refreshList()V", # ExtendedAE (Legacy)
@@ -124,16 +125,15 @@
   "com.klikli_dev.modonomicon.book.page.BookSpotlightPage:matchesQuery(Lnet/minecraft/world/item/ItemStack;Ljava/lang/String;)Z", # Modonomicon
   "com.klikli_dev.modonomicon.book.page.BookTextPage:matchesQuery(Ljava/lang/String;)Z", # Modonomicon
   'com.github.klikli_dev.occultism.client.gui.storage.StorageControllerGuiBase:itemMatchesSearch(Lnet/minecraft/world/item/ItemStack;)Z', # Occultism legacy
-  'com.github.klikli_dev.occultism.client.gui.storage.StorageControllerGuiBase:machineMatchesSearch(Lcom/github/klikli_dev/occultism/api/common/data/MachineReference;)Z', # Occultism legacy
-  "com.github.klikli_dev.occultism.client.gui.storage.StorageControllerGuiBase:machineMatchesSearch(Lcom/github/klikli_dev/occultism/api/common/data/MachineReference;)Z", # Occultism
+  "com.github.klikli_dev.occultism.client.gui.storage.StorageControllerGuiBase:machineMatchesSearch(Lcom/github/klikli_dev/occultism/api/common/data/MachineReference;)Z", # Occultism (Legacy)
   'com.klikli_dev.occultism.client.gui.storage.StorageControllerGuiBase:itemMatchesSearch(Lnet/minecraft/world/item/ItemStack;)Z', # Occultism
   'com.klikli_dev.occultism.client.gui.storage.StorageControllerGuiBase:machineMatchesSearch(Lcom/klikli_dev/occultism/api/common/data/MachineReference;)Z', # Occultism
   'ml.pkom.itemalchemy.gui.screen.AlchemyTableScreenHandler:sortBySearch()V', # Item Alchemy (since 0.7.6)
   "com.lothrazar.storagenetwork.api.util.UtilInventory:doOverlap(Ljava/lang/String;Ljava/lang/String;)Z", # Simple Storage Network (Legacy)
   "com.lothrazar.storagenetwork.gui.NetworkWidget:doesStackMatchSearch(Lnet/minecraft/world/item/ItemStack;)Z", # Simple Storage Network (since 1.20.1-1.10.1)
   "pro.mikey.xray.gui.GuiSelectionScreen:lambda$updateSearch$8(Lpro/mikey/xray/utils/BlockData;)Z", # Advanced XRay (since 1.20.1-2.18.1-build.22)
-  "pro.mikey.xray.gui.GuiSelectionScreen:lambda$updateSearch$7(Lpro/mikey/xray/utils/BlockData;)Z",
-  "pro.mikey.xray.gui.manage.GuiBlockList:lambda$reloadBlocks$1(Lpro/mikey/xray/store/GameBlockStore$BlockWithItemStack;)Z", # Advanced XRay (since 1.20.1-2.18.1-build.22 & )
+  "pro.mikey.xray.gui.GuiSelectionScreen:lambda$updateSearch$7(Lpro/mikey/xray/utils/BlockData;)Z",  # Advanced XRay (since 1.16.5-2.7.0)
+  "pro.mikey.xray.gui.manage.GuiBlockList:lambda$reloadBlocks$1(Lpro/mikey/xray/store/GameBlockStore$BlockWithItemStack;)Z", # Advanced XRay (since 1.20.1-2.18.1-build.22 & 1.16.5-2.7.0)
   "com.robertx22.age_of_exile.gui.screens.skill_tree.buttons.PerkButton:lambda$renderWidget$1(Ljava/lang/String;Lcom/robertx22/age_of_exile/database/OptScaleExactStat;)Z", # Mine And Slash talent search
   "com.robertx22.age_of_exile.gui.screens.stat_gui.StatScreen:lambda$init$9(Ljava/lang/String;Lcom/robertx22/age_of_exile/database/data/stats/Stat;)Z", # Mine And Slash stat search
   "com.robertx22.age_of_exile.gui.screens.skill_tree.buttons.PerkButton:lambda$renderWidget$2(Ljava/lang/String;Lcom/robertx22/age_of_exile/database/OptScaleExactStat;)Z", # Mine And Slash talent search
@@ -154,6 +154,8 @@
   "com.kreidev.cmpackagecouriers.StockTickerIntegration:rewriteAddressIfNeeded(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/item/ItemStack;)V", # Create More: Package Couriers
   "ru.zznty.create_factory_abstractions.api.generic.search.GenericSearch:lambda$search$1(Ljava/lang/String;Lnet/minecraft/tags/TagKey;)Z", # Create Factory Logistics & Create More: Package Couriers
   "ru.zznty.create_factory_abstractions.api.generic.search.GenericSearch:search(Lru/zznty/create_factory_abstractions/api/generic/search/CategoriesProvider;Ljava/lang/String;II)Lru/zznty/create_factory_abstractions/api/generic/search/GenericSearch$SearchResult;", # Create Factory Logistics & Create More: Package Couriers
+  "com.fishguy129.apokinetics.client.FactoryScannerScreen:filteredMachineIndexes(Lcom/fishguy129/apokinetics/content/scanner/FactoryScannerSnapshot$NetworkSnapshot;)Ljava/util/List;", # Create: Apokinetics (Factory Scanner, machine search, since 1.0.5-forge-1.20.1)
+  "com.fishguy129.apokinetics.client.FactoryScannerScreen:filteredNetworkIndexes()Ljava/util/List;", # Create: Apokinetics (Factory Scanner, network search, since 1.0.5-forge-1.20.1)
   "me.shedaniel.rei.impl.client.search.method.DefaultInputMethod:contains(Ljava/lang/String;Ljava/lang/String;)Z", # REI (Since 12.1.785)
   "com.aranaira.magichem.gui.AlchemicalNexusScreen:updateDisplayedRecipes(Ljava/lang/String;)V", # magichem start: various recipe searchers
   "com.aranaira.magichem.gui.CentrifugeScreen:updateDisplayedRecipes(Ljava/lang/String;)V", # magichem
@@ -223,8 +225,6 @@
   "de.maxanier.guideapi.gui.SearchScreen:getMatches(Lde/maxanier/guideapi/api/impl/Book;Ljava/lang/String;Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/item/ItemStack;)Ljava/util/List;", # Guide-API VP (since 1.20.1-2.2.6)
   "com.brandon3055.projectintelligence.client.gui.guielements.GuiPartPageList:doesPageMatchSearch(Lcom/brandon3055/projectintelligence/docmanagement/DocumentationPage;Ljava/lang/String;)Z", # Project Intelligence (since 1.16.5-1.1.0.35)
   "fr.harmex.cobbledollars.common.client.gui.screen.CobbleMerchantScreen$CobbleMerchantOfferList:updateSearchFilter(Ljava/lang/String;)V", # CobbleDollars (since 1.5.2+1.20.1)
-  "com.fishguy129.apokinetics.client.FactoryScannerScreen:filteredMachineIndexes(Lcom/fishguy129/apokinetics/content/scanner/FactoryScannerSnapshot$NetworkSnapshot;)Ljava/util/List;", # Create: Apokinetics (Factory Scanner, machine search, since 1.0.5-forge-1.20.1)
-  "com.fishguy129.apokinetics.client.FactoryScannerScreen:filteredNetworkIndexes()Ljava/util/List;", # Create: Apokinetics (Factory Scanner, network search, since 1.0.5-forge-1.20.1)
 ]
 "equals": [
   'org.cyclops.integrateddynamics.core.client.gui.WidgetTextFieldDropdown:lambda$refreshDropdownList$0(Lorg/cyclops/integrateddynamics/core/client/gui/IDropdownEntry;)Z', #Integrated Dynamics
