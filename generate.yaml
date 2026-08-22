@@ -94,8 +94,8 @@
   "com.kreidev.cmpackagecouriers.StockTickerIntegration:rewriteAddressIfNeeded(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/item/ItemStack;)V", # Create More: Package Couriers
   "ru.zznty.create_factory_abstractions.api.generic.search.GenericSearch:lambda$search$1(Ljava/lang/String;Lnet/minecraft/tags/TagKey;)Z", # Create Factory Logistics & Create More: Package Couriers
   "ru.zznty.create_factory_abstractions.api.generic.search.GenericSearch:search(Lru/zznty/create_factory_abstractions/api/generic/search/CategoriesProvider;Ljava/lang/String;II)Lru/zznty/create_factory_abstractions/api/generic/search/GenericSearch$SearchResult;", # Create Factory Logistics & Create More: Package Couriers
-  "com.fishguy129.apokinetics.client.FactoryScannerScreen:filteredMachineIndexes(Lcom/fishguy129/apokinetics/content/scanner/FactoryScannerSnapshot$NetworkSnapshot;)Ljava/util/List;", # Create: Apokinetics (Factory Scanner, search machine, since 1.0.5 1.21.1)
-  "com.fishguy129.apokinetics.client.FactoryScannerScreen:filteredNetworkIndexes()Ljava/util/List;", # Create: Apokinetics (Factory Scanner, search network, since 1.0.5 1.21.1)
+  "com.fishguy129.apokinetics.client.FactoryScannerScreen:filteredMachineIndexes(Lcom/fishguy129/apokinetics/content/scanner/FactoryScannerSnapshot$NetworkSnapshot;)Ljava/util/List;", # Create: Apokinetics (Factory Scanner, machine search, since 1.0.5 1.21.1)
+  "com.fishguy129.apokinetics.client.FactoryScannerScreen:filteredNetworkIndexes()Ljava/util/List;", # Create: Apokinetics (Factory Scanner, network search, since 1.0.5 1.21.1)
   "com.swigbox.sablecleanup.client.SableListScreen:lambda$applySortAndFilter$53(Ljava/lang/String;Lcom/swigbox/sablecleanup/network/SubLevelEntry;)Z", # Sable CleanUp (/sablecleanup comand GUI, since 0.3.0 1.21.1)
   "net.blay09.mods.farmingforblockheads.menu.MarketMenu:searchMatches(Lnet/minecraft/world/item/crafting/RecipeHolder;)Z", # Farming for Blockheads (Since MC1.21.1)
   "net.blay09.mods.farmingforblockheads.menu.MarketMenu:searchMatches(Lnet/minecraft/world/item/crafting/display/RecipeDisplayEntry;)Z", # Farming for Blockheads (Since 21.4.5)
@@ -119,7 +119,6 @@
   "com.hollingsworth.arsnouveau.client.container.AbstractStorageTerminalScreen:lambda$updateSearch$11(Ljava/lang/String;Ljava/lang/String;)Z", # Ars Nouveau (Bookwyrm Lectern) (Since 1.21.1-5.8.3)
   "com.hollingsworth.arsnouveau.client.container.AbstractStorageTerminalScreen:updateSearch()V", # Ars Nouveau (Bookwyrm Lectern) (Since 1.21.1-5.8.3)
   "net.blay09.mods.waystones.client.gui.screen.WaystoneSelectionScreenBase:updateList()V", # Waystones
-  "dev.ftb.mods.ftbfiltersystem.client.gui.ItemConfigScreen$SearchEntry:test(Ljava/lang/String;)Z", # FTB Filter System
   "blue.endless.jankson.impl.serializer.CommentSerializer:print(Ljava/lang/StringBuilder;Ljava/lang/String;IZZ)V", # Fzzy Config
   "me.shedaniel.clothconfig2.gui.widget.SearchFieldEntry:matchesSearch(Ljava/util/Iterator;)Z", # Cloth Config
   "dev.isxander.yacl3.gui.controllers.ActionController$ActionControllerElement:matchesSearch(Ljava/lang/String;)Z", # YetAnotherConfigLib
@@ -145,10 +144,10 @@
   "fr.loxoz.csearcher.gui.SearchScreen:stackSearch(Lfr/loxoz/csearcher/core/CachedStack;Ljava/lang/String;)Z", # ContainerSearcher (since 0.3.1+mc1.21.1)
   "org.violetmoon.quark.content.client.module.ChestSearchingModule$Client:namesMatch(Lnet/minecraft/world/item/ItemStack;Ljava/lang/String;)Z", # Quark (Chest Search, since 4.1-482 1.21.1)
   "cgcm.chestsearchbar.search.ContainerSearcher:checkName(Ljava/lang/String;Ljava/lang/String;)Z", # Chest Search Bar (since 1.21-1.5.1)
-
   "dev.ftb.mods.ftblibrary.ui.misc.AbstractButtonListScreen$ButtonPanel:add(Ldev/ftb/mods/ftblibrary/ui/Widget;)V", # FTB Library (FTB Quests, quest search, since 2101.1.14)
   "dev.ftb.mods.ftblibrary.ui.misc.ButtonListBaseScreen$ButtonPanel:add(Ldev/ftb/mods/ftblibrary/ui/Widget;)V", # FTB Library (Since 2101.1.14)
   "dev.ftb.mods.ftblibrary.util.SearchTerms:lambda$match$0(Lnet/minecraft/resources/ResourceLocation;Ljava/util/function/Predicate;Ljava/lang/String;Ldev/ftb/mods/ftblibrary/util/SearchTerms$Term;)Z", # FTB Library (FTB Quests, edit mode item search, since 2101.1.35)
+  "dev.ftb.mods.ftbfiltersystem.client.gui.ItemConfigScreen$SearchEntry:test(Ljava/lang/String;)Z", # FTB Filter System
   "journeymap.client.ui.waypointmanager.WaypointManager:lambda$getWaypointsForGroup$18(Ljourneymap/client/ui/waypointmanager/waypoint/WaypointSlot;)Z", # JourneyMap (Legacy, Waypoint Search, since 6.00)
   "journeymap.client.ui.waypointmanager.WaypointManagerQueryService:lambda$buildWaypointRows$6(Ljava/lang/String;Ljourneymap/client/waypoint/ClientWaypointImpl;)Z", # JourneyMap (Waypoint Search, since 1.21.1-6.0.2+neoforge)
   "com.blamejared.searchables.api.SearchableComponent:lambda$create$2(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/Boolean;", # Searchables & Controlling (Since 1.0.2)
@@ -199,7 +198,8 @@
   "com.buuz135.functionalstorage.inventory.ArmoryCabinetMenu:matches(Lnet/minecraft/world/item/ItemStack;Ljava/lang/String;)Z", # Functional Storage (Armory Cabinet, since 1.21.1-1.5.8)
   "net.unfamily.iskautils.util.DeepDrawerItemFilter:matchesSearch(Lnet/minecraft/world/item/ItemStack;Ljava/lang/String;Lnet/minecraft/core/HolderLookup$Provider;)Z", # Iskandert's Utilities (Deep Drawer, since 3.11.0.0.0 1.21.1)
   "de.maxanier.guideapi.gui.SearchScreen:getMatches(Lde/maxanier/guideapi/api/impl/Book;Ljava/lang/String;Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/item/ItemStack;)Ljava/util/List;", # Guide-API VP (since 1.21.1-2.3.0)
-  "com.github.tartaricacid.touhoulittlemaid.client.gui.entity.model.AbstractModelGui:filterKeyWord(Lcom/github/tartaricacid/touhoulittlemaid/client/resource/pojo/IModelInfo;Ljava/lang/String;)Z", # Touhou Little Maid (Model Search, since 1.5.3-neoforge+mc1.21.1)
+  "com.github.tartaricacid.touhoulittlemaid.client.gui.entity.model.AbstractModelGui:filterKeyWord(Lcom/github/tartaricacid/touhoulittlemaid/client/resource/pojo/IModelInfo;Ljava/lang/String;)Z", # Touhou Little Maid (model Search, since 1.5.3-neoforge+mc1.21.1)
+  "com.github.tartaricacid.touhoulittlemaid.client.gui.entity.ModelDownloadGui:lambda$initShowInfos$10(Ljava/lang/String;Lcom/github/tartaricacid/touhoulittlemaid/client/download/pojo/DownloadInfo;)Z", # Touhou Little Maid (download model Search, since 1.5.3-neoforge+mc1.21.1)
   "com.buuz135.replication.client.gui.ReplicationTerminalScreen$PatternMenu:lambda$getFilteredPatterns$1(Ljava/lang/String;Lcom/buuz135/replication/client/gui/addons/MatterPatternButton;)Z", # Replication (Replication Terminal, since 1.21-1.2.7)
   "com.cobblemon.mod.common.api.pokedex.filter.SearchFilter:test(Lcom/cobblemon/mod/common/api/pokedex/entry/PokedexEntry;)Z", # Cobblemon (Pokédex, since 1.7.3+1.21.1)
   "com.cobblemon.mod.common.client.gui.config.variable.CobblemonConfigVariable:filter(Ljava/lang/String;)Z", # Cobblemon (Config Search, since 1.7.3+1.21.1)
