@@ -215,6 +215,8 @@
   "fuzs.enchantinginfuser.client.gui.screens.inventory.InfuserScreen:matchesSearch(Lnet/minecraft/core/Holder;)Z", # Enchanting Infuser (since v21.1.4-1.21.1)
   "punchy.client.config.PunchyConfigScreen:refreshBlacklistFilteredEntries()V", # Punchy! (since 2.7d-neoforge-1.21.1)
   "committee.nova.mkw.gui.KeyBindingListWidget:lambda$filterBindingsByName$0([Ljava/lang/String;Lnet/minecraft/client/KeyMapping;)Z", # Keyboard Wizard CE (since 1.21.1-1.0.1)
+  "punchy.client.config.PunchyConfigScreen:refreshBlacklistFilteredEntries()V", # Punchy! (config item search, since 2.7d-forge-1.20.1)
+  "nl.ljack2k.ae2organizer.client.gui.ItemPickerScreen:applyFilter(Ljava/lang/String;)V", # Storage Organizer (Item Picker search, since 2.0.0+1.20.1)
 ]
 "equals": [
   "me.shedaniel.clothconfig2.gui.entries.TextFieldListEntry:isMatchDefault(Ljava/lang/String;)Z", # Cloth Config
