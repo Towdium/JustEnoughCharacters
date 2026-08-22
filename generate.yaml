@@ -70,6 +70,7 @@
   "com.wintercogs.appliedpneumatics.client.gui.AmadronWirelessTerminalGUI:offerMatches(Lnet/minecraft/resources/ResourceLocation;Ljava/lang/String;)Z", # Applied Pneumatics (Amadron Wireless Terminal, since 1.21.1-neoforge-1.0.8)
   "com.moakiee.ae2lt.client.gui.FrequencyScreen:lambda$filteredFrequencies$12(Ljava/lang/String;Lcom/moakiee/ae2lt/client/ClientFrequencyCache$CachedFrequency;)Z", # AE2 Lightning Tech (since 1.1.1 1.21.1)
   "com.lhy.ae2utility.client.RecipeFinderScreen:rebuildFiltered()V", # AE2 Utility (Recipe Finder, since 1.7.7 1.21.1)
+  "nl.ljack2k.ae2organizer.client.gui.ItemPickerScreen:applyFilter(Ljava/lang/String;)V", # Storage Organizer (Item Picker, since 2.0.0+1.21.1)
   'com.klikli_dev.occultism.client.gui.storage.StorageControllerGuiBase:itemMatchesSearch(Lnet/minecraft/world/item/ItemStack;)Z', # Occultism
   'com.klikli_dev.occultism.client.gui.storage.StorageControllerGuiBase:machineMatchesSearch(Lcom/klikli_dev/occultism/api/common/data/MachineReference;)Z', # Occultism
   'dev.emi.emi.search.NameQuery:matchesUnbaked(Ldev/emi/emi/api/stack/EmiStack;)Z', # EMI text search (Since 1.0.24+1.20.2)
@@ -211,6 +212,9 @@
   "nimble.portable_blueprints.client.screen.tablet.TabletBlueprintScreen:MakeList()V", # Portable Blueprints (Tablet, since v2.0.10-mv1.21.1neoforge)
   "nimble.portable_blueprints.client.screen.tablet.mineprint.TabletMinePrintScreen:MakeList()V", # Portable Blueprints (Tablet, since v2.0.10-mv1.21.1neoforge)
   "cc.sighs.oelib.config.ui.screen.ConfigScreen:init()V", # One Enough Lib (config, since 1.21.1-0.2.3)
+  "fuzs.enchantinginfuser.client.gui.screens.inventory.InfuserScreen:matchesSearch(Lnet/minecraft/core/Holder;)Z", # Enchanting Infuser (since v21.1.4-1.21.1)
+  "punchy.client.config.PunchyConfigScreen:refreshBlacklistFilteredEntries()V", # Punchy! (since 2.7d-neoforge-1.21.1)
+  "committee.nova.mkw.gui.KeyBindingListWidget:lambda$filterBindingsByName$0([Ljava/lang/String;Lnet/minecraft/client/KeyMapping;)Z", # Keyboard Wizard CE (since 1.21.1-1.0.1)
 ]
 "equals": [
   "me.shedaniel.clothconfig2.gui.entries.TextFieldListEntry:isMatchDefault(Ljava/lang/String;)Z", # Cloth Config
