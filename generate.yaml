@@ -192,6 +192,7 @@
   "com.buuz135.functionalstorage.inventory.ArmoryCabinetMenu:matches(Lnet/minecraft/world/item/ItemStack;Ljava/lang/String;)Z", # Functional Storage (Armory Cabinet, since 26.1.2-1.6.0)
   "cc.sighs.oelib.config.ui.screen.ConfigScreen:init()V", # One Enough Lib (config, since 0.2.3-dev2)
   "punchy.client.config.PunchyConfigScreen:refreshBlacklistFilteredEntries()V", # Punchy! (config item search, since 2.7d 26.1.x)
+  "fuzs.enchantinginfuser.common.client.gui.screens.inventory.InfuserScreen:matchesSearch(Lnet/minecraft/core/Holder;)Z", # Enchanting Infuser (since 26.1.0)
 ]
 "equals": [
   "me.shedaniel.clothconfig2.gui.entries.TextFieldListEntry:isMatchDefault(Ljava/lang/String;)Z", # Cloth Config
