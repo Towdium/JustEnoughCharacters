@@ -24,6 +24,7 @@
   "binnie.core.machines.storage.SearchDialog:updateSearch()V", # Binnie Core
   "com.chaosthedude.naturescompass.gui.NaturesCompassScreen:processSearchTerm()V", # Nature‘s Compass
   'com.chaosthedude.explorerscompass.gui.ExplorersCompassScreen:processSearchTerm()V', # Explorer's Compass (since 1.16.5-2.0.2)
+  "com.chaosthedude.explorerscompass.gui.SearchDocument:contains(Lcom/chaosthedude/explorerscompass/gui/SearchQuery$Field;Ljava/lang/String;)Z", # Explorer's Compass Enhance (since 1.20.1-forge-1.5.1)
   "org.cyclops.integrateddynamics.core.client.gui.WidgetTextFieldDropdown:refreshDropdownList()V", # Integrated Dynamics
   "betterquesting.api2.client.gui.panels.lists.CanvasQuestDatabase:queryMatches(Lbetterquesting/api2/storage/DBEntry;Ljava/lang/String;Ljava/util/ArrayDeque;)V", # Better Questing
   "betterquesting.api2.client.gui.panels.lists.CanvasFileDirectory:queryMatches(Ljava/io/File;Ljava/lang/String;Ljava/util/ArrayDeque;)V", # Better Questing
@@ -41,6 +42,7 @@
   "mezz.jei.gui.search.ElementSearchLowMem:matches(Ljava/lang/String;Lmezz/jei/core/search/PrefixInfo;Lmezz/jei/gui/ingredients/IListElementInfo;)Z", # JEI (low memory, since jei-11.6.0.1016)
   "mezz.jei.search.ElementSearchLowMem:matches(Ljava/lang/String;Lmezz/jei/core/search/PrefixInfo;Lmezz/jei/ingredients/IListElementInfo;)Z", # JEI (low memory)
   "de.ellpeck.actuallyadditions.mod.booklet.entry.BookletEntry:getChaptersForDisplay(Ljava/lang/String;)Ljava/util/List;", # Actually Additions (Manual)
+  "de.ellpeck.actuallyadditions.mod.booklet.entry.BookletEntry:fitsFilter(Lde/ellpeck/actuallyadditions/api/booklet/IBookletPage;Ljava/lang/String;)Z", # Actually Additions (Manual)
   "fi.dy.masa.malilib.gui.widgets.WidgetListBase:matchesFilter(Ljava/lang/String;Ljava/lang/String;)Z", # MaLiLib & MaFgLib
   "com.github.einjerjar.mc.keymap.client.gui.widgets.KeymapListWidget:lambda$updateFilteredList$1(Lcom/github/einjerjar/mc/keymap/client/gui/widgets/KeymapListWidget$KeymapListEntry;Ljava/lang/String;)Z", # Keymap since 0.8.0-beta.1
   "com.refinedmods.refinedstorage.screen.grid.filtering.ModGridFilter:test(Lcom/refinedmods/refinedstorage/screen/grid/stack/IGridStack;)Z", # Refined Storage
@@ -108,7 +110,6 @@
   "mcjty.rftoolsstorage.modules.modularstorage.client.GuiModularStorage:lambda$updateList$6(Ljava/lang/String;Ljava/util/List;Ljava/util/concurrent/atomic/AtomicInteger;Lnet/minecraftforge/items/IItemHandler;)V", # RFTools Storage (since 1.20-5.0.2)
   "mcjty.rftoolsdim.modules.workbench.client.GuiWorkbench:dimletMatches(Ljava/lang/String;Lmcjty/rftoolsdim/modules/dimlets/client/DimletClientHelper$DimletWithInfo;)Z", # RFTools Dimensions (Dimlet Workbench, since 1.20-11.0.11 & 1.16-7.0.21)
   "mcjty.xnet.modules.controller.client.GuiController:populateList()V", # XNet (since 1.20-6.1.7 & 1.16-3.0.17)
-  "de.ellpeck.actuallyadditions.mod.booklet.entry.BookletEntry:fitsFilter(Lde/ellpeck/actuallyadditions/api/booklet/IBookletPage;Ljava/lang/String;)Z", # Actually Additions (Manual)
   "com.ma.guide.GuideBookEntries:lambda$null$1(Ljava/lang/String;Lcom/ma/guide/interfaces/IEntrySection;)Z", #Mana and Artifice
   "com.github.glodblock.epp.client.gui.GuiExPatternTerminal:refreshList()V", # ExtendedAE (Legacy)
   "com.github.glodblock.epp.client.gui.GuiExPatternTerminal:itemStackMatchesSearchTerm(Lnet/minecraft/world/item/ItemStack;Ljava/lang/String;Z)Z", # ExtendedAE (Legacy)
@@ -240,7 +241,7 @@
   'appeng.client.gui.me.search.SearchPredicates:lambda$createTooltipPredicate$4(Lappeng/client/gui/me/search/RepoSearch;Ljava/util/regex/Pattern;Lappeng/menu/me/common/GridInventoryEntry;)Z', # Applied Energistics 2 (Legacy, since 12.9.8)
   'dev.emi.emi.search.RegexTooltipQuery:matches(Ldev/emi/emi/api/stack/EmiStack;)Z', # EMI (regex search)
   'dev.emi.emi.search.RegexNameQuery:matches(Ldev/emi/emi/api/stack/EmiStack;)Z', # EMI (regex search)
-  'com.tom.storagemod.gui.AbstractStorageTerminalScreen:updateSearch()V', # Tom's Simple Storage Mod
+  "com.tom.storagemod.gui.AbstractStorageTerminalScreen:updateSearch()V", # Tom's Simple Storage Mod (since 1.20.1)
   "com.tom.storagemod.gui.GuiStorageTerminalBase:updateSearch()V", # Tom's Simple Storage Mod (since 1.16.5)
   'com.hollingsworth.arsnouveau.client.container.AbstractStorageTerminalScreen:updateSearch()V', # Ars Nouveau (since 1.19.2-3.21.4)
   "blusunrize.lib.manual.ManualEntry$ManualEntryBuilder:lambda$readFromFile$6(Lnet/minecraft/resources/ResourceLocation;)Lblusunrize/lib/manual/ManualEntry$EntryData;", # Immersive Engineering (Engineer's Manual, since 1.20.1-10.2.0-183)
