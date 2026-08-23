@@ -194,6 +194,7 @@
   "punchy.client.config.PunchyConfigScreen:refreshBlacklistFilteredEntries()V", # Punchy! (config item search, since 2.7d 26.1.x)
   "fuzs.enchantinginfuser.common.client.gui.screens.inventory.InfuserScreen:matchesSearch(Lnet/minecraft/core/Holder;)Z", # Enchanting Infuser (since 26.1.0)
   "committee.nova.mkw.gui.KeyBindingListWidget:lambda$filterBindingsByName$0([Ljava/lang/String;Lnet/minecraft/client/KeyMapping;)Z", # Keyboard Wizard CE (since 26.1.2-1.0.1)
+  "dev.lambdaurora.lambdynlights.gui.LightSourceListWidget:checkFilter(Ldev/lambdaurora/lambdynlights/gui/LightSourceListWidget$LightSourceEntry;Ljava/util/List;)Z", # LambDynamicLights (since 4.11.1+26.1.2)
 ]
 "equals": [
   "me.shedaniel.clothconfig2.gui.entries.TextFieldListEntry:isMatchDefault(Ljava/lang/String;)Z", # Cloth Config
