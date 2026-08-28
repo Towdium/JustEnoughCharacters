@@ -163,6 +163,8 @@
   "me.almana.logisticsnetworks.client.screen.NodeScreen:getFilteredNetworks()Ljava/util/List;", # Logistics Network (since 1.21.1-1.10.1)
   "com.moakiee.ae2lt.client.gui.FrequencyScreen:lambda$filteredFrequencies$12(Ljava/lang/String;Lcom/moakiee/ae2lt/client/ClientFrequencyCache$CachedFrequency;)Z", # AE2 Lightning Tech (since 1.1.1 1.21.1)
   "net.fayebeard.bookoffamiliars.GUI.FamiliarBookScreen:updateDropdown()V", # Book of Familiars (since 1.21.1-2.1.1)
+  "dev.dubhe.anvilcraft.rpc.StorageServerStub:matchesFilters(Lnet/minecraft/core/Holder;Ldev/anvilcraft/lib/v2/util/stack/UnlimitedItemStack;Lnet/minecraft/resources/ResourceLocation;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;)Z", # AnvilCraft Storage search (terminal/station RPC)
+  "dev.dubhe.anvilcraft.rpc.StorageServerStub:matchesTag(Lnet/minecraft/resources/ResourceLocation;Ljava/lang/String;)Z", # AnvilCraft Storage search (tag match)
 ]
 "equals": [
   "com.hollingsworth.arsnouveau.client.container.AbstractStorageTerminalScreen:updateSearch()V", # Ars Nouveau (Bookwyrm Lectern) (Since 1.21.1-5.8.3)
