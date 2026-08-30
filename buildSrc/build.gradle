@@ -1,0 +1,31 @@
+plugins {
+    id 'java-gradle-plugin'
+}
+
+// Gradle 8.1.1 cannot instrument class files newer than Java 19 on the script classpath,
+// so keep the plugin bytecode at 17 even though the daemon may run on a newer JVM.
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compileOnly gradleApi()
+    implementation('org.yaml:snakeyaml:2.0')
+    implementation('com.google.code.gson:gson:2.10.1')
+}
+
+gradlePlugin {
+    plugins {
+        "jech" {
+            id = "dev.vfyjxf.gradle.jech"
+            displayName = "Jech Builtin Gradle Plugin"
+            description = "A Gradle plugin for Jech project management."
+            implementationClass = "dev.vfyjxf.gradle.JechBuiltinPlugin"
+        }
+    }
+}

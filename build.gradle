@@ -1,8 +1,5 @@
 import com.google.gson.GsonBuilder
-import com.google.gson.JsonArray
 import com.google.gson.JsonObject
-import com.google.gson.JsonPrimitive
-import org.yaml.snakeyaml.Yaml
 
 plugins {
     id 'java-library'
@@ -132,6 +129,9 @@ subprojects { Project p ->
     apply plugin: 'io.freefair.lombok'
 
     def type = ProjectType.getType(p)
+    if (type.impl) {
+        apply plugin: 'dev.vfyjxf.gradle.jech'
+    }
     if (type.notMain()) {
         apply plugin: 'architectury-plugin'
         if (type.notRoot()) {
@@ -268,92 +268,7 @@ subprojects { Project p ->
     }
 }
 
-subprojects { Project p ->
-    def type = ProjectType.getType(p)
-    if (!type.impl) return
-    def targetsJson = p.file("build/resources/main/me/towdium/jecharacters/targets.json")
 
-    p.tasks.register("generateTargetsJson") {
-        def generalConfig = p.rootProject.file("generate.yaml")
-        def versionConfig = p.parent.file("version_generate.yaml")
-        def platformConfig = p.file("platform_generate.yaml")
-        def mapping = p.rootProject.file("mapping.yaml")
-        Yaml yaml = new Yaml()
-        Map<String, Set<String>> all = new HashMap<>()
-        Map<String, List<Map<String, String>>> mappings = yaml.load(mapping.text) as Map<String, List<Map<String, String>>>
-        putAll(yaml, generalConfig, all)
-        putAll(yaml, versionConfig, all)
-        putAll(yaml, platformConfig, all)
-        JsonObject json = new JsonObject()
-        all.each { key, value ->
-            JsonArray array = new JsonArray()
-            for (target in value) {
-                def remap = target
-                mappings.entrySet().forEach {
-                    if (target.contains(it.key)) {
-                        if (type.fabric) {
-                            remap = target.replace(it.key, getMapping("intermediary", it.value))
-                        }
-                        if (type.forge && p.path.contains("1.16.5")) {
-                            remap = target.replace(it.key, getMapping("mcp", it.value))
-                        }
-                    }
-                }
-                if (type.fabric && containsForgeFluidStack(remap)) continue
-                array.add(remap)
-            }
-            JsonObject inner = new JsonObject()
-            inner.add("default", array)
-            inner.add("additional", new JsonArray())
-            json.add(key, inner)
-        }
-        json.add("removals", new JsonArray())
-        json.add("suffixClassName", new JsonPrimitive(p.suffixClassName))
-        String jsonStr = new GsonBuilder().setPrettyPrinting().create().toJson(json)
-        if (!targetsJson.exists()) {
-            targetsJson.parentFile.mkdirs()
-            targetsJson.createNewFile()
-        }
-        targetsJson.write(jsonStr)
-    }
-    p.processResources {
-        dependsOn "generateTargetsJson"
-    }
-
-}
-
-
-static void putAll(Yaml yaml, File configFile, Map<String, Set<String>> map) {
-    if (!configFile.exists()) return
-    Map<String, List<String>> list = yaml.load(configFile.text) as Map<String, List<String>>
-    try {
-        list.entrySet().each { entry ->
-            def checked = entry.value.findAll { checkTargetFormat(it) }
-            map.computeIfAbsent(entry.key, k -> new TreeSet<>()).addAll(checked)
-        }
-    } catch (Exception e) {
-        throw new IllegalArgumentException("Invalid config from file: ${configFile.name}, ${e.message}")
-    }
-
-}
-
-static boolean checkTargetFormat(String target) {
-    String[] split = target.split(':')
-    if (split.length != 2)
-        throw new IllegalArgumentException("Invalid target: \"${target}\", must be in format 'namespace:name'")
-    split.each { s ->
-        if (s.contains(" "))
-            throw new IllegalArgumentException("Invalid target: \"${target}\", spaces are not allowed")
-    }
-}
-
-static boolean containsForgeFluidStack(String s) {
-    return s.contains("Lnet/minecraftforge/fluids/FluidStack")
-}
-
-static String getMapping(String namespace, List<Map<String, String>> list) {
-    return list.find { (it.keySet().contains(namespace)) }.get(namespace)
-}
 
 abstract class GenerateCoremodsJson extends DefaultTask {
 
