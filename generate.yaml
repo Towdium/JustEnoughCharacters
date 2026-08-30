@@ -274,3 +274,9 @@
   "dev.dubhe.anvilcraft.client.gui.screen.ActiveSilencerScreen:lambda$onSearchTextChange$3(Ljava/util/regex/Pattern;Lit/unimi/dsi/fastutil/Pair;)Z", # AnvilCraft Active Silencer regex search
   "dev.dubhe.anvilcraft.client.gui.screen.TeslaTowerScreen:lambda$onSearchTextChange$5(Ljava/util/regex/Pattern;Lit/unimi/dsi/fastutil/Pair;)Z", # AnvilCraft Tesla Tower regex search
 ]
+
+"startsWith": [
+  "com.denfop.screen.ScreenVeinSensor:drawForegroundLayer(Lnet/minecraft/client/gui/GuiGraphics;II)V",# Industrial Upgrade(since 3.4.0.13)
+  "com.denfop.screen.ScreenVeinSensor:mouseClicked(III)V",# Industrial Upgrade(since 3.4.0.13)
+  "com.denfop.screen.ScreenVeinSensor:drawGuiContainerBackgroundLayer(Lnet/minecraft/client/gui/GuiGraphics;FII)V"# Industrial Upgrade(since 3.4.0.13)
+]

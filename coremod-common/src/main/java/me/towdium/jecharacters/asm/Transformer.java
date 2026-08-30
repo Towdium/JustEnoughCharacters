@@ -169,6 +169,29 @@ public interface Transformer {
         return method;
     }
 
+    static MethodNode transformStartsWith(MethodNode method) {
+        transformInvoke(
+                method,
+                "java/lang/String",
+                "startsWith",
+                "(Ljava/lang/String;)Z",
+                "me/towdium/jecharacters/utils/Match",
+                "startsWith",
+                "(Ljava/lang/String;Ljava/lang/String;)Z"
+        );
+        transformInvoke(
+                method,
+                "java/lang/String",
+                "startsWith",
+                "(Ljava/lang/String;I)Z",
+                "me/towdium/jecharacters/utils/Match",
+                "startsWith",
+                "(Ljava/lang/String;Ljava/lang/String;I)Z"
+        );
+        return method;
+    }
+
+
     default ClassNode transform(ClassNode node) {
         return node;
     }

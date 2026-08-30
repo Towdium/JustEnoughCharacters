@@ -78,6 +78,22 @@ public class Match {
         return contains(s1, s2);
     }
 
+    public static boolean startsWith(String s, String prefix) {
+        boolean b = context.begins(s, prefix);
+        if (JechConfig.enableVerbose)
+            LOGGER.info("startsWith(" + s + ',' + prefix + ")->" + b);
+        return b;
+    }
+
+    public static boolean startsWith(String s, String prefix, int offset) {
+        boolean b = offset >= 0
+                && offset <= s.length()
+                && context.begins(s.substring(offset), prefix);
+        if (JechConfig.enableVerbose)
+            LOGGER.info("startsWith(" + s + ',' + prefix + ',' + offset + ")->" + b);
+        return b;
+    }
+
     public static void onConfigChange() {
         context.config().keyboard(JechConfig.enumKeyboard.get())
                 .fAng2An(JechConfig.enableFAng2an).fEng2En(JechConfig.enableFEng2en)
