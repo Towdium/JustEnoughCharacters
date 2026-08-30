@@ -122,6 +122,26 @@ var transEquals = function (method) {
     return method;
 };
 
+var transStartsWith = function (method) {
+    transInvoke(method,
+        'java/lang/String',
+        'startsWith',
+        '(Ljava/lang/String;)Z',
+        'me/towdium/jecharacters/utils/Match',
+        'startsWith',
+        '(Ljava/lang/String;Ljava/lang/String;)Z'
+    );
+    transInvoke(method,
+        'java/lang/String',
+        'startsWith',
+        '(Ljava/lang/String;I)Z',
+        'me/towdium/jecharacters/utils/Match',
+        'startsWith',
+        '(Ljava/lang/String;Ljava/lang/String;I)Z'
+    );
+    return method;
+};
+
 function logMsg(msg) {
     api.log('INFO', msg, ['a'])
 }

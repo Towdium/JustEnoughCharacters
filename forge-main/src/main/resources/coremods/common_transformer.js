@@ -69,4 +69,6 @@ function getTransformerFunc(type, suffixClass) {
         }
     if (type === "regexp")
         return transRegExp
+    if (type === "startswith")
+        return transStartsWith
 }

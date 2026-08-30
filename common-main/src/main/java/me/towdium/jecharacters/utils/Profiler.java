@@ -63,6 +63,16 @@ public class Profiler {
             new Analyzer.Invoke(
                     Type.REGEXP, false, "java/util/regex/Pattern", "matcher",
                     "(Ljava/lang/CharSequence;)Ljava/util/regex/Matcher;"
+            ),
+            new Analyzer.Invoke(
+                    Type.STARTS_WITH, false,
+                    "java/lang/String", "startsWith",
+                    "(Ljava/lang/String;)Z"
+            ),
+            new Analyzer.Invoke(
+                    Type.STARTS_WITH, false,
+                    "java/lang/String", "startsWith",
+                    "(Ljava/lang/String;I)Z"
             )
     ));
 
@@ -158,6 +168,7 @@ public class Profiler {
             ret.regExp = new ArrayList<>(methods.get(Type.REGEXP));
             ret.suffix = new ArrayList<>(methods.get(Type.SUFFIX));
             ret.equals = new ArrayList<>(methods.get(Type.EQUALS));
+            ret.startsWith = new ArrayList<>(methods.get(Type.STARTS_WITH));
             cbkJar.accept(ret);
         }
     }
@@ -203,6 +214,7 @@ public class Profiler {
         List<String> regExp;
         List<String> suffix;
         List<String> equals;
+        List<String> startsWith;
     }
 
     @SuppressWarnings("unused")
@@ -299,6 +311,7 @@ public class Profiler {
         CONTAINS,
         EQUALS,
         REGEXP,
+        STARTS_WITH,
         SUFFIX
     }
 
