@@ -139,7 +139,7 @@
   "dev.ftb.mods.ftblibrary.ui.misc.ButtonListBaseScreen$ButtonPanel:add(Ldev/ftb/mods/ftblibrary/ui/Widget;)V", # FTB Library (Legacy, since 2101.1.14)
   "dev.ftb.mods.ftblibrary.client.gui.screens.AbstractButtonListScreen$ButtonPanel:add(Ldev/ftb/mods/ftblibrary/client/gui/widget/Widget;)V", # FTB Library (FTB Quests, quest search, since 26.1.2.7)
   "dev.ftb.mods.ftblibrary.client.gui.widget.DropDownMenu$MainPanel:lambda$addWidgets$0(Ldev/ftb/mods/ftblibrary/client/gui/widget/ContextMenuItem;)Z", # FTB Library (since 26.1.2.7)
-  "dev.ftb.mods.ftblibrary.util.SearchTerms:lambda$match$0(Lnet/minecraft/resources/Identifier;Ljava/util/function/Predicate;Ljava/lang/String;Ldev/ftb/mods/ftblibrary/util/SearchTerms$Term;)Z" # FTB Library (FTB Quests, edit mode item search, since 26.1.2.7)
+  "dev.ftb.mods.ftblibrary.util.SearchTerms:lambda$match$0(Lnet/minecraft/resources/Identifier;Ljava/util/function/Predicate;Ljava/lang/String;Ldev/ftb/mods/ftblibrary/util/SearchTerms$Term;)Z", # FTB Library (FTB Quests, edit mode item search, since 26.1.2.7)
   "dev.ftb.mods.ftbfiltersystem.client.gui.ItemConfigScreen$SearchEntry:test(Ljava/lang/String;)Z", # FTB Filter System
   "journeymap.client.ui.waypointmanager.WaypointManagerQueryService:lambda$buildWaypointRows$2(Ljava/lang/String;Ljourneymap/client/waypoint/ClientWaypointImpl;)Z", # JourneyMap (Waypoint Search, since 26.1.2-6.0.2+neoforge)
   "com.blamejared.searchables.api.SearchableComponent:lambda$create$2(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/Boolean;", # Searchables & Controlling (Since 1.0.2)
