@@ -15,7 +15,7 @@ import java.util.Set;
 @AutoService(Transformer.class)
 public final class HexcessibleTransformer implements Transformer {
 
-    private static final Set<String> TARGET_CLASSES = Set.of("dev/tizu/hexcessible/Utils");
+    private static final Set<String> targets = Set.of("dev/tizu/hexcessible/Utils");
 
     @Override
     public ClassNode transform(ClassNode node) {
@@ -55,7 +55,12 @@ public final class HexcessibleTransformer implements Transformer {
     }
 
     @Override
+    public boolean accept(String className) {
+        return targets.contains(className);
+    }
+
+    @Override
     public Set<String> targetClasses() {
-        return TARGET_CLASSES;
+        return targets;
     }
 }

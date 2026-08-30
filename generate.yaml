@@ -218,10 +218,34 @@
   "punchy.client.config.PunchyConfigScreen:refreshBlacklistFilteredEntries()V", # Punchy! (config item search, since 2.7d-forge-1.20.1)
   "nl.ljack2k.ae2organizer.client.gui.ItemPickerScreen:applyFilter(Ljava/lang/String;)V", # Storage Organizer (Item Picker search, since 2.0.0+1.20.1)
   "dev.lambdaurora.lambdynlights.gui.LightSourceListWidget:checkFilter(Ldev/lambdaurora/lambdynlights/gui/LightSourceListWidget$LightSourceEntry;Ljava/util/List;)Z", # LambDynamicLights (since 4.8.10+1.21.1)
+  "dev.dubhe.anvilcraft.rpc.StorageServerStub:matchesFilters(Lnet/minecraft/core/Holder;Ldev/anvilcraft/lib/v2/util/stack/UnlimitedItemStack;Lnet/minecraft/resources/ResourceLocation;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;)Z", # AnvilCraft Storage search (terminal/station RPC)
+  "dev.dubhe.anvilcraft.rpc.StorageServerStub:matchesTag(Lnet/minecraft/resources/ResourceLocation;Ljava/lang/String;)Z", # AnvilCraft Storage search (tag match)
+  "dev.dubhe.anvilcraft.client.gui.screen.TeslaTowerScreen:lambda$onSearchTextChange$2(Ljava/lang/String;Lit/unimi/dsi/fastutil/Pair;)Z", # AnvilCraft Tesla Tower search
+  "dev.dubhe.anvilcraft.client.gui.screen.TeslaTowerScreen:lambda$onSearchTextChange$6(Lit/unimi/dsi/fastutil/Pair;)Z", # AnvilCraft Tesla Tower search
+  "dev.dubhe.anvilcraft.client.gui.screen.AdjacentSmithingScreen:lambda$filteredTemplates$1(Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z", # AnvilCraft Adjacent Smithing search
+  "dev.dubhe.anvilcraft.client.gui.screen.AutoEnchantingTableScreen:refreshFilter()V", # AnvilCraft Auto Enchanting Table filter
 ]
 "equals": [
   "me.shedaniel.clothconfig2.gui.entries.TextFieldListEntry:isMatchDefault(Ljava/lang/String;)Z", # Cloth Config
   'org.cyclops.integrateddynamics.core.client.gui.WidgetTextFieldDropdown:lambda$refreshDropdownList$0(Lorg/cyclops/integrateddynamics/core/client/gui/IDropdownEntry;)Z', #Integrated Dynamics
+  'vazkii.botania.api.corporea.CorporeaRequestDefaultMatchers$CorporeaStringMatcher:equalOrContain(Ljava/lang/String;)Z', # Botania (Corporea)
+  "com.refinedmods.refinedstorage.common.grid.query.GridQueryParser:parseBinOp(Lcom/refinedmods/refinedstorage/query/parser/node/BinOpNode;)Lcom/refinedmods/refinedstorage/api/resource/repository/ResourceRepositoryFilter;", #refinedstorage-neoforge-2.0.0-beta.2
+  "com.refinedmods.refinedstorage.common.grid.query.GridQueryParser:parseUnaryOp(Lcom/refinedmods/refinedstorage/query/parser/node/UnaryOpNode;)Lcom/refinedmods/refinedstorage/api/resource/repository/ResourceRepositoryFilter;",
+  "com.refinedmods.refinedstorage.common.grid.screen.AbstractGridScreen:trySynchronizeToGrid()V",
+  "com.refinedmods.refinedstorage.common.support.widget.History:save(Ljava/lang/String;)Z",
+  "com.refinedmods.refinedstorage.common.util.IdentifierUtil:getTagTranslationKey(Lnet/minecraft/tags/TagKey;)Ljava/lang/String;",
+  "com.refinedmods.refinedstorage.neoforge.ConfigImpl$GridEntryImpl:setResourceType(Lnet/minecraft/resources/ResourceLocation;)V",
+  "com.refinedmods.refinedstorage.neoforge.ConfigImpl$GridEntryImpl:setSynchronizer(Lnet/minecraft/resources/ResourceLocation;)V",
+  "com.refinedmods.refinedstorage.neoforge.ConfigImpl$SimpleEnergyUsageEntryImpl:\u003cinit\u003e(Lcom/refinedmods/refinedstorage/neoforge/ConfigImpl;Ljava/lang/String;J)V",
+  "com.refinedmods.refinedstorage.query.lexer.LexerTokenMappings:findMapping(Lcom/refinedmods/refinedstorage/query/lexer/LexerPosition;Lcom/refinedmods/refinedstorage/query/lexer/Source;)Lcom/refinedmods/refinedstorage/query/lexer/LexerTokenMapping;",
+  "com.refinedmods.refinedstorage.query.parser.Parser:parseParen()Lcom/refinedmods/refinedstorage/query/parser/node/Node;",
+  "com.blamejared.controlling.api.DisplayMode:lambda$static$2(Lcom/blamejared/controlling/api/entries/IKeyEntry;)Z", # Controlling (Since 22.0.5-1.21.4)
+  "com.spaceagle17.irissearch.engine.ShaderOptionsSearchEngine:computeMatchTier(Ljava/lang/String;Ljava/lang/String;)I", # Iris & Oculus Search (since 1.4.2)
+  "com.spaceagle17.irissearch.engine.ShaderPackSearchEngine:computeMatchTier(Ljava/lang/String;Ljava/lang/String;)I", # Iris & Oculus Search (since 1.4.2)
+  "dev.dubhe.anvilcraft.client.gui.screen.TeslaTowerScreen:lambda$onSearchTextChange$0(Lit/unimi/dsi/fastutil/Pair;Lit/unimi/dsi/fastutil/Pair;)Z", # AnvilCraft Tesla Tower search
+  "dev.dubhe.anvilcraft.client.gui.screen.TeslaTowerScreen:lambda$onSearchTextChange$3(Lit/unimi/dsi/fastutil/Pair;Lit/unimi/dsi/fastutil/Pair;)Z", # AnvilCraft Tesla Tower search
+  "dev.dubhe.anvilcraft.client.gui.screen.TeslaTowerScreen:lambda$onSearchTextChange$7(Lit/unimi/dsi/fastutil/Pair;Lit/unimi/dsi/fastutil/Pair;)Z", # AnvilCraft Tesla Tower search
+  "dev.dubhe.anvilcraft.client.gui.screen.TeslaTowerScreen:lambda$removeWhiteFilter$9(Ljava/lang/String;Ljava/lang/String;Lit/unimi/dsi/fastutil/Pair;)Z", # AnvilCraft Tesla Tower search
 ]
 "regExp": [
   'appeng.client.gui.me.search.SearchPredicates:lambda$createNamePredicate$3(Ljava/util/regex/Pattern;Lappeng/menu/me/common/GridInventoryEntry;)Z', #Applied Energistics (Since 2-12.9.5)
@@ -244,4 +268,9 @@
   'com.tom.storagemod.screen.AbstractStorageTerminalScreen:lambda$updateSearch$15(Ljava/util/regex/Pattern;Lcom/tom/storagemod/inventory/StoredItemStack;)Z', # Tom's Simple Storage Mod (Since MC1.21.1)
   "com.tom.storagemod.screen.AbstractStorageTerminalScreen:matchSearch(Ljava/util/regex/Pattern;Ljava/lang/String;)Z", # Tom's Simple Storage Mod (since 1.21-2.4.1)
   "org.violetmoon.quark.content.client.module.ChestSearchingModule$Client:lambda$namesMatch$3(Ljava/lang/String;Ljava/lang/String;)Z", # Quark (Regex Chest Search, since 4.1-482 1.21.1)
+  "com.spaceagle17.irissearch.ShaderSearchEngine:computeMatchTier(Ljava/lang/String;Ljava/lang/String;)I", # Iris & Oculus Search (Legacy, since 1.0.1)
+  "com.spaceagle17.irissearch.engine.ShaderOptionsSearchEngine:computeMatchTier(Ljava/lang/String;Ljava/lang/String;)I", # Iris & Oculus Search (since 1.4.2)
+  "com.spaceagle17.irissearch.engine.ShaderOptionsSearchEngine:matchesPrefixRange(Ljava/util/NavigableMap;Ljava/lang/String;Ljava/lang/String;)Z", # Iris & Oculus Search (since 1.4.2)
+  "dev.dubhe.anvilcraft.client.gui.screen.ActiveSilencerScreen:lambda$onSearchTextChange$3(Ljava/util/regex/Pattern;Lit/unimi/dsi/fastutil/Pair;)Z", # AnvilCraft Active Silencer regex search
+  "dev.dubhe.anvilcraft.client.gui.screen.TeslaTowerScreen:lambda$onSearchTextChange$5(Ljava/util/regex/Pattern;Lit/unimi/dsi/fastutil/Pair;)Z", # AnvilCraft Tesla Tower regex search
 ]
