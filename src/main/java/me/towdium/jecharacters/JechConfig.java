@@ -221,28 +221,42 @@ public class JechConfig {
                 case LIST_DEFAULT_STRING:
                     return new String[]{
                             "mezz.jei.ItemFilter$FilterPredicate:stringContainsTokens",  // JEI legacy
-                            "com.raoulvdberge.refinedstorage.gui.grid.filtering.GridFilterName:accepts",  // Refined Storage legpacy
-                            "com.raoulvdberge.refinedstorage.gui.grid.filtering.GridFilterTooltip:accepts",  // Refined Storage legacy
-                            "com.raoulvdberge.refinedstorage.gui.grid.filtering.GridFilterMod:test",  // Refined Storage item mod name
-                            "com.raoulvdberge.refinedstorage.gui.grid.filtering.GridFilterName:test",  // Refined Storage item name
-                            "com.raoulvdberge.refinedstorage.gui.grid.filtering.GridFilterOreDict:lambda$test$0",  // Refined Storage item oreDict
-                            "com.raoulvdberge.refinedstorage.gui.grid.filtering.GridFilterTooltip:test",  // Refined Storage item tooltip
-                            "com.rwtema.extrautils2.transfernodes.TileIndexer$ContainerIndexer$WidgetItemRefButton:lambda$getRef$0",  // Extra Utilities indexer
-                            "crazypants.enderio.machine.invpanel.client.ItemFilter$ModFilter:matches",  // EnderIO inventory panel item mod
-                            "crazypants.enderio.machine.invpanel.client.ItemFilter$NameFilter:matches",  // EnderIO inventory panel item name
-                            "vazkii.psi.client.gui.GuiProgrammer:shouldShow",  // Psi programmer search
-                            "vazkii.botania.client.gui.lexicon.GuiLexiconIndex:matchesSearch",  // Botania manual
-                            "de.ellpeck.actuallyadditions.mod.booklet.entry.BookletEntry:fitsFilter",  // Actually Additions manual
-                            "de.ellpeck.actuallyadditions.mod.booklet.entry.BookletEntry:getChaptersForDisplay",  // Actually Additions manual
-                            "com.zerofall.ezstorage.gui.client.GuiStorageCore:updateFilteredItems",  // EZ Storage search
+                            "com.raoulvdberge.refinedstorage.gui.grid.filtering.GridFilterName:accepts",  // Refined Storage (Legacy)
+                            "com.raoulvdberge.refinedstorage.gui.grid.filtering.GridFilterTooltip:accepts",  // Refined Storage (Legacy)
+                            "com.raoulvdberge.refinedstorage.gui.grid.filtering.GridFilterMod:test",  // Refined Storage (item mod name)
+                            "com.raoulvdberge.refinedstorage.gui.grid.filtering.GridFilterName:test",  // Refined Storage (item name)
+                            "com.raoulvdberge.refinedstorage.gui.grid.filtering.GridFilterOreDict:lambda$test$0",  // Refined Storage (item oreDict)
+                            "com.raoulvdberge.refinedstorage.gui.grid.filtering.GridFilterTooltip:test",  // Refined Storage (item tooltip)
+                            "com.rwtema.extrautils2.transfernodes.TileIndexer$ContainerIndexer$WidgetItemRefButton:lambda$getRef$0",  // Extra Utilities (Indexer)
+                            "crazypants.enderio.machine.invpanel.client.ItemFilter$ModFilter:matches",  // EnderIO (Legacy, Inventory Panel item mod)
+                            "crazypants.enderio.machine.invpanel.client.ItemFilter$NameFilter:matches",  // EnderIO (Legacy, Inventory Panel item name)
+                            "crazypants.enderio.invpanel.client.AbstractItemEntryFilter$NameEntryFilter:matches",  // Ender IO (Inventory Panel)
+                            "vazkii.psi.client.gui.GuiProgrammer:shouldShow",  // Psi (Spell Programmer)
+                            "vazkii.botania.client.gui.lexicon.GuiLexiconIndex:matchesSearch",  // Botania (Lexica Botania)
+                            "de.ellpeck.actuallyadditions.mod.booklet.entry.BookletEntry:fitsFilter",  // Actually Additions (manual)
+                            "de.ellpeck.actuallyadditions.mod.booklet.entry.BookletEntry:getChaptersForDisplay",  // Actually Additions (manual)
+                            "com.zerofall.ezstorage.gui.client.GuiStorageCore:updateFilteredItems",  // EZStorage 2
                             "io.github.elytra.copo.inventory.ContainerVT:updateSlots",  // Correlated legacy
                             "io.github.elytra.copo.inventory.ContainerTerminal:updateSlots",  // Correlated legacy
                             "net.minecraft.client.gui.inventory.GuiContainerCreative:updateFilteredItems",  // vanilla creative search legacy
                             "bmp:updateFilteredItems",  // vanilla creative search legacy
-                            "appeng.client.gui.implementation.GuiInterfaceTerminal:refreshList",  // Applied Energistics terminal interface legacy
-                            "appeng.client.gui.implementation.GuiInterfaceTerminal:itemStackMatchesSearchTerm",  // Applied Energistics terminal interface legacy
-                            "appeng.client.gui.implementations.GuiInterfaceTerminal:refreshList",  // Applied Energistics terminal interface
-                            "appeng.client.gui.implementations.GuiInterfaceTerminal:itemStackMatchesSearchTerm",  // Applied Energistics terminal interface
+                            "appeng.client.gui.implementation.GuiInterfaceTerminal:refreshList",  // Applied Energistics  (Legacy, ME Interface Terminal)
+                            "appeng.client.gui.implementation.GuiInterfaceTerminal:itemStackMatchesSearchTerm",  // Applied Energistics (Legacy, ME Interface Terminal)
+                            "appeng.client.gui.implementations.GuiInterfaceTerminal:refreshList",  // Applied Energistics (ME Interface Terminal, ME Interface name)
+                            "appeng.client.gui.implementations.GuiInterfaceTerminal:itemStackMatchesSearchTerm",  // Applied Energistics (ME Interface Terminal, item search)
+                            "appeng.client.me.ItemRepo:updateView",  // AE2 Unofficial Extended Life (Legacy)
+                            "appeng.client.me.ItemRepo:lambda$updateView$0",  // AE2 Unofficial Extended Life (Legacy)
+                            "appeng.client.gui.implementations.GuiInterfaceConfigurationTerminal:refreshList",  // AE2 Unofficial Extended Life (ME Interface Configuration Terminal, ME Interface name)
+                            "appeng.client.gui.implementations.GuiInterfaceConfigurationTerminal:itemStackMatchesSearchTerm",  // AE2 Unofficial Extended Life (ME Interface Configuration Terminal, item search)
+                            "appeng.client.gui.implementations.GuiFluidInterfaceConfigurationTerminal:fluidStackMatchesSearchTerm",  // AE2 Unofficial Extended Life (ME Fluid Interface Configuration Terminal, fluid search)
+                            "appeng.client.gui.implementations.GuiFluidInterfaceConfigurationTerminal:refreshList",  // AE2 Unofficial Extended Life (ME Fluid Interface Configuration Terminal, ME Fluid Interface name)
+                            "appeng.client.me.ItemRepo:addIAE",  // AE2 Unofficial Extended Life
+                            "com.cellterminal.gui.handler.TerminalDataManager:storageBusMatchesSearchFilter",  // Cell Terminal (ME Storage Bus Search)
+                            "com.cellterminal.gui.handler.TerminalDataManager:cellMatchesSearchFilter",  // Cell Terminal (Cell Search)
+                            "com.cellterminal.client.AdvancedSearchParser:hasWildcards",  // Cell Terminal (Advanced Search)
+                            "com.cellterminal.client.AdvancedSearchParser:compareSingleString",  // Cell Terminal (Advanced Search)
+                            "p455w0rd.wit.client.gui.GuiWIT:refreshList",  // AE2 Wireless Interface Terminal (ME Interface name)
+                            "p455w0rd.wit.client.gui.GuiWIT:itemStackMatchesSearchTerm",  // AE2 Wireless Interface Terminal (item search)
                             "pers.towdium.just_enough_calculation.gui.guis.GuiPicker:updateLayout",  // JustEnoughCalculation legacy
                             "io.github.elytra.correlated.inventory.ContainerTerminal:updateSlots",  // Correlated legacy
                             "com.elytradev.correlated.inventory.ContainerTerminal:updateSlots",  // Correlated legacy
@@ -254,23 +268,24 @@ public class JechConfig {
                             "sonar.logistics.core.tiles.readers.items.GuiInventoryReader:getGridList",  // Practical Logistics item search
                             "sonar.logistics.core.items.wirelessstoragereader.GuiWirelessStorageReader:getGridList",  // Practical Logistics remote item search
                             "sonar.logistics.core.items.guide.GuiGuide:updateSearchList",  // Practical Logistics manual
-                            "binnie.core.machines.storage.SearchDialog:updateSearch",  // BinnieCore chest search
+                            "binnie.core.machines.storage.SearchDialog:updateSearch",  // Binnie Core (chest)
                             "net.blay09.mods.cookingforblockheads.container.ContainerRecipeBook:search",  // Cooking for Blockheads workbench search
                             "mcjty.rftools.blocks.storagemonitor.GuiStorageScanner:updateContentsList",  // RFTools unknown
                             "mcjty.rftools.blocks.storagemonitor.StorageScannerTileEntity:lambda$null$20",  // RFTools unknown
                             "mcjty.rftools.blocks.storagemonitor.StorageScannerTileEntity:lambda$makeSearchPredicate$24",  // RFTools unknown
                             "mcjty.rftools.blocks.storagemonitor.StorageScannerTileEntity:lambda$makeSearchPredicate$20",  // RFTools unknown
-                            "mcjty.rftools.blocks.storage.GuiModularStorage:updateList",  // RFTools modular storage
+                            "mcjty.rftools.blocks.storage.GuiModularStorage:updateList",  // RFTools (Modular Storage)
                             "mcjty.rftools.blocks.shaper.LocatorTileEntity:checkFilter",  // RFTools unknown
-                            "mcjty.rftools.items.netmonitor.GuiNetworkMonitor:populateList",  // RFTools network monitor
-                            "moze_intel.projecte.gameObjs.container.inventory.TransmutationInventory:doesItemMatchFilter",  // ProjectE item search
-                            "moze_intel.projecte.utils.ItemSearchHelper$DefaultSearch:doesItemMatchFilter_",  // ProjectE legacy
-                            "org.cyclops.integrateddynamics.core.client.gui.GuiTextFieldDropdown:func_146201_a",
-                            "blusunrize.immersiveengineering.api.ManualPageBlueprint:listForSearch",  // Immersive Engineering manual
-                            "blusunrize.lib.manual.ManualPages$Crafting:listForSearch",  // Immersive Engineering manual
-                            "blusunrize.lib.manual.ManualPages$CraftingMulti:listForSearch",  // Immersive Engineering manual
-                            "blusunrize.lib.manual.ManualPages$ItemDisplay:listForSearch",  // Immersive Engineering manual
-                            "blusunrize.lib.manual.gui.GuiManual:func_73869_a",  // Immersive Engineering manual
+                            "mcjty.rftools.items.netmonitor.GuiNetworkMonitor:populateList",  // RFTools (RF Network Monitor)
+                            "mcjty.rftoolsdim.blocks.workbench.GuiDimletWorkbench:dimletMatches",  // RFTools Dimensions (Dimlet Workbench)
+                            "moze_intel.projecte.gameObjs.container.inventory.TransmutationInventory:doesItemMatchFilter",  // ProjectE (item search)
+                            "moze_intel.projecte.utils.ItemSearchHelper$DefaultSearch:doesItemMatchFilter_",  // ProjectE (Legacy)
+                            "org.cyclops.integrateddynamics.core.client.gui.GuiTextFieldDropdown:func_146201_a",  // Integrated Dynamics
+                            "blusunrize.immersiveengineering.api.ManualPageBlueprint:listForSearch",  // Immersive Engineering (Engineer's Manual)
+                            "blusunrize.lib.manual.ManualPages$Crafting:listForSearch",  // Immersive Engineering (Engineer's Manual)
+                            "blusunrize.lib.manual.ManualPages$CraftingMulti:listForSearch",  // Immersive Engineering (Engineer's Manual)
+                            "blusunrize.lib.manual.ManualPages$ItemDisplay:listForSearch",  // Immersive Engineering (Engineer's Manual)
+                            "blusunrize.lib.manual.gui.GuiManual:func_73869_a",  // Immersive Engineering (Engineer's Manual)
                             "betterquesting.client.gui.editors.GuiPrerequisiteEditor:RefreshSearch",  // BetterQuesting prerequisite search legacy
                             "betterquesting.client.gui.editors.GuiQuestLineEditorB:RefreshSearch",  // BetterQuesting legacy
                             "betterquesting.client.gui.editors.json.GuiJsonEntitySelection:updateSearch",  // BetterQuesting entity search legacy
@@ -284,36 +299,28 @@ public class JechConfig {
                             "betterquesting.client.gui2.editors.tasks.CanvasAdvancementSearch:queryMatches",  // Better Questing Unofficial (Editor Advancement Search)
                             "betterquesting.client.gui2.editors.GuiTaskEditor$1:queryMatches",  // Better Questing Unofficial (Editor Search)
                             "com.elytradev.correlated.C28n:contains",  // Correlated
-                            "vswe.stevesfactory.components.ComponentMenuContainer$2:updateSearch",  // Steve's Factory Manager container search
-                            "vswe.stevesfactory.components.ComponentMenuFluid:updateSearch",  // Steve's Factory Manager fluid search
-                            "vswe.stevesfactory.components.ComponentMenuItem:updateSearch",  // Steve's Factory Manager item search
-                            "com.mia.props.client.container.GuiDecobench:refreshButtons",  // Decofraft workbench
-                            "mrriegel.storagenetwork.gui.GuiRequest:match",  // Storage Network
-                            "vazkii.quark.client.feature.ChestSearchBar:lambda$namesMatch$0",  // quark chest
-                            "vazkii.quark.client.feature.ChestSearchBar:namesMatch", // quark chest
+                            "com.mia.props.client.container.GuiDecobench:refreshButtons",  // Decocraft (Decobench)
+                            "vazkii.quark.client.feature.ChestSearchBar:lambda$namesMatch$0",  // Quark (Chest Search)
+                            "vazkii.quark.client.feature.ChestSearchBar:namesMatch",  // Quark (Chest Search)
                             "logisticspipes.gui.orderer.GuiOrderer:isSearched",  // Logistics Pipes orderer
                             "logisticspipes.gui.orderer.GuiRequestTable:isSearched",  // Logistics Pipes request table
                             "us.getfluxed.controlsearch.client.gui.GuiNewControls:refreshKeys",  // Controlling
                             "me.towdium.jecalculation.utils.Utilities$I18n:contains",  // Just Enough Calculation
                             "net.blay09.mods.farmingforblockheads.container.ContainerMarketClient:applyFilters",  // Farming for Blockheads
-                            "mrriegel.storagenetwork.gui.GuiContainerStorageInventory:doesStackMatchSearch",  // simple storage network storage
-                            "mrriegel.storagenetwork.gui.fb.GuiFastNetworkCrafter:doesStackMatchSearch",  // simple storage network crafting
+                            "mrriegel.storagenetwork.gui.GuiRequest:match",  // Simple Storage Network (Legacy)
+                            "mrriegel.storagenetwork.gui.GuiContainerStorageInventory:doesStackMatchSearch",  // Simple Storage Network (Storage Inventory)
+                            "mrriegel.storagenetwork.gui.fb.GuiFastNetworkCrafter:doesStackMatchSearch",  // Simple Storage Network
                             "com.feed_the_beast.ftblib.lib.gui.misc.GuiButtonListBase$1:add",  // FTB Quests (quest search, double-tap Shift)
                             "com.feed_the_beast.ftblib.lib.gui.misc.GuiSelectItemStack$ItemStackButton:shouldAdd",  // FTB quests (Edit mode item search)
                             "com.latmod.mods.projectex.gui.GuiTableBase:updateValidItemList",  // Project EX & ProjectEZ
                             "amerifrance.guideapi.gui.GuiSearch:getMatches",  // Guide-API
                             "thaumcraft.client.gui.GuiResearchBrowser:updateSearch",  // Thaumcraft
-                            "astavie.thermallogistics.client.gui.GuiTerminalItem:updateFilter",  // Thermal Logistics
-                            "com.the9grounds.aeadditions.gui.GuiTerminal:updateFluids", // AE Additions Terminal
-                            "com.the9grounds.aeadditions.gui.GuiStorage:updateFluids", // AE Additions Terminal
+                            "astavie.thermallogistics.client.gui.GuiTerminalItem:updateFilter",  // Thermal Logistics (Terminal)
+                            "com.the9grounds.aeadditions.gui.GuiTerminal:updateFluids",  // AE Additions - ExtraCells2 Fork (Terminal)
+                            "com.the9grounds.aeadditions.gui.GuiStorage:updateFluids",  // AE Additions - ExtraCells2 Fork (Terminal)
                             "me.desht.pneumaticcraft.common.recipes.AmadronOffer:passesQuery",  // PneumaticCraft (Amadron)
                             "me.desht.pneumaticcraft.client.gui.GuiSearcher$SearchEntry:test",  // PneumaticCraft (Item Search)
                             "me.desht.pneumaticcraft.client.gui.programmer.GuiProgWidgetLiquidFilter:addValidFluids",  // PneumaticCraft (Fluid Search)
-                            "appeng.client.me.ItemRepo:updateView", // AE2 Unofficial Extended Life(legacy)
-                            "appeng.client.me.ItemRepo:lambda$updateView$0", //AE2 Unofficial Extended Life
-                            "appeng.client.gui.implementations.GuiInterfaceConfigurationTerminal:refreshList",  //AE2 Unofficial Extended Life
-                            "appeng.client.gui.implementations.GuiInterfaceConfigurationTerminal:itemStackMatchesSearchTerm",  //AE2 Unofficial Extended Life(legacy)
-                            "appeng.client.me.ItemRepo:addIAE", //AE2 Unofficial Extended Life
                             "ruukas.infinityeditor.gui.GuiEnchanting:filterEnchantments",  // Infinity Item Editor (Enchanting)
                             "ruukas.infinityeditor.gui.GuiPick:func_73866_w_",  // Infinity Item Editor (pick item)
                             "ruukas.infinityeditor.gui.GuiPotion:filterPotions",  // Infinity Item Editor (Potion)
@@ -321,16 +328,13 @@ public class JechConfig {
                             "com.chaosthedude.naturescompass.gui.GuiNaturesCompass:processSearchTerm",  // Nature's Compass
                             "journeymap.client.ui.waypointmanager.WaypointManagerQueryService:lambda$buildWaypointRows$7",  // JourneyMap (Waypoint Search, since 1.12.2-6.0.0-beta.3)
                             "vazkii.patchouli.client.book.BookEntry:isFoundByQuery",  // Patchouli
-                            "dev.emi.emi.search.NameQuery:matchesUnbaked",  // retroEMI Forge (search)
-                            "dev.emi.emi.search.TooltipQuery:matchesUnbaked",  // retroEMI Forge (Tooltip Search)
                             "dev.emi.emi.screen.widget.config.ConfigEntryWidget:isVisible",  // retroEMI Forge (Config Search)
                             "com.xray.gui.manage.GuiBlockListScrollable:reloadBlocks",  // Advanced Xray
                             "com.xray.gui.GuiSelectionScreen:lambda$updateSearch$0",  // Advanced Xray
-                            "crazypants.enderio.invpanel.client.AbstractItemEntryFilter$NameEntryFilter:matches",  // Ender IO (Inventory Panel)
                             "mezz.jei.search.ElementSearchLowMem:matches",  // Had Enough Items (Low Memory)
                             "com.brandon3055.projectintelligence.client.gui.guielements.GuiPartPageList:doesPageMatchSearch",  // Project Intelligence
-                            "mcjty.xnet.blocks.controller.gui.GuiController:populateList",  // Xnet
-                            "mcjty.xnet.blocks.controller.gui.GuiController:matchesSearch",  // Znet (Xnet fork)
+                            "mcjty.xnet.blocks.controller.gui.GuiController:populateList",  // Xnet (Controller)
+                            "mcjty.xnet.blocks.controller.gui.GuiController:matchesSearch",  // Znet (Xnet fork, Controller)
                             "com.github.mrnerdy42.keywizard.gui.GuiBindingList:lambda$filterBindingsByName$6",  // Keyboard Wizard
                             "mrnerdy42.keywizard.gui.GuiBindingList:lambda$filterBindingsByName$14",  // Keyboard Wizard CE
                             "com.latmod.mods.itemfilters.gui.GuiEditStringValueFilter:updateVariants",  // Item Filters
@@ -344,11 +348,18 @@ public class JechConfig {
                             "mekanism.common.content.qio.QIOSearchQueryParser$QueryType:lambda$static$2",  // Mekanism CE Unofficial (QIO)
                             "mekanism.common.content.qio.QIOSearchQueryParser$QueryType:lambda$static$1",  // Mekanism CE Unofficial (QIO)
                             "mekanism.common.content.qio.QIOSearchQueryParser$QueryType:lambda$static$0",  // Mekanism CE Unofficial (QIO)
-                            "com.cellterminal.gui.handler.TerminalDataManager:storageBusMatchesSearchFilter",  // Cell Terminal (ME Storage Bus Search)
-                            "com.cellterminal.gui.handler.TerminalDataManager:cellMatchesSearchFilter",  // Cell Terminal (Cell Search)
-                            "com.cellterminal.client.AdvancedSearchParser:hasWildcards",  // Cell Terminal (Advanced Search)
-                            "com.cellterminal.client.AdvancedSearchParser:compareSingleString",  // Cell Terminal (Advanced Search)
-                            "electroblob.wizardry.spell.Spell:matches"  // Electroblob's Wizardry (Lectern)
+                            "electroblob.wizardry.spell.Spell:matches",  // Electroblob's Wizardry (Lectern)
+                            "noppes.npcs.client.gui.GuiNpcMobSpawner:getSearchList",  // Custom NPCs
+                            "noppes.npcs.client.gui.GuiNpcMobSpawnerMounter:getSearchList",  // Custom NPCs (Mounter)
+                            "noppes.npcs.client.gui.GuiNpcMobSpawnerSelector:getSearchList",  // Custom NPCs
+                            "com.supermartijn642.rechiseled.screen.BaseChiselingContainerScreen:doesItemMatchSearch",  // Rechiseled
+                            "com.aranaira.arcanearchives.types.lists.ManifestList:lambda$filtered$0",  // Arcane Archives
+                            "cassiokf.industrialrenewal.gui.GUIStorageChest:stackMatches",  // Industrial Renewal Storage Rack (Chest)
+                            "xy177.tinkersplannerantique.client.planner.PlannerScreen:matchesSearch",  // Tinkers Planner Antique
+                            "com.blamejared.worldbook.client.gui.GuiWorldBook:filter",  // World Book
+                            "mrtjp.projectred.transportation.GuiRequester$$anonfun$stringMatch$1$1:apply",  // Project Red Integration (Project Red Transmission Routed Request pipe)
+                            "bq_standard.client.gui.editors.tasks.CanvasAdvancementSearch:queryMatches",  // Standard Expansion (Advancement Search)
+                            "net.silentchaos512.lib.guidebook.entry.GuideEntry:fitsFilter"  // Silent Lib (Guide)
                     };
                 case LIST_DEFAULT_REGEXP:
                     return new String[]{
@@ -356,10 +367,10 @@ public class JechConfig {
                             "appeng.client.me.ItemRepo:updateView",  // Applied Energistics item search
                             "codechicken.nei.ItemList$PatternItemFilter:matches",  // NEI item list legacy
                             "codechicken.nei.util.ItemList$PatternItemFilter:matches",  // NEI item list
-                            "org.cyclops.integrateddynamics.core.inventory.container.ContainerMultipartAspects$1:apply",
+                            "org.cyclops.integrateddynamics.core.inventory.container.ContainerMultipartAspects$1:apply",  // Integrated Dynamics
                             "org.cyclops.integrateddynamics.inventory.container.ContainerLogicProgrammerBase$1:apply",  // Integrated Dynamics programmer
                             "p455w0rd.wct.client.me.ItemRepo:updateView",  // Wireless Crafting Terminal
-                            "vazkii.quark.client.feature.ChestSearchBar:lambda$namesMatch$2",  // quark chest
+                            "vazkii.quark.client.feature.ChestSearchBar:lambda$namesMatch$2",  // Quark (Regex Chest Search)
                             "org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerFluidStack:lambda$getInstanceFilterPredicate$1",  // integrated terminals
                             "org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerFluidStack:lambda$getInstanceFilterPredicate$4",  // integrated terminals
                             "org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$getInstanceFilterPredicate$1",  // integrated terminals
@@ -370,7 +381,7 @@ public class JechConfig {
                             "thaumicenergistics.client.gui.helpers.MERepo:searchTooltip",  // Thaumic Energistics
                             "thaumicenergistics.client.gui.helpers.MERepo:searchMod",  // Thaumic Energistics
                             "thaumicenergistics.client.gui.helpers.MERepo:lambda$searchAspects$5",  // Thaumic Energistics
-                            "appeng.client.me.ItemRepo:addIAE", //AE2 Unofficial Extended Life
+                            "appeng.client.me.ItemRepo:addIAE",  //AE2 Unofficial Extended Life
                             "dev.emi.emi.search.RegexNameQuery:matches",  // retroEMI Forge (Regex Search)
                             "dev.emi.emi.search.RegexTooltipQuery:matches",  // retroEMI Forge (Regex Tooltip Search)
                             "vswe.superfactory.util.SearchUtil$Query:lambda$new$0"  // Super Factory Manager (item Search)
@@ -379,18 +390,18 @@ public class JechConfig {
                     return new String[]{
                             "net.minecraft.client.util.PinyinTree:<init>",  // vanilla search
                             "net.minecraft.client.util.PinyinTree:recalculate",  // vanilla search
-                            "net.minecraft.client.util.SearchTree:<init>", // vanilla search
-                            "net.minecraft.client.util.SearchTree:recalculate", // vanilla search
+                            "net.minecraft.client.util.SearchTree:<init>",  // vanilla search
+                            "net.minecraft.client.util.SearchTree:recalculate",  // vanilla search
                             "cgw:<init>",  // vanilla search notch name
                             "cgw:a",  // vanilla search notch name
-                            "cgu:<init>", // vanilla search notch name
-                            "cgu:a", // vanilla search notch name
+                            "cgu:<init>",  // vanilla search notch name
+                            "cgu:a",  // vanilla search notch name
                             "buildcraft.lib.client.guide.GuideManager:generateContentsPage"  // BuildCraft manual
                     };
                 case LIST_DEFAULT_STRSKT:
                     return new String[]{
-                            "com.cout970.magneticraft.features.multiblocks.ContainerShelvingUnit:filterSlots",  // Magneticraft shelving unit legacy
-                            "com.cout970.magneticraft.features.multiblocks.ContainerShelvingUnit$filterSlots$1:invoke"  // Magneticraft shelving unit
+                            "com.cout970.magneticraft.features.multiblocks.ContainerShelvingUnit:filterSlots",  // Magneticraft (Legacy, Shelving Unit)
+                            "com.cout970.magneticraft.features.multiblocks.ContainerShelvingUnit$filterSlots$1:invoke"  // Magneticraft (Shelving Unit)
                     };
                 case ENABLE_FUZZY_ZH2Z:
                 case ENABLE_FUZZY_SH2S:
