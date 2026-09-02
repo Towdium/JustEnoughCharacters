@@ -218,12 +218,14 @@
   "punchy.client.config.PunchyConfigScreen:refreshBlacklistFilteredEntries()V", # Punchy! (config item search, since 2.7d-forge-1.20.1)
   "nl.ljack2k.ae2organizer.client.gui.ItemPickerScreen:applyFilter(Ljava/lang/String;)V", # Storage Organizer (Item Picker search, since 2.0.0+1.20.1)
   "dev.lambdaurora.lambdynlights.gui.LightSourceListWidget:checkFilter(Ldev/lambdaurora/lambdynlights/gui/LightSourceListWidget$LightSourceEntry;Ljava/util/List;)Z", # LambDynamicLights (since 4.8.10+1.21.1)
-  "dev.dubhe.anvilcraft.rpc.StorageServerStub:matchesFilters(Lnet/minecraft/core/Holder;Ldev/anvilcraft/lib/v2/util/stack/UnlimitedItemStack;Lnet/minecraft/resources/ResourceLocation;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;)Z", # AnvilCraft Storage search (terminal/station RPC)
+  "dev.dubhe.anvilcraft.rpc.StorageServerStub:matchesFilters(Lnet/minecraft/core/Holder;Ldev/anvilcraft/lib/v2/util/stack/UnlimitedItemStack;Lnet/minecraft/resources/ResourceLocation;Ljava/lang/String;Ljava/util/List;)Z", # AnvilCraft Storage search (terminal/station RPC)
   "dev.dubhe.anvilcraft.rpc.StorageServerStub:matchesTag(Lnet/minecraft/resources/ResourceLocation;Ljava/lang/String;)Z", # AnvilCraft Storage search (tag match)
   "dev.dubhe.anvilcraft.client.gui.screen.TeslaTowerScreen:lambda$onSearchTextChange$2(Ljava/lang/String;Lit/unimi/dsi/fastutil/Pair;)Z", # AnvilCraft Tesla Tower search
   "dev.dubhe.anvilcraft.client.gui.screen.TeslaTowerScreen:lambda$onSearchTextChange$6(Lit/unimi/dsi/fastutil/Pair;)Z", # AnvilCraft Tesla Tower search
   "dev.dubhe.anvilcraft.client.gui.screen.AdjacentSmithingScreen:lambda$filteredTemplates$1(Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z", # AnvilCraft Adjacent Smithing search
   "dev.dubhe.anvilcraft.client.gui.screen.AutoEnchantingTableScreen:refreshFilter()V", # AnvilCraft Auto Enchanting Table filter
+  "dev.dubhe.anvilcraft.client.gui.screen.StorageScreen:applySearchFilter(Lit/unimi/dsi/fastutil/ints/IntList;)Lit/unimi/dsi/fastutil/ints/IntList;", # AnvilCraft Storage client-side search filter
+  "dev.dubhe.anvilcraft.client.gui.screen.StorageScreen:rebuildFoldedGroups(Z)V", # AnvilCraft Storage client-side search filter
 ]
 "equals": [
   "me.shedaniel.clothconfig2.gui.entries.TextFieldListEntry:isMatchDefault(Ljava/lang/String;)Z", # Cloth Config
