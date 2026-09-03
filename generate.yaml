@@ -226,6 +226,7 @@
   "dev.dubhe.anvilcraft.client.gui.screen.AutoEnchantingTableScreen:refreshFilter()V", # AnvilCraft Auto Enchanting Table filter
   "dev.dubhe.anvilcraft.client.gui.screen.StorageScreen:applySearchFilter(Lit/unimi/dsi/fastutil/ints/IntList;)Lit/unimi/dsi/fastutil/ints/IntList;", # AnvilCraft Storage client-side search filter
   "dev.dubhe.anvilcraft.client.gui.screen.StorageScreen:rebuildFoldedGroups(Z)V", # AnvilCraft Storage client-side search filter
+  "dev.dubhe.anvilcraft.client.support.TerminalRemoteOverlay:applyClientFilter()V", # AnvilCraft terminal overlay client-side search filter
 ]
 "equals": [
   "me.shedaniel.clothconfig2.gui.entries.TextFieldListEntry:isMatchDefault(Ljava/lang/String;)Z", # Cloth Config
@@ -248,6 +249,8 @@
   "dev.dubhe.anvilcraft.client.gui.screen.TeslaTowerScreen:lambda$onSearchTextChange$3(Lit/unimi/dsi/fastutil/Pair;Lit/unimi/dsi/fastutil/Pair;)Z", # AnvilCraft Tesla Tower search
   "dev.dubhe.anvilcraft.client.gui.screen.TeslaTowerScreen:lambda$onSearchTextChange$7(Lit/unimi/dsi/fastutil/Pair;Lit/unimi/dsi/fastutil/Pair;)Z", # AnvilCraft Tesla Tower search
   "dev.dubhe.anvilcraft.client.gui.screen.TeslaTowerScreen:lambda$removeWhiteFilter$9(Ljava/lang/String;Ljava/lang/String;Lit/unimi/dsi/fastutil/Pair;)Z", # AnvilCraft Tesla Tower search
+  "dev.dubhe.anvilcraft.client.support.TerminalRemoteOverlay:lambda$ensureSearchBox$0(Ljava/lang/String;)V", # AnvilCraft terminal overlay search box (since 2234)
+  "dev.dubhe.anvilcraft.integration.StorageJeiBridge:cache(Ljava/lang/String;Ljava/lang/reflect/Method;)V", # AnvilCraft storage JEI bridge
 ]
 "regExp": [
   'appeng.client.gui.me.search.SearchPredicates:lambda$createNamePredicate$3(Ljava/util/regex/Pattern;Lappeng/menu/me/common/GridInventoryEntry;)Z', #Applied Energistics (Since 2-12.9.5)
