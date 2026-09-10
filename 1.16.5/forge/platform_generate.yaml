@@ -1,0 +1,13 @@
+"suffix": [
+  "net.minecraft.client.util.SearchTree:<init>(Ljava/util/function/Function;Ljava/util/function/Function;)V",  # Vanilla
+  "net.minecraft.client.util.SearchTree:func_194040_a()V",  # Vanilla
+  "net.minecraft.client.util.SearchTreeReloadable:<init>(Ljava/util/function/Function;)V",  # Vanilla
+  "net.minecraft.client.util.SearchTreeReloadable:func_194040_a()V"  # Vanilla
+]
+"contains": [
+  "mezz.jei.search.ElementSearchLowMem:matches(Ljava/lang/String;Lmezz/jei/search/PrefixInfo;Lmezz/jei/ingredients/IIngredientListElementInfo;)Z", #JEI (low memory)
+]
+"equals": [
+]
+"regExp": [
+]
