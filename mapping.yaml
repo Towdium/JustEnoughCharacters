@@ -1,4 +1,20 @@
-"Lnet/minecraft/world/item/ItemStack": [
-  "mcp": "Lnet/minecraft/item/ItemStack",
-  "intermediary": "Lnet/minecraft/class_1799"
-]
+# Class-name rewrites applied ONLY to Fabric targets, before targets.json is
+# written. Forge targets use official (Mojang) names, which is what the shared
+# generate.yaml lists already contain, so they need no rewrite.
+#
+#   <official name>: { <namespace>: <name in that namespace> }
+#
+# Only `intermediary` is consumed today; `mcp` is recorded because the 1.12.2 and
+# 1.16.5 lines use MCP names and will need it if they ever share this file.
+#
+# NOTE: this file previously used `[ ... ]` (a YAML *sequence*) around the two
+# entries instead of `{ ... }` (a *mapping*). It parsed as
+#   {"Lnet/.../ItemStack": [{"mcp": "..."}, {"intermediary": "..."}]}
+# and the build script stringified that list, producing entries that looked like
+#   foo:bar([[mcp:Lnet/minecraft/item/ItemStack], [intermediary:Lnet/minecraft/class_1799]];...)Z
+# which match nothing at runtime. Corrected here; the codegen also accepts the
+# old shape so a stale checkout does not silently produce garbage again.
+
+"Lnet/minecraft/world/item/ItemStack":
+  mcp: "Lnet/minecraft/item/ItemStack"
+  intermediary: "Lnet/minecraft/class_1799"
