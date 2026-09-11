@@ -13,7 +13,6 @@ import org.spongepowered.asm.transformers.TreeTransformer;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
-import java.util.Objects;
 
 @FieldDefaults(
         level = AccessLevel.PRIVATE,
@@ -29,7 +28,7 @@ class MixinTransformerDelegate<T extends TreeTransformer & IMixinTransformer> ex
 
 class MixinTransformerHook<T extends TreeTransformer & IMixinTransformer> extends MixinTransformerDelegate<T> {
 
-    private final Deque<String> transformationStack = new ArrayDeque<>();
+    private final ThreadLocal<Deque<String>> transformationStack = ThreadLocal.withInitial(ArrayDeque::new);
     private final JechClassTransformer transformer;
 
     MixinTransformerHook(T delegate, JechClassTransformer transformer) {
@@ -39,23 +38,27 @@ class MixinTransformerHook<T extends TreeTransformer & IMixinTransformer> extend
 
     @Override
     public byte[] transformClassBytes(String name, String transformedName, byte[] basicClass) {
-        if (basicClass == null || Objects.equals(transformationStack.peek(), name))
+        Deque<String> stack = transformationStack.get();
+        if (basicClass == null || stack.contains(name))
             return super.transformClassBytes(name, transformedName, basicClass);
-        transformationStack.push(name);
-        basicClass = super.transformClassBytes(name, transformedName, basicClass);
-        String internalName = name.replace('.', '/');
-        boolean shouldTransform = transformer.getTransformers().stream().anyMatch(it -> it.accept(internalName));
-        if (!shouldTransform) return basicClass;
-        //transform class bytes
-        ClassNode classNode = new ClassNode();
-        ClassReader classReader = new ClassReader(basicClass);
-        classReader.accept(classNode, 0);
-        transformer.transform(classNode);
-        ClassWriter classWriter = new ClassWriter(ClassWriter.COMPUTE_MAXS);
-        classNode.accept(classWriter);
-        basicClass = classWriter.toByteArray();
-        transformationStack.pop();
-        return basicClass;
+        stack.push(name);
+        try {
+            basicClass = super.transformClassBytes(name, transformedName, basicClass);
+            String internalName = name.replace('.', '/');
+            boolean shouldTransform = transformer.getTransformers().stream().anyMatch(it -> it.accept(internalName));
+            if (!shouldTransform) return basicClass;
+            //transform class bytes
+            ClassNode classNode = new ClassNode();
+            ClassReader classReader = new ClassReader(basicClass);
+            classReader.accept(classNode, 0);
+            transformer.transform(classNode);
+            ClassWriter classWriter = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+            classNode.accept(classWriter);
+            basicClass = classWriter.toByteArray();
+            return basicClass;
+        } finally {
+            stack.pop();
+        }
     }
 
 
