@@ -264,10 +264,10 @@ public class JechConfig {
                             "sonar.logistics.client.gui.GuiGuide:updateSearchList",  // Practical Logistics legacy manual
                             "sonar.logistics.client.gui.GuiInventoryReader:getGridList",  // Practical Logistics legacy item search
                             "sonar.logistics.client.gui.GuiWirelessStorageReader:getGridList",  // Practical Logistics legacy remote item search
-                            "sonar.logistics.core.tiles.readers.fluids.GuiFluidReader:getGridList",   // Practical Logistics fluid search
-                            "sonar.logistics.core.tiles.readers.items.GuiInventoryReader:getGridList",  // Practical Logistics item search
-                            "sonar.logistics.core.items.wirelessstoragereader.GuiWirelessStorageReader:getGridList",  // Practical Logistics remote item search
-                            "sonar.logistics.core.items.guide.GuiGuide:updateSearchList",  // Practical Logistics manual
+                            "sonar.logistics.core.tiles.readers.fluids.GuiFluidReader:getGridList",  // Practical Logistics (fluid search)
+                            "sonar.logistics.core.tiles.readers.items.GuiInventoryReader:getGridList",  // Practical Logistics (item search)
+                            "sonar.logistics.core.items.wirelessstoragereader.GuiWirelessStorageReader:getGridList",  // Practical Logistics (remote item search)
+                            "sonar.logistics.core.items.guide.GuiGuide:updateSearchList",  // Practical Logistics (Practical Logistics Guide)
                             "binnie.core.machines.storage.SearchDialog:updateSearch",  // Binnie Core (chest)
                             "net.blay09.mods.cookingforblockheads.container.ContainerRecipeBook:search",  // Cooking for Blockheads workbench search
                             "mcjty.rftools.blocks.storagemonitor.GuiStorageScanner:updateContentsList",  // RFTools unknown
@@ -365,7 +365,7 @@ public class JechConfig {
                             "com.pixelmonmod.pixelmon.comm.packetHandlers.clientStorage.newStorage.pc.ServerQueryPC:lambda$search$0",  // Pixelmon (PC)
                             "pavocado.exoticbirds.gui.GuiBirdBook:UpdateBirdSearch",  // Exotic Birds (Bird Encyclopedia)
                             "net.shadowmage.ancientwarfare.automation.gui.GuiWarehouseControl:matchesSearch",  // Ancient Warfare 2 (Warehouse Control Block)
-                            "com.brilliafy.magicstorage.gui.GuiCraftingAccess:doesStackMatchSearch",  // Magic Storage
+                            "com.brilliafy.magicstorage.gui.GuiCraftingAccess:doesStackMatchSearch",  // Magic Storage Network
                             "moe.plushie.armourers_workshop.client.gui.skinlibrary.GuiSkinLibrary:func_73863_a:",  // Armourer's Workshop (Skin Library)
                             "com.github.aeddddd.ae2enhanced.container.ContainerOmniTerm:fallbackPageQuery",  // AE2Enhanced (Omni Terminal)
                             "com.github.aeddddd.ae2enhanced.container.ContainerOmniTerm:fallbackSearch",  // AE2Enhanced (Omni Terminal)
@@ -373,7 +373,23 @@ public class JechConfig {
                             "matteroverdrive.gui.pages.PageGuideEntries:searchFilterMatch",  // Matter Overdrive (Data Pad)
                             "com.xcompwiz.mystcraft.client.gui.GuiElementSurfaceControlsBase:updateCollection",  // Mystcraft (Symbol Portfolio)
                             "com.xcompwiz.mystcraft.client.gui.element.GuiElementPageSurface:_renderBackground",  // Mystcraft (Writing Desk)
-                            "com.fuzs.enchantinginfuser.client.gui.screens.inventory.GuiInfuser:refreshSearchResults"  // Enchanting Infuser Backport
+                            "com.fuzs.enchantinginfuser.client.gui.screens.inventory.GuiInfuser:refreshSearchResults",  // Enchanting Infuser Backport
+                            "com.kaduvill.capnschiselsearch.mixin.client.GuiChiselMixin:capnschiselsearch$matchesSearch",  // Capn's Chisel Search
+                            "mchorse.metamorph.client.gui.creative.GuiMorphSection:isMatching",  // Metamorph (creative morph menu)
+                            "cam72cam.immersiverailroading.gui.components.ListSelector:lambda$updateSearch$0",  // Immersive Railroading (Track Blueprint)
+                            "cam72cam.mod.gui.helpers.ItemPickerGUI$ItemPickerScreen:lambda$null$1",  // Universal Mod Core (Immersive Railroading Track Exchanger)
+                            "cam72cam.mod.gui.helpers.ItemPickerGUI$ItemPickerScreen:lambda$null$0",  // Universal Mod Core (Immersive Railroading Track Exchanger)
+                            "io.bluebeaker.jehighlights.ItemMatcher$SingleMatcher:matchName",  // Just Enough Highlights (item)
+                            "io.bluebeaker.jehighlights.ItemMatcher$SingleMatcher:matchTooltips",  // Just Enough Highlights (tooltip)
+                            "io.bluebeaker.jehighlights.ItemMatcher$SingleMatcher:matchCreativeTab",  // Just Enough Highlights (creative tab)
+                            "com.ae2powertools.features.maintainer.widgets.MaintainerEntryViewport:collectVisibleEntries",  // AE2 PowerTools (Better Level Maintainer)
+                            "com.ae2powertools.widgets.SearchableGridSelectorWidget:applyFilter",  // AE2 PowerTools
+                            "com.mctechnicguy.aim.gui.GuiAIMGuide:updateSearch",  // Advanced Inventory Management (Inventory Management Manual)
+                            "com.mamiyaotaru.voxelmap.gui.GuiSlotMobs:updateFilter",  // VoxelMap (config mob filter)
+                            "com.mamiyaotaru.voxelmap.gui.GuiSlotWaypoints:updateFilter",  // VoxelMap (waypoint filter)
+                            "com.spellarchives.gui.GuiSpellArchive:passesNameFilter",  // Spellcaster's Archives
+                            "techguns.tileentities.operation.FabricatorRecipe:matchesSearch",  // Techguns-CE (Fabricator)
+                            "joshie.harvest.knowledge.gui.stats.collection.button.ButtonSearch:matchesFilter"  // Harvest Festival Legacy (Farming for Dummies)
                     };
                 case LIST_DEFAULT_REGEXP:
                     return new String[]{
