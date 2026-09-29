@@ -276,6 +276,7 @@
   "org.figuramc.figura.gui.widgets.avatar.AbstractAvatarWidget:filtered()Z", # Figura (verified on 0.1.6+1.20.1)
   "org.figuramc.figura.gui.widgets.config.AbstractConfigElement:matchesFilter()Z", # Figura (config, verified on 0.1.6+1.20.1)
   "org.figuramc.figura.gui.widgets.lists.NetworkFilterList:lambda$onSearch$1(Ljava/lang/String;Lorg/figuramc/figura/gui/widgets/lists/NetworkFilterList$NetworkFilterEntry;)V", # Figura (verified on 0.1.6+1.20.1)
+  "com.mrcrayfish.mightymail.client.gui.screen.PostBoxScreen:lambda$updateSearchFilter$4(Lcom/mrcrayfish/mightymail/mail/IMailbox;)Z", # Mighty Mail (verified on 1.20.1-1.1.4)
 ]
 "equals": [
   'org.cyclops.integrateddynamics.core.client.gui.WidgetTextFieldDropdown:lambda$refreshDropdownList$0(Lorg/cyclops/integrateddynamics/core/client/gui/IDropdownEntry;)Z', #Integrated Dynamics
