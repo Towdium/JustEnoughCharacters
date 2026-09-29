@@ -1,6 +1,8 @@
 "suffix": [
 ]
 "contains": [
+  "net.minecraft.client.gui.screens.worldselection.WorldSelectionList:m_101676_(Ljava/util/function/Supplier;Z)V", # Minecraft World Selection List Search (Forge 1.18.x)
+  "net.minecraft.class_528:method_2750(Ljava/util/function/Supplier;Z)V", # Minecraft World Selection List Search (Fabric, Intermediary Mappings 1.13.1 - 1.18.2)
   "dev.ftb.extendedexchange.client.gui:updateValidItemList()V", # FTB Extended Exchange (since 1802.2.7)
 ]
 "equals": [
