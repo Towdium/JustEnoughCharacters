@@ -389,7 +389,8 @@ public class JechConfig {
                             "com.mamiyaotaru.voxelmap.gui.GuiSlotWaypoints:updateFilter",  // VoxelMap (waypoint filter)
                             "com.spellarchives.gui.GuiSpellArchive:passesNameFilter",  // Spellcaster's Archives
                             "techguns.tileentities.operation.FabricatorRecipe:matchesSearch",  // Techguns-CE (Fabricator)
-                            "joshie.harvest.knowledge.gui.stats.collection.button.ButtonSearch:matchesFilter"  // Harvest Festival Legacy (Farming for Dummies)
+                            "joshie.harvest.knowledge.gui.stats.collection.button.ButtonSearch:matchesFilter",  // Harvest Festival Legacy (Farming for Dummies)
+                            "com.cleanroommc.client.modlist.screen.ModListScreen$ModList:lambda$static$0"  // Cleanroom ModList search
                     };
                 case LIST_DEFAULT_REGEXP:
                     return new String[]{
