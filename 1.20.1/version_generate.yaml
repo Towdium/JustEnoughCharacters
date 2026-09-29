@@ -1,7 +1,7 @@
 "suffix": [
 ]
 "contains": [
-  "net.minecraft.client.gui.screens.worldselection.WorldSelectionList:m_233195_(Ljava/lang/String;Lnet/minecraft/world/level/storage/LevelSummary;)Z", # Minecraft World Selection List Search (Forge 1.19 - 1.20.5)
+  "net.minecraft.client.gui.screens.worldselection.WorldSelectionList:m_233195_(Ljava/lang/String;Lnet/minecraft/world/level/storage/LevelSummary;)Z", # Minecraft World Selection List Search (Forge 1.19 - 1.20.4)
   "net.minecraft.class_528:method_43453(Ljava/lang/String;Lnet/minecraft/class_34;)Z", # Minecraft World Selection List Search (Fabric, Intermediary Mappings, since 1.19)
   "com.aranaira.magichem.gui.AlchemicalNexusScreen:updateDisplayedRecipes(Ljava/lang/String;)V", # MagiChem (Alchemical Nexus)
   "com.aranaira.magichem.gui.CentrifugeScreen:updateDisplayedRecipes(Ljava/lang/String;)V", # MagiChem (Centrifuge)
