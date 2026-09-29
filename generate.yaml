@@ -5,8 +5,8 @@
   "me.fzzyhmstrs.fzzy_config.util.Searcher:search_delegate$lambda$0(Lme/fzzyhmstrs/fzzy_config/util/Searcher;)Lnet/minecraft/client/searchtree/SuffixArray;", # Fzzy Config (since 0.7.6+1.21)
 ]
 "contains": [
-  "net.minecraft.client.gui.screens.worldselection.WorldSelectionList:filterAccepts(Ljava/lang/String;Lnet/minecraft/world/level/storage/LevelSummary;)Z", # Minecraft World Selection List Search (since 1.13.1)
-  "net.minecraft.class_528:method_43453(Ljava/lang/String;Lnet/minecraft/class_34;)Z", # Minecraft World Selection List Search (since 1.13.1, Fabric, Intermediary Mappings)
+  "net.minecraft.client.gui.screens.worldselection.WorldSelectionList:filterAccepts(Ljava/lang/String;Lnet/minecraft/world/level/storage/LevelSummary;)Z", # Minecraft World Selection List Search (Neoforge, since 1.20.5)
+  "net.minecraft.class_528:method_43453(Ljava/lang/String;Lnet/minecraft/class_34;)Z", # Minecraft World Selection List Search (since 1.19, Fabric, Intermediary Mappings)
   "com.chaosthedude.naturescompass.gui.NaturesCompassScreen:processSearchTerm()V", # Nature's Compass
   'com.chaosthedude.explorerscompass.gui.ExplorersCompassScreen:processSearchTerm()V', # Explorer's Compass (Since 1.16.5-2.0.2)
   "com.chaosthedude.explorerscompass.gui.SearchDocument:contains(Lcom/chaosthedude/explorerscompass/gui/SearchQuery$Field;Ljava/lang/String;)Z", # Explorer's Compass Enhance (since 1.21.1-neoforge-1.5.0)
