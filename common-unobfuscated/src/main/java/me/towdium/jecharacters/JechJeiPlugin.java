@@ -3,6 +3,7 @@ package me.towdium.jecharacters;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
 import mezz.jei.api.registration.IAdvancedSearchRegistration;
+import mezz.jei.api.search.ISearchStorageFactory;
 import net.minecraft.resources.Identifier;
 
 @JeiPlugin
@@ -17,6 +18,7 @@ public class JechJeiPlugin implements IModPlugin {
     @Override
     public void registerAdvancedSearch(IAdvancedSearchRegistration registration) {
         JustEnoughCharacters.logger.info("Registering JEI pinyin search storage");
-        registration.replaceSearchStorage(JechSearchStorage::new);
+        // JEI 31 also accepts a builder factory; select the live storage overload explicitly.
+        registration.replaceSearchStorage((ISearchStorageFactory) JechSearchStorage::new);
     }
 }

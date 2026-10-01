@@ -5,8 +5,19 @@ plugins {
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion = JavaLanguageVersion.of(25)
     }
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+// Compile against FML 12 (Java 25) while keeping the shared coremod usable by legacy targets.
+tasks.withType(JavaCompile).configureEach {
+    options.release = 21
+}
+
+configurations.compileClasspath.attributes {
+    attribute(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, 25)
 }
 
 jar {
@@ -30,7 +41,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly 'net.neoforged.fancymodloader:loader:10.0.32'
+    compileOnly "net.neoforged.fancymodloader:loader:${fml_unobfuscated_version}"
     implementation project(":coremod-common")
     compileOnly 'org.jetbrains:annotations:24.1.0'
     compileOnly 'com.google.auto.service:auto-service-annotations:1.1.1'

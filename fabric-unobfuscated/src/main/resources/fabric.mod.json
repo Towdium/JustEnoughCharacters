@@ -34,9 +34,9 @@
     "jecharacters.mixins.json"
   ],
   "depends": {
-    "fabricloader": ">=0.19.2",
+    "fabricloader": ">=${loader_version}",
     "fabric-api": "*",
-    "minecraft": ">=21.1",
+    "minecraft": "~${minecraft_version}",
     "java": ">=25"
   }
 }

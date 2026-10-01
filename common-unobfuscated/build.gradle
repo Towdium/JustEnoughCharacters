@@ -5,14 +5,23 @@ plugins {
 }
 
 neoForge {
-    neoFormVersion = '26.1.2-1'
+    neoFormVersion = neo_form_unobfuscated_version
 }
 
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.release = 25
+}
 
 dependencies {
     compileOnly(project(":common"))
     compileOnly "com.github.towdium:PinIn:${verpinin}"
-    compileOnly "mezz.jei:jei-26.1.2-common-api:${jei_unobfuscated_version}"
+    compileOnly "mezz.jei:jei-${minecraft_unobfuscated_version}-common-api:${jei_unobfuscated_version}"
     compileOnly 'com.google.auto.service:auto-service-annotations:1.1.1'
     annotationProcessor 'com.google.auto.service:auto-service:1.1.1'
 }

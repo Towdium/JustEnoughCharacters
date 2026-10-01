@@ -12,7 +12,7 @@ base {
     archivesName = mod_id + '-' + minecraft_version + '-neoforge'
 }
 neoForge {
-    version = "26.1.2.59-beta"
+    version = neo_unobfuscated_version
 
     def at = project(':common').file('src/main/resources/META-INF/accesstransformer.cfg')
     if (at.exists()) {
@@ -34,11 +34,6 @@ neoForge {
                 programArgument quickPlaySingleplayerWorld.get()
             }
         }
-    }
-
-    parchment {
-        minecraftVersion = parchment_minecraft_version
-        mappingsVersion = parchment_mappings_version
     }
 
     mods {
@@ -64,14 +59,13 @@ configurations {
 }
 
 dependencies {
-    compileOnly project(':common')
-
     jarJar(project(':coremod-neoforge'))
     jarJar(implementation("com.github.towdium:PinIn:${verpinin}"))
-    localRuntime "mezz.jei:jei-26.1.2-neoforge:${jei_unobfuscated_version}"
-    compileOnly "mezz.jei:jei-26.1.2-common-api:${jei_unobfuscated_version}"
-    compileOnly "mezz.jei:jei-${minecraft_version}-core:29.6.2.31"
-    compileOnly "mezz.jei:jei-${minecraft_version}-common:29.15.0.45"
+    localRuntime "mezz.jei:jei-${minecraft_version}-neoforge:${jei_unobfuscated_version}"
+    compileOnly "mezz.jei:jei-${minecraft_version}-common-api:${jei_unobfuscated_version}"
+    // FakeTree supports older JEI implementations; modern JEI no longer publishes a core artifact.
+    compileOnly "mezz.jei:jei-1.21.11-core:27.4.0.24"
+    compileOnly "mezz.jei:jei-${minecraft_version}-common:${jei_unobfuscated_version}"
     compileOnly('net.mezzdev:suffixtree:1.1.0') {
         transitive = false
     }
@@ -79,13 +73,16 @@ dependencies {
     annotationProcessor 'com.google.auto.service:auto-service:1.1.1'
 }
 
+// Compile shared sources against this target's Minecraft API, without building legacy module binaries.
 compileJava {
     source(project(":common").sourceSets.main.allSource)
     source(project(":common-unobfuscated").sourceSets.main.allSource)
 }
 
 processResources {
-    from project(":common").sourceSets.main.resources
+    from(project(":common").sourceSets.main.resources) {
+        exclude 'pack.mcmeta'
+    }
     from project(":common-unobfuscated").sourceSets.main.resources
 }
 
@@ -94,7 +91,9 @@ var generateModMetadata = tasks.register("generateModMetadata", ProcessResources
     var replaceProperties = [
             loader_version_range: loader_version_range,
             mod_id              : mod_id,
-            mod_version         : version
+            mod_version         : version,
+            minecraft_version   : minecraft_version,
+            neo_version         : neo_unobfuscated_version
     ]
     inputs.properties replaceProperties
     expand replaceProperties

@@ -18,12 +18,11 @@ dependencies {
     include "com.github.Towdium:PinIn:${verpinin}"
     implementation "com.github.towdium:PinIn:${verpinin}"
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-    compileOnly project(':common')
-    compileOnly(project(":fabric-common"))
     implementation project(":coremod-common")
     compileOnly "mezz.jei:jei-${project.minecraft_version}-common-api:${jei_unobfuscated_version}"
-    compileOnly "mezz.jei:jei-${minecraft_version}-core:29.6.2.31"
-    compileOnly "mezz.jei:jei-${minecraft_version}-common:29.15.0.45"
+    // FakeTree supports older JEI implementations; modern JEI no longer publishes a core artifact.
+    compileOnly "mezz.jei:jei-1.21.11-core:27.4.0.24"
+    compileOnly "mezz.jei:jei-${minecraft_version}-common:${jei_unobfuscated_version}"
     compileOnly('net.mezzdev:suffixtree:1.1.0') {
         transitive = false
     }
@@ -34,6 +33,7 @@ dependencies {
     annotationProcessor 'com.google.auto.service:auto-service:1.1.1'
 }
 
+// Compile shared sources against this target's Minecraft API, without building legacy module binaries.
 compileJava {
     source(project(":common").sourceSets.main.allSource)
     source(project(":coremod-common").sourceSets.main.allSource)
@@ -42,18 +42,24 @@ compileJava {
 }
 
 processResources {
-    from project(":common").sourceSets.main.resources
+    from(project(":common").sourceSets.main.resources) {
+        exclude 'pack.mcmeta'
+    }
     from project(":coremod-common").sourceSets.main.resources
-    from project(":fabric-common").sourceSets.main.resources
+    from(project(":fabric-common").sourceSets.main.resources) {
+        exclude 'jecharacters.mixins.json'
+    }
     from project(":common-unobfuscated").sourceSets.main.resources
 }
 
 
 processResources {
 	inputs.property "version", project.version
+	inputs.property "minecraft_version", project.minecraft_version
+	inputs.property "loader_version", project.loader_version
 
 	filesMatching("fabric.mod.json") {
-		expand "version": inputs.properties.version
+		expand inputs.properties
 	}
 }
 

@@ -1,0 +1,12 @@
+{
+  "package": "me.towdium.jecharacters.mixin",
+  "required": true,
+  "compatibilityLevel": "JAVA_25",
+  "plugin": "me.towdium.jecharacters.mixin.JechMixinPlugin",
+  "client": [
+    "MixinClientLevel"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
