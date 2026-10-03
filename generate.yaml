@@ -228,12 +228,25 @@
   "committee.nova.mods.avaritia.client.screen.TesseractChannelScreen:lambda$appendChannels$0(Ljava/lang/String;Ljava/util/Map$Entry;)Z", # Re-Avaritia (Tesseract, verified on 26.1.2-1.4.2)
   "committee.nova.mods.avaritia.common.container.InfinityChestContainer:lambda$matches$1(Ljava/lang/String;Lnet/minecraft/tags/TagKey;)Z", # Re-Avaritia (Infinity Chest, verified on 26.1.2-1.4.2)
   "committee.nova.mods.avaritia.common.container.InfinityChestContainer:matches(Lnet/neoforged/neoforge/transfer/item/ItemResource;Ljava/lang/String;)Z", # Re-Avaritia (Infinity Chest, verified on 26.1.2-1.4.2)
+  "dev.dubhe.anvilcraft.rpc.StorageServerStub:matchesFilters(Lnet/minecraft/core/Holder;Ldev/anvilcraft/lib/v2/util/stack/UnlimitedItemStack;Lnet/minecraft/resources/ResourceLocation;Ljava/lang/String;Ljava/util/List;)Z", # AnvilCraft Storage search (terminal/station RPC)
+  "dev.dubhe.anvilcraft.rpc.StorageServerStub:matchesTag(Lnet/minecraft/resources/ResourceLocation;Ljava/lang/String;)Z", # AnvilCraft Storage search (tag match)
+  "dev.dubhe.anvilcraft.client.gui.screen.AdjacentSmithingScreen:lambda$filteredTemplates$1(Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z", # AnvilCraft Adjacent Smithing search
+  "dev.dubhe.anvilcraft.client.gui.screen.AutoEnchantingTableScreen:refreshFilter()V", # AnvilCraft Auto Enchanting Table filter
+  "dev.dubhe.anvilcraft.client.gui.screen.StorageScreen:applySearchFilter(Lit/unimi/dsi/fastutil/ints/IntList;)Lit/unimi/dsi/fastutil/ints/IntList;", # AnvilCraft Storage client-side search filter
+  "dev.dubhe.anvilcraft.client.gui.screen.StorageScreen:rebuildFoldedGroups(Z)V", # AnvilCraft Storage client-side search filter
+  "dev.dubhe.anvilcraft.client.support.TerminalRemoteOverlay:applyClientFilter()V", # AnvilCraft terminal overlay client-side search filter
 ]
 "equals": [
   "me.shedaniel.clothconfig2.gui.entries.TextFieldListEntry:isMatchDefault(Ljava/lang/String;)Z", # Cloth Config
   'org.cyclops.integrateddynamics.core.client.gui.WidgetTextFieldDropdown:lambda$refreshDropdownList$0(Lorg/cyclops/integrateddynamics/core/client/gui/IDropdownEntry;)Z', #Integrated Dynamics
   'vazkii.botania.api.corporea.CorporeaRequestDefaultMatchers$CorporeaStringMatcher:equalOrContain(Ljava/lang/String;)Z', # Botania (Corporea)
   "com.blamejared.controlling.api.DisplayMode:lambda$static$2(Lcom/blamejared/controlling/api/entries/IKeyEntry;)Z", # Controlling (Since 22.0.5-1.21.4)
+  "dev.dubhe.anvilcraft.client.gui.screen.TeslaTowerScreen:lambda$onSearchTextChange$0(Lit/unimi/dsi/fastutil/Pair;Lit/unimi/dsi/fastutil/Pair;)Z", # AnvilCraft Tesla Tower search
+  "dev.dubhe.anvilcraft.client.gui.screen.TeslaTowerScreen:lambda$onSearchTextChange$3(Lit/unimi/dsi/fastutil/Pair;Lit/unimi/dsi/fastutil/Pair;)Z", # AnvilCraft Tesla Tower search
+  "dev.dubhe.anvilcraft.client.gui.screen.TeslaTowerScreen:lambda$onSearchTextChange$7(Lit/unimi/dsi/fastutil/Pair;Lit/unimi/dsi/fastutil/Pair;)Z", # AnvilCraft Tesla Tower search
+  "dev.dubhe.anvilcraft.client.gui.screen.TeslaTowerScreen:lambda$removeWhiteFilter$9(Ljava/lang/String;Ljava/lang/String;Lit/unimi/dsi/fastutil/Pair;)Z", # AnvilCraft Tesla Tower search
+  "dev.dubhe.anvilcraft.client.support.TerminalRemoteOverlay:lambda$ensureSearchBox$0(Ljava/lang/String;)V", # AnvilCraft terminal overlay search box (since 2234)
+  "dev.dubhe.anvilcraft.integration.StorageJeiBridge:cache(Ljava/lang/String;Ljava/lang/reflect/Method;)V", # AnvilCraft storage JEI bridge
 ]
 "regExp": [
   'dev.emi.emi.search.RegexTooltipQuery:matches(Ldev/emi/emi/api/stack/EmiStack;)Z', #EMI regex search
@@ -247,4 +260,6 @@
   "com.tom.storagemod.screen.AbstractStorageTerminalScreen:lambda$updateSearch$3(Ljava/util/regex/Pattern;Lcom/tom/storagemod/inventory/StoredItemStack;)Z", # Tom's Simple Storage Mod (Legacy, since 26.1-2.9.5)
   "com.tom.storagemod.screen.AbstractStorageTerminalScreen:lambda$updateSearch$4(Ljava/util/regex/Pattern;Lcom/tom/storagemod/inventory/StoredItemStack;)Z", # Tom's Simple Storage Mod (Legacy, since 26.1-2.9.5)
   "com.tom.storagemod.screen.AbstractStorageTerminalScreen:matchSearch(Ljava/util/regex/Pattern;Ljava/lang/String;)Z" # Tom's Simple Storage Mod (since 26.1-2.10.1)
+  "dev.dubhe.anvilcraft.client.gui.screen.ActiveSilencerScreen:lambda$onSearchTextChange$3(Ljava/util/regex/Pattern;Lit/unimi/dsi/fastutil/Pair;)Z", # AnvilCraft Active Silencer regex search
+  "dev.dubhe.anvilcraft.client.gui.screen.TeslaTowerScreen:lambda$onSearchTextChange$5(Ljava/util/regex/Pattern;Lit/unimi/dsi/fastutil/Pair;)Z", # AnvilCraft Tesla Tower regex search
 ]
