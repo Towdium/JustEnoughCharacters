@@ -275,6 +275,8 @@
   "io.github.lightman314.lightmanscurrency.common.traders.terminal.filters.ItemTraderSearchFilter:lambda$filterItemsWithContext$1(Ljava/util/List;Lnet/minecraft/core/HolderLookup$Provider;Ljava/lang/String;)Z", # Lightman's Currency (Trader Custom Name search, verified on 1.21-2.3.0.5)
   "committee.nova.mods.avaritia.core.chest.InfinityChestContainer:refreshContainer(Z)V", # Re-Avaritia (Infinity Chest, verified on 1.21.1-1.4.2)
   "committee.nova.mods.avaritia.client.screen.TesseractChannelScreen:lambda$appendChannels$5(Ljava/lang/String;Ljava/util/Map$Entry;)Z", # Re-Avaritia (Tesseract, verified on 1.21.1-1.4.2)
+  "com.astryxion.hats.client.gui.HatScreen:lambda$updateFilteredHats$2(Ljava/lang/String;Lnet/minecraft/world/item/Item;)Z", # Hats (Classic) (Keybind H, verified on 1.20.1-1.3.0)
+  "de.markusbordihn.easynpc.configui.client.screen.preset.PresetBrowserScreen:matchesFilters(Lde/markusbordihn/easynpc/configui/client/screen/preset/PresetListEntry;)Z", # Easy NPC: Config UI (Preset Browser, verified on 1.21.1-7.14.0)
 ]
 "equals": [
   "me.shedaniel.clothconfig2.gui.entries.TextFieldListEntry:isMatchDefault(Ljava/lang/String;)Z", # Cloth Config
@@ -297,13 +299,14 @@
   'appeng.client.gui.me.search.SearchPredicates:lambda$createTooltipPredicate$4(Lappeng/client/gui/me/search/RepoSearch;Ljava/util/regex/Pattern;Lappeng/menu/me/common/GridInventoryEntry;)Z', #Applied Energistics (Since 2-12.9.5)
   'com.tom.storagemod.gui.GuiStorageTerminalBase:updateSearch()V', # Tom's Simple Storage Mod
   'dev.emi.emi.search.RegexNameQuery:matches(Ldev/emi/emi/api/stack/EmiStack;)Z', #emi regex search
-  'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$getInstanceFilterPredicate$4(Ljava/lang/String;Lnet/minecraft/tags/TagKey;)Z', # Integrated Terminals(Since 1.21.1-1.6.9)
-  'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$getInstanceFilterPredicate$1(Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z', # Integrated Terminals(Since 1.21.1-1.6.9)
-  'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$getInstanceFilterPredicate$7(Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z', # Integrated Terminals(Since 1.21.1-1.6.9)
-  'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$getInstanceFilterPredicate$2(Ljava/lang/String;Lnet/minecraft/network/chat/Component;)Z', # Integrated Terminals(Since 1.21.1-1.6.9)
-  'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerFluidStack:lambda$getInstanceFilterPredicate$10(Ljava/lang/String;Lnet/minecraft/tags/TagKey;)Z', # Integrated Terminals(Since 1.21.1-1.6.9)
-  'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerFluidStack:lambda$getInstanceFilterPredicate$13(Ljava/lang/String;Lnet/neoforged/neoforge/fluids/FluidStack;)Z', # Integrated Terminals(Since 1.21.1-1.6.9)
-  'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerFluidStack:lambda$getInstanceFilterPredicate$8(Ljava/lang/String;Lnet/neoforged/neoforge/fluids/FluidStack;)Z', # Integrated Terminals(Since 1.21.1-1.6.9)
+  "org.cyclops.integratedterminals.core.terminalstorage.query.IngredientQueryMatchers:lambda$containsQuery$1(Ljava/util/regex/Pattern;Ljava/lang/String;)Z" # Integrated Terminals (since 1.21.1-neoforge-1.10.0)
+  'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$getInstanceFilterPredicate$4(Ljava/lang/String;Lnet/minecraft/tags/TagKey;)Z', # Integrated Terminals (Legacy, since 1.21.1-1.6.9)
+  'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$getInstanceFilterPredicate$1(Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z', # Integrated Terminals (Legacy, since 1.21.1-1.6.9)
+  'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$getInstanceFilterPredicate$7(Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z', # Integrated Terminals (Legacy, since 1.21.1-1.6.9)
+  'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$getInstanceFilterPredicate$2(Ljava/lang/String;Lnet/minecraft/network/chat/Component;)Z', # Integrated Terminals (Legacy, since 1.21.1-1.6.9)
+  'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerFluidStack:lambda$getInstanceFilterPredicate$10(Ljava/lang/String;Lnet/minecraft/tags/TagKey;)Z', # Integrated Terminals (Legacy, since 1.21.1-1.6.9)
+  'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerFluidStack:lambda$getInstanceFilterPredicate$13(Ljava/lang/String;Lnet/neoforged/neoforge/fluids/FluidStack;)Z', # Integrated Terminals (Legacy, since 1.21.1-1.6.9)
+  'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerFluidStack:lambda$getInstanceFilterPredicate$8(Ljava/lang/String;Lnet/neoforged/neoforge/fluids/FluidStack;)Z', # Integrated Terminals (Legacy, since 1.21.1-1.6.9)
   'ml.pkom.itemalchemy.gui.screen.AlchemyTableScreenHandler:sortBySearch()V', # Item Alchemy (Legacy, since 0.7.6)
   'com.tom.storagemod.screen.AbstractStorageTerminalScreen:lambda$updateSearch$16(Ljava/util/regex/Pattern;Lcom/tom/storagemod/inventory/StoredItemStack;)Z', # Tom's Simple Storage Mod (Since MC1.21.1)
   'com.tom.storagemod.screen.AbstractStorageTerminalScreen:lambda$updateSearch$15(Ljava/util/regex/Pattern;Lcom/tom/storagemod/inventory/StoredItemStack;)Z', # Tom's Simple Storage Mod (Since MC1.21.1)
