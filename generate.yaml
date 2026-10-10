@@ -5,9 +5,8 @@
   "me.fzzyhmstrs.fzzy_config.util.Searcher:search_delegate$lambda$0(Lme/fzzyhmstrs/fzzy_config/util/Searcher;)Lnet/minecraft/client/searchtree/SuffixArray;", # Fzzy Config (since 0.7.6+1.21)
 ]
 "contains": [
-  "net.minecraft.client.gui.screens.worldselection.WorldSelectionList:filterAccepts(Ljava/lang/String;Lnet/minecraft/world/level/storage/LevelSummary;)Z", # Minecraft World Selection List Search (since 1.13.1)
-  "net.minecraft.class_528:method_43453(Ljava/lang/String;Lnet/minecraft/class_34;)Z", # Minecraft World Selection List Search (since 1.13.1, Fabric, Intermediary Mappings)
-  "binnie.core.machines.storage.SearchDialog:updateSearch()V", #Binnie Core
+  "net.minecraft.client.gui.screens.worldselection.WorldSelectionList:filterAccepts(Ljava/lang/String;Lnet/minecraft/world/level/storage/LevelSummary;)Z", # Minecraft World Selection List Search (Neoforge, since 1.20.5)
+  "net.minecraft.class_528:method_43453(Ljava/lang/String;Lnet/minecraft/class_34;)Z", # Minecraft World Selection List Search (since 1.19, Fabric, Intermediary Mappings)
   "com.chaosthedude.naturescompass.gui.NaturesCompassScreen:processSearchTerm()V", # Nature's Compass
   'com.chaosthedude.explorerscompass.gui.ExplorersCompassScreen:processSearchTerm()V', # Explorer's Compass (Since 1.16.5-2.0.2)
   "com.chaosthedude.explorerscompass.gui.SearchDocument:contains(Lcom/chaosthedude/explorerscompass/gui/SearchQuery$Field;Ljava/lang/String;)Z", # Explorer's Compass Enhance (since 1.21.1-neoforge-1.5.0)
@@ -18,7 +17,6 @@
   "org.cyclops.integrateddynamics.core.client.gui.WidgetTextFieldDropdown:refreshDropdownList()V", #Integrated Dynamics
   "betterquesting.api2.client.gui.panels.lists.CanvasQuestDatabase:queryMatches(Lbetterquesting/api2/storage/DBEntry;Ljava/lang/String;Ljava/util/ArrayDeque;)V", #Better Questing
   "com.minecolonies.core.client.gui.WindowHutAllInventory:lambda$updateResources$2(Lcom/minecolonies/api/crafting/ItemStorage;)Z", # Minecolonies (Since 1.1.978-1.21.1)
-  "sonar.logistics.core.items.wirelessstoragereader.GuiWirelessStorageReader:getGridList()Ljava/util/List;", #Practical Logistics
   "me.shedaniel.clothconfig2.forge.gui.entries.DropdownBoxEntry$DefaultDropdownMenuElement:search()V", #Cloth Config
   "mezz.jei.common.search.ElementSearchLowMem:matches(Ljava/lang/String;Lmezz/jei/core/search/PrefixInfo;Lmezz/jei/common/ingredients/IListElementInfo;)Z", # JEI (low memory) Since 10.2.1.1005
   "fi.dy.masa.malilib.gui.widgets.WidgetListBase:matchesFilter(Ljava/lang/String;Ljava/lang/String;)Z", #MaLiLib
@@ -31,14 +29,12 @@
   "com.razz.decocraft.common.containers.DecobenchScreenHandler:lambda$search$3(Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z", # Decocraft (Decobench, since 3.0.11-1.21.1-neoforge)
   "vazkii.patchouli.client.book.BookEntry:isFoundByQuery(Ljava/lang/String;)Z", # Patchouli (Botania)
   "voltaic.client.guidebook.ScreenGuidebook:onTextSearched(Ljava/lang/String;)V", # Voltaic (Guidebook, since 1.21.1-1.0.11)
-  "sonar.logistics.core.tiles.readers.items.GuiInventoryReader:getGridList()Ljava/util/List;", #Practical Logistics
   "mekanism.common.content.qio.SearchQueryParser$QueryType$1:matches(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/player/Player;Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z", # Mekanism (QIO) (Since 10.4.16.80)
   "mekanism.common.content.qio.SearchQueryParser$QueryType$2:matches(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/player/Player;Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z", # Mekanism (QIO) (Since 10.4.16.80)
   "mekanism.common.content.qio.SearchQueryParser$QueryType$3:matches(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/player/Player;Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z", # Mekanism (QIO) (Since 10.4.16.80)
   "mekanism.common.content.qio.SearchQueryParser$QueryType$4:matches(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/player/Player;Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z", # Mekanism (QIO) (Since 10.4.16.80)
   "moze_intel.projecte.gameObjs.container.inventory.TransmutationInventory:doesItemMatchFilter(Lmoze_intel/projecte/api/ItemInfo;)Z", #Project E
   "logisticspipes.gui.orderer.GuiOrderer:isSearched(Ljava/lang/String;Ljava/lang/String;)Z", #Logistics Pipes
-  "sonar.logistics.core.tiles.readers.fluids.GuiFluidReader:getGridList()Ljava/util/List;", #Practical Logistics
   "dev.emi.emi.search.TooltipQuery:matches(Ldev/emi/emi/api/stack/EmiStack;)Z", #EMI text search(Leagcy)
   "hellfirepvp.astralsorcery.client.screen.journal.ScreenJournalProgression:onSearchTextInput()V", #Astral Sorcery
   "betterquesting.api2.client.gui.panels.lists.CanvasFileDirectory:queryMatches(Ljava/io/File;Ljava/lang/String;Ljava/util/ArrayDeque;)V", #Better Questing
@@ -50,8 +46,6 @@
   "mezz.jei.search.ElementSearchLowMem:matches(Ljava/lang/String;Lmezz/jei/core/search/PrefixInfo;Lmezz/jei/ingredients/IListElementInfo;)Z", #JEI (low memory)
   "com.lothrazar.storagenetwork.api.util.UtilInventory:doOverlap(Ljava/lang/String;Ljava/lang/String;)Z", #Simple Storage Network legacy
   "com.ma.guide.GuideBookEntries:lambda$null$1(Ljava/lang/String;Lcom/ma/guide/interfaces/IEntrySection;)Z", #Mana and Artifice
-  "com.latmod.mods.projectex.gui.GuiTableBase:updateValidItemList()V", #Project EX
-  "sonar.logistics.core.items.guide.GuiGuide:updateSearchList()V", #Practical Logistics
   "logisticspipes.gui.orderer.GuiRequestTable:isSearched(Ljava/lang/String;Ljava/lang/String;)Z", #Logistics Pipes
   "me.shedaniel.clothconfig2.gui.entries.DropdownBoxEntry$DefaultDropdownMenuElement:search()V", #Cloth Config
   "appeng.client.gui.me.interfaceterminal.InterfaceTerminalScreen:refreshList()V", # Applied Energistics (Legacy)
@@ -67,6 +61,7 @@
   "net.pedroksl.advanced_ae.client.gui.QuantumCrafterTermScreen:itemStackMatchesSearchTerm(Lnet/minecraft/world/item/ItemStack;Ljava/lang/String;)Z", # Advanced AE (Quantum Crafter Terminal, since 1.6.12-1.21.1)
   "org.ae2LabeledPatterns.menus.LabeledPatternAccessTerminalScreen:itemStackMatchesSearchTerm(Lnet/minecraft/world/item/ItemStack;Ljava/lang/String;)Z", # AE2 Labeled Patterns
   "com.almostreliable.merequester.client.RequesterTerminalScreen:keyMatchesSearchQuery(Lappeng/api/stacks/AEKey;Ljava/lang/String;)Z", # ME Requester
+  "com.almostreliable.merequester.client.RequesterTerminalScreen:refreshList()V", # ME Requester
   "com.wintercogs.appliedpneumatics.client.gui.AmadronWirelessTerminalGUI:offerMatches(Lnet/minecraft/resources/ResourceLocation;Ljava/lang/String;)Z", # Applied Pneumatics (Amadron Wireless Terminal, since 1.21.1-neoforge-1.0.8)
   "com.moakiee.ae2lt.client.gui.FrequencyScreen:lambda$filteredFrequencies$12(Ljava/lang/String;Lcom/moakiee/ae2lt/client/ClientFrequencyCache$CachedFrequency;)Z", # AE2 Lightning Tech (since 1.1.1 1.21.1)
   "com.lhy.ae2utility.client.RecipeFinderScreen:rebuildFiltered()V", # AE2 Utility (Recipe Finder, since 1.7.7 1.21.1)
@@ -178,6 +173,11 @@
   "moze_intel.projecte.utils.text.SearchQueryParser$QueryType$2:matches(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/player/Player;Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z", # ProjectE (since 1.1.0-1.21.1)
   "moze_intel.projecte.utils.text.SearchQueryParser$QueryType$3:matches(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/player/Player;Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z", # ProjectE (since 1.1.0-1.21.1)
   "moze_intel.projecte.utils.text.SearchQueryParser$QueryType$4:lambda$matches$0(Ljava/lang/String;Lnet/minecraft/tags/TagKey;)Z", # ProjectE (since 1.1.0-1.21.1)
+  "moze_intel.projecte.utils.text.SearchQueryParser$QueryType$1:matches(Lnet/minecraft/class_1937;Lnet/minecraft/class_1657;Ljava/lang/String;Lnet/minecraft/class_1799;)Z", # ProjectEF Neo (since 1.21.1-PE1.2.3)
+  "moze_intel.projecte.utils.text.SearchQueryParser$QueryType$2:matches(Lnet/minecraft/class_1937;Lnet/minecraft/class_1657;Ljava/lang/String;Lnet/minecraft/class_1799;)Z", # ProjectEF Neo (since 1.21.1-PE1.2.3)
+  "moze_intel.projecte.utils.text.SearchQueryParser$QueryType$3:matches(Lnet/minecraft/class_1937;Lnet/minecraft/class_1657;Ljava/lang/String;Lnet/minecraft/class_1799;)Z", # ProjectEF Neo (since 1.21.1-PE1.2.3)
+  "moze_intel.projecte.utils.text.SearchQueryParser$QueryType$4:lambda$matches$0(Ljava/lang/String;Lnet/minecraft/class_6862;)Z", # ProjectEF Neo (since 1.21.1-PE1.2.3)
+  "net.pitan76.itemalchemy.gui.screen.AlchemyTableScreenHandler:sortBySearch()V", # Item Alchemy (since 1.3.9)
   "com.terraformersmc.mod_menu.util.mod.ModSearch:lambda$authorMatches$5(Ljava/lang/String;Ljava/lang/String;)Z", # Better ModList (Author Search, since 1.1.20-1.21.1)
   "com.terraformersmc.mod_menu.util.mod.ModSearch:passesFilters(Lcom/terraformersmc/mod_menu/gui/ModsScreen;Lcom/terraformersmc/mod_menu/util/mod/Mod;Ljava/lang/String;)I", # Better ModList (Mod Search, since 1.1.20-1.21.1)
   "com.terraformersmc.modmenu.util.mod.ModSearch:lambda$authorMatches$4(Ljava/lang/String;Ljava/lang/String;)Z", # Mod Menu (Author Search, since 11.0.4 1.21)
@@ -227,24 +227,62 @@
   "dev.dubhe.anvilcraft.client.gui.screen.StorageScreen:applySearchFilter(Lit/unimi/dsi/fastutil/ints/IntList;)Lit/unimi/dsi/fastutil/ints/IntList;", # AnvilCraft Storage client-side search filter
   "dev.dubhe.anvilcraft.client.gui.screen.StorageScreen:rebuildFoldedGroups(Z)V", # AnvilCraft Storage client-side search filter
   "dev.dubhe.anvilcraft.client.support.TerminalRemoteOverlay:applyClientFilter()V", # AnvilCraft terminal overlay client-side search filter
+  "cam72cam.immersiverailroading.gui.components.ListSelector:lambda$updateSearch$0(Ljava/lang/String;Ljava/lang/String;)Z", # Immersive Railroading (Track Blueprint, verified on 1.21.1-neoforge-1.11.0)
+  "de.siphalor.amecs.gui.SearchFieldControlsListWidget:lambda$new$1(Lnet/minecraft/class_459;Lnet/minecraft/class_310;Ljava/lang/String;)V", # Amecs (verified on 1.6.3+mc1.21.1)
+  "com.pixelmonmod.pixelmon.comm.packetHandlers.clientStorage.newStorage.pc.ServerQueryPCPacket:lambda$search$1(Ljava/util/List;Ljava/util/List;Lcom/pixelmonmod/pixelmon/api/pokemon/Pokemon;)Z", # Pixelmon (PC, verified on 1.21.1-9.4.1)
+  "harmonised.pmmo.api.client.types.GlossaryFilter$Filter:matchesTextFilter(Ljava/lang/String;)Z", # Project MMO (verified on 1.21.1-2.10.47)
+  "com.mrcrayfish.controllable.client.gui.screens.ListMenuScreen:lambda$filterItems$2(Ljava/lang/String;Lcom/mrcrayfish/controllable/client/gui/screens/ListMenuScreen$Item;)Z", # Controllable (config, verified on 1.21.1-0.25.4)
+  "com.mrcrayfish.controllable.client.gui.screens.ListMenuScreen:lambda$updateSearchTextFieldSuggestion$5(Ljava/lang/String;Lcom/mrcrayfish/controllable/client/gui/ISearchable;)Z", # Controllable (config, verified on 1.21.1-0.25.4)
+  "com.mrcrayfish.mightymail.client.gui.screen.PostBoxScreen:lambda$updateSearchFilter$4(Lcom/mrcrayfish/mightymail/mail/IMailbox;)Z", # Mighty Mail (verified on 1.21.1-1.1.4)
+  "igentuman.mbtool.client.screen.MultibuilderSelectStructureScreen:lambda$applyFilter$3([Ljava/lang/String;Ligentuman/mbtool/util/MultiblockStructure;)Z", # Multi Builder Tool (verified on 1.21.1-1.1.28)
+  "org.figuramc.figura.avatar.local.LocalAvatarFetcher$AvatarPath:search(Ljava/lang/String;)Z", # Figura (verified on 0.1.6+1.21.1)
+  "org.figuramc.figura.gui.widgets.avatar.AbstractAvatarWidget:filtered()Z", # Figura (verified on 0.1.6+1.21.1)
+  "org.figuramc.figura.gui.widgets.config.AbstractConfigElement:matchesFilter()Z", # Figura (config, verified on 0.1.6+1.21.1)
+  "org.figuramc.figura.gui.widgets.lists.NetworkFilterList:lambda$onSearch$1(Ljava/lang/String;Lorg/figuramc/figura/gui/widgets/lists/NetworkFilterList$NetworkFilterEntry;)V", # Figura (verified on 0.1.6+1.21.1)
+  "io.github.catomon.easymobspawncontrol.gui.MobListManager:getMobEntries(Ljava/lang/String;)Ljava/util/List;", # Easy Mob Spawn Control (mob search, verified on 1.5.11 1.21.1)
+  "io.github.catomon.easymobspawncontrol.gui.screens.ItemSelectScreen:getItemEntries()Ljava/util/List;", # Easy Mob Spawn Control (item search, verified on 1.5.11 1.21.1)
+  "io.github.catomon.easymobspawncontrol.gui.screens.SpawnTypeDisableSelectScreen:getSpawnTypeEntries()Ljava/util/List;", # Easy Mob Spawn Control (spawn type search, verified on 1.5.11 1.21.1)
+  "com.mrcrayfish.backpacked.client.gui.screen.widget.ItemGrid:lambda$updateList$0(ZLjava/lang/String;Ljava/util/List;Lnet/minecraft/world/item/Item;)V", # Backpacked (verified on 1.21.1-3.0.5)
+  "com.sockywocky.createaddonorganizer.client.AddSectionScreen:candidates()Ljava/util/List;", # Create: Addon Organizer (verified on 1.5__1.21.1)
+  "io.github.thecsdev.betterstats.api.util.stats.SUStat:matchesSearchQuery(Ljava/lang/String;)Z", # Better Statistics Screen (verified on 3.13.9+fabric-1.21)
+  "hellfirepvp.astralsorcery.client.screen.tome.research.TomeResearchSearchRenderer:updateSearchContents(Ljava/lang/String;)V", # Astral Sorcery (verified on 2.0.0.3 1.21.1)
+  "io.github.fishstiz.packed_packs.gui.states.Query:lambda$test$0(Lio/github/fishstiz/packed_packs/pack/PackNode;)Z", # Packed Packs (verified on 2.3.0-beta.1+1.21.1)
+  "com.benbenlaw.smartcrafting.screen.SmartCraftingScreen:lambda$updateFilteredRecipes$3(Ljava/lang/String;Lnet/minecraft/world/item/crafting/RecipeHolder;)Z", # Smart Crafting Table (verified on 1.21.1-1.2.13)
+  "com.benbenlaw.smartcrafting.screen.SmartCraftingScreen:lambda$updateFilteredRecipes$4(Lnet/minecraft/world/item/crafting/RecipeHolder;)Z", # Smart Crafting Table (verified on 1.21.1-1.2.13)
+  "mcp.mobius.waila.gui.widget.ConfigListWidget$Entry:match([Ljava/lang/String;)Z", # WTHIT (config, verified on 1.21.1-fabric-12.10.2)
+  "wraith.fwaystones.util.SearchType:match(Ljava/lang/String;Ljava/lang/String;)Z", # Wraith Waystones (verified on 3.3.4+mc1.21.1)
+  "net.mezzdev.config.gui.model.ConfigScreenModel:matches(Ljava/lang/String;)Z", # MezzConfigGUI (config search, verified on 1.21.1-neoforge-0.6.3)
+  "net.mezzdev.config.gui.screenlist.ConfigScreenListEntry:matches(Ljava/lang/String;)Z", # MezzConfigGUI (mod config screens search, verified on 1.21.1-neoforge-0.6.3)
+  "io.github.kosmx.emotes.arch.gui.widgets.EmoteListWidget:filter(Ljava/util/function/Supplier;)V", # Emotecraft (verified on 1.21.1-2.4.12)
+  "org.infernalstudios.questlog.core.quests.display.QuestDisplayData:matchesSearch(Ljava/lang/String;)Z", # Questlog (quest search, verified on 1.21.1-3.4.0)
+  "net.tslat.aoa3.client.gui.adventgui.AdventGuiTabBestiary:lambda$searchFilterBestiaryEntries$2(Ljava/lang/String;Lnet/tslat/aoa3/client/gui/adventgui/AdventGuiTabBestiary$EntityStats;)Z", # Advent of Ascension 3 (Bestiary, verified on 1.21.1, 1.20.1, 1.16.5)
+  "com.skylogistics.client.FluidVaultScreen:filtered(Lcom/skylogistics/block/entity/FluidVaultBlockEntity;)Ljava/util/List;", # Sky Logistics (Celestial Fluid Vault, verified on 1.3.2+1.21.1)
+  "com.skylogistics.client.ItemVaultScreen:filtered(Lcom/skylogistics/block/entity/ItemVaultBlockEntity;)Ljava/util/List;", # Sky Logistics (Celestial Item Vault, verified on 1.3.2+1.21.1)
+  "com.kuzhi.findme.client.CompanionManageListView:filteredIndices(Lcom/kuzhi/findme/common/CompanionKind;Ljava/lang/String;)Ljava/util/List;", # Find me (Small House, verified on 1.2.3 1.21.1)
+  "me.alfie.immersiveenchanting.gui.tab.book.Searchbar:checkSearch()V", # Immersive Enchanting (verified on 1.6.14+1.21.1)
+  "io.github.lightman314.lctech.client.gui.widget.FluidEditWidget:modifySearch(Ljava/lang/String;)V", # Lightman's Currency Tech (Fluid Trader edit fluid search, verified on 1.21.1, 1.20.1, 1.16.5)
+  "io.github.lightman314.lctech.common.traders.terminal.filters.FluidTraderSearchFilter:lambda$filterFluid$0(Lnet/neoforged/neoforge/fluids/FluidStack;Ljava/lang/String;)Z", # Lightman's Currency Tech (Fluid Trader search, verified on 1.21-0.2.2.7)
+  "io.github.lightman314.lightmanscurrency.api.ownership.listing.PotentialOwner:failedFilter(Ljava/lang/String;)Z", # Lightman's Currency (ownership search, verified on 1.21-2.3.0.5)
+  "io.github.lightman314.lightmanscurrency.api.traders.terminal.ITradeSearchFilter:filterItem(Lnet/minecraft/world/item/ItemStack;Ljava/lang/String;Lnet/minecraft/core/HolderLookup$Provider;)Z", # Lightman's Currency (Trader item search, verified on 1.21-2.3.0.5)
+  "io.github.lightman314.lightmanscurrency.api.traders.terminal.ITradeSearchFilter:filterItemTooltips(Lnet/minecraft/world/item/ItemStack;Ljava/lang/String;Lnet/minecraft/core/HolderLookup$Provider;)Z", # Lightman's Currency (Trader item search, verified on 1.21-2.3.0.5)
+  "io.github.lightman314.lightmanscurrency.api.traders.terminal.PendingSearch:of(Ljava/lang/String;)Lio/github/lightman314/lightmanscurrency/api/traders/terminal/PendingSearch;", # Lightman's Currency (verified on 1.21-2.3.0.5)
+  "io.github.lightman314.lightmanscurrency.client.gui.widget.BankAccountSelectionWidget:searchFilter(Lio/github/lightman314/lightmanscurrency/api/money/bank/reference/BankReference;)Z", # Lightman's Currency (Trader Account search, verified on 1.21-2.3.0.5)
+  "io.github.lightman314.lightmanscurrency.client.gui.widget.ItemEditWidget:modifySearch(Ljava/lang/String;)V", # Lightman's Currency (Trader edit item search, verified on 1.21-2.3.0.5)
+  "io.github.lightman314.lightmanscurrency.common.traders.terminal.filters.BasicSearchFilter:lambda$checkName$2(Lio/github/lightman314/lightmanscurrency/api/traders/TraderData;Ljava/lang/String;)Z", # Lightman's Currency (Trading Terminal Trader search, verified on 1.21-2.3.0.5)
+  "io.github.lightman314.lightmanscurrency.common.traders.terminal.filters.BasicSearchFilter:lambda$checkOwner$1(Lio/github/lightman314/lightmanscurrency/api/traders/TraderData;Ljava/lang/String;)Z", # Lightman's Currency (Trading Terminal PT Owner search, verified on 1.21-2.3.0.5)
+  "io.github.lightman314.lightmanscurrency.common.traders.terminal.filters.BasicSearchFilter:lambda$checkType$0(Lio/github/lightman314/lightmanscurrency/api/traders/TraderData;Ljava/lang/String;)Z", # Lightman's Currency (verified on 1.21-2.3.0.5)
+  "io.github.lightman314.lightmanscurrency.common.traders.terminal.filters.DescriptionSearchFilter:filterTrade(Lio/github/lightman314/lightmanscurrency/api/traders/trade/TradeData;Lio/github/lightman314/lightmanscurrency/api/traders/terminal/PendingSearch;Lnet/minecraft/core/HolderLookup$Provider;)V",  # Lightman's Currency (verified on 1.21-2.3.0.5)
+  "io.github.lightman314.lightmanscurrency.common.traders.terminal.filters.ItemTraderSearchFilter:lambda$filterItemsWithContext$1(Ljava/util/List;Lnet/minecraft/core/HolderLookup$Provider;Ljava/lang/String;)Z", # Lightman's Currency (Trader Custom Name search, verified on 1.21-2.3.0.5)
+  "committee.nova.mods.avaritia.core.chest.InfinityChestContainer:refreshContainer(Z)V", # Re-Avaritia (Infinity Chest, verified on 1.21.1-1.4.2)
+  "committee.nova.mods.avaritia.client.screen.TesseractChannelScreen:lambda$appendChannels$5(Ljava/lang/String;Ljava/util/Map$Entry;)Z", # Re-Avaritia (Tesseract, verified on 1.21.1-1.4.2)
+  "com.astryxion.hats.client.gui.HatScreen:lambda$updateFilteredHats$2(Ljava/lang/String;Lnet/minecraft/world/item/Item;)Z", # Hats (Classic) (Keybind H, verified on 1.20.1-1.3.0)
+  "de.markusbordihn.easynpc.configui.client.screen.preset.PresetBrowserScreen:matchesFilters(Lde/markusbordihn/easynpc/configui/client/screen/preset/PresetListEntry;)Z", # Easy NPC: Config UI (Preset Browser, verified on 1.21.1-7.14.0)
 ]
 "equals": [
   "me.shedaniel.clothconfig2.gui.entries.TextFieldListEntry:isMatchDefault(Ljava/lang/String;)Z", # Cloth Config
   'org.cyclops.integrateddynamics.core.client.gui.WidgetTextFieldDropdown:lambda$refreshDropdownList$0(Lorg/cyclops/integrateddynamics/core/client/gui/IDropdownEntry;)Z', #Integrated Dynamics
   'vazkii.botania.api.corporea.CorporeaRequestDefaultMatchers$CorporeaStringMatcher:equalOrContain(Ljava/lang/String;)Z', # Botania (Corporea)
-  "com.refinedmods.refinedstorage.common.grid.query.GridQueryParser:parseBinOp(Lcom/refinedmods/refinedstorage/query/parser/node/BinOpNode;)Lcom/refinedmods/refinedstorage/api/resource/repository/ResourceRepositoryFilter;", #refinedstorage-neoforge-2.0.0-beta.2
-  "com.refinedmods.refinedstorage.common.grid.query.GridQueryParser:parseUnaryOp(Lcom/refinedmods/refinedstorage/query/parser/node/UnaryOpNode;)Lcom/refinedmods/refinedstorage/api/resource/repository/ResourceRepositoryFilter;",
-  "com.refinedmods.refinedstorage.common.grid.screen.AbstractGridScreen:trySynchronizeToGrid()V",
-  "com.refinedmods.refinedstorage.common.support.widget.History:save(Ljava/lang/String;)Z",
-  "com.refinedmods.refinedstorage.common.util.IdentifierUtil:getTagTranslationKey(Lnet/minecraft/tags/TagKey;)Ljava/lang/String;",
-  "com.refinedmods.refinedstorage.neoforge.ConfigImpl$GridEntryImpl:setResourceType(Lnet/minecraft/resources/ResourceLocation;)V",
-  "com.refinedmods.refinedstorage.neoforge.ConfigImpl$GridEntryImpl:setSynchronizer(Lnet/minecraft/resources/ResourceLocation;)V",
-  "com.refinedmods.refinedstorage.neoforge.ConfigImpl$SimpleEnergyUsageEntryImpl:\u003cinit\u003e(Lcom/refinedmods/refinedstorage/neoforge/ConfigImpl;Ljava/lang/String;J)V",
-  "com.refinedmods.refinedstorage.query.lexer.LexerTokenMappings:findMapping(Lcom/refinedmods/refinedstorage/query/lexer/LexerPosition;Lcom/refinedmods/refinedstorage/query/lexer/Source;)Lcom/refinedmods/refinedstorage/query/lexer/LexerTokenMapping;",
-  "com.refinedmods.refinedstorage.query.parser.Parser:parseParen()Lcom/refinedmods/refinedstorage/query/parser/node/Node;",
   "com.blamejared.controlling.api.DisplayMode:lambda$static$2(Lcom/blamejared/controlling/api/entries/IKeyEntry;)Z", # Controlling (Since 22.0.5-1.21.4)
-  "com.spaceagle17.irissearch.engine.ShaderOptionsSearchEngine:computeMatchTier(Ljava/lang/String;Ljava/lang/String;)I", # Iris & Oculus Search (since 1.4.2)
-  "com.spaceagle17.irissearch.engine.ShaderPackSearchEngine:computeMatchTier(Ljava/lang/String;Ljava/lang/String;)I", # Iris & Oculus Search (since 1.4.2)
   "dev.dubhe.anvilcraft.client.gui.screen.TeslaTowerScreen:lambda$onSearchTextChange$0(Lit/unimi/dsi/fastutil/Pair;Lit/unimi/dsi/fastutil/Pair;)Z", # AnvilCraft Tesla Tower search
   "dev.dubhe.anvilcraft.client.gui.screen.TeslaTowerScreen:lambda$onSearchTextChange$3(Lit/unimi/dsi/fastutil/Pair;Lit/unimi/dsi/fastutil/Pair;)Z", # AnvilCraft Tesla Tower search
   "dev.dubhe.anvilcraft.client.gui.screen.TeslaTowerScreen:lambda$onSearchTextChange$7(Lit/unimi/dsi/fastutil/Pair;Lit/unimi/dsi/fastutil/Pair;)Z", # AnvilCraft Tesla Tower search
@@ -261,14 +299,15 @@
   'appeng.client.gui.me.search.SearchPredicates:lambda$createTooltipPredicate$4(Lappeng/client/gui/me/search/RepoSearch;Ljava/util/regex/Pattern;Lappeng/menu/me/common/GridInventoryEntry;)Z', #Applied Energistics (Since 2-12.9.5)
   'com.tom.storagemod.gui.GuiStorageTerminalBase:updateSearch()V', # Tom's Simple Storage Mod
   'dev.emi.emi.search.RegexNameQuery:matches(Ldev/emi/emi/api/stack/EmiStack;)Z', #emi regex search
-  'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$getInstanceFilterPredicate$4(Ljava/lang/String;Lnet/minecraft/tags/TagKey;)Z', # Integrated Terminals(Since 1.21.1-1.6.9)
-  'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$getInstanceFilterPredicate$1(Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z', # Integrated Terminals(Since 1.21.1-1.6.9)
-  'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$getInstanceFilterPredicate$7(Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z', # Integrated Terminals(Since 1.21.1-1.6.9)
-  'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$getInstanceFilterPredicate$2(Ljava/lang/String;Lnet/minecraft/network/chat/Component;)Z', # Integrated Terminals(Since 1.21.1-1.6.9)
-  'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerFluidStack:lambda$getInstanceFilterPredicate$10(Ljava/lang/String;Lnet/minecraft/tags/TagKey;)Z', # Integrated Terminals(Since 1.21.1-1.6.9)
-  'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerFluidStack:lambda$getInstanceFilterPredicate$13(Ljava/lang/String;Lnet/neoforged/neoforge/fluids/FluidStack;)Z', # Integrated Terminals(Since 1.21.1-1.6.9)
-  'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerFluidStack:lambda$getInstanceFilterPredicate$8(Ljava/lang/String;Lnet/neoforged/neoforge/fluids/FluidStack;)Z', # Integrated Terminals(Since 1.21.1-1.6.9)
-  'ml.pkom.itemalchemy.gui.screen.AlchemyTableScreenHandler:sortBySearch()V', # ItemAlchemy(Since 0.7.6)
+  "org.cyclops.integratedterminals.core.terminalstorage.query.IngredientQueryMatchers:lambda$containsQuery$1(Ljava/util/regex/Pattern;Ljava/lang/String;)Z", # Integrated Terminals (since 1.21.1-neoforge-1.10.0)
+  'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$getInstanceFilterPredicate$4(Ljava/lang/String;Lnet/minecraft/tags/TagKey;)Z', # Integrated Terminals (Legacy, since 1.21.1-1.6.9)
+  'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$getInstanceFilterPredicate$1(Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z', # Integrated Terminals (Legacy, since 1.21.1-1.6.9)
+  'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$getInstanceFilterPredicate$7(Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z', # Integrated Terminals (Legacy, since 1.21.1-1.6.9)
+  'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$getInstanceFilterPredicate$2(Ljava/lang/String;Lnet/minecraft/network/chat/Component;)Z', # Integrated Terminals (Legacy, since 1.21.1-1.6.9)
+  'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerFluidStack:lambda$getInstanceFilterPredicate$10(Ljava/lang/String;Lnet/minecraft/tags/TagKey;)Z', # Integrated Terminals (Legacy, since 1.21.1-1.6.9)
+  'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerFluidStack:lambda$getInstanceFilterPredicate$13(Ljava/lang/String;Lnet/neoforged/neoforge/fluids/FluidStack;)Z', # Integrated Terminals (Legacy, since 1.21.1-1.6.9)
+  'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerFluidStack:lambda$getInstanceFilterPredicate$8(Ljava/lang/String;Lnet/neoforged/neoforge/fluids/FluidStack;)Z', # Integrated Terminals (Legacy, since 1.21.1-1.6.9)
+  'ml.pkom.itemalchemy.gui.screen.AlchemyTableScreenHandler:sortBySearch()V', # Item Alchemy (Legacy, since 0.7.6)
   'com.tom.storagemod.screen.AbstractStorageTerminalScreen:lambda$updateSearch$16(Ljava/util/regex/Pattern;Lcom/tom/storagemod/inventory/StoredItemStack;)Z', # Tom's Simple Storage Mod (Since MC1.21.1)
   'com.tom.storagemod.screen.AbstractStorageTerminalScreen:lambda$updateSearch$15(Ljava/util/regex/Pattern;Lcom/tom/storagemod/inventory/StoredItemStack;)Z', # Tom's Simple Storage Mod (Since MC1.21.1)
   "com.tom.storagemod.screen.AbstractStorageTerminalScreen:matchSearch(Ljava/util/regex/Pattern;Ljava/lang/String;)Z", # Tom's Simple Storage Mod (since 1.21-2.4.1)
@@ -281,7 +320,8 @@
 ]
 
 "startsWith": [
-  "com.denfop.screen.ScreenVeinSensor:drawForegroundLayer(Lnet/minecraft/client/gui/GuiGraphics;II)V",# Industrial Upgrade(since 3.4.0.13)
-  "com.denfop.screen.ScreenVeinSensor:mouseClicked(III)V",# Industrial Upgrade(since 3.4.0.13)
-  "com.denfop.screen.ScreenVeinSensor:drawGuiContainerBackgroundLayer(Lnet/minecraft/client/gui/GuiGraphics;FII)V"# Industrial Upgrade(since 3.4.0.13)
+  "com.denfop.screen.ScreenVeinSensor:drawForegroundLayer(Lnet/minecraft/client/gui/GuiGraphics;II)V", # Industrial Upgrade (since 3.4.0.13)
+  "com.denfop.screen.ScreenVeinSensor:mouseClicked(III)V", # Industrial Upgrade (since 3.4.0.13)
+  "com.denfop.screen.ScreenVeinSensor:drawGuiContainerBackgroundLayer(Lnet/minecraft/client/gui/GuiGraphics;FII)V", # Industrial Upgrade (since 3.4.0.13)
+  "org.embeddedt.embeddium.impl.util.StringUtils:fuzzySearch(Ljava/lang/Iterable;Ljava/lang/String;ILjava/util/function/Function;)Ljava/util/List;", # Embeddium (verified on 1.0.15+mc1.21.1)
 ]
