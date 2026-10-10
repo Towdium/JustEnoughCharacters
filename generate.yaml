@@ -299,7 +299,7 @@
   'appeng.client.gui.me.search.SearchPredicates:lambda$createTooltipPredicate$4(Lappeng/client/gui/me/search/RepoSearch;Ljava/util/regex/Pattern;Lappeng/menu/me/common/GridInventoryEntry;)Z', #Applied Energistics (Since 2-12.9.5)
   'com.tom.storagemod.gui.GuiStorageTerminalBase:updateSearch()V', # Tom's Simple Storage Mod
   'dev.emi.emi.search.RegexNameQuery:matches(Ldev/emi/emi/api/stack/EmiStack;)Z', #emi regex search
-  "org.cyclops.integratedterminals.core.terminalstorage.query.IngredientQueryMatchers:lambda$containsQuery$1(Ljava/util/regex/Pattern;Ljava/lang/String;)Z" # Integrated Terminals (since 1.21.1-neoforge-1.10.0)
+  "org.cyclops.integratedterminals.core.terminalstorage.query.IngredientQueryMatchers:lambda$containsQuery$1(Ljava/util/regex/Pattern;Ljava/lang/String;)Z", # Integrated Terminals (since 1.21.1-neoforge-1.10.0)
   'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$getInstanceFilterPredicate$4(Ljava/lang/String;Lnet/minecraft/tags/TagKey;)Z', # Integrated Terminals (Legacy, since 1.21.1-1.6.9)
   'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$getInstanceFilterPredicate$1(Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z', # Integrated Terminals (Legacy, since 1.21.1-1.6.9)
   'org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStack:lambda$getInstanceFilterPredicate$7(Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z', # Integrated Terminals (Legacy, since 1.21.1-1.6.9)
