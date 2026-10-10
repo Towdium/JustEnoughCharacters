@@ -1,8 +1,17 @@
 "suffix": [
 ]
 "contains": [
+  "net.minecraft.client.gui.screen.WorldSelectionList:func_212330_a(Ljava/util/function/Supplier;Z)V", # Minecraft World Selection List Search (Forge, SRG, 1.16.5)
+  "net.minecraft.class_528:method_2750(Ljava/util/function/Supplier;Z)V", # Minecraft World Selection List Search (Fabirc, Intermediary Mappings 1.13.1 - 1.18.2)
+  "invoker54.xpshop.client.screen.search.InvSearchScreen:refreshSearchResults()V", # XP Shop (add item from inventory, verified on 1.16.5-1.2.6)
+  "invoker54.xpshop.client.screen.search.SellItemSearch:func_231042_a_(CI)Z", # XP Shop (add item, verified on 1.16.5-1.2.6)
+  "com.mamiyaotaru.voxelmap.gui.GuiSlotMobs:updateFilter(Ljava/lang/String;)V", # VoxelMap (mob search, verified on 1.10.12_for_1.16.5)
+  "com.mamiyaotaru.voxelmap.gui.GuiSlotWaypoints:updateFilter(Ljava/lang/String;)V", # VoxelMap (Waypoint search, verified on 1.10.12_for_1.16.5)
 ]
 "equals": [
 ]
 "regExp": [
+]
+"startsWith": [
+  "me.flashyreese.mods.reeses_sodium_options.util.StringUtils:fuzzySearch(Ljava/util/List;Ljava/lang/String;I)Ljava/util/List;", # Reese's Sodium Options & TexTrue's Embeddium Options (verified on 1.20.1, 1.16.5)
 ]
