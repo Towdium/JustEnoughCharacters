@@ -175,7 +175,8 @@
   "com.terraformersmc.mod_menu.util.mod.ModSearch:passesFilters(Lcom/terraformersmc/mod_menu/gui/ModsScreen;Lcom/terraformersmc/mod_menu/util/mod/Mod;Ljava/lang/String;)I",# Better ModList(since 1.1.20-1.21.1)
   "earth.terrarium.chipped.common.menus.WorkbenchMenu:lambda$updateResults$0(Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)V", # Chipped
   "com.supermartijn642.rechiseled.screen.BaseChiselingContainerScreen:doesItemMatchSearch(Lnet/minecraft/world/item/Item;)Z", # Rechiseled
-  "io.github.chiselteam.chisel.inventory.ChiselSelectionInventory:updateFilteredItems()V", # Chisel 3 (since 26.1.2.17)
+  "io.github.chiselteam.chisel.inventory.ChiselSelectionInventory:updateFilteredItems()V", # Chisel 3 (Legacy, verified on 26.1.2.17)
+  "io.github.chiselteam.chisel.menu.ChiselSelectionInventory:updateFilteredItems()V", # Chisel 3 (since 26.1.2.18)
   "com.kreidev.cmpackagecouriers.StockTickerIntegration:rewriteAddressIfNeeded(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/item/ItemStack;)V", # Create More: Package Couriers
   "ru.zznty.create_factory_abstractions.api.generic.search.GenericSearch:lambda$search$1(Ljava/lang/String;Lnet/minecraft/tags/TagKey;)Z", # Create Factory Logistics & Create More: Package Couriers
   "ru.zznty.create_factory_abstractions.api.generic.search.GenericSearch:search(Lru/zznty/create_factory_abstractions/api/generic/search/CategoriesProvider;Ljava/lang/String;II)Lru/zznty/create_factory_abstractions/api/generic/search/GenericSearch$SearchResult;", # Create Factory Logistics & Create More: Package Couriers
@@ -201,7 +202,6 @@
   "io.github.fishstiz.packed_packs.gui.states.Query:lambda$test$0(Lio/github/fishstiz/packed_packs/pack/PackNode;)Z", # Packed Packs (verified on 2.3.0-beta.1+26.1)
   "com.mrcrayfish.backpacked.client.gui.screen.widget.ItemGrid:lambda$updateList$0(ZLjava/lang/String;Ljava/util/List;Lnet/minecraft/world/item/Item;)V", # Backpacked (verified on 2.3.0-beta.1+26.1)
   "com.teamresourceful.resourcefulconfig.client.ConfigScreenContext:fulfillsSearch(Ljava/lang/String;)Z", # Resourceful Config (verified on 4.0.1 26.1.2)
-  "io.github.chiselteam.chisel.menu.ChiselSelectionInventory:updateFilteredItems()V", # Chisel 3 (verified on 26.1.2.18)
   "net.mezzdev.config.gui.model.ConfigScreenModel:matches(Ljava/lang/String;)Z", # MezzConfigGUI (config search, verified on mc26.1.2-0.5.2)
   "net.mezzdev.config.gui.screenlist.ConfigScreenListEntry:matches(Ljava/lang/String;)Z", # MezzConfigGUI (mod config screens search, verified on mc26.1.2-0.5.2)
   "harmonised.pmmo.api.client.types.GlossaryFilter$Filter:matchesTextFilter(Ljava/lang/String;)Z", # Project MMO (verified on 26.1.2-2.8.35)
@@ -213,7 +213,9 @@
   "com.skylogistics.client.FluidVaultScreen:filtered(Lcom/skylogistics/block/entity/FluidVaultBlockEntity;)Ljava/util/List;", # Sky Logistics (Celestial Fluid Vault, verified on 26.1.2, 1.21.1, 1.20.1)
   "com.skylogistics.client.ItemVaultScreen:filtered(Lcom/skylogistics/block/entity/ItemVaultBlockEntity;)Ljava/util/List;", # Sky Logistics (Celestial Item Vault, verified on 26.1.2, 1.21.1, 1.20.1)
   "wraith.fwaystones.util.SearchType:match(Ljava/lang/String;Ljava/lang/String;)Z", # Wraith Waystones (verified on 26.1.2, 1.21.1, 1.20.1)
-  "io.github.catomon.easymobspawncontrol.gui.SpawnControlScreen:getMobEntries()Ljava/util/List;", # Easy Mob Spawn Control (mob search, verified on 1.3.2 26.1.2)
+  "io.github.catomon.easymobspawncontrol.gui.MobListManager:getMobEntries(Ljava/lang/String;)Ljava/util/List;", # Easy Mob Spawn Control (mob search, verified on 1.5.11 26.1.2)
+  "io.github.catomon.easymobspawncontrol.gui.screens.ItemSelectScreen:getItemEntries()Ljava/util/List;", # Easy Mob Spawn Control (item search, verified on 1.5.11 26.1.2)
+  "io.github.catomon.easymobspawncontrol.gui.screens.SpawnTypeDisableSelectScreen:getSpawnTypeEntries()Ljava/util/List;", # Easy Mob Spawn Control (spawn type search, verified on 1.5.11 26.1.2)
   "mcp.mobius.waila.gui.widget.ConfigListWidget$Entry:match([Ljava/lang/String;)Z", # WTHIT (config, verified on 26.1.2, 1.21.1, 1.20.1)
   "io.wispforest.owo.config.ui.ConfigScreen:lambda$build$5([Ljava/lang/String;Lio/wispforest/owo/config/ui/component/SearchAnchorComponent;)Z", # oωo (owo-lib config search, since 0.13.1+26.1)
   "de.siphalor.amecs.gui.SearchFieldControlsListWidget:lambda$new$1(Lnet/minecraft/client/gui/screens/options/controls/KeyBindsList;Lnet/minecraft/client/Minecraft;Ljava/lang/String;)V", # Amecs (verified on 1.6.5+mc26.1-rc-1)
@@ -235,6 +237,10 @@
   "dev.dubhe.anvilcraft.client.gui.screen.StorageScreen:applySearchFilter(Lit/unimi/dsi/fastutil/ints/IntList;)Lit/unimi/dsi/fastutil/ints/IntList;", # AnvilCraft Storage client-side search filter
   "dev.dubhe.anvilcraft.client.gui.screen.StorageScreen:rebuildFoldedGroups(Z)V", # AnvilCraft Storage client-side search filter
   "dev.dubhe.anvilcraft.client.support.TerminalRemoteOverlay:applyClientFilter()V", # AnvilCraft terminal overlay client-side search filter
+  "com.astryxion.hats.client.gui.HatScreen:lambda$updateFilteredHats$0(Ljava/lang/String;Lnet/minecraft/world/item/Item;)Z", # Hats (Classic) (Keybind H, verified on 26.1-1.2.0)
+  "com.leclowndu93150.thaumaturge.client.screen.research.ThaumonomiconBrowserScreen:onSearchChanged(Ljava/lang/String;)V", # Thaumaturge (verified on 26.1.2-NeoForge-1.0.2)
+  "de.markusbordihn.easynpc.configui.client.screen.preset.PresetBrowserScreen:matchesFilters(Lde/markusbordihn/easynpc/configui/client/screen/preset/PresetListEntry;)Z", # Easy NPC: Config UI (Preset Browser, verified on 26.1.2-7.14.0)
+  "at.minecraftschurli.mods.arsmagicalegacy.client.gui.inscriptiontable.SpellPartSourceArea:lambda$updateCache$0(Lnet/minecraft/core/Holder;)Z", # Ars Magica: Legacy (Inscription Table, verified on 26.1.2-1.7.0)
 ]
 "equals": [
   "me.shedaniel.clothconfig2.gui.entries.TextFieldListEntry:isMatchDefault(Ljava/lang/String;)Z", # Cloth Config
@@ -253,10 +259,11 @@
   "org.cyclops.integrateddynamics.inventory.container.ContainerLogicProgrammerBase:lambda$static$0(Lorg/cyclops/integrateddynamics/api/logicprogrammer/ILogicProgrammerElement;Ljava/util/regex/Pattern;)Z", #Integrated Dynamics
   "org.cyclops.integrateddynamics.core.inventory.container.ContainerMultipartAspects:lambda$new$0(Lorg/cyclops/integrateddynamics/api/part/aspect/IAspect;Ljava/util/regex/Pattern;)Z", # Integrated Dynamics
   'dev.emi.emi.search.RegexNameQuery:matches(Ldev/emi/emi/api/stack/EmiStack;)Z', #emi regex search
-  "org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStackClient:lambda$getInstanceFilterPredicate$0(Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z", # Integrated Terminals (since 26.1.2-1.33.2)
-  "org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStackClient:lambda$getInstanceFilterPredicate$2(Ljava/lang/String;Lnet/minecraft/network/chat/Component;)Z", # Integrated Terminals (since 26.1.2-1.33.2)
-  "org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStackClient:lambda$getInstanceFilterPredicate$4(Ljava/lang/String;Lnet/minecraft/tags/TagKey;)Z", # Integrated Terminals (since 26.1.2-1.33.2)
-  "org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStackClient:lambda$getInstanceFilterPredicate$6(Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z", # Integrated Terminals (since 26.1.2-1.33.2)
+  "org.cyclops.integratedterminals.core.terminalstorage.query.IngredientQueryMatchers:lambda$containsQuery$1(Ljava/util/regex/Pattern;Ljava/lang/String;)Z",  # Integrated Terminals (since 26.1.2-neoforge-1.10.0)
+  "org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStackClient:lambda$getInstanceFilterPredicate$0(Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z", # Integrated Terminals (Legacy, since 26.1.2-1.33.2)
+  "org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStackClient:lambda$getInstanceFilterPredicate$2(Ljava/lang/String;Lnet/minecraft/network/chat/Component;)Z", # Integrated Terminals (Legacy, since 26.1.2-1.33.2)
+  "org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStackClient:lambda$getInstanceFilterPredicate$4(Ljava/lang/String;Lnet/minecraft/tags/TagKey;)Z", # Integrated Terminals (Legacy, since 26.1.2-1.33.2)
+  "org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStackClient:lambda$getInstanceFilterPredicate$6(Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z", # Integrated Terminals (Legacy, since 26.1.2-1.33.2)
   "com.tom.storagemod.screen.AbstractStorageTerminalScreen:lambda$updateSearch$3(Ljava/util/regex/Pattern;Lcom/tom/storagemod/inventory/StoredItemStack;)Z", # Tom's Simple Storage Mod (Legacy, since 26.1-2.9.5)
   "com.tom.storagemod.screen.AbstractStorageTerminalScreen:lambda$updateSearch$4(Ljava/util/regex/Pattern;Lcom/tom/storagemod/inventory/StoredItemStack;)Z", # Tom's Simple Storage Mod (Legacy, since 26.1-2.9.5)
   "com.tom.storagemod.screen.AbstractStorageTerminalScreen:matchSearch(Ljava/util/regex/Pattern;Ljava/lang/String;)Z" # Tom's Simple Storage Mod (since 26.1-2.10.1)
