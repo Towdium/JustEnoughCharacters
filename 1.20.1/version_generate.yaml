@@ -1,13 +1,36 @@
 "suffix": [
 ]
 "contains": [
+  "net.minecraft.client.gui.screens.worldselection.WorldSelectionList:m_233195_(Ljava/lang/String;Lnet/minecraft/world/level/storage/LevelSummary;)Z", # Minecraft World Selection List Search (Forge 1.19 - 1.20.4)
+  "net.minecraft.class_528:method_43453(Ljava/lang/String;Lnet/minecraft/class_34;)Z", # Minecraft World Selection List Search (Fabric, Intermediary Mappings, since 1.19)
+  "com.aranaira.magichem.gui.AlchemicalNexusScreen:updateDisplayedRecipes(Ljava/lang/String;)V", # MagiChem (Alchemical Nexus)
+  "com.aranaira.magichem.gui.CentrifugeScreen:updateDisplayedRecipes(Ljava/lang/String;)V", # MagiChem (Centrifuge)
+  "com.aranaira.magichem.gui.CircleFabricationScreen:updateDisplayedRecipes(Ljava/lang/String;)V", # MagiChem (Circle of Fabrication)
+  "com.aranaira.magichem.gui.CodexMateriaScreen:updateDisplayedMateria(Ljava/lang/String;)V", # MagiChem (Localization Item Name Not Supported, Codex Materia)
+  "com.aranaira.magichem.gui.FuseryScreen:updateDisplayedRecipes(Ljava/lang/String;)V", # MagiChem (Fusery)
+  "com.aranaira.magichem.gui.GrandCentrifugeScreen:updateDisplayedRecipes(Ljava/lang/String;)V", # MagiChem (Grand Centrifuge)
+  "com.aranaira.magichem.gui.GrandCircleFabricationScreen:updateDisplayedRecipes(Ljava/lang/String;)V", # MagiChem (Grand Circle of Fabrication)
+  "com.aranaira.magichem.gui.GrandFuseryScreen:updateDisplayedRecipes(Ljava/lang/String;)V", # MagiChem (Grand Fusery)
+  "com.aranaira.magichem.gui.MateriaManifestScreen:updateMateriaOptionsByTextFilter()V", # MagiChem (Materia Manifest)
+  "com.aranaira.magichem.gui.MirrorLabyrinthScreen:updateMateriaOptionsByTextFilter()V", # MagiChem (Mirror Labyrinth)
+  "com.aranaira.magichem.gui.PrimeAggregatorScreen:updateDisplayedRecipes(Ljava/lang/String;)V", # MagiChem (Prime Aggregator)
+  "com.github.alexthe666.rats.client.gui.MobFilterScreen:lambda$refreshSearchResults$7(Lcom/mojang/datafixers/util/Pair;)Z", # Rats (Rat Upgrade: Mob Filter, verified on 1.20.1-8.1.3)
+  "com.uberhelixx.enchlibathome.client.screen.LibraryScreen:isAllowedBySearch(Lit/unimi/dsi/fastutil/objects/Object2IntMap$Entry;)Z", # Enchantment Library at Home
+  "dev.dubhe.anvilcraft.client.gui.screen.inventory.ActiveSilencerScreen:lambda$onSearchTextChange$0(Ljava/lang/String;Lit/unimi/dsi/fastutil/Pair;)Z", # AnvilCraft (Active Silencer, verified on 1.20.1-1.4.1+pre-release.2)
+  "dev.dubhe.anvilcraft.client.gui.screen.inventory.ActiveSilencerScreen:lambda$onSearchTextChange$6(Lit/unimi/dsi/fastutil/Pair;)Z",  # AnvilCraft (Active Silencer, verified on 1.20.1-1.4.1+pre-release.2)
+  "com.skylogistics.client.FluidVaultScreen:filtered(Lcom/skylogistics/block/entity/FluidVaultBlockEntity;)Ljava/util/List;", # Sky Logistics (Celestial Fluid Vault, verified on 1.3.2+1.20.1)
+  "com.skylogistics.client.ItemVaultScreen:filtered(Lcom/skylogistics/block/entity/ItemVaultBlockEntity;)Ljava/util/List;", # Sky Logistics (Celestial Item Vault, verified on 1.3.2+1.20.1)
+  "igentuman.mbtool.client.screen.MultibuilderSelectStructureScreen:lambda$applyFilter$5([Ljava/lang/String;Ligentuman/mbtool/util/MultiblockStructure;)Z", # Multi Builder Tool (verified on 1.20.1-1.0.27)
 ]
 "equals": [
 ]
 "regExp": [
 ]
 "startsWith": [
-  "com.denfop.screen.ScreenVeinSensor:drawForegroundLayer(Lnet/minecraft/client/gui/GuiGraphics;II)V",# Industrial Upgrade (verified on 1.20.1-3.4.0.11)
-  "com.denfop.screen.ScreenVeinSensor:mouseClicked(III)V",# Industrial Upgrade (verified on 1.20.1-3.4.0.11)
-  "com.denfop.screen.ScreenVeinSensor:drawGuiContainerBackgroundLayer(Lnet/minecraft/client/gui/GuiGraphics;FII)V"# Industrial Upgrade (verified on 1.20.1-3.4.0.11)
+  "com.denfop.screen.ScreenVeinSensor:drawForegroundLayer(Lnet/minecraft/client/gui/GuiGraphics;II)V", # Industrial Upgrade (verified on 1.20.1-3.4.0.11)
+  "com.denfop.screen.ScreenVeinSensor:mouseClicked(III)V", # Industrial Upgrade (verified on 1.20.1-3.4.0.11)
+  "com.denfop.screen.ScreenVeinSensor:drawGuiContainerBackgroundLayer(Lnet/minecraft/client/gui/GuiGraphics;FII)V", # Industrial Upgrade (verified on 1.20.1-3.4.0.11)
+  "org.embeddedt.embeddium.util.StringUtils:fuzzySearch(Ljava/lang/Iterable;Ljava/lang/String;ILjava/util/function/Function;)Ljava/util/List;", # Embeddium (verified on 0.3.31+mc1.20.1)
+  "me.flashyreese.mods.reeses_sodium_options.util.StringUtils:fuzzySearch(Ljava/util/List;Ljava/lang/String;I)Ljava/util/List;", # Reese's Sodium Options & TexTrue's Embeddium Options (verified on 1.20.1, 1.16.5)
+  "com.kuzhi.findme.client.FindMeAuiHouseScreen:action(Ljava/lang/String;Ljava/lang/String;)V", # Find me (Small House, verified on 1.20.1-forge-1.3.3)
 ]
