@@ -4,7 +4,8 @@
   "tags": [
     "moderner",
     "neoforge",
-    "smoke"
+    "smoke",
+    "experimental"
   ],
   "mc": "26.1.2",
   "loader": {
