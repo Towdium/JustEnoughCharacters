@@ -266,7 +266,7 @@
   "org.cyclops.integratedterminals.capability.ingredient.IngredientComponentTerminalStorageHandlerItemStackClient:lambda$getInstanceFilterPredicate$6(Ljava/lang/String;Lnet/minecraft/world/item/ItemStack;)Z", # Integrated Terminals (Legacy, since 26.1.2-1.33.2)
   "com.tom.storagemod.screen.AbstractStorageTerminalScreen:lambda$updateSearch$3(Ljava/util/regex/Pattern;Lcom/tom/storagemod/inventory/StoredItemStack;)Z", # Tom's Simple Storage Mod (Legacy, since 26.1-2.9.5)
   "com.tom.storagemod.screen.AbstractStorageTerminalScreen:lambda$updateSearch$4(Ljava/util/regex/Pattern;Lcom/tom/storagemod/inventory/StoredItemStack;)Z", # Tom's Simple Storage Mod (Legacy, since 26.1-2.9.5)
-  "com.tom.storagemod.screen.AbstractStorageTerminalScreen:matchSearch(Ljava/util/regex/Pattern;Ljava/lang/String;)Z" # Tom's Simple Storage Mod (since 26.1-2.10.1)
+  "com.tom.storagemod.screen.AbstractStorageTerminalScreen:matchSearch(Ljava/util/regex/Pattern;Ljava/lang/String;)Z", # Tom's Simple Storage Mod (since 26.1-2.10.1)
   "dev.dubhe.anvilcraft.client.gui.screen.ActiveSilencerScreen:lambda$onSearchTextChange$3(Ljava/util/regex/Pattern;Lit/unimi/dsi/fastutil/Pair;)Z", # AnvilCraft Active Silencer regex search
   "dev.dubhe.anvilcraft.client.gui.screen.TeslaTowerScreen:lambda$onSearchTextChange$5(Ljava/util/regex/Pattern;Lit/unimi/dsi/fastutil/Pair;)Z", # AnvilCraft Tesla Tower regex search
 ]
