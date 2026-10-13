@@ -1,0 +1,64 @@
+{
+  "_comment": "multiple-version line, MC 1.16.5 forge, smoke env. The jei row is pinned by file id below to exercise the pin-is-used-directly path; 1.16.5 ships no JEI plugin class.",
+  "name": "mv-1.16.5-forge",
+  "tags": [
+    "mv",
+    "forge",
+    "smoke"
+  ],
+  "mc": "1.16.5",
+  "loader": {
+    "type": "forge",
+    "version": "1.16.5-36.2.39"
+  },
+  "java": {
+    "version": 8
+  },
+  "jech": {
+    "source": "local-build",
+    "project": "multiple-version",
+    "path": "1.16.5/forge/build/libs/jecharacters-1.16.5-forge-4.6.12.jar",
+    "expectModId": "jecharacters"
+  },
+  "mods": [
+    {
+      "name": "jei",
+      "source": "curseforge",
+      "slug": "jei",
+      "describe": {
+        "version": "7.8.0.1009"
+      },
+      "pin": {
+        "fileId": 4371666,
+        "filename": "jei-1.16.5-7.8.0.1009.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/4371/666/jei-1.16.5-7.8.0.1009.jar",
+        "sha1": "cb07340ff3b0d66d0541ff98e5fa6abcd392b08c",
+        "size": 839446
+      }
+    }
+  ],
+  "checks": [
+    {
+      "type": "log_not_contains",
+      "value": "Could not find targets.json. JechTransformer will not be loaded.",
+      "name": "no-transformer-failure"
+    },
+    {
+      "type": "no_crash_reports",
+      "name": "no-crash-reports"
+    },
+    {
+      "type": "exit_code_zero",
+      "name": "exit-code"
+    }
+  ],
+  "timeout_sec": 600,
+  "jvm": {
+    "max_mem_mb": 3072,
+    "min_mem_mb": 1024,
+    "window": [
+      1280,
+      720
+    ]
+  }
+}

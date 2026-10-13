@@ -1,0 +1,21 @@
+#!/usr/bin/env python3
+"""jt - the JECh compatibility test harness.
+
+A thin launcher: it puts this directory on ``sys.path`` so ``lib`` resolves no
+matter where the command is invoked from, then hands over to ``lib.__main__``.
+No absolute path is baked in; ``os.path.abspath(__file__)`` is where the file
+itself happens to live.
+"""
+
+import os
+import sys
+
+_HERE = os.path.dirname(os.path.abspath(__file__))
+if _HERE not in sys.path:
+    sys.path.insert(0, _HERE)
+
+from lib.__main__ import main  # noqa: E402  (import after sys.path setup)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

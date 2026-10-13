@@ -1,0 +1,184 @@
+"""Rendering an env into a ``.mrpack`` (Modrinth pack format).
+
+The pack is deliberately dumb: ``files`` is empty and *every* mod jar — the
+downloaded ones and the JECh artifact under test — rides in ``overrides/mods/``.
+Two reasons:
+
+* import needs no CDN download and no CurseForge key, so a run works offline from
+  the cache and cannot be re-resolved to something else halfway through;
+* ``overrides`` is copied into the instance verbatim, which is what lets the
+  isolation step rebuild ``mods/`` from one authoritative source.
+
+The build directory lives under ``runs/<id>/pack`` and the zip next to it, so a
+run's exact input set survives with the report.
+"""
+
+from __future__ import annotations
+
+import json
+import os
+import shutil
+import zipfile
+from pathlib import Path
+
+from . import envs
+from .errors import ConfigError, DependencyError
+from .util import atomic_write_text, dump_json_text, load_json, sha256_json
+
+INDEX_NAME = "modrinth.index.json"
+FORMAT_VERSION = 1
+OVERRIDES_DIR = "overrides"
+MODS_SUBDIR = "mods"
+INDEX_GAME = "minecraft"
+
+
+class PackResult:
+    def __init__(self, *, pack_dir, index_path, mrpack_path, pack_hash, mod_filenames, version_id,
+                 dependencies):
+        self.pack_dir = Path(pack_dir)
+        self.index_path = Path(index_path)
+        self.mrpack_path = Path(mrpack_path)
+        self.pack_hash = pack_hash
+        self.mod_filenames = list(mod_filenames)
+        self.version_id = version_id
+        self.dependencies = dict(dependencies)
+
+    def mods_dir(self):
+        return self.pack_dir / OVERRIDES_DIR / MODS_SUBDIR
+
+    def __repr__(self):
+        return f"PackResult({self.mrpack_path.name}, {len(self.mod_filenames)} mod(s))"
+
+
+def dependency_key(loader_type):
+    try:
+        return envs.MRPACK_DEPENDENCY_KEYS[loader_type]
+    except KeyError:
+        raise ConfigError(
+            f"loader {loader_type!r} cannot be expressed as an mrpack dependency "
+            f"(known: {', '.join(sorted(envs.MRPACK_DEPENDENCY_KEYS))})"
+        )
+
+
+def dependencies_for(env):
+    return {INDEX_GAME: env.mc, dependency_key(env.loader.type): env.loader.version}
+
+
+def build_index(env, resolved, version_id=None):
+    """The ``modrinth.index.json`` body. ``files`` stays empty on purpose."""
+    return {
+        "formatVersion": FORMAT_VERSION,
+        "game": INDEX_GAME,
+        "versionId": version_id or env.name,
+        "name": env.name,
+        "summary": f"JECh compatibility test env {env.name} ({env.mod_label}, java {env.java_version})",
+        "files": [],
+        "dependencies": dependencies_for(env),
+    }
+
+
+def modset_hash(env, resolved):
+    """A stable fingerprint of everything that decides what the game loads.
+
+    Timestamps and run ids are excluded on purpose: the hash answers "is this the
+    same mod set as last time", which is what licenses reusing an instance.
+    """
+    mods = sorted(
+        ({"name": a.name, "filename": a.filename, "sha1": a.sha1 or "", "size": a.size}
+         for a in resolved.artifacts),
+        key=lambda item: (item["name"], item["filename"]),
+    )
+    return sha256_json({
+        "mc": env.mc,
+        "loader": {"type": env.loader.type, "version": env.loader.version},
+        "java": env.java_version,
+        "jvm": {"min": env.jvm.min_mem_mb, "max": env.jvm.max_mem_mb},
+        "mods": mods,
+    })
+
+
+def build_pack(env, resolved, run_dir, *, version_id=None, log=print):
+    """Stage ``overrides/mods`` + the index, then zip them into ``<env.name>.mrpack``."""
+    run_dir = Path(run_dir)
+    pack_dir = run_dir / "pack"
+    mods_dir = pack_dir / OVERRIDES_DIR / MODS_SUBDIR
+    if pack_dir.exists():
+        shutil.rmtree(pack_dir)
+    mods_dir.mkdir(parents=True, exist_ok=True)
+
+    staged = []
+    for artifact in resolved.artifacts:
+        if artifact.path is None or not artifact.path.is_file():
+            raise DependencyError(
+                f"{artifact.name}: {artifact.filename} is not in the cache "
+                "(run jt resolve first; jt run does it automatically)"
+            )
+        dest = mods_dir / artifact.filename
+        if dest.exists():  # two mods cannot share one jar name
+            raise DependencyError(
+                f"two artifacts stage to {artifact.filename!r}; rename one in the env "
+                "(mods[].name is only a label, the file name comes from the pin)"
+            )
+        _link_or_copy(artifact.path, dest)
+        staged.append(artifact.filename)
+
+    index = build_index(env, resolved, version_id=version_id)
+    index_path = pack_dir / INDEX_NAME
+    atomic_write_text(index_path, dump_json_text(index))
+
+    mrpack_path = run_dir / f"{env.name}.mrpack"
+    _write_zip(pack_dir, mrpack_path)
+
+    return PackResult(
+        pack_dir=pack_dir,
+        index_path=index_path,
+        mrpack_path=mrpack_path,
+        pack_hash=modset_hash(env, resolved),
+        mod_filenames=staged,
+        version_id=index["versionId"],
+        dependencies=index["dependencies"],
+    )
+
+
+def _link_or_copy(source, dest):
+    """Stage a cache file without ever mutating it: hardlink when possible."""
+    try:
+        os.link(source, dest)
+        return
+    except OSError:
+        pass
+    shutil.copy2(source, dest)
+
+
+def _write_zip(pack_dir, out_path):
+    """Zip the pack: index deflated, jars stored (they are already compressed)."""
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = out_path.with_name(out_path.name + ".tmp")
+    if tmp.exists():
+        tmp.unlink()
+    with zipfile.ZipFile(tmp, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+        for path in sorted(pack_dir.rglob("*")):
+            if not path.is_file():
+                continue
+            arcname = path.relative_to(pack_dir).as_posix()
+            compress = zipfile.ZIP_STORED if arcname.endswith(".jar") else zipfile.ZIP_DEFLATED
+            archive.write(path, arcname=arcname, compress_type=compress)
+    os.replace(tmp, out_path)
+    return out_path
+
+
+def read_index(mrpack_path):
+    """Read the index out of a rendered pack (used by the selftest and by verify)."""
+    with zipfile.ZipFile(mrpack_path) as archive:
+        with archive.open(INDEX_NAME) as handle:
+            return json.loads(handle.read().decode("utf-8"))
+
+
+def read_index_file(index_path):
+    return load_json(index_path, what=f"pack index {Path(index_path).name}")
+
+
+def listed_mods(mrpack_path):
+    with zipfile.ZipFile(mrpack_path) as archive:
+        return sorted(name for name in archive.namelist()
+                      if name.startswith(f"{OVERRIDES_DIR}/{MODS_SUBDIR}/") and name.endswith(".jar"))

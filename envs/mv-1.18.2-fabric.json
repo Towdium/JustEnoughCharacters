@@ -1,0 +1,79 @@
+{
+  "_comment": "multiple-version line, MC 1.18.2 fabric; fabric-api version from 1.18.2/gradle.properties.",
+  "name": "mv-1.18.2-fabric",
+  "tags": [
+    "mv",
+    "fabric",
+    "smoke"
+  ],
+  "mc": "1.18.2",
+  "loader": {
+    "type": "fabric",
+    "version": "0.14.9"
+  },
+  "java": {
+    "version": 17
+  },
+  "jech": {
+    "source": "local-build",
+    "project": "multiple-version",
+    "path": "1.18.2/fabric/build/libs/jecharacters-1.18.2-fabric-4.6.12.jar",
+    "expectModId": "jecharacters"
+  },
+  "mods": [
+    {
+      "name": "jei",
+      "source": "curseforge",
+      "slug": "jei",
+      "describe": {
+        "version": "10.2.1.1005"
+      },
+      "pin": {
+        "fileId": 4593546,
+        "filename": "jei-1.18.2-fabric-10.2.1.1005.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/4593/546/jei-1.18.2-fabric-10.2.1.1005.jar",
+        "sha1": "c98638e9fab69b93d5052bff15b0647b5f739259",
+        "size": 1104492
+      }
+    },
+    {
+      "name": "fabric-api",
+      "source": "curseforge",
+      "slug": "fabric-api",
+      "describe": {
+        "version": "0.67.0+1.18.2"
+      },
+      "pin": {
+        "fileId": 4100443,
+        "filename": "fabric-api-0.67.0+1.18.2.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/4100/443/fabric-api-0.67.0%2b1.18.2.jar",
+        "sha1": "31174f7510f15ceddd3b449da4bffc0c2c589a4b",
+        "size": 1458350
+      }
+    }
+  ],
+  "checks": [
+    {
+      "type": "log_not_contains",
+      "value": "Could not find targets.json. JechTransformer will not be loaded.",
+      "name": "no-transformer-failure"
+    },
+    {
+      "type": "no_crash_reports",
+      "name": "no-crash-reports"
+    },
+    {
+      "type": "exit_code_zero",
+      "name": "exit-code"
+    }
+  ],
+  "timeout_sec": 600,
+  "jvm": {
+    "max_mem_mb": 3072,
+    "min_mem_mb": 1024,
+    "window": [
+      1280,
+      720
+    ]
+  }
+}

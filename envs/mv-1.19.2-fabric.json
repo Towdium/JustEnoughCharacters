@@ -1,0 +1,94 @@
+{
+  "_comment": "multiple-version line, MC 1.19.2 fabric; fabric-api version from 1.19.2/gradle.properties.",
+  "name": "mv-1.19.2-fabric",
+  "tags": [
+    "mv",
+    "fabric",
+    "smoke"
+  ],
+  "mc": "1.19.2",
+  "loader": {
+    "type": "fabric",
+    "version": "0.14.11"
+  },
+  "java": {
+    "version": 17
+  },
+  "jech": {
+    "source": "local-build",
+    "project": "multiple-version",
+    "path": "1.19.2/fabric/build/libs/jecharacters-1.19.2-fabric-4.6.12.jar",
+    "expectModId": "jecharacters"
+  },
+  "mods": [
+    {
+      "name": "jei",
+      "source": "curseforge",
+      "slug": "jei",
+      "describe": {
+        "version": "11.30.3.1056"
+      },
+      "pin": {
+        "fileId": 8583563,
+        "filename": "jei-1.19.2-fabric-11.30.3.1056.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/8583/563/jei-1.19.2-fabric-11.30.3.1056.jar",
+        "sha1": "bf3a938351af57a13e79e906fd562e42663fd701",
+        "size": 1423509
+      }
+    },
+    {
+      "name": "fabric-api",
+      "source": "curseforge",
+      "slug": "fabric-api",
+      "describe": {
+        "version": "0.68.0+1.19.2"
+      },
+      "pin": {
+        "fileId": 4123950,
+        "filename": "fabric-api-0.68.0+1.19.2.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/4123/950/fabric-api-0.68.0%2b1.19.2.jar",
+        "sha1": "bb4d02f261723dd81effd117df9437bfa20dc728",
+        "size": 1820290
+      }
+    }
+  ],
+  "checks": [
+    {
+      "type": "log_contains",
+      "value": "Registering JEI pinyin search storage",
+      "name": "jei-storage-registered"
+    },
+    {
+      "type": "log_not_contains",
+      "value": "Could not find targets.json. JechTransformer will not be loaded.",
+      "name": "transformer-loaded"
+    },
+    {
+      "type": "log_not_contains",
+      "value": "Can't create config file!",
+      "name": "config-writable"
+    },
+    {
+      "type": "file_exists",
+      "value": "config/jecharacters.json",
+      "name": "config-generated"
+    },
+    {
+      "type": "no_crash_reports",
+      "name": "no-crash-reports"
+    },
+    {
+      "type": "exit_code_zero",
+      "name": "exit-code"
+    }
+  ],
+  "timeout_sec": 600,
+  "jvm": {
+    "max_mem_mb": 3072,
+    "min_mem_mb": 1024,
+    "window": [
+      1280,
+      720
+    ]
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "_comment": "multiple-version line, MC 1.19.2 forge.",
+  "name": "mv-1.19.2-forge",
+  "tags": [
+    "mv",
+    "forge",
+    "smoke"
+  ],
+  "mc": "1.19.2",
+  "loader": {
+    "type": "forge",
+    "version": "1.19.2-43.2.3"
+  },
+  "java": {
+    "version": 17
+  },
+  "jech": {
+    "source": "local-build",
+    "project": "multiple-version",
+    "path": "1.19.2/forge/build/libs/jecharacters-1.19.2-forge-4.6.12.jar",
+    "expectModId": "jecharacters"
+  },
+  "mods": [
+    {
+      "name": "jei",
+      "source": "curseforge",
+      "slug": "jei",
+      "describe": {
+        "version": "11.30.3.1056"
+      },
+      "pin": {
+        "fileId": 8583564,
+        "filename": "jei-1.19.2-forge-11.30.3.1056.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/8583/564/jei-1.19.2-forge-11.30.3.1056.jar",
+        "sha1": "7720a5c063ef828adc34e8003bbb461183e3e8e0",
+        "size": 1401041
+      }
+    }
+  ],
+  "checks": [
+    {
+      "type": "log_contains",
+      "value": "Registering JEI pinyin search storage",
+      "name": "jei-storage-registered"
+    },
+    {
+      "type": "log_not_contains",
+      "value": "Could not find targets.json. JechTransformer will not be loaded.",
+      "name": "transformer-loaded"
+    },
+    {
+      "type": "no_crash_reports",
+      "name": "no-crash-reports"
+    },
+    {
+      "type": "exit_code_zero",
+      "name": "exit-code"
+    }
+  ],
+  "timeout_sec": 600,
+  "jvm": {
+    "max_mem_mb": 3072,
+    "min_mem_mb": 1024,
+    "window": [
+      1280,
+      720
+    ]
+  }
+}

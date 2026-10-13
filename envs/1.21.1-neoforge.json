@@ -1,0 +1,69 @@
+{
+  "_comment": "1.21.1 line. Loader/jei versions mirror 1.21.1/gradle.properties.",
+  "name": "1.21.1-neoforge",
+  "tags": [
+    "1211",
+    "neoforge",
+    "smoke"
+  ],
+  "mc": "1.21.1",
+  "loader": {
+    "type": "neoforge",
+    "version": "21.1.215"
+  },
+  "java": {
+    "version": 21
+  },
+  "jech": {
+    "source": "local-build",
+    "project": "1.21.1",
+    "path": "neoforge/build/libs/jecharacters-1.21.1-neoforge-*.jar",
+    "expectModId": "jecharacters"
+  },
+  "mods": [
+    {
+      "name": "jei",
+      "source": "curseforge",
+      "slug": "jei",
+      "describe": {
+        "version": "19.37.0.362"
+      },
+      "pin": {
+        "fileId": 8413371,
+        "filename": "jei-1.21.1-neoforge-19.37.0.362.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/8413/371/jei-1.21.1-neoforge-19.37.0.362.jar",
+        "sha1": "abdd62a8cee4fa4b93e8267da4a9e6a3700be842",
+        "size": 1624420
+      }
+    }
+  ],
+  "checks": [
+    {
+      "type": "log_contains",
+      "value": "Registering JEI pinyin search storage",
+      "name": "jei-storage-registered"
+    },
+    {
+      "type": "log_not_contains",
+      "value": "Could not find targets.json. JechTransformer will not be loaded.",
+      "name": "transformer-loaded"
+    },
+    {
+      "type": "no_crash_reports",
+      "name": "no-crash-reports"
+    },
+    {
+      "type": "exit_code_zero",
+      "name": "exit-code"
+    }
+  ],
+  "timeout_sec": 600,
+  "jvm": {
+    "max_mem_mb": 3072,
+    "min_mem_mb": 1024,
+    "window": [
+      1280,
+      720
+    ]
+  }
+}

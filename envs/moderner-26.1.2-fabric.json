@@ -1,0 +1,94 @@
+{
+  "_comment": "moderner line, MC 26.1.2, fabric (fabric-unobfuscated module). fabric-api version is fabric_api_version in moderner/fabric-unobfuscated/gradle.properties; that variant's fabric.mod.json depends on fabric-api explicitly.",
+  "name": "moderner-26.1.2-fabric",
+  "tags": [
+    "moderner",
+    "fabric",
+    "smoke"
+  ],
+  "mc": "26.1.2",
+  "loader": {
+    "type": "fabric",
+    "version": "0.19.2"
+  },
+  "java": {
+    "version": 25
+  },
+  "jech": {
+    "source": "local-build",
+    "project": "moderner",
+    "path": "fabric-unobfuscated/build/libs/jecharacters-26.1.2-fabric-*.jar",
+    "expectModId": "jecharacters"
+  },
+  "mods": [
+    {
+      "name": "jei",
+      "source": "curseforge",
+      "slug": "jei",
+      "describe": {
+        "version": "29.16.0.46"
+      },
+      "pin": {
+        "fileId": 8411568,
+        "filename": "jei-26.1.2-fabric-29.16.0.46.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/8411/568/jei-26.1.2-fabric-29.16.0.46.jar",
+        "sha1": "88520f2f2152d16351dfbcdf62519c8d13bccad3",
+        "size": 1659440
+      }
+    },
+    {
+      "name": "fabric-api",
+      "source": "curseforge",
+      "slug": "fabric-api",
+      "describe": {
+        "version": "0.146.1+26.1.2"
+      },
+      "pin": {
+        "fileId": 7940762,
+        "filename": "fabric-api-0.146.1+26.1.2.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/7940/762/fabric-api-0.146.1%2b26.1.2.jar",
+        "sha1": "d2ee4e810cc926a38758e7a0f6e1497382be557a",
+        "size": 2409383
+      }
+    }
+  ],
+  "checks": [
+    {
+      "type": "log_contains",
+      "value": "Registering JEI pinyin search storage",
+      "name": "jei-storage-registered"
+    },
+    {
+      "type": "log_not_contains",
+      "value": "Could not find targets.json. JechTransformer will not be loaded.",
+      "name": "transformer-loaded"
+    },
+    {
+      "type": "log_not_contains",
+      "value": "Can't create config file!",
+      "name": "config-writable"
+    },
+    {
+      "type": "file_exists",
+      "value": "config/jecharacters.json",
+      "name": "config-generated"
+    },
+    {
+      "type": "no_crash_reports",
+      "name": "no-crash-reports"
+    },
+    {
+      "type": "exit_code_zero",
+      "name": "exit-code"
+    }
+  ],
+  "timeout_sec": 600,
+  "jvm": {
+    "max_mem_mb": 3072,
+    "min_mem_mb": 1024,
+    "window": [
+      1280,
+      720
+    ]
+  }
+}

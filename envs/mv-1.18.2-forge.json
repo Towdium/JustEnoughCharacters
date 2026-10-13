@@ -1,0 +1,64 @@
+{
+  "_comment": "multiple-version line, MC 1.18.2 forge. This line has no JEI plugin class, so there is no plugin log marker to assert; the checks stay on the failure markers.",
+  "name": "mv-1.18.2-forge",
+  "tags": [
+    "mv",
+    "forge",
+    "smoke"
+  ],
+  "mc": "1.18.2",
+  "loader": {
+    "type": "forge",
+    "version": "1.18.2-40.2.1"
+  },
+  "java": {
+    "version": 17
+  },
+  "jech": {
+    "source": "local-build",
+    "project": "multiple-version",
+    "path": "1.18.2/forge/build/libs/jecharacters-1.18.2-forge-4.6.12.jar",
+    "expectModId": "jecharacters"
+  },
+  "mods": [
+    {
+      "name": "jei",
+      "source": "curseforge",
+      "slug": "jei",
+      "describe": {
+        "version": "10.2.1.1005"
+      },
+      "pin": {
+        "fileId": 4593548,
+        "filename": "jei-1.18.2-forge-10.2.1.1005.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/4593/548/jei-1.18.2-forge-10.2.1.1005.jar",
+        "sha1": "95ac179f935376235eb35fa6a854b5051590dcfe",
+        "size": 1085640
+      }
+    }
+  ],
+  "checks": [
+    {
+      "type": "log_not_contains",
+      "value": "Could not find targets.json. JechTransformer will not be loaded.",
+      "name": "no-transformer-failure"
+    },
+    {
+      "type": "no_crash_reports",
+      "name": "no-crash-reports"
+    },
+    {
+      "type": "exit_code_zero",
+      "name": "exit-code"
+    }
+  ],
+  "timeout_sec": 600,
+  "jvm": {
+    "max_mem_mb": 3072,
+    "min_mem_mb": 1024,
+    "window": [
+      1280,
+      720
+    ]
+  }
+}

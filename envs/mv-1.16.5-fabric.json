@@ -1,0 +1,64 @@
+{
+  "_comment": "multiple-version line, MC 1.16.5 fabric, smoke env: no target mod, only fabric-api, to isolate JECh loading. This variant has no JEI integration at all.",
+  "name": "mv-1.16.5-fabric",
+  "tags": [
+    "mv",
+    "fabric",
+    "smoke"
+  ],
+  "mc": "1.16.5",
+  "loader": {
+    "type": "fabric",
+    "version": "0.14.9"
+  },
+  "java": {
+    "version": 8
+  },
+  "jech": {
+    "source": "local-build",
+    "project": "multiple-version",
+    "path": "1.16.5/fabric/build/libs/jecharacters-1.16.5-fabric-4.6.12.jar",
+    "expectModId": "jecharacters"
+  },
+  "mods": [
+    {
+      "name": "fabric-api",
+      "source": "curseforge",
+      "slug": "fabric-api",
+      "describe": {
+        "version": "0.42.0+1.16"
+      },
+      "pin": {
+        "fileId": 3516413,
+        "filename": "fabric-api-0.42.0+1.16.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/3516/413/fabric-api-0.42.0%2b1.16.jar",
+        "sha1": "54970c87bc1cf0bb93df57ec3a0b3bbb67c7ab0c",
+        "size": 1090414
+      }
+    }
+  ],
+  "checks": [
+    {
+      "type": "log_not_contains",
+      "value": "Could not find targets.json. JechTransformer will not be loaded.",
+      "name": "no-transformer-failure"
+    },
+    {
+      "type": "no_crash_reports",
+      "name": "no-crash-reports"
+    },
+    {
+      "type": "exit_code_zero",
+      "name": "exit-code"
+    }
+  ],
+  "timeout_sec": 600,
+  "jvm": {
+    "max_mem_mb": 3072,
+    "min_mem_mb": 1024,
+    "window": [
+      1280,
+      720
+    ]
+  }
+}

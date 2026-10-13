@@ -1,0 +1,79 @@
+{
+  "_comment": "1.12.2 line against Had Enough Items (the JEI fork). The srg classifier is required: the build directory also holds the non-srg jar, and only the srg one is a 1.12.2 runtime jar. With HEI the legacy GeneralizedSuffixTree constructor patch is not applied (that is the legacy-JEI path only), so that check is absent here.",
+  "name": "1.12.2-forge-hei",
+  "tags": [
+    "112",
+    "forge",
+    "smoke"
+  ],
+  "mc": "1.12.2",
+  "loader": {
+    "type": "forge",
+    "version": "1.12.2-14.23.5.2864"
+  },
+  "java": {
+    "version": 8
+  },
+  "jech": {
+    "source": "local-build",
+    "project": "1.12.0",
+    "path": "build/libs/jecharacters-1.12.0-*-srg.jar",
+    "expectModId": "jecharacters"
+  },
+  "mods": [
+    {
+      "name": "had-enough-items",
+      "source": "curseforge",
+      "slug": "had-enough-items",
+      "describe": {
+        "version": "4.34.0"
+      },
+      "pin": {
+        "fileId": 8576621,
+        "filename": "HadEnoughItems_1.12.2-4.34.0.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/8576/621/HadEnoughItems_1.12.2-4.34.0.jar",
+        "sha1": "68c7b255be2c5fa7a4aee8a0ae50d94ebd3db848",
+        "size": 954164
+      }
+    }
+  ],
+  "checks": [
+    {
+      "type": "log_contains",
+      "value": "Registering JEI pinyin search index",
+      "name": "jei-index-registered"
+    },
+    {
+      "type": "log_contains",
+      "value": "Transforming class mezz/jei/ingredients/IngredientFilter for JEI integration.",
+      "name": "jei-class-transformed"
+    },
+    {
+      "type": "log_not_contains",
+      "value": "Invalid config syntax:",
+      "name": "config-syntax-valid"
+    },
+    {
+      "type": "file_exists",
+      "value": "config/JustEnoughCharacters.cfg",
+      "name": "config-generated"
+    },
+    {
+      "type": "no_crash_reports",
+      "name": "no-crash-reports"
+    },
+    {
+      "type": "exit_code_zero",
+      "name": "exit-code"
+    }
+  ],
+  "timeout_sec": 600,
+  "jvm": {
+    "max_mem_mb": 3072,
+    "min_mem_mb": 1024,
+    "window": [
+      1280,
+      720
+    ]
+  }
+}
