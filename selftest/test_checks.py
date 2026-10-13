@@ -101,6 +101,37 @@ class DeclaredCheckTest(unittest.TestCase):
         self.assertEqual(result["status"], checks.SKIP)
         self.assertIn("handoff", result["detail"])
 
+    def test_a_deliberate_stop_passes_whatever_the_exit_code_says(self):
+        """Once ready, the runner ends the game itself — the code is an artefact."""
+        for reason in checks.DELIBERATE_STOP_REASONS:
+            with self.subTest(reason=reason):
+                result = checks.evaluate_one(spec("exit_code_zero"), session(
+                    exit_code=-15, exit_code_source="runner", stop_reason=reason, ready_reached=False))
+                self.assertEqual(result["status"], checks.PASS)
+                self.assertIn(reason, result["detail"])
+
+    def test_a_deliberate_stop_still_passes_on_top_of_a_handoff(self):
+        result = checks.evaluate_one(spec("exit_code_zero"), session(
+            exit_code=None, exit_code_source="handoff", stop_reason=checks.STOP_GOAL_REACHED))
+        self.assertEqual(result["status"], checks.PASS)
+
+    def test_a_natural_exit_before_the_ready_marker_fails(self):
+        result = checks.evaluate_one(spec("exit_code_zero"), session(
+            exit_code=0, exit_code_source="launcher", ready_reached=False))
+        self.assertEqual(result["status"], checks.FAIL)
+        self.assertIn("before the ready marker", result["detail"])
+
+    def test_a_nonzero_natural_exit_after_readiness_fails(self):
+        result = checks.evaluate_one(spec("exit_code_zero"), session(
+            exit_code=1, exit_code_source="launcher", ready_reached=True))
+        self.assertEqual(result["status"], checks.FAIL)
+
+    def test_a_game_that_was_still_running_fails(self):
+        result = checks.evaluate_one(spec("exit_code_zero"), session(
+            exit_code=0, exit_code_source="launcher", game_exited=False))
+        self.assertEqual(result["status"], checks.FAIL)
+        self.assertIn("still running", result["detail"])
+
     def test_evaluating_a_list_keeps_the_order(self):
         results = checks.evaluate([spec("log_contains", "jecharacters", name="first"),
                                    spec("no_crash_reports", name="second")], session())

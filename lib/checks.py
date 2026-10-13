@@ -30,13 +30,20 @@ PASS = "PASS"
 FAIL = "FAIL"
 SKIP = "SKIP"
 
+# ``stop_reason`` values that mean the runner ended the session on purpose, so
+# the process exit code is an artefact of the harness and carries no signal.
+STOP_GOAL_REACHED = "goal-reached"
+STOP_READY_TIMEOUT = "ready-timeout"
+DELIBERATE_STOP_REASONS = (STOP_GOAL_REACHED, STOP_READY_TIMEOUT)
+
 
 class CheckContext:
     """Everything the checks may look at, gathered by the runner."""
 
     def __init__(self, *, log_text="", log_path=None, minecraft_dir=None, session_started=False,
                  exit_code=None, exit_code_source="unknown", timed_out=False, new_crash_reports=(),
-                 game_started=False, game_exited=False, duration_sec=None, timeout_sec=None):
+                 game_started=False, game_exited=False, duration_sec=None, timeout_sec=None,
+                 stop_reason=None, ready_reached=True):
         self.log_text = log_text or ""
         self.log_path = log_path
         # The instance's minecraft directory: the root every file_exists value is
@@ -51,6 +58,12 @@ class CheckContext:
         self.game_exited = bool(game_exited)
         self.duration_sec = duration_sec
         self.timeout_sec = timeout_sec
+        # Why tracking stopped: one of DELIBERATE_STOP_REASONS when the runner
+        # ended the session itself, None when the game (or the watchdog) decided.
+        self.stop_reason = stop_reason
+        # Whether the env's readiness rule was satisfied before tracking stopped.
+        # True by default: an env without ``ready_when`` has no readiness gate.
+        self.ready_reached = bool(ready_reached)
 
 
 def result(name, type_, status, detail):
@@ -211,12 +224,29 @@ def _no_crash_reports(spec, ctx):
 
 
 def _exit_code_zero(spec, ctx):
+    """The game ended — was that a healthy end?
+
+    A production instance quits only when something ends it, so three outcomes
+    count as healthy: the runner ended the session on purpose once the env was
+    ready (``stop_reason``), or the game itself exited 0 as part of a normal
+    shutdown. A natural exit *before* the ready marker appeared, a non-zero exit,
+    or an unobservable one all fail — the watchdog stays a separate exit code 3.
+    """
+    if ctx.stop_reason in DELIBERATE_STOP_REASONS:
+        return result(spec.name, spec.type, PASS,
+                      f"the runner ended the session on purpose (stop_reason={ctx.stop_reason})")
     if ctx.exit_code_source == "handoff":
         return result(spec.name, spec.type, SKIP,
                       "launcher handoff: the launcher handed off to a running Prism instance, so the "
                       "game's own exit code is not observable from the CLI")
     if ctx.exit_code is None:
         return result(spec.name, spec.type, FAIL, "the process exit code could not be determined")
+    if not ctx.game_exited:
+        return result(spec.name, spec.type, FAIL,
+                      "the game was still running when tracking stopped")
+    if not ctx.ready_reached:
+        return result(spec.name, spec.type, FAIL,
+                      f"the game exited before the ready marker appeared (exit code {ctx.exit_code})")
     if ctx.exit_code == 0:
         return result(spec.name, spec.type, PASS,
                       f"exit code 0 (source={ctx.exit_code_source})")

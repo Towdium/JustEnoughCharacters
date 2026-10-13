@@ -48,8 +48,17 @@ class EnvParsingTest(unittest.TestCase):
     def test_jvm_window_overrides(self):
         env = support.mk_env(jvm={"max_mem_mb": 2048, "min_mem_mb": 512, "window": [1024, 768]})
         self.assertEqual(env.jvm.window, (1024, 768))
-        self.assertIn("-Xmx2048m", env.jvm.jvm_args())
-        self.assertIn("-Xms512m", env.jvm.jvm_args())
+        self.assertEqual(env.jvm.max_mem_mb, 2048)
+        self.assertEqual(env.jvm.min_mem_mb, 512)
+
+    def test_jvm_args_carry_only_the_extra_arguments_not_the_heap(self):
+        """Heap lives in Prism's memory keys; -Xmx/-Xms there trigger a modal warning."""
+        env = support.mk_env(jvm={"max_mem_mb": 2048, "min_mem_mb": 512,
+                                  "args": ["-Dfoo=bar"]})
+        self.assertEqual(env.jvm.jvm_args(), "-Dfoo=bar")
+        self.assertNotIn("-Xmx", env.jvm.jvm_args())
+        self.assertNotIn("-Xms", env.jvm.jvm_args())
+        self.assertEqual(support.mk_env().jvm.jvm_args(), "")
 
     def test_comment_keys_are_allowed(self):
         data = support.env_dict()
@@ -98,6 +107,14 @@ class EnvParsingTest(unittest.TestCase):
         listed = support.mk_env(checks=[{"type": "file_exists",
                                         "value": ["config/a.json", "config/b.json"]}])
         self.assertEqual(listed.checks[0].value, ["config/a.json", "config/b.json"])
+
+    def test_ready_when_is_optional(self):
+        self.assertIsNone(support.mk_env().ready_when)
+
+    def test_ready_when_holds_one_log_line(self):
+        env = support.mk_env(ready_when={"value": "Sound engine started"})
+        self.assertIsNotNone(env.ready_when)
+        self.assertEqual(env.ready_when.value, "Sound engine started")
 
 
 class EnvRejectionTest(unittest.TestCase):
@@ -207,6 +224,15 @@ class EnvRejectionTest(unittest.TestCase):
                                      {"type": "log_not_contains", "value": "b", "name": "same"}]),
             "is a duplicate",
         )
+
+    def test_ready_when_requires_a_value(self):
+        self.reject(support.env_dict(ready_when={}), "missing required key 'value'")
+        self.reject(support.env_dict(ready_when={"value": "  "}), "must be a non-empty string")
+
+    def test_ready_when_rejects_unknown_keys_and_wrong_shapes(self):
+        self.reject(support.env_dict(ready_when={"value": "x", "timeout": 1}), "unknown key 'timeout'")
+        self.reject(support.env_dict(ready_when="Sound engine started"),
+                    'env.ready_when must be an object')
 
     def test_all_problems_are_reported_together(self):
         message = self.reject(

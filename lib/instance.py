@@ -32,7 +32,7 @@ from pathlib import Path
 from . import paths
 from .errors import ConfigError, JtError, ToolMissingError
 from .pack import modset_hash as _modset_hash
-from .util import atomic_write_json, atomic_write_text, load_json, now_iso
+from .util import atomic_write_json, atomic_write_text, load_json, now_iso, sanitize_name
 
 PRISM_LAUNCHER_ENV = "JT_PRISM_LAUNCHER"
 JAVA_HOME_CMD_ENV = "JT_JAVA_HOME_CMD"
@@ -40,12 +40,44 @@ JAVA_HOME_ENV_TEMPLATE = "JT_JAVA_{version}_HOME"
 # The one absolute path in this codebase: macOS's JDK lookup helper.
 MACOS_JAVA_HOME_CMD = "/usr/libexec/java_home -v {version}"
 
+
+def java_version_queries(version):
+    """The version strings to hand the platform JDK helper, best first.
+
+    macOS's ``java_home`` matches on the release string, so Java 8 answers to
+    ``1.8`` and *not* to ``8`` — and a ``-v 8`` that matches nothing does not
+    fail, it silently prints the default (newest) JDK. Asking ``1.8`` first for
+    the 1.x era is what keeps a Java 8 env from being handed a Java 25 runtime.
+    """
+    yield str(version)
+    if version <= 8:
+        yield f"1.{version}"
+
+
 INSTANCE_CFG = "instance.cfg"
+PACK_JSON = "mmc-pack.json"
 GAME_DIR_CANDIDATES = ("minecraft", ".minecraft")
 LOG_NAME = "latest.log"
 STATE_VERSION = 1
 IMPORT_TIMEOUT_SEC = 1800
 IMPORT_GRACE_SEC = 2.0
+
+# The Prism/MultiMC component uid that carries each loader, and whether the
+# component version is the bare loader version or the ``<mc>-<loader>`` string
+# (the same split the mrpack dependency table in envs.py uses).
+LOADER_COMPONENT_UIDS = {
+    "forge": "net.minecraftforge",
+    "neoforge": "net.neoforged",
+    "fabric": "net.fabricmc.fabric-loader",
+    "quilt": "org.quiltmc.quilt-loader",
+}
+LOADER_COMPONENT_NAMES = {
+    "forge": "Forge",
+    "neoforge": "NeoForge",
+    "fabric": "Fabric Loader",
+    "quilt": "Quilt Loader",
+}
+PACK_FORMAT_VERSION = 1
 
 LOGGED_OFF_HINT = (
     "Prism must already have a Minecraft account configured in this data root "
@@ -221,6 +253,7 @@ def cfg_values_for(env, *, java_path):
         "OverrideJavaArgs": "true",
         "MinMemAlloc": str(env.jvm.min_mem_mb),
         "MaxMemAlloc": str(env.jvm.max_mem_mb),
+        "OverrideMemory": "true",
         "MinecraftWinWidth": str(width),
         "MinecraftWinHeight": str(height),
         "OverrideWindow": "true",
@@ -265,23 +298,39 @@ def java_home_for(version, *, require_exists=True, command=None):
     command = str(command)
     helper = shlex.split(command)[0] if command.strip() else ""
     if os.path.exists(helper) or JAVA_HOME_CMD_ENV in os.environ:
-        rendered = command.format(version=version)
-        argv = shlex.split(rendered)
-        try:
-            completed = subprocess.run(argv, capture_output=True, text=True, timeout=60, check=False)
-        except (OSError, subprocess.SubprocessError) as exc:
-            raise ConfigError(f"java {version}: cannot run {rendered!r} ({exc})")
-        home = completed.stdout.strip().splitlines()[0].strip() if completed.stdout.strip() else ""
-        if completed.returncode != 0 or not home:
-            raise ConfigError(
-                f"java {version}: {rendered!r} returned {completed.returncode} and "
-                f"{completed.stdout.strip()!r}; install a JDK {version} or set "
-                f"{JAVA_HOME_CMD_ENV} (e.g. 'your-java-home-helper -v {{version}}')"
-            )
-        candidate = Path(home)
-        if require_exists and not (candidate / "bin" / "java").is_file():
-            raise ConfigError(f"java {version}: {home!r} holds no bin/java executable")
-        return candidate
+        tried = []
+        for query in java_version_queries(version):
+            rendered = command.format(version=query)
+            argv = shlex.split(rendered)
+            try:
+                completed = subprocess.run(argv, capture_output=True, text=True, timeout=60,
+                                           check=False)
+            except (OSError, subprocess.SubprocessError) as exc:
+                raise ConfigError(f"java {version}: cannot run {rendered!r} ({exc})")
+            home = (completed.stdout.strip().splitlines()[0].strip()
+                    if completed.stdout.strip() else "")
+            if completed.returncode != 0 or not home:
+                tried.append(f"{rendered!r} returned {completed.returncode} ({home or 'no output'})")
+                continue
+            candidate = Path(home)
+            if require_exists and not (candidate / "bin" / "java").is_file():
+                tried.append(f"{rendered!r} -> {paths.display(candidate)} (no bin/java)")
+                continue
+            # The helper answers with a *path*, and some of them fall back to the
+            # default JDK when nothing matches. Verify the major version instead
+            # of trusting the request, so a Java 8 env can never silently be
+            # handed a Java 25 runtime.
+            found = read_java_major(candidate)
+            if found is not None and found != version:
+                tried.append(f"{rendered!r} -> {paths.display(candidate)} (that is JDK {found})")
+                continue
+            return candidate
+        raise ConfigError(
+            f"java {version}: no JDK {version} found. "
+            + ("; ".join(tried) if tried else "the platform lookup produced nothing")
+            + f". Install a JDK {version}, or set "
+            + JAVA_HOME_ENV_TEMPLATE.format(version=version) + f" (or {JAVA_HOME_CMD_ENV})."
+        )
 
     key = JAVA_HOME_ENV_TEMPLATE.format(version=version)
     configured = os.environ.get(key) or os.environ.get("JAVA_HOME")
@@ -347,6 +396,19 @@ def modset_hash(env, resolved):
     return _modset_hash(env, resolved)
 
 
+def instance_id_for(env, digest):
+    """The deterministic Prism instance id for one env and one modset.
+
+    The id is the env name plus the modset digest, so the same (env, modset)
+    always maps to the same instance directory and a changed modset maps to a
+    different one. That is what makes the import idempotent: a run interrupted
+    mid-import leaves a directory whose name the next run can recognise and
+    clean before re-importing, and a stale instance can never be silently
+    reused for a different mod set.
+    """
+    return sanitize_name(f"{env.name}-{digest[:12]}")
+
+
 def ensure_instance(env, resolved, pack_result, *, root=None, refresh=False, log=print):
     """Reuse the env's instance when its modset is unchanged, else import anew."""
     root = Path(root) if root else paths.prism_root()
@@ -354,20 +416,36 @@ def ensure_instance(env, resolved, pack_result, *, root=None, refresh=False, log
     state = read_state()
     entry = (state.get("envs") or {}).get(env.name) or {}
     digest = modset_hash(env, resolved)
-    if not refresh and entry.get("instance_id") and entry.get("modset_hash") == digest:
-        existing = instance_dir(entry["instance_id"], root)
+    desired_id = instance_id_for(env, digest)
+    if not refresh and entry.get("instance_id") == desired_id and entry.get("modset_hash") == digest:
+        existing = instance_dir(desired_id, root)
         if (existing / INSTANCE_CFG).is_file():
-            log(f"instance {entry['instance_id']}: reused (modset {digest[:12]} unchanged)")
-            return InstanceInfo(instance_id=entry["instance_id"], root=root, reused=True,
+            # Re-apply the env's java/memory/window values even on reuse: the env
+            # file is the authority for those, and it may have changed without
+            # changing the modset (which is what keys the reuse).
+            cfg = configure_instance(desired_id, env, root=root, log=log)
+            log(f"instance {desired_id}: reused (modset {digest[:12]} unchanged)")
+            return InstanceInfo(instance_id=desired_id, root=root, reused=True,
                                 imported=False, modset_hash=digest,
-                                pack_hash=pack_result.pack_hash, cfg=parse_cfg(read_cfg(entry["instance_id"], root)))
-        log(f"instance {entry['instance_id']}: recorded but missing on disk, re-importing")
+                                pack_hash=pack_result.pack_hash, cfg=cfg)
+        log(f"instance {desired_id}: recorded but missing on disk, re-creating")
     elif entry.get("instance_id"):
         log(f"instance {entry['instance_id']}: modset changed "
-            f"({str(entry.get('modset_hash'))[:12]} -> {digest[:12]}), importing a fresh instance")
+            f"({str(entry.get('modset_hash'))[:12]} -> {digest[:12]}) or naming changed, "
+            f"importing a fresh instance {desired_id}")
 
-    instance_id = import_pack(pack_result.mrpack_path, root=root, log=log)
-    cfg = configure_instance(instance_id, env, root=root, log=log)
+    # A directory at the target id that state.json does not point at is debris
+    # from an instance that was never recorded (an interrupted creation). Prism
+    # would then refuse the id, so the debris is removed here, in python — never
+    # with a shell rm that may be denied.
+    leftover = instance_dir(desired_id, root)
+    if leftover.exists() and entry.get("instance_id") != desired_id:
+        log(f"instance {desired_id}: leftover directory not recorded in state.json; "
+            "removing it before re-creating the instance")
+        shutil.rmtree(leftover, ignore_errors=True)
+
+    instance_id = materialize_instance(env, desired_id, root=root, log=log)
+    cfg = cfg_values_for(env, java_path=java_home_for(env.java_version) / "bin" / "java")
     state.setdefault("envs", {})[env.name] = {
         "instance_id": instance_id,
         "modset_hash": digest,
@@ -383,43 +461,87 @@ def ensure_instance(env, resolved, pack_result, *, root=None, refresh=False, log
                         modset_hash=digest, pack_hash=pack_result.pack_hash, cfg=cfg)
 
 
-def import_pack(mrpack_path, *, root=None, log=print, timeout=IMPORT_TIMEOUT_SEC, log_path=None):
-    """Import a local ``.mrpack`` and return the id of the instance it created."""
-    mrpack_path = Path(mrpack_path)
-    if not mrpack_path.is_file():
-        raise ConfigError(f"pack {paths.display(mrpack_path)} does not exist")
+def component_version(env, uid):
+    """The version string Prism's metadata expects for one component.
+
+    The two loaders that ship an ``<mc>-<loader>`` string (legacy Forge) differ
+    from the mrpack dependency spelling: the pack index wants
+    ``1.12.2-14.23.5.2864``, while ``net.minecraftforge``'s component is
+    ``14.23.5.2864`` and a prefixed one 404s against Prism's metadata.
+    """
+    version = env.loader.version
+    if uid == "net.minecraftforge":
+        prefix = f"{env.mc}-"
+        if version.startswith(prefix):
+            version = version[len(prefix):]
+    return version
+
+
+def pack_json(env):
+    """The ``mmc-pack.json`` body for one env: Minecraft plus its loader.
+
+    Prism resolves the rest of the chain (LWJGL, assets, natives) from these two
+    components, so a run needs no pack import at all. The ``cached*`` keys are
+    what Prism itself writes and what its version listing reads without a
+    download; omitting them leaves the instance nameless in the launcher.
+    """
+    try:
+        uid = LOADER_COMPONENT_UIDS[env.loader.type]
+    except KeyError:
+        raise ConfigError(
+            f"loader {env.loader.type!r} has no Prism component uid "
+            f"(known: {', '.join(sorted(LOADER_COMPONENT_UIDS))})"
+        )
+    version = component_version(env, uid)
+    return {
+        "formatVersion": PACK_FORMAT_VERSION,
+        "components": [
+            {"uid": "net.minecraft", "version": env.mc,
+             "cachedName": "Minecraft", "cachedVersion": env.mc, "important": True},
+            {"uid": uid, "version": version,
+             "cachedName": LOADER_COMPONENT_NAMES[env.loader.type],
+             "cachedVersion": version,
+             "cachedRequires": [{"uid": "net.minecraft", "equals": env.mc}]},
+        ],
+    }
+
+
+def materialize_instance(env, instance_id, *, root=None, java_home=None, log=print):
+    """Create the instance directory directly, then return its id.
+
+    jt used to hand a local ``.mrpack`` to ``prismlauncher -I`` and diff the
+    instances directory. On Prism 11 that path goes through
+    ``MainWindow::addInstance()`` and opens the modal New Instance dialog, and
+    the CLI keeps the main window open afterwards instead of exiting — a
+    headless run can never complete it. Writing the two files Prism reads
+    (``instance.cfg`` and ``mmc-pack.json``) is the same thing the import does
+    without its UI: Prism's own launch task resolves and downloads whatever the
+    version chain still needs. Mods are staged by :func:`isolate`, not here.
+    """
     root = Path(root) if root else paths.prism_root()
     root.mkdir(parents=True, exist_ok=True)
-    exe = prism_launcher()
-    before = set(list_instances(root))
-    command = [exe, "-d", str(root), "-I", str(mrpack_path)]
-    log(f"import: {' '.join(command)}")
-    try:
-        completed = subprocess.run(
-            command, stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=timeout,
-            check=False,
-        )
-    except subprocess.TimeoutExpired:
+    directory = instance_dir(instance_id, root)
+    if directory.exists():
+        # Callers clear debris first; anything still here would be overwritten.
+        raise ConfigError(f"instance {instance_id}: {paths.display(directory)} already exists")
+    minecraft = directory / GAME_DIR_CANDIDATES[0]
+    (minecraft / "mods").mkdir(parents=True, exist_ok=True)
+
+    home = Path(java_home) if java_home else java_home_for(env.java_version)
+    java = home / "bin" / "java"
+    if not java.is_file():
         raise ConfigError(
-            f"prism import timed out after {timeout}s. Inline imports hang when Prism opens a "
-            "dialog: check that the pack is a local file and that a display is available "
-            "(the CLI needs a window server even for a headless import)."
+            f"java {env.java_version}: {paths.display(java)} does not exist "
+            f"(resolved via {'$' + JAVA_HOME_CMD_ENV} or the platform JDK lookup)"
         )
-    output = (completed.stdout or "") + (completed.stderr or "")
-    if log_path:
-        atomic_write_text(log_path, output)
-    after = list_instances(root)
-    new_ids = sorted(set(after) - before)
-    if len(new_ids) != 1:
-        tail = "\n".join(output.strip().splitlines()[-20:])
-        raise ConfigError(
-            f"prism import created {len(new_ids)} new instance(s) (expected exactly 1); "
-            f"exit code {completed.returncode}. Instances now present: "
-            f"{', '.join(sorted(after)) or '(none)'}.\nimport output tail:\n{tail}"
-            + (f"\nnote: {LOGGED_OFF_HINT}" if completed.returncode == 0 else "")
-        )
-    instance_id = new_ids[0]
-    log(f"import: created instance {instance_id}")
+    values = {"ConfigVersion": "1.3", "InstanceType": "OneSix", "iconKey": "default",
+              "name": instance_id, "AutomaticJava": "false"}
+    values.update(cfg_values_for(env, java_path=java))
+    text = "[General]\n" + "\n".join(f"{key}={value}" for key, value in values.items()) + "\n"
+    atomic_write_text(directory / INSTANCE_CFG, text)
+    atomic_write_json(directory / PACK_JSON, pack_json(env))
+    log(f"instance {instance_id}: materialized (mc {env.mc}, {env.loader.type} "
+        f"{env.loader.version}, java {paths.display(home)})")
     return instance_id
 
 
@@ -535,15 +657,22 @@ def process_table():
 def game_pids(instance_id, *, root=None, exclude=()):
     """Pids of the game JVM for this instance.
 
-    Matched on the instance's own game directory appearing in the command line,
-    not on a name pattern: ``pgrep -f`` also matches the searching process, which
-    is exactly the trap the pack-lifecycle skill warns about.
+    Matched on the instance's own directory appearing in the command line, not on
+    a name pattern: ``pgrep -f`` also matches the searching process, which is
+    exactly the trap the pack-lifecycle skill warns about. The *game directory*
+    is the wrong key: Prism hands the JVM ``-Djava.library.path=<instance>/natives``
+    and ``--gameDir`` only for some loaders, so a match on ``<instance>/minecraft``
+    finds nothing and the harness reads a running game as "never started". Both
+    the instance directory and its game directory are therefore accepted.
     """
-    key = str(game_dir(instance_id, root))
+    keys = {str(instance_dir(instance_id, root))}
+    game = str(game_dir(instance_id, root))
+    if game not in keys:
+        keys.add(game)
     excluded = {int(pid) for pid in exclude} | {os.getpid()}
     pids = []
     for pid, (_ppid, command) in process_table().items():
-        if pid in excluded or key not in command:
+        if pid in excluded or not any(key in command for key in keys):
             continue
         lowered = command.casefold()
         if "java" in lowered or "prism" in lowered:

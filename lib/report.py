@@ -147,8 +147,13 @@ def render_text(report):
             f"    instance={entry.get('instanceId') or '(none)'} "
             f"reused={bool(entry.get('instanceReused'))} packHash={str(entry.get('packHash'))[:16]} "
             f"exitCode={entry.get('exitCode')} ({entry.get('exitCodeSource')}) "
-            f"timedOut={bool(entry.get('timedOut'))}"
+            f"timedOut={bool(entry.get('timedOut'))} stopReason={entry.get('stopReason') or '-'}"
         )
+        if entry.get("readyWhen"):
+            lines.append(
+                f"    ready_when={entry.get('readyWhen')!r} "
+                f"readyReached={bool(entry.get('readyReached'))}"
+            )
         for mod in entry.get("mods") or []:
             pin = mod.get("pin") or {}
             pinned = pin.get("fileId") or pin.get("versionId") or "local"

@@ -169,6 +169,7 @@ def _env_json(env):
                   "describe": mod.describe, "pin": mod.pin} for mod in env.mods],
         "checks": [{"type": check.type, "name": check.name, "value": check.value}
                    for check in env.checks],
+        "readyWhen": ({"value": env.ready_when.value} if env.ready_when is not None else None),
         "timeout_sec": env.timeout_sec,
         "jvm": {"max_mem_mb": env.jvm.max_mem_mb, "min_mem_mb": env.jvm.min_mem_mb,
                 "window": list(env.jvm.window)},

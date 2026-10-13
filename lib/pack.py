@@ -65,12 +65,18 @@ def dependencies_for(env):
 
 
 def build_index(env, resolved, version_id=None):
-    """The ``modrinth.index.json`` body. ``files`` stays empty on purpose."""
+    """The ``modrinth.index.json`` body. ``files`` stays empty on purpose.
+
+    ``name`` doubles as the instance name Prism gives the imported instance, so
+    a caller that needs a deterministic instance id passes it as ``version_id``
+    (see ``instance.instance_id_for``); without one the env name is used.
+    """
+    label = version_id or env.name
     return {
         "formatVersion": FORMAT_VERSION,
         "game": INDEX_GAME,
-        "versionId": version_id or env.name,
-        "name": env.name,
+        "versionId": label,
+        "name": label,
         "summary": f"JECh compatibility test env {env.name} ({env.mod_label}, java {env.java_version})",
         "files": [],
         "dependencies": dependencies_for(env),

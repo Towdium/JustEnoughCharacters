@@ -62,9 +62,15 @@ class JvmSpec:
         self.window = window
 
     def jvm_args(self):
-        args = [f"-Xms{self.min_mem_mb}m", f"-Xmx{self.max_mem_mb}m"]
-        args.extend(self.args)
-        return " ".join(args)
+        """Only the *extra* JVM arguments.
+
+        Heap size is carried by Prism's own ``MinMemAlloc``/``MaxMemAlloc`` keys,
+        never by ``-Xmx``/``-Xms`` in ``JvmArgs``: Prism treats those two in
+        ``JvmArgs`` as a manual override and pops a modal warning dialog on every
+        launch, which no headless run can dismiss. So ``jvm_args`` returns just
+        the env's ``args`` (usually empty) and memory travels in its own keys.
+        """
+        return " ".join(self.args)
 
 
 class ModSpec:
@@ -79,6 +85,23 @@ class ModSpec:
     @property
     def pinned(self):
         return isinstance(self.pin, dict) and bool(self.pin)
+
+
+class ReadyWhen:
+    """The optional log line that marks the game as *ready* for this env.
+
+    A production instance has no in-game runner, so nothing makes the game quit
+    on its own. Declaring ``ready_when`` gives the runner a stopping rule: once
+    that line (together with every ``log_contains`` marker) has appeared in
+    ``latest.log``, the runner ends the instance's process tree itself and
+    judges the run, instead of waiting for a natural exit or the watchdog.
+    """
+
+    def __init__(self, value):
+        self.value = value
+
+    def __repr__(self):
+        return f"ReadyWhen({self.value!r})"
 
 
 class JechSpec:
@@ -120,7 +143,7 @@ class Env:
     """One parsed, validated env file."""
 
     def __init__(self, *, name, tags, mc, loader, java_version, jech, mods, checks,
-                 timeout_sec, jvm, path, raw):
+                 timeout_sec, jvm, path, raw, ready_when=None):
         self.name = name
         self.tags = tags
         self.mc = mc
@@ -131,6 +154,7 @@ class Env:
         self.checks = checks
         self.timeout_sec = timeout_sec
         self.jvm = jvm
+        self.ready_when = ready_when
         self.path = Path(path)
         self.raw = raw
 
@@ -170,7 +194,7 @@ def parse_env(data, path="<dict>"):
         raise EnvSchemaError(f"{path}: env must be a json object, got {type(data).__name__}")
 
     _reject_unknown(data, {"name", "tags", "mc", "loader", "java", "jech", "mods", "checks",
-                           "timeout_sec", "jvm"}, "env", problems)
+                           "timeout_sec", "jvm", "ready_when"}, "env", problems)
 
     name = _string(data, "name", "env", problems, required=True)
     if name is not None and not _NAME_RE.match(name):
@@ -187,6 +211,7 @@ def parse_env(data, path="<dict>"):
     checks = _parse_checks(data.get("checks"), problems)
     timeout_sec = _parse_timeout(data.get("timeout_sec"), problems)
     jvm = _parse_jvm(data.get("jvm"), problems)
+    ready_when = _parse_ready_when(data.get("ready_when"), problems)
 
     if problems:
         raise EnvSchemaError(
@@ -194,7 +219,8 @@ def parse_env(data, path="<dict>"):
         )
 
     return Env(name=name, tags=tags, mc=mc, loader=loader, java_version=java_version, jech=jech,
-               mods=mods, checks=checks, timeout_sec=timeout_sec, jvm=jvm, path=path, raw=data)
+               mods=mods, checks=checks, timeout_sec=timeout_sec, jvm=jvm, path=path, raw=data,
+               ready_when=ready_when)
 
 
 def load_all(directory=None):
@@ -325,6 +351,18 @@ def _parse_timeout(data, problems):
         problems.append("env.timeout_sec must be an integer >= 30")
         return DEFAULT_TIMEOUT_SEC
     return data
+
+
+def _parse_ready_when(data, problems):
+    """``ready_when`` is optional; when present it must be ``{"value": "<line>"}``."""
+    if data is None:
+        return None
+    if not isinstance(data, dict):
+        problems.append('env.ready_when must be an object {"value": "<log line>"}')
+        return None
+    _reject_unknown(data, {"value"}, "env.ready_when", problems)
+    value = _string(data, "value", "env.ready_when", problems, required=True)
+    return ReadyWhen(value) if value else None
 
 
 def _parse_describe(data, context, problems):

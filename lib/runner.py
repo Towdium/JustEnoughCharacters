@@ -39,6 +39,12 @@ from .util import atomic_write_json, atomic_write_text, now_iso, now_stamp, sani
 POLL_SEC = 0.5
 STARTUP_GRACE_SEC = 180
 LAUNCHER_EXIT_GRACE_SEC = 60
+# How long the run keeps waiting, after the ``ready_when`` line has appeared,
+# for the env's ``log_contains`` markers to show up too. In a healthy run they
+# are already there when the ready line lands (the markers are earlier), so the
+# runner stops at once; the grace only bounds a run whose markers never arrive,
+# turning it into an assertion FAIL instead of a watchdog kill.
+READY_GRACE_SEC = 120
 CONFIG_ERROR = "configError"
 
 
@@ -123,6 +129,9 @@ def run_env(env, *, refresh=False, log=print, selection_label=None):
         "exitCodeSource": "unknown",
         "timedOut": False,
         "watchdog": False,
+        "stopReason": None,
+        "readyReached": None,
+        "readyWhen": env.ready_when.value if env.ready_when is not None else None,
         "instanceId": None,
         "instanceReused": False,
         "instanceImported": False,
@@ -212,12 +221,18 @@ def _execute(env, run_dir, entry, *, started_wall, refresh, log):
     for note in resolved.notes:
         entry["notes"].append(note)
 
-    pack_result = pack_mod.build_pack(env, resolved, run_dir, log=log)
+    # The same (env, modset) always maps to the same instance id; naming the pack
+    # after it makes the import deterministic, so a retry reuses one instance
+    # instead of accumulating suffixed ones.
+    digest = instance.modset_hash(env, resolved)
+    instance_label = instance.instance_id_for(env, digest)
+    pack_result = pack_mod.build_pack(env, resolved, run_dir, version_id=instance_label, log=log)
     entry["mrpack"] = paths.display(pack_result.mrpack_path)
     entry["packHash"] = pack_result.pack_hash
     entry["dependencies"] = pack_result.dependencies
     log(f"{env.name}: pack {paths.display(pack_result.mrpack_path)} "
-        f"({len(pack_result.mod_filenames)} jar(s) in overrides/mods, files list empty)")
+        f"({len(pack_result.mod_filenames)} jar(s) in overrides/mods, files list empty, "
+        f"instance {instance_label})")
 
     info = instance.ensure_instance(env, resolved, pack_result, refresh=refresh, log=log)
     entry["instanceId"] = info.instance_id
@@ -234,18 +249,28 @@ def _execute(env, run_dir, entry, *, started_wall, refresh, log):
     entry["log"] = paths.display(log_path)
     entry["launcherLog"] = paths.display(launcher_log)
 
+    ready_values, markers = readiness_rule(env)
     crash_before = crash_report_snapshot(minecraft_dir)
     proc = instance.launch(info.instance_id, log_path=launcher_log, log=log)
     follower = instance.LogFollower(log_path, started_wall, poll=POLL_SEC)
-    watch = _watch(env, info.instance_id, proc, follower, started_wall, log=log)
+    watch = _watch(env, info.instance_id, proc, follower, started_wall, log=log,
+                   ready_values=ready_values, markers=markers)
 
     entry["timedOut"] = watch["timed_out"]
     entry["watchdog"] = watch["timed_out"]
     entry["exitCode"] = watch["exit_code"]
     entry["exitCodeSource"] = watch["exit_code_source"]
+    entry["stopReason"] = watch["stop_reason"]
+    entry["readyReached"] = watch["ready_reached"]
     if watch["timed_out"]:
         entry["notes"].append(
             f"watchdog: the run exceeded timeout_sec={env.timeout_sec}; the process tree was killed"
+        )
+    elif watch["stop_reason"] in checks_mod.DELIBERATE_STOP_REASONS:
+        detail = f"ready_when={env.ready_when.value!r}" if env.ready_when is not None else "no ready_when"
+        entry["notes"].append(
+            f"stop: the runner ended the session on purpose "
+            f"(stop_reason={watch['stop_reason']}, {detail})"
         )
 
     if follower.text:
@@ -269,6 +294,8 @@ def _execute(env, run_dir, entry, *, started_wall, refresh, log):
         game_exited=watch["game_exited"],
         duration_sec=watch["duration_sec"],
         timeout_sec=env.timeout_sec,
+        stop_reason=watch["stop_reason"],
+        ready_reached=watch["ready_reached"],
     )
     entry["checks"] = checks_mod.internal_checks(ctx) + checks_mod.evaluate(env.checks, ctx)
     entry["status"] = checks_mod.overall_status(entry["checks"])
@@ -282,13 +309,57 @@ def _execute(env, run_dir, entry, *, started_wall, refresh, log):
             log(f"{env.name}: launcher.log tail:\n{tail}")
 
 
-def _watch(env, instance_id, proc, follower, started_wall, *, log):
-    """Track the game until it exits, the launcher gives up, or the watchdog fires."""
+def readiness_rule(env):
+    """``(ready values, required markers)`` for one env's stopping rule.
+
+    ``ready values`` is the ``ready_when`` line (empty when the env declares
+    none, in which case the runner never stops the game early). ``markers`` is
+    every ``log_contains`` value: the env's own assertion of "JECh loaded", which
+    must already hold before the runner considers the game ready.
+    """
+    ready = [env.ready_when.value] if env.ready_when is not None else []
+    markers = [value for spec in env.checks if spec.type == "log_contains"
+               for value in _check_values(spec)]
+    return ready, markers
+
+
+def _check_values(spec):
+    value = spec.value
+    if isinstance(value, (list, tuple)):
+        return [str(v) for v in value]
+    if value is None:
+        return []
+    return [str(value)]
+
+
+def ready_line_seen(log_text, ready_values):
+    """True once the env's ``ready_when`` line(s) are in the log (False with none)."""
+    return bool(ready_values) and all(value in log_text for value in ready_values)
+
+
+def all_markers_seen(log_text, markers):
+    """True when every required ``log_contains`` marker is in the log."""
+    return all(value in log_text for value in markers)
+
+
+def _watch(env, instance_id, proc, follower, started_wall, *, log, ready_values=(), markers=()):
+    """Track the game until it is ready, it exits, the launcher gives up, or the watchdog fires.
+
+    When the env declares ``ready_when`` the run gets a stopping rule: the moment
+    the ready line and every ``log_contains`` marker are in the log, the runner
+    ends the instance's process tree itself (``stop_reason=goal-reached``) and
+    moves on to judging. If the ready line lands but a marker never arrives, the
+    run is bounded by ``READY_GRACE_SEC`` and then stopped too
+    (``stop_reason=ready-timeout``), so a broken assertion surfaces as a FAIL
+    instead of an unbounded hang.
+    """
     deadline = started_wall + env.timeout_sec
     session_started = False
     game_started = False
     timed_out = False
     launcher_died_early = False
+    stop_reason = None
+    ready_seen_at = None
     pids = []
 
     while True:
@@ -304,6 +375,16 @@ def _watch(env, instance_id, proc, follower, started_wall, *, log):
                 # the CLI (or a Prism instance it handed over to) is not the
                 # game's parent: the game's own exit code is unobservable then
                 launcher_died_early = True
+        if session_started and ready_values:
+            if ready_seen_at is None and ready_line_seen(follower.text, ready_values):
+                ready_seen_at = now
+            if ready_seen_at is not None:
+                if all_markers_seen(follower.text, markers):
+                    stop_reason = checks_mod.STOP_GOAL_REACHED
+                    break
+                if now - ready_seen_at >= READY_GRACE_SEC:
+                    stop_reason = checks_mod.STOP_READY_TIMEOUT
+                    break
         if game_started and not pids:
             break
         if not game_started and proc.poll() is not None:
@@ -315,10 +396,12 @@ def _watch(env, instance_id, proc, follower, started_wall, *, log):
 
     follower.poll_once()
     was_running = bool(pids)
-    if timed_out or was_running:
+    if stop_reason or timed_out or was_running:
         instance.kill_process_tree(sorted(set(pids) | {proc.pid}), log=log)
     exit_code = _reap(proc, log=log, timeout=LAUNCHER_EXIT_GRACE_SEC)
-    if launcher_died_early:
+    if stop_reason:
+        source = "runner"
+    elif launcher_died_early:
         source = "handoff"
     elif exit_code is not None:
         source = "launcher"
@@ -326,10 +409,21 @@ def _watch(env, instance_id, proc, follower, started_wall, *, log):
         source = "unknown"
     if not session_started and not timed_out and time.time() < deadline:
         log(f"{env.name}: the launcher exited before a game session started")
+    if stop_reason:
+        log(f"{env.name}: the runner ended the session (stop_reason={stop_reason}, "
+            f"after {time.time() - started_wall:.0f}s)")
+    # A run the runner ended is exited by definition: SIGKILLed children can linger
+    # in the process table for a moment, which must not read as "still running".
+    game_exited = bool(stop_reason) or (
+        game_started and not instance.game_pids(instance_id, exclude=(proc.pid,)))
+    ready_reached = True if not ready_values else (
+        ready_line_seen(follower.text, ready_values) and all_markers_seen(follower.text, markers))
     return {
         "timed_out": timed_out,
+        "stop_reason": stop_reason,
+        "ready_reached": ready_reached,
         "game_started": game_started,
-        "game_exited": game_started and not instance.game_pids(instance_id, exclude=(proc.pid,)),
+        "game_exited": game_exited,
         "exit_code": exit_code,
         "exit_code_source": source,
         "duration_sec": time.time() - started_wall,

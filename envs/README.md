@@ -31,6 +31,7 @@ ignored too. Everything else must be listed below.
     { "type": "no_crash_reports", "name": "no-crash-reports" },
     { "type": "exit_code_zero", "name": "exit-code" }
   ],
+  "ready_when": { "value": "Sound engine started" },
   "timeout_sec": 600,
   "jvm": { "max_mem_mb": 3072, "min_mem_mb": 1024, "window": [1280, 720] }
 }
@@ -48,6 +49,7 @@ ignored too. Everything else must be listed below.
 | `jech` | yes | the mod under test, see below |
 | `mods` | yes | list, may be empty |
 | `checks` | yes | list, may be empty (but an env with no checks proves nothing) |
+| `ready_when` | no | `{"value": "<log line>"}`, the line that marks the game as up, see below |
 | `timeout_sec` | no | watchdog budget, default 600; the whole run is killed and the run fails with exit code 3 |
 | `jvm` | no | `{max_mem_mb, min_mem_mb, args, window}`; defaults 3072 / 1024 / `[]` / `[1280, 720]` |
 
@@ -104,7 +106,7 @@ Check types:
 | `log_regex` | ✔ regex(es) | `re.search` matches each pattern (multiline) |
 | `file_exists` | ✔ relative path(s) | every path exists **under the instance's `minecraft/` directory** (e.g. `config/jecharacters.json`) |
 | `no_crash_reports` | — | no new file appeared in `minecraft/crash-reports/` during the run |
-| `exit_code_zero` | — | the launcher process exited 0 (SKIP when Prism handed off to an already-running instance, where the game's own code is unobservable) |
+| `exit_code_zero` | — | the game ended healthy: the runner deliberately stopped it once it was ready, or the game itself exited 0 (SKIP when Prism handed off to an already-running instance *and* nothing ended it deliberately) |
 
 Two rules keep the checks honest:
 
@@ -117,6 +119,48 @@ Two rules keep the checks honest:
   by default, so DEBUG-level lines (for example the transformer "hit" lines) are
   not in `latest.log` and must not be used in a check until the log4j level is
   raised by the harness.
+* A marker must be reached by a client that stops at the **main menu**. A
+  production `jt run` loads no world, and some registration work is deferred until
+  one exists: JEI 19.x runs most of its plugin phases (including
+  `registerAdvancedSearch`, which is what logs
+  `Registering JEI pinyin search storage`) only once a level is available, so that
+  marker never appears at the main menu no matter how long the run waits. A run
+  whose only evidence is such a marker cannot pass today; either assert a marker
+  emitted during startup, or give the harness a way to load a world first. Verify
+  every new marker against a real `latest.log` (step 4 of "Adding an env").
+
+## When is the game ready? (`ready_when`)
+
+A production instance has no in-game runner: nothing in the game makes it quit,
+so without a stopping rule a `jt run` can only end by the game being closed by
+hand or by the watchdog (exit code 3). `ready_when` gives the run a stopping
+rule.
+
+```json
+"ready_when": { "value": "Sound engine started" }
+```
+
+* **The rule.** The run is *ready* once the `ready_when` line is in
+  `latest.log` **and** every `log_contains` value of the env is in it too. At
+  that moment the runner ends the instance's process tree itself and judges the
+  run; the report records `stopReason: "goal-reached"` and `readyReached: true`.
+* **Choosing the line.** Pick a stable INFO line vanilla prints exactly once
+  when the client has finished coming up (for 1.12.2 and 1.21.1 alike, the
+  classic `Sound engine started` / `Setting user:` family is a good start);
+  verify it against a real `latest.log` before trusting it. Order matters: since
+  every `log_contains` marker must already be there, either pick a ready line
+  that comes *after* your markers, or accept that the run waits for the markers.
+* **A marker that never appears.** The ready line starts a bounded grace window;
+  if the markers still have not shown up when it expires, the runner stops the
+  run anyway and records `stopReason: "ready-timeout"`. The missing
+  `log_contains` check then FAILs (exit code 1) instead of the whole run hanging
+  into the watchdog — a broken assertion is a failure, not a timeout.
+* **`exit_code_zero` with a stopping rule.** When the runner ended the session
+  itself, `exit_code_zero` PASSes whatever code the killed process reported (the
+  code is an artefact of the harness). A natural exit 0 also passes; a natural
+  exit before the ready line, or a non-zero one, FAILs.
+* **Omitting it.** Without `ready_when` the run behaves as before: it waits for
+  the game to exit on its own or for the watchdog.
 
 ## Pins
 
@@ -279,5 +323,7 @@ has a JEI plugin and can be asserted on its registration marker.
 2. Read the checkout's `gradle.properties` and copy the loader / api / jei
    versions from there instead of typing a remembered version.
 3. Check which family the new line belongs to (`unzip -l <jar> | grep JechJeiPlugin`).
-4. `jt envs` (does it load?), then `jt resolve <name>` (does the description pin
+4. Pick a `ready_when` line from a real run's `latest.log` (a first, exploratory
+   `jt run` may end at the watchdog — that log is still the evidence to read).
+5. `jt envs` (does it load?), then `jt resolve <name>` (does the description pin
    to exactly one file?), then `jt run <name>`.

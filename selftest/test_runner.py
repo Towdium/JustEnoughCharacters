@@ -4,10 +4,12 @@ from __future__ import annotations
 
 import json
 import tempfile
+import time
 import unittest
 from pathlib import Path
+from unittest import mock
 
-from lib import checks, paths, report, runner
+from lib import checks, instance, paths, report, runner
 
 from . import support
 
@@ -112,6 +114,141 @@ class TailTest(unittest.TestCase):
 
     def test_tail_of_a_missing_file_is_empty(self):
         self.assertEqual(runner.tail_of("/nonexistent/launcher.log"), "")
+
+
+class ReadinessRuleTest(unittest.TestCase):
+    def test_an_env_without_ready_when_has_no_ready_values(self):
+        ready, markers = runner.readiness_rule(support.mk_env())
+        self.assertEqual(ready, [])
+        self.assertEqual(markers, ["jecharacters"])
+
+    def test_ready_when_and_every_log_contains_value_are_collected(self):
+        env = support.mk_env(
+            ready_when={"value": "Sound engine started"},
+            checks=[{"type": "log_contains", "value": ["a", "b"]},
+                    {"type": "no_crash_reports"},
+                    {"type": "log_not_contains", "value": "nope"},
+                    {"type": "log_regex", "value": "ignored"}],
+        )
+        ready, markers = runner.readiness_rule(env)
+        self.assertEqual(ready, ["Sound engine started"])
+        self.assertEqual(markers, ["a", "b"], "only log_contains gates readiness")
+
+    def test_ready_line_seen(self):
+        self.assertFalse(runner.ready_line_seen("anything", []))
+        self.assertFalse(runner.ready_line_seen("anything", ["READY"]))
+        self.assertTrue(runner.ready_line_seen("a\nREADY\n", ["READY"]))
+
+    def test_all_markers_seen(self):
+        self.assertTrue(runner.all_markers_seen("x", []))
+        self.assertFalse(runner.all_markers_seen("x", ["M"]))
+        self.assertTrue(runner.all_markers_seen("x\nM\n", ["M"]))
+
+
+class _FakeFollower:
+    """The minimum of :class:`instance.LogFollower` the watch loop uses."""
+
+    def __init__(self, full_text):
+        self._full = full_text
+        self.text = ""
+        self.session_started = False
+
+    def wait_for_session(self, deadline, *, log=None, sleep=None):
+        self.session_started = True
+        return True
+
+    def poll_once(self):
+        self.text = self._full
+        return self._full
+
+
+class _FakeProc:
+    def __init__(self, code=0, pid=4242):
+        self.pid = pid
+        self.returncode = code
+
+    def poll(self):
+        return self.returncode
+
+    def wait(self, timeout=None):
+        return self.returncode
+
+
+class WatchLoopTest(unittest.TestCase):
+    """The stopping rule: the runner ends the session itself once the env is ready."""
+
+    def setUp(self):
+        self._home = support.temp_home()
+        self.home = self._home.__enter__()
+        self.addCleanup(self._home.__exit__, None, None, None)
+
+    def watch(self, text, *, ready, markers, grace=0.05):
+        env = support.mk_env(
+            ready_when={"value": ready[0]} if ready else None,
+            checks=[{"type": "log_contains", "value": m} for m in markers] or
+            [{"type": "no_crash_reports"}],
+        )
+        ready_values, marker_values = runner.readiness_rule(env)
+        killed = {}
+
+        def fake_kill(pids, *, log=print, grace=None):
+            killed["pids"] = list(pids)
+            return list(pids)
+
+        with mock.patch.object(instance, "game_pids", return_value=[999]), \
+                mock.patch.object(instance, "kill_process_tree", side_effect=fake_kill), \
+                mock.patch.object(runner, "POLL_SEC", 0.01), \
+                mock.patch.object(runner, "READY_GRACE_SEC", grace):
+            result = runner._watch(env, "unit", _FakeProc(code=0), _FakeFollower(text),
+                                   time.time(), log=lambda *_: None,
+                                   ready_values=ready_values, markers=marker_values)
+        return result, killed
+
+    def test_the_runner_stops_once_the_ready_line_and_markers_are_in(self):
+        watch, killed = self.watch("booting\nREADY\nMARKER\n", ready=["READY"], markers=["MARKER"])
+        self.assertEqual(watch["stop_reason"], checks.STOP_GOAL_REACHED)
+        self.assertTrue(watch["ready_reached"])
+        self.assertTrue(watch["game_exited"])
+        self.assertFalse(watch["timed_out"])
+        self.assertEqual(watch["exit_code_source"], "runner")
+        self.assertIn(999, killed["pids"], "the game's process tree must be ended by the runner")
+
+    def test_a_marker_that_never_appears_bounds_the_run_and_stops_it(self):
+        watch, _killed = self.watch("booting\nREADY\n", ready=["READY"], markers=["MARKER"])
+        self.assertEqual(watch["stop_reason"], checks.STOP_READY_TIMEOUT)
+        self.assertFalse(watch["ready_reached"])
+        self.assertTrue(watch["game_exited"])
+        self.assertFalse(watch["timed_out"])
+
+    def test_a_ready_timeout_still_lets_exit_code_zero_pass(self):
+        watch, _killed = self.watch("booting\nREADY\n", ready=["READY"], markers=["MARKER"])
+        ctx = checks.CheckContext(stop_reason=watch["stop_reason"], exit_code=watch["exit_code"],
+                                  exit_code_source=watch["exit_code_source"],
+                                  game_started=True, game_exited=True, session_started=True,
+                                  ready_reached=watch["ready_reached"])
+        spec = support.mk_env(checks=[{"type": "exit_code_zero", "name": "exit-code"}]).checks[0]
+        self.assertEqual(checks.evaluate_one(spec, ctx)["status"], checks.PASS)
+
+    def test_without_ready_when_the_run_waits_for_a_natural_exit(self):
+        env = support.mk_env()
+        ready_values, markers = runner.readiness_rule(env)
+        self.assertEqual(ready_values, [])
+        calls = {"n": 0}
+
+        def fake_pids(*args, **kwargs):
+            calls["n"] += 1
+            return [999] if calls["n"] == 1 else []
+
+        with mock.patch.object(instance, "game_pids", side_effect=fake_pids), \
+                mock.patch.object(instance, "kill_process_tree") as kill, \
+                mock.patch.object(runner, "POLL_SEC", 0.01):
+            watch = runner._watch(env, "unit", _FakeProc(code=0), _FakeFollower("booting\n"),
+                                  time.time(), log=lambda *_: None,
+                                  ready_values=ready_values, markers=markers)
+        self.assertIsNone(watch["stop_reason"])
+        self.assertTrue(watch["ready_reached"], "no ready_when means no readiness gate")
+        self.assertFalse(watch["timed_out"])
+        kill.assert_not_called()
 
 
 if __name__ == "__main__":

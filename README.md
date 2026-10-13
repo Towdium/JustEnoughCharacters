@@ -39,16 +39,39 @@ Minecraft clients at once.
 
 1. **Resolve** the env (pinning anything still unresolved) and download every jar
    into the cache; the JECh artifact is used in place from its build directory.
-2. **Render a `.mrpack`** into `runs/<id>/pack` — `files` empty, every jar in
-   `overrides/mods/`, so the import needs no CDN and no API key.
-3. **Reuse or import** the env's Prism instance, keyed by a modset hash of
-   (mc, loader, java, jvm memory, jar names + sha1s).
+2. **Render the pack** into `runs/<id>/pack` — `files` empty, every jar in
+   `overrides/mods/`. It is kept as the run's exact input record.
+3. **Materialize the instance** — write the env's Prism instance directly:
+   `instance.cfg` (java, memory, window) plus `mmc-pack.json` (the Minecraft and
+   loader components). Memory goes in `MinMemAlloc`/`MaxMemAlloc` with
+   `OverrideMemory=true` and the heap stays out of `JvmArgs`: Prism treats
+   `-Xms`/`-Xmx` in the JVM-args field as a manual override and answers with a
+   modal warning that no headless run can dismiss. The instance is named
+   deterministically after the env and its modset hash (`<env>-<hash12>`), so a
+   retry lands on the same directory; if a directory with that name exists but
+   `state.json` does not point at it (debris from an interrupted run), it is
+   removed in python and rebuilt — never a shell `rm`, and never silently reused.
+   Prism's own launch task then resolves and downloads whatever the version chain
+   still needs.
+   *Why not `prismlauncher -I`?* On Prism 11 a local `-I` goes through
+   `MainWindow::addInstance()`, which opens the modal *New Instance* dialog, and
+   the CLI keeps the main window open afterwards instead of exiting — a headless
+   run can never finish it. Writing the two files Prism reads is the same import
+   without its UI, and it is the only dialog-free path.
 4. **Isolate**: re-sync `mods/` from the pack, archive then empty `config/`,
    empty `saves/` and `logs/`. A stale instance can never influence a verdict.
 5. **Launch** `prismlauncher -d <root> --launch <instance>` and follow
    `logs/latest.log`, accepting only a file newer than the run start.
 6. **Watchdog** on `timeout_sec`: it kills the process tree and the run fails.
-7. **Judge**: the env's checks plus three always-present `internal:` checks, then
+7. **Stop when ready**: an env may declare `ready_when` — a log line that means
+   the game got up. Once that line *and* every `log_contains` marker are in the
+   log, the runner ends the instance's process tree itself and goes straight to
+   judging (`stop_reason: goal-reached`, recorded in the report), so a run does
+   not have to wait for a game that will never quit on its own. If the ready line
+   lands but a marker never arrives, the run is bounded by a grace period and
+   then stopped too (`stop_reason: ready-timeout`), so a broken assertion becomes
+   a FAIL rather than a watchdog kill.
+8. **Judge**: the env's checks plus three always-present `internal:` checks, then
    write `report.json`, `report.txt` and `junit.xml`.
 
 ## Layout
@@ -113,6 +136,14 @@ missing evidence cannot come out green.
 | `JT_JAVA_HOME_CMD` | the JDK lookup command, `{version}` placeholder; defaults to macOS's `java_home` |
 | `JT_JAVA_<N>_HOME` | an explicit JDK home per major version, for platforms without that helper |
 
+The lookup never trusts the helper blindly: every candidate is accepted only
+after the JDK's own `release` file reports the requested major version. macOS's
+`java_home` needs that, because it answers to the *release string*, not the major
+number — `-v 8` matches nothing and silently returns the newest installed JDK
+(`-v 1.8` is the one that finds Java 8), so the Java 8 envs query `8` and then
+`1.8`. Without the check, the 1.12.2 envs would launch on JDK 25 and fail at
+`VerifyJavaInstall` instead of using the Java 8 they asked for.
+
 ## CI
 
 * Each per-branch fork checkout carries `compat-tests` as a **submodule**, so a
@@ -122,16 +153,37 @@ missing evidence cannot come out green.
   the root level. A matrix job runs one env per job.
 * Ubuntu runners need a virtual display and software GL (`xvfb-run` plus
   mesa/llvmpipe): the client must actually start, and there is no GPU.
-* The Prism data root must already hold a Minecraft account. An offline/dummy
-  account scheme for CI is **not decided yet** — until then a CI job needs a real
-  logged-in account in that root, or the run fails at launch (`internal:` checks
-  report it, with the launcher log tail kept in the report).
+* The Prism data root must already hold a **Microsoft** account. An offline/dummy
+  account **cannot** work, and this is now settled rather than a follow-up:
+  Prism shows its first-run setup wizard whenever
+  `!accounts->anyAccountIsValid()`, and `AccountList::anyAccountIsValid()` returns
+  true only for an account whose `ownsMinecraft()` is true — which is
+  `type != Offline && entitlement.ownsMinecraft`. A fabricated `{"type":"Offline"}`
+  entry is parsed happily and still leaves the launcher claiming "you must log in
+  with a Microsoft account", because the wizard's login page is the only page it
+  has left. So a CI job needs a real logged-in account in that root (or a copy of
+  one), or the run fails at launch (`internal:` checks report it, with the
+  launcher log tail kept in the report).
+* Only one Prism Launcher process may own a data root at a time. Prism's CLI
+  hands off over a local socket to an instance already running for that root, so
+  a leftover launcher from an earlier run turns the next `--launch` into a
+  `handoff` (and a half-second "run"). Nothing in jt detects that today; a CI job
+  should run one env at a time and start from a clean root.
 * **Known limitation:** a production instance logs at INFO, so DEBUG-level lines
   are not in `latest.log`. The modern line's transformer hit line is exactly such
   a line (`Transformed <class> with <Transformer>`, logged at DEBUG by the
   coremod), so how many classes JECh actually patched cannot be asserted today;
   raising the log4j level for the run is a follow-up, after which those checks can
   be added.
+* **Known limitation:** a run stops at the main menu and loads no world, but some
+  registration work only happens once a world exists. JEI 19.x runs most of its
+  plugin phases — including `registerAdvancedSearch`, the phase that logs JECh's
+  `Registering JEI pinyin search storage` — when a level is loaded, so the whole
+  "JEI plugin present" check family (moderner ×4, 1.21.1 ×2, mv-1.20.1 ×2,
+  mv-1.19.2 ×2) cannot pass on a real `jt run` today: the marker is absent from a
+  65-line main-menu `latest.log` and appears at line 98 the moment a world is
+  joined. The fix is a world-load path in the harness (quick-play plus a staged
+  world), not a weaker assertion; see [envs/README.md](envs/README.md).
 
 ## Env matrix
 
