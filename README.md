@@ -193,13 +193,73 @@ number — `-v 8` matches nothing and silently returns the newest installed JDK
 
 ## CI
 
+The workflow — `<branch>/.github/workflows/compat-tests.yml`, one per branch —
+runs on the **workstation itself** through a self-hosted macOS runner
+(`runs-on: [self-hosted, macOS]`): a run launches a real Minecraft client, and the
+window has to be able to appear. Bootstrap checklist, in order:
+
+1. **Register the runner against the fork** (not upstream), in a user directory
+   such as `$HOME/actions-runner`:
+   `./config.sh --url https://github.com/<fork>/<repo> --token <token>`, then
+   install it as a **user-level launchd agent** with `./svc.sh install <user>` +
+   `./svc.sh start`. That word is load-bearing: a user LaunchAgent inherits the
+   logged-in GUI session, so Prism and the client it launches get a WindowServer
+   session. A system-level LaunchDaemon has no GUI session, the game cannot create
+   a window, and every launch fails. The runner's default labels (`self-hosted`,
+   `macOS`, `ARM64`) already satisfy `runs-on: [self-hosted, macOS]`.
+2. **Give the runner its own data root.** Put
+   `JT_HOME_CI=/Users/vfyjxf/ModdingGround/Data/jech-compat-ci` in the runner's
+   `.env` (the runner root directory, which `svc.sh`'s start script reads when the
+   agent starts). The workflow reads it, fails with a named error if it is missing,
+   and exports it as `JT_HOME`. The root is deliberately *not* the workstation's
+   `Data/jech-compat`: **only one Prism process may own a data root at a time**, so
+   a CI run must never point at the root a manual `jt run` is using. It ships
+   exactly one file — `prism/accounts.json`, a real Microsoft account, mode 600,
+   never committed and never printed — because Prism raises its first-run wizard
+   unless an account that owns Minecraft is present (see the account bullet
+   below). Everything else (`cache/`, `runs/`, `state.json`, the rest of
+   `prism/`) is created on demand.
+3. **Set `CF_API_KEY` as a repository secret on the fork.** Secrets do not travel
+   with a fork — the upstream repository's secret is not visible there — so the
+   CurseForge resolutions (JEI, fabric-api) fail without it:
+   Settings → Secrets and variables → Actions → New repository secret.
+4. **Dispatch by hand**: Actions → compat-tests → Run workflow. There is no `push`
+   trigger on purpose, and the `selection` input defaults to the branch's own
+   matrix (its description lists the default expression).
+
+* **Nothing runs until the branch is pushed.** These checkouts live only locally
+  today: GitHub has no copy of the branch, hence no copy of this workflow file, so
+  the Actions tab does not even list it. Pushing the branch to the fork is the step
+  that turns the checklist above into a dispatchable workflow.
+* **The first run on a branch is slow — that is not a hang.** The CI root starts
+  with nothing but the account, so the first run downloads what the instance needs
+  (vanilla assets and libraries, the mod jars) and builds the world seed
+  (~52 MB per server jar, ~3.4 MB per seed); later runs reuse the same root's
+  cache. The job timeout is 90 minutes.
+* **One job at a time.** A single registered runner executes one job at a time, so
+  two dispatches can never share a data root; the per-branch `concurrency` group
+  additionally serializes dispatches *within* a branch (a second dispatch queues
+  rather than cancelling the first).
 * Each per-branch fork checkout carries `compat-tests` as a **submodule**, so a
-  branch's own harness and envs travel with the branch. Set `JT_JECH_ROOT` to the
-  branch checkout root (and `JT_HOME` to the runner's cache directory); with
-  `jech.project` naming the branch directory, resolution finds the built jar at
-  the root level. A matrix job runs one env per job.
-* Ubuntu runners need a virtual display and software GL (`xvfb-run` plus
-  mesa/llvmpipe): the client must actually start, and there is no GPU.
+  branch's own harness and envs travel with the branch. `JT_JECH_ROOT` is the
+  branch checkout root (`${{ github.workspace }}`); with `jech.project` naming the
+  branch directory, resolution finds the built jar at the root level.
+* **A macOS GUI session needs no virtual display.** The Linux-era `xvfb-run`
+  wrapper and the mesa/llvmpipe fallback are gone: Prism opens a real window and
+  the client runs on the real GL stack. Prism itself is the Homebrew CLI
+  (`/opt/homebrew/bin/prismlauncher`) on the runner's `PATH`.
+* **The build JDK is per branch, and the wrapper decides it.** The runner's default
+  JDK is JBR 25, so only the branches whose Gradle cannot run on 25 pin
+  `JAVA_HOME`: `moderner` (Gradle 9.5.0) and `1.12.0` (Gradle 9.3.1) use the
+  default, `1.21.1` (Gradle 8.13) pins JDK 21, `multiple-version` (Gradle 8.1.1)
+  pins JDK 17. That is the *build* JDK only — the client is launched by jt with the
+  per-env JDK it resolves through `/usr/libexec/java_home`, which is also how Java 8
+  is reached on macOS (the lookup queries `8`, then `1.8`, and verifies the answer
+  against the JDK's own `release` file, because `-v 8` alone matches nothing and
+  returns the newest installed JDK). `JT_JAVA_<N>_HOME` is therefore never needed
+  here. There is no `actions/setup-java` / `actions/setup-python` step either: on a
+  self-hosted runner they add nothing (python3 3.9+, the JDKs and the branch's own
+  `./gradlew` are already there) and can fight the runner's environment.
 * The Prism data root must already hold a **Microsoft** account. An offline/dummy
   account **cannot** work, and this is now settled rather than a follow-up:
   Prism shows its first-run setup wizard whenever
