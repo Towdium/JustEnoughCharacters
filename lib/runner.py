@@ -46,6 +46,18 @@ LAUNCHER_EXIT_GRACE_SEC = 60
 # runner stops at once; the grace only bounds a run whose markers never arrive,
 # turning it into an assertion FAIL instead of a watchdog kill.
 READY_GRACE_SEC = 120
+# How long the run keeps watching after the env's stopping rule is satisfied,
+# before it ends the session itself. Reaching the ready line is not the last
+# thing a client writes: FML dumps a mod-loading crash report — and logs the
+# "Crash report saved to …" line — a fraction of a second *after* the ready line
+# (measured: 0.37 s on a 1.16.5-forge run whose mod set was rejected for a Forge
+# version mismatch). Ending the process the instant the markers are in races that
+# write, and a race the harness wins reports a real failure as a pass: the same
+# env PASSed once and FAILed once on identical inputs before this. So the stop
+# waits out a bounded settle first, which lets both the crash-report file and the
+# log lines written with it land before the evidence is read. It costs
+# SETTLE_GRACE_SEC per run and is skipped when the game has already exited.
+SETTLE_GRACE_SEC = 3
 # When the launcher CLI exits without a sign of a game, it usually handed the
 # launch off to a Prism process that already owns this data root (Prism's CLI
 # talks to the running instance over a local socket), and that process launches
@@ -413,10 +425,12 @@ def _watch(env, instance_id, proc, follower, started_wall, *, log, ready_values=
     When the env declares ``ready_when`` the run gets a stopping rule: the moment
     the ready line and every ``log_contains`` marker are in the log, the runner
     ends the instance's process tree itself (``stop_reason=goal-reached``) and
-    moves on to judging. If the ready line lands but a marker never arrives, the
-    run is bounded by ``READY_GRACE_SEC`` and then stopped too
-    (``stop_reason=ready-timeout``), so a broken assertion surfaces as a FAIL
-    instead of an unbounded hang.
+    moves on to judging. That stop is delayed by ``SETTLE_GRACE_SEC`` so a client
+    that writes the evidence the checks read *just* after the ready line (a
+    mod-loading crash report, say) is not killed before it does. If the ready
+    line lands but a marker never arrives, the run is bounded by
+    ``READY_GRACE_SEC`` and then stopped too (``stop_reason=ready-timeout``), so a
+    broken assertion surfaces as a FAIL instead of an unbounded hang.
     """
     deadline = started_wall + env.timeout_sec
     session_started = False
@@ -425,6 +439,7 @@ def _watch(env, instance_id, proc, follower, started_wall, *, log, ready_values=
     launcher_died_early = False
     stop_reason = None
     ready_seen_at = None
+    goal_reached_at = None
     handoff_deadline = None
     handoff_noted = False
     notes = []
@@ -448,9 +463,17 @@ def _watch(env, instance_id, proc, follower, started_wall, *, log, ready_values=
                 ready_seen_at = now
             if ready_seen_at is not None:
                 if all_markers_seen(follower.text, markers):
-                    stop_reason = checks_mod.STOP_GOAL_REACHED
-                    break
-                if now - ready_seen_at >= READY_GRACE_SEC:
+                    # The env is ready, but the client may still be writing the
+                    # evidence the checks read (see SETTLE_GRACE_SEC): wait the
+                    # settle out, or stop at once when the game is already gone
+                    # and nothing more can arrive. Reaching the goal is sticky —
+                    # the ready-timeout below must not preempt it.
+                    if goal_reached_at is None:
+                        goal_reached_at = now
+                    if now - goal_reached_at >= SETTLE_GRACE_SEC or not pids:
+                        stop_reason = checks_mod.STOP_GOAL_REACHED
+                        break
+                elif now - ready_seen_at >= READY_GRACE_SEC:
                     stop_reason = checks_mod.STOP_READY_TIMEOUT
                     break
         if game_started and not pids:

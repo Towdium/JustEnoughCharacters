@@ -88,7 +88,12 @@ runs a vanilla dedicated server.
    the game got up. Once that line *and* every `log_contains` marker are in the
    log, the runner ends the instance's process tree itself and goes straight to
    judging (`stop_reason: goal-reached`, recorded in the report), so a run does
-   not have to wait for a game that will never quit on its own. If the ready line
+   not have to wait for a game that will never quit on its own. That stop waits
+   out a bounded settle (`SETTLE_GRACE_SEC`, 3s) first: a client keeps writing
+   for a moment after the ready line — FML dumps a mod-loading crash report and
+   logs `Crash report saved to …` 0.37s after `Sound engine started` (measured) —
+   and killing it the instant the markers are in races that write, which is how
+   the same env once PASSed and FAILed on identical inputs. If the ready line
    lands but a marker never arrives, the run is bounded by a grace period and
    then stopped too (`stop_reason: ready-timeout`), so a broken assertion becomes
    a FAIL rather than a watchdog kill. When the launcher CLI exits within a
@@ -224,8 +229,14 @@ number — `-v 8` matches nothing and silently returns the newest installed JDK
   is why they declare `world`. The `mv-1.19.2` rows cannot: quick play needs
   1.20+, so they carry `skip` and a CI selection must decide explicitly whether to
   exclude them (`--exclude tag:skip`) or accept exit code 1 with the skips named.
-  `moderner-1.21.10` and `26.1.2` are ≥ 1.20 and *could* take a world the same
-  way; they have not been measured yet, so they keep their startup markers.
+  (Re-measured 2026-10-14: Prism only passes the quick-play game argument to
+  versions whose profile carries `feature:is_quick_play_singleplayer`, which its
+  metadata has from 1.20 on, and a world target has no fallback argument — the
+  1.19.2 client reaches the title screen and nothing else. See
+  [envs/README.md](envs/README.md) for the run.) The `moderner` ×4 and
+  `mv-1.20.1` ×2 rows are also launched into a world and were measured the same
+  way: ten envs in all stop at `goal-reached` on a real join, and only the two
+  `mv-1.19.2` rows are skipped.
 * **Known limitation:** a production instance logs at INFO, so DEBUG-level lines
   are not in `latest.log`. The modern line's transformer hit line is exactly such
   a line (`Transformed <class> with <Transformer>`, logged at DEBUG by the
@@ -233,12 +244,15 @@ number — `-v 8` matches nothing and silently returns the newest installed JDK
   raising the log4j level for the run is a follow-up, after which those checks can
   be added.
 * **Resolved limitation (was): world load.** A run used to stop at the main menu,
-  and JEI 19.x runs `registerAdvancedSearch` — the phase that logs JECh's
-  `Registering JEI pinyin search storage` — only once a level exists. The harness
-  now generates a world seed with the vanilla server (`jt seed-world`), stages it
-  as `saves/jechworld`, and launches the instance through Prism's `--world`
-  option, so the whole "JEI plugin present" family is assertable: both 1.21.1 rows
-  pass on a real run (`stopReason: goal-reached`). See
+  and JEI runs `registerAdvancedSearch` — the phase that logs JECh's
+  `Registering JEI pinyin search storage` — only once a level exists (measured
+  for JEI 15, 19, 26 and 29 across the 1.20.1/1.21.1/1.21.10/26.1.2 rows). The
+  harness now generates a world seed with the vanilla server (`jt seed-world`),
+  stages it as `saves/jechworld`, and launches the instance through Prism's
+  `--world` option, so the whole "JEI plugin present" family is assertable: all
+  eight runnable rows of that family pass on a real run
+  (`stopReason: goal-reached`), the two `mv-1.19.2` rows excepted (they carry
+  `skip`). See
   [envs/README.md](envs/README.md) for the rejected launch paths and the seed
   recipe.
 
@@ -255,7 +269,7 @@ loader/java/target versions, the check families and the resolution rules are in
 | `moderner` | 1.21.10 | `21.10.64` | `0.19.2` | — |
 | `moderner` | 26.1.2 | `26.1.2.59-beta` | `0.19.2` | — |
 | `1211` | 1.21.1 | `21.1.215` | `0.16.14` | — |
-| `mv` | 1.20.1 | — | `0.14.11` | `47.0.35` |
+| `mv` | 1.20.1 | — | `0.16.14` (see envs README) | `47.0.35` |
 | `mv` | 1.19.2 | — | `0.14.11` | `43.2.3` |
 | `mv` | 1.18.2 | — | `0.14.9` | `40.2.1` |
 | `mv` | 1.16.5 | — | `0.14.9` | `36.2.39` |
@@ -264,6 +278,18 @@ loader/java/target versions, the check families and the resolution rules are in
 ```bash
 python3 jt resolve all --exclude tag:experimental && python3 jt run all --exclude tag:experimental
 ```
+
+Two rows are expected to keep the matrix red, and neither is a harness failure:
+
+* `mv-1.19.2-forge` / `mv-1.19.2-fabric` — declared `skip` (no quick-play world
+  join before 1.20; re-measured 2026-10-14), so a selection without
+  `--exclude tag:skip` exits 1 with the skip named.
+* `mv-1.16.5-forge` — FAILs on `no-crash-reports`: the built jar declares
+  `forge [36.2.41,)` in its own `mods.toml` while its checkout pins
+  `forge_version=36.2.39`, so FML refuses to load the mod and dumps a crash
+  report. That is a real upstream mismatch this harness exists to surface; the
+  env stays on the pinned Forge rather than being raised to hide it. Details in
+  [envs/README.md](envs/README.md).
 
 ## Requirements
 

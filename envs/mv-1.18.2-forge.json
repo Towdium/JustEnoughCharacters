@@ -52,6 +52,9 @@
       "name": "exit-code"
     }
   ],
+  "ready_when": {
+    "value": "Sound engine started"
+  },
   "timeout_sec": 600,
   "jvm": {
     "max_mem_mb": 3072,

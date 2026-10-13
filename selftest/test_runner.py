@@ -228,6 +228,30 @@ class _FakeProc:
         return self.returncode
 
 
+class _StagedFollower:
+    """A log that fills in one stage per poll — the shape of a late write.
+
+    ``_FakeFollower`` shows the whole text from the first poll, which cannot
+    express "the ready line is there, the crash report lands a moment later".
+    """
+
+    def __init__(self, stages):
+        self._stages = list(stages)
+        self.text = ""
+        self.session_started = False
+        self.polls = 0
+
+    def wait_for_session(self, deadline, *, log=None, sleep=None):
+        self.session_started = True
+        return True
+
+    def poll_once(self):
+        self.polls += 1
+        if self._stages:
+            self.text += self._stages.pop(0)
+        return self.text
+
+
 class WatchLoopTest(unittest.TestCase):
     """The stopping rule: the runner ends the session itself once the env is ready."""
 
@@ -236,7 +260,8 @@ class WatchLoopTest(unittest.TestCase):
         self.home = self._home.__enter__()
         self.addCleanup(self._home.__exit__, None, None, None)
 
-    def watch(self, text, *, ready, markers, grace=0.05, timeout_sec=600):
+    def watch(self, text, *, ready, markers, grace=0.05, timeout_sec=600, settle=0.05,
+              follower=None, started_wall=None, pids=(999,)):
         env = support.mk_env(
             ready_when={"value": ready[0]} if ready else None,
             checks=[{"type": "log_contains", "value": m} for m in markers] or
@@ -252,12 +277,15 @@ class WatchLoopTest(unittest.TestCase):
             killed["pids"] = list(pids)
             return list(pids)
 
-        with mock.patch.object(instance, "game_pids", return_value=[999]), \
+        follower = follower if follower is not None else _FakeFollower(text)
+        with mock.patch.object(instance, "game_pids", return_value=list(pids)), \
                 mock.patch.object(instance, "kill_process_tree", side_effect=fake_kill), \
                 mock.patch.object(runner, "POLL_SEC", 0.01), \
+                mock.patch.object(runner, "SETTLE_GRACE_SEC", settle), \
                 mock.patch.object(runner, "READY_GRACE_SEC", grace):
-            result = runner._watch(env, "unit", _FakeProc(code=0), _FakeFollower(text),
-                                   time.time(), log=lambda *_: None,
+            result = runner._watch(env, "unit", _FakeProc(code=0), follower,
+                                   started_wall if started_wall is not None else time.time(),
+                                   log=lambda *_: None,
                                    ready_values=ready_values, markers=marker_values)
         return result, killed
 
@@ -271,6 +299,31 @@ class WatchLoopTest(unittest.TestCase):
         self.assertFalse(watch["timed_out"])
         self.assertEqual(watch["exit_code_source"], "runner")
         self.assertIn(999, killed["pids"], "the game's process tree must be ended by the runner")
+
+    def test_the_stop_settles_so_late_evidence_is_captured(self):
+        """The client keeps writing for a moment after the ready line.
+
+        Measured on the 1.16.5-forge row: FML writes its mod-loading crash report
+        (and the `Crash report saved to …` line) 0.37s *after* `Sound engine
+        started`. Ending the process at the ready line raced that write — the same
+        env PASSed once and FAILed once on identical inputs — so the stop waits
+        ``SETTLE_GRACE_SEC`` for it.
+        """
+        follower = _StagedFollower(["booting\nREADY\n", "", "Crash report saved to x\n"])
+        watch, _killed = self.watch("", ready=["READY"], markers=[], settle=0.3,
+                                    follower=follower)
+        self.assertEqual(watch["stop_reason"], checks.STOP_GOAL_REACHED)
+        self.assertGreater(follower.polls, 5, "the stop must wait out the settle, not fire at once")
+        self.assertIn("Crash report saved to x", follower.text,
+                      "evidence written just after the ready line must still land")
+
+    def test_a_game_that_is_already_gone_does_not_wait_the_settle(self):
+        """Nothing more can arrive from a dead process, so the settle is skipped."""
+        follower = _StagedFollower(["booting\nREADY\n"])
+        watch, _killed = self.watch("", ready=["READY"], markers=[], settle=30,
+                                    follower=follower, pids=())
+        self.assertEqual(watch["stop_reason"], checks.STOP_GOAL_REACHED)
+        self.assertEqual(follower.polls, 2, "a gone game stops the run on its first poll")
 
     def test_a_marker_that_never_appears_bounds_the_run_and_stops_it(self):
         watch, _killed = self.watch("booting\nREADY\n", ready=["READY"], markers=["MARKER"])

@@ -1,5 +1,5 @@
 {
-  "_comment": "multiple-version line, MC 1.20.1 fabric. The upstream fabric_api_version=0.76.0+1.19.4 (1.20.1/gradle.properties) is a known typo: no such file exists for 1.20.1 on CurseForge or Modrinth. Substituted with the real 1.20.1 line 0.92.12+1.20.1 so the env stays runnable; revisit if upstream fixes the property.",
+  "_comment": "multiple-version line, MC 1.20.1 fabric. Two upstream pins had to be corrected for the modset to load at all. (1) fabric_api_version=0.76.0+1.19.4 (1.20.1/gradle.properties) is a known typo: no such file exists for 1.20.1 on CurseForge or Modrinth; substituted with the real 1.20.1 line 0.92.12+1.20.1. (2) fabric_loader_version=0.14.11 is likewise unloadable: the pinned jei 15.48.0.179 requires fabricloader >=0.16.3 and the substituted fabric-api 0.92.12+1.20.1 requires >=0.16.10, so Fabric refuses the set with 'Incompatible mod set!' before Minecraft starts. The loader is therefore raised to 0.16.14 (the version the 1.21.1 fabric row already runs). Revisit when upstream fixes its properties.",
   "name": "mv-1.20.1-fabric",
   "tags": [
     "mv",
@@ -10,7 +10,7 @@
   "mc": "1.20.1",
   "loader": {
     "type": "fabric",
-    "version": "0.14.11"
+    "version": "0.16.14"
   },
   "java": {
     "version": 17
@@ -86,6 +86,12 @@
       "name": "exit-code"
     }
   ],
+  "ready_when": {
+    "value": "Sound engine started"
+  },
+  "world": {
+    "name": "jechworld"
+  },
   "timeout_sec": 600,
   "jvm": {
     "max_mem_mb": 3072,

@@ -1,5 +1,5 @@
 {
-  "_comment": "1.12.2 line against legacy Just Enough Items 4.16.x. The extra check asserts the classic ASM patch that replaces JEI's suffix tree constructor ran.",
+  "_comment": "1.12.2 line against legacy Just Enough Items 4.16.x. No 'Registering JEI pinyin search index' check here: that line is emitted by JechJeiPlugin.registerAdvancedSearch, and legacy JEI 4.16.1.301 has no mezz/jei/api/IAdvancedSearchRegistry to implement (75 classes under mezz/jei/api, none of them the search API; HEI 4.34.0 has it). With legacy JEI the integration is the classic ASM path instead — its two markers below are the assertion, and the extra check pins the suffix-tree patch only this path applies.",
   "name": "1.12.2-forge-jei-legacy",
   "tags": [
     "112",
@@ -41,11 +41,6 @@
   "checks": [
     {
       "type": "log_contains",
-      "value": "Registering JEI pinyin search index",
-      "name": "jei-index-registered"
-    },
-    {
-      "type": "log_contains",
       "value": "Transforming class mezz/jei/ingredients/IngredientFilter for JEI integration.",
       "name": "jei-class-transformed"
     },
@@ -73,6 +68,9 @@
       "name": "legacy-tree-transformed"
     }
   ],
+  "ready_when": {
+    "value": "Sound engine started"
+  },
   "timeout_sec": 600,
   "jvm": {
     "max_mem_mb": 3072,

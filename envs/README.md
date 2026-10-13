@@ -128,7 +128,13 @@ Three rules keep the checks honest:
   run that stops at the main menu can never satisfy it, no matter how long it
   waits. Declaring `world` moves the client into a level and the marker arrives
   a second or two after the join. Verify every new marker against a real
-  `latest.log` (step 4 of "Adding an env").
+  `latest.log` (step 4 of "Adding an env"). Measured across the whole matrix
+  (2026-10-14): JEI's level-load phase announces itself as `Sending Runtime` in
+  `mezz.jei.library.load.PluginCaller` *after* `joined the game` (1.20.1: join
+  at log line 105, `Sending Runtime` at 155, JECh's marker at 141), whereas a
+  run that stays at the title screen shows only the startup `Sending
+  ConfigManager` and never the marker — JEI 15 (1.20.1), 19 (1.21.1), 26
+  (1.21.10/26.1.2) all behave this way.
 
 ### `skip` — an env that is deliberately not executed
 
@@ -147,6 +153,22 @@ selection; the tag is never written back into the env file.)
 pins and downloads it, `jt seed-world` still maintains its world cache, and the
 env keeps its `checks` as the written-down statement of what it would assert
 (the reason string is what points at the missing capability).
+
+The two `mv-1.19.2` rows are the only ones left. That skip was re-measured on
+2026-10-14 rather than inherited: `mv-1.19.2-forge` was run with a real seed
+staged (`saves/jechworld`, 14 files) and launched as
+`prismlauncher --launch … --world jechworld`. The client reached
+`Sound engine started` and sat at the title screen for three minutes — no
+`Loading level`, no `Preparing spawn area`, no `joined the game` anywhere in
+`latest.log` — so no level was ever loaded and the marker could not appear.
+That is Prism behaving as designed, not a harness failure: Prism only appends
+the quick-play game argument when the version profile carries the
+`feature:is_quick_play_singleplayer` trait, and Prism's own metadata has that
+trait from 1.20 on (`net.minecraft/1.19.2.json` `+traits`:
+`["XR:Initial","FirstThreadOnMacOS"]`; `1.20.1`/`1.21.1` add both quick-play
+traits), while a world target has no fallback argument (the server case falls
+back to `--server`/`--port`; a world does not). The env was restored to `skip`
+with its checks intact after the probe.
 
 ## Launching into a world (`world`)
 
@@ -171,6 +193,24 @@ were tried and rejected are recorded here so nobody re-treads them:
   `arguments.game`: workable in principle, but it only ever duplicates what
   Prism already does, and a patch file has to be kept in sync per loader. Not
   used.
+
+Which rows declare it, as measured on 2026-10-14: `1.21.1-neoforge`,
+`1.21.1-fabric`, the four `moderner` rows and the two `mv-1.20.1` rows — all ten
+run to `stopReason: goal-reached` on a real join (`vfyjxf_ joined the game`,
+then JECh's `Registering JEI pinyin search storage` a second later). The
+`mv-1.16.5` and `mv-1.18.2` rows deliberately keep no world: their markers are
+emitted at startup (and the 1.16.5/1.18.2 jars carry no JEI plugin at all), so a
+world would only add a level load to what they assert. `mv-1.19.2` cannot join
+one — see the `skip` section above.
+
+One caveat that cost a full watchdog on the way (recorded so the next person
+reads it as designed, not as a bug): a run whose client dies *before* the ready
+line — a Fabric `Incompatible mod set!` dialog, say — has no stopping rule at
+all, because the bounded grace only starts once the ready line is in the log. It
+then waits out `timeout_sec` (exit 3) even though the failure is already in the
+log. A ready line that lands whether or not the join succeeds is what turns a
+*join* failure into a fast `ready-timeout`; a failure earlier than the ready
+line is still a watchdog case.
 
 Name restrictions: `world.name` must be a plain folder name
 (`[A-Za-z0-9][A-Za-z0-9 ._-]*`, not `.`/`..`, no separators) because it becomes
@@ -300,6 +340,17 @@ rule.
   run anyway and records `stopReason: "ready-timeout"`. The missing
   `log_contains` check then FAILs (exit code 1) instead of the whole run hanging
   into the watchdog — a broken assertion is a failure, not a timeout.
+* **The stop settles first.** Reaching the goal does not end the session
+  instantly: the runner keeps watching for `SETTLE_GRACE_SEC` (3s) before it
+  kills the process tree, because a client keeps writing for a moment after the
+  ready line. Measured on `mv-1.16.5-forge`: FML writes its mod-loading crash
+  report (`crash-<stamp>-fml.txt`) and logs `Crash report saved to …` 0.37s
+  *after* `Sound engine started`. Killing at the ready line raced that write —
+  the same env PASSed once and FAILed once on identical inputs, because one run
+  died before FML flushed the report the `no_crash_reports` check reads. The
+  settle makes that verdict repeatable (both re-runs FAIL on the same check, with
+  the crash report named in the run); it is skipped when the game has already
+  exited, and it costs 3s per run.
 * **`exit_code_zero` with a stopping rule.** When the runner ended the session
   itself, `exit_code_zero` PASSes whatever code the killed process reported (the
   code is an artefact of the harness). A natural exit 0 also passes; a natural
@@ -312,7 +363,13 @@ rule.
   naming the other launcher's pid when there is one. A genuinely failed launch
   still ends as a missing session after that grace.
 * **Omitting it.** Without `ready_when` the run behaves as before: it waits for
-  the game to exit on its own or for the watchdog.
+  the game to exit on its own or for the watchdog. No shipped env omits it: a
+  modded client that reaches the title screen never exits on its own, so an env
+  without a stopping rule can only end in a watchdog kill (exit 3) — i.e. it is
+  a broken env, not a lenient one. Every env file in `envs/` declares
+  `Sound engine started`, which the client prints in 1.12.2 through 26.1.2 alike
+  (verified against each client jar), and which lands *before* the world join so
+  a failed join still becomes a clean `ready-timeout`.
 
 ## Pins
 
@@ -409,7 +466,7 @@ and says so in the report.
 | `1.21.1-neoforge` | 1.21.1 / neoforge 21.1.215 | 21 | `1.21.1` | jei 19.37.0.362 |
 | `1.21.1-fabric` | 1.21.1 / fabric 0.16.14 | 21 | `1.21.1` | jei 19.37.0.362, fabric-api 0.116.1+1.21.1 |
 | `mv-1.20.1-forge` | 1.20.1 / forge 1.20.1-47.0.35 | 17 | `multiple-version` | jei 15.48.0.179 |
-| `mv-1.20.1-fabric` | 1.20.1 / fabric 0.14.11 | 17 | `multiple-version` | jei 15.48.0.179, fabric-api (see below) |
+| `mv-1.20.1-fabric` | 1.20.1 / fabric 0.16.14 (see below) | 17 | `multiple-version` | jei 15.48.0.179, fabric-api (see below) |
 | `mv-1.19.2-forge` | 1.19.2 / forge 1.19.2-43.2.3 | 17 | `multiple-version` | jei 11.30.3.1056 — **skipped**, see below |
 | `mv-1.19.2-fabric` | 1.19.2 / fabric 0.14.11 | 17 | `multiple-version` | jei 11.30.3.1056, fabric-api 0.68.0+1.19.2 — **skipped** |
 | `mv-1.18.2-forge` | 1.18.2 / forge 1.18.2-40.2.1 | 17 | `multiple-version` | jei 10.2.1.1005 |
@@ -419,40 +476,60 @@ and says so in the report.
 | `1.12.2-forge-hei` | 1.12.2 / forge 1.12.2-14.23.5.2864 | 8 | `1.12.0` (srg jar) | had-enough-items 4.34.0 |
 | `1.12.2-forge-jei-legacy` | 1.12.2 / forge 1.12.2-14.23.5.2864 | 8 | `1.12.0` (srg jar) | jei 4.16.1.301 |
 
-Every row also stages the preset `options.txt`. The two envs that are *launched
+Every row also stages the preset `options.txt`. The ten envs that are *launched
 into a world*, and the two that are *skipped*, are called out below and in the
 table above:
 
 | env | runs? | world | why |
 | --- | --- | --- | --- |
 | `1.21.1-neoforge`, `1.21.1-fabric` | yes | `world: {name: jechworld}` | the JEI plugin marker needs a loaded level |
-| `mv-1.19.2-forge`, `mv-1.19.2-fabric` | **no** — `skip` | none | same marker, but quick play needs 1.20+ |
-| the other 12 | yes | none | markers are emitted during startup |
+| `moderner` ×4, `mv-1.20.1` ×2 | yes | `world: {name: jechworld}` | same marker, same level-load phase (measured 2026-10-14) |
+| `mv-1.19.2-forge`, `mv-1.19.2-fabric` | **no** — `skip` | none | same marker, but quick play needs 1.20+ (re-measured 2026-10-14) |
+| `mv-1.16.5` ×2, `mv-1.18.2` ×2, `1.12.2` ×2 | yes | none | markers are emitted during startup |
 
-The `mv-1.19.2` rows are the one family with no path to their marker today: JEI
-11.x's `registerAdvancedSearch` (the phase that logs JECh's storage marker) also
-runs at level load, and the only non-interactive way to load a level —
-`--quickPlaySingleplayer` — does not exist before 1.20. So the envs stay in the
-matrix with their checks written down, and `skip` names exactly what is missing.
-Removing the `skip` is a follow-up that needs one of: a 1.19.2-era way to join a
-world from the command line, or an in-game runner (a test mod that loads a world
-and quits). Neither is in place; a weaker assertion is not an option.
+Every env also declares `ready_when: Sound engine started`; without it a client
+that reaches the title screen runs until the watchdog (see "Omitting it").
+
+The `mv-1.19.2` rows are the one family with no path to their marker: JEI 11.x's
+`registerAdvancedSearch` (the phase that logs JECh's storage marker) runs at
+level load, and the only non-interactive way to load a level —
+`--quickPlaySingleplayer` — does not exist before 1.20. That was re-measured on
+2026-10-14 rather than assumed: with a seed staged and `--world jechworld` on the
+command line, the 1.19.2 client reached the title screen and never loaded a
+level, because Prism only passes the quick-play argument to versions whose
+profile carries the `feature:is_quick_play_singleplayer` trait (Prism's
+`net.minecraft/1.19.2.json` has no such trait; 1.20.1 does). So the envs stay in
+the matrix with their checks written down, and `skip` names exactly what is
+missing. Removing the `skip` is a follow-up that needs one of: a 1.19.2-era way
+to join a world from the command line, or an in-game runner (a test mod that
+loads a world and quits). Neither is in place; a weaker assertion is not an
+option.
 
 The version strings above are not invented: they mirror each checkout's
 `gradle.properties` (`neo_version`, `forge_version`, `fabric_loader_version`,
 `fabric_api_version`, `jei_version`, `jei_unobfuscated_version`, `hei_version`).
 
-Two upstream oddities are pinned as-found and flagged rather than corrected:
+The `mv-1.20.1-fabric` row corrects two upstream pins rather than pinning them
+as-found, because with them as-found the modset does not load at all:
 
-* `mv-1.20.1-fabric` — `1.20.1/gradle.properties` says
-  `fabric_api_version=0.76.0+1.19.4`, a 1.19.4 build. No such file exists for MC
-  1.20.1 on either CurseForge or Modrinth, so that row's `pin` stays `null` and
-  the env is tagged `experimental`. The newest fabric-api for 1.20.1 is
-  `0.92.12+1.20.1`.
-* the fabric variants' `fabric.mod.json` files declare the legacy
-  `"fabric": "*"` dependency instead of `fabric-api` (only the 26.1.2 variant
-  names `fabric-api` explicitly); all fabric rows therefore carry fabric-api,
-  taken from the `fabric_api_version` their build compiles against.
+* `1.20.1/gradle.properties` says `fabric_api_version=0.76.0+1.19.4`, a 1.19.4
+  build. No such file exists for MC 1.20.1 on either CurseForge or Modrinth, so
+  that row pins the real 1.20.1 line `0.92.12+1.20.1` instead — the newest
+  fabric-api for 1.20.1 — and stays tagged `experimental`.
+* the same file's `fabric_loader_version=0.14.11` cannot load that modset: the
+  pinned `jei 15.48.0.179` requires `fabricloader >=0.16.3` and
+  `fabric-api 0.92.12+1.20.1` requires `>=0.16.10`, so Fabric refuses the set
+  with `Incompatible mod set!` before Minecraft starts (measured: the first run
+  of this row FAILed with exactly that line and no game session). The row
+  therefore uses loader `0.16.14`, the version the 1.21.1 fabric row already
+  runs; Prism's `net.fabricmc.fabric-loader` metadata does not bind loader
+  versions to a game version, so this is a one-token change.
+
+Separately, and true of every fabric row rather than of this one: the fabric
+variants' `fabric.mod.json` files declare the legacy `"fabric": "*"` dependency
+instead of `fabric-api` (only the 26.1.2 variant names `fabric-api`
+explicitly), so all fabric rows carry fabric-api, taken from the
+`fabric_api_version` their build compiles against.
 
 ## Check families
 
@@ -468,27 +545,59 @@ has a JEI plugin and can be asserted on its registration marker.
   `log_not_contains "Can't create config file!"` and
   `file_exists config/jecharacters.json`.
 
-  Of those ten rows, only the **two 1.21.1 rows are measured against a real run**
-  — they declare `world`, and their marker arrives a second after the join. The
-  two `mv-1.19.2` rows carry `skip`: the same marker needs a loaded level and
-  quick play does not exist before 1.20. The remaining six rows (`moderner` ×4,
-  `mv-1.20.1` ×2) are ≥ 1.20 and therefore *could* take a `world` the same way,
-  but no run of theirs has been measured for this harness round, so nothing is
-  claimed about them here: whether their JEI version defers this phase to level
-  load is the first thing to establish when they are next exercised. Adding
-  `"world": {"name": "jechworld"}` needs no harness change; it needs a measured
-  run and their own `ready_when` line.
+  All ten rows of this family declare `world` except the two `mv-1.19.2` rows,
+  which carry `skip` (no quick play before 1.20; re-measured 2026-10-14, see the
+  `skip` section). The other eight were measured against a real run on
+  2026-10-14 — `1.21.1` ×2, `moderner` ×4, `mv-1.20.1` ×2 all stop at
+  `goal-reached` with their marker present a second after `joined the game`. So
+  the level-load claim holds for JEI 15 (1.20.1), JEI 19 (1.21.1), JEI 26
+  (1.21.10) and JEI 29 (26.1.2): each of them defers `registerAdvancedSearch`
+  until a level exists.
 * **B — no JEI plugin** (mv-1.16.5 ×2, mv-1.18.2 ×2): the failure markers only —
   `log_not_contains "Could not find targets.json. JechTransformer will not be loaded."`,
-  `no_crash_reports`, `exit_code_zero`.
-* **C — 1.12.2** (both rows): `log_contains "Registering JEI pinyin search index"`,
+  `no_crash_reports`, `exit_code_zero`. These rows have no world: their markers
+  are startup markers, and the JECh jars for 1.16.5/1.18.2 contain no
+  `JechJeiPlugin.class` at all (`unzip -l <jar> | grep JechJeiPlugin` is empty).
+
+  **`mv-1.16.5-forge` is red, and the redness is the finding** (2026-10-14, not a
+  harness bug — do not "fix" it by relaxing the env): its built jar refuses to
+  load on the Forge version its own checkout pins. `multiple-version/1.16.5/forge/
+  src/main/resources/META-INF/mods.toml:18` hardcodes
+  `versionRange = "[36.2.41,)"` for `forge`, while
+  `multiple-version/1.16.5/gradle.properties:5` pins `forge_version=36.2.39`, so
+  FML answers `Mod jecharacters requires forge 36.2.41 or above / Currently,
+  forge is 36.2.39`, abandons mod loading and writes
+  `crash-<stamp>-fml.txt`; the client still reaches the title screen with a
+  broken mod state (`Cowardly refusing to send event … to a broken mod state` in
+  `latest.log`, ~1s *before* the ready line). `no_crash_reports` catches it, and
+  the failure mode is worth knowing about: raising the env's Forge to 36.2.41+
+  would hide the mismatch rather than report it, so the env stays on the pinned
+  36.2.39 until upstream's metadata agrees with its own properties. The other
+  three rows of this family are green; `mv-1.16.5-fabric` has no Forge at all,
+  and neither 1.18.2 jar declares any dependency block.
+* **C — 1.12.2** (both rows):
   `log_contains "Transforming class mezz/jei/ingredients/IngredientFilter for JEI integration."`,
   `log_not_contains "Invalid config syntax:"`,
   `file_exists config/JustEnoughCharacters.cfg`, `no_crash_reports`,
-  `exit_code_zero`; the legacy-JEI row adds
+  `exit_code_zero`; the legacy-JEI row also carries
   `log_contains "Transforming constructor of mezz/jei/suffixtree/GeneralizedSuffixTree"`,
   which the Had Enough Items row must not carry (that ASM patch belongs to the
-  legacy-JEI path only).
+  legacy-JEI path only), and **skips** `Registering JEI pinyin search index`.
+
+  Why those two rows do not share that one marker: it is emitted by
+  `JechJeiPlugin.registerAdvancedSearch`, i.e. through JEI's *advanced search
+  API*, and that API is the Had Enough Items fork's addition — legacy
+  `jei_1.12.2-4.16.1.301.jar` exposes 75 classes under `mezz/jei/api/` and
+  `IAdvancedSearchRegistry` is not among them (`HadEnoughItems_1.12.2-4.34.0.jar`
+  has it, along with `ISearchIndex`, `ISearchIndexFactory`,
+  `ISearchIndexBuilder(Factor)`). With legacy JEI the plugin method can never be
+  called; JECh integrates there through the classic ASM patch instead
+  (`TransformerJei.transformLegacyJei` replaces the `GeneralizedSuffixTree`
+  constructor in both `IngredientFilter.<init>` and
+  `createPrefixedSearchTree`), which is exactly what the two transformer markers
+  assert. Measured 2026-10-14: the legacy row ran to `goal-reached` with both
+  transformer markers present and the plugin marker absent; that is the row's
+  intended shape, not a JECh regression.
 
   Both transformer markers quote the **JVM-internal class names, with slashes**.
   That is not a style choice: the runtime logs `ClassNode.name` as ASM holds it
@@ -509,11 +618,16 @@ has a JEI plugin and can be asserted on its registration marker.
    `"world": {"name": "jechworld"}` and pick a `ready_when` line the client
    prints **whether or not** the join succeeds (see "When is the game ready?").
    `jt run` builds the seed itself; `jt seed-world <name>` builds it ahead of time.
-5. Pick a `ready_when` line from a real run's `latest.log` (a first, exploratory
-   `jt run` may end at the watchdog — that log is still the evidence to read).
+5. Give the env a `ready_when` line, from a real run's `latest.log` (a first,
+   exploratory `jt run` may end at the watchdog — that log is still the evidence
+   to read). An env without one can only end in a watchdog kill, because nothing
+   in a modded client makes it quit at the title screen.
 6. If the marker is unreachable for a version-line reason, do not soften the
    check: keep the check as written, add `"skip": "<the missing capability>"`,
-   and say so here.
+   and say so here. That is different from a check whose *premise* is wrong for
+   the row — a marker only one loader's API can emit, say (see the legacy-JEI
+   row under "Check families"): fix the check, keep what the row does prove, and
+   record the evidence here.
 7. `jt seed-world <name>` (when step 4 applied), then `jt envs` (does it load?),
    then `jt resolve <name>` (does the description pin to exactly one file?),
    then `jt run <name>`.

@@ -156,6 +156,44 @@ class EnvParsingTest(unittest.TestCase):
             self.assertIsNone(loaded[name].world, name)
             self.assertTrue(loaded[name].checks, "a skipped env keeps its checks as documentation")
 
+    def test_every_shipped_env_declares_a_stopping_rule(self):
+        """No env that is actually executed may be left without ``ready_when``.
+
+        A modded client that reaches the title screen never exits on its own, so
+        an env without a stopping rule can only end in a watchdog kill (exit
+        code 3) — the run is bounded by ``timeout_sec`` even when the failure it
+        should report is already in the log. That makes a missing ``ready_when``
+        a broken env, not a lenient one. A skipped env is the exception: it is
+        never executed, so it needs no stopping rule, and its checks stay
+        written down as documentation.
+        """
+        for env in envs.load_all():
+            if env.skip:
+                continue
+            self.assertIsNotNone(env.ready_when, f"{env.name} declares no ready_when")
+
+    def test_the_shipped_matrix_declares_a_world_only_where_it_was_measured(self):
+        """``world`` is a premise about the marker, not a decoration.
+
+        The rows launched into a level are exactly the ones whose JEI version
+        defers its registration phase to level load and that can take a quick
+        play argument (1.20+); the rest assert startup markers and must stay
+        without one, so a row cannot silently acquire a level load it was not
+        measured with.
+        """
+        measured = {
+            "1.21.1-neoforge", "1.21.1-fabric",
+            "moderner-1.21.10-neoforge", "moderner-1.21.10-fabric",
+            "moderner-26.1.2-neoforge", "moderner-26.1.2-fabric",
+            "mv-1.20.1-forge", "mv-1.20.1-fabric",
+        }
+        for env in envs.load_all():
+            if env.name in measured:
+                self.assertIsNotNone(env.world, env.name)
+                self.assertEqual(env.world.name, "jechworld", env.name)
+            else:
+                self.assertIsNone(env.world, f"{env.name} declares a world it was not measured with")
+
 
 class EnvRejectionTest(unittest.TestCase):
     def reject(self, data, *needles):
