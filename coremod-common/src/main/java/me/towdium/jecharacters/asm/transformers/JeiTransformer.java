@@ -66,6 +66,24 @@ public class JeiTransformer implements Transformer {
                            }
                    );
 
+        Transformer.findMethod(node, "getIngredientListUncached", "(Ljava/lang/String;)Ljava/util/stream/Stream;")
+                   .ifPresent(method -> {
+                               InsnList list = method.instructions;
+                               for (int i = 0; i < list.size(); i++) {
+                                   AbstractInsnNode insnNode = list.get(i);
+                                   if (insnNode.getOpcode() == Opcodes.INVOKESTATIC) {
+                                       MethodInsnNode methodInsn = (MethodInsnNode) insnNode;
+                                       if ("mezz/jei/gui/search/SearchTokenizer".equals(methodInsn.owner) && "tokenize".equals(methodInsn.name) && "(Ljava/lang/String;)Ljava/util/List;".equals(methodInsn.desc)) {
+                                           list.insert(insnNode.getPrevious(), new MethodInsnNode(Opcodes.INVOKESTATIC,
+                                                   "me/towdium/jecharacters/utils/Match", "wrap",
+                                                   "(Ljava/lang/String;)Ljava/lang/String;", false));
+                                           return;
+                                       }
+                                   }
+                               }
+                           }
+                   );
+
         return node;
     }
 
