@@ -22,8 +22,62 @@ class ExitCodeTest(unittest.TestCase):
         self.assertEqual(runner.env_exit_code({"status": checks.FAIL, "watchdog": True}), 3)
         self.assertEqual(runner.env_exit_code({"status": checks.FAIL, "timedOut": True}), 3)
 
+    def test_a_declared_skip_exits_one_and_is_never_a_pass(self):
+        self.assertEqual(runner.env_exit_code({"status": checks.SKIP, "exitCodeKind": "skip"}), 1)
+        self.assertEqual(runner.env_exit_code({"status": checks.SKIP}), 1)
+
     def test_a_config_error_that_still_passed_is_not_a_config_exit(self):
         self.assertEqual(runner.env_exit_code({"status": checks.PASS, "configError": True}), 0)
+
+
+class SkippedEnvTest(unittest.TestCase):
+    """A declared skip is reported, never executed, and never a pass."""
+
+    def setUp(self):
+        self._home = support.temp_home()
+        self.home = self._home.__enter__()
+        self.addCleanup(self._home.__exit__, None, None, None)
+        self.env = support.mk_env(skip="needs a world load, and quickPlay needs 1.20+")
+
+    def test_the_env_is_not_executed_and_the_report_says_so(self):
+        logs = []
+        entry, code = runner.run_env(self.env, log=logs.append)
+        self.assertEqual(code, 1, "a skip must not be exit code 0")
+        self.assertEqual(entry["status"], checks.SKIP)
+        self.assertEqual(entry["exitCodeKind"], "skip")
+        self.assertEqual(entry["skipReason"], self.env.skip)
+        self.assertIsNone(entry["instanceId"], "nothing may be materialized for a skipped env")
+        self.assertEqual(entry["mods"], [])
+        self.assertTrue(any("SKIP unit-env" in line for line in logs), logs)
+        run_dir = sorted(paths.runs_dir().iterdir())[0]
+        self.assertEqual(run_dir.name, entry["runDir"].rsplit("/", 1)[-1])
+        written = json.loads((run_dir / report.REPORT_JSON).read_text(encoding="utf-8"))
+        self.assertEqual(written["status"], checks.FAIL)
+        self.assertEqual(written["totals"]["skipped"], 1)
+        self.assertEqual(written["totals"]["passed"], 0)
+        self.assertIn("declared skip", written["reason"])
+        self.assertEqual(written["envs"][0]["status"], checks.SKIP)
+        text = (run_dir / report.REPORT_TXT).read_text(encoding="utf-8")
+        self.assertIn("[SKIP] unit-env", text)
+        self.assertIn("quickPlay needs 1.20+", text)
+        self.assertIn("were NOT executed", text)
+        self.assertEqual(report.verify_run(run_dir, log=lambda *_: None), 1)
+
+    def test_no_instance_directory_or_prism_root_is_created(self):
+        runner.run_env(self.env, log=lambda *_: None)
+        self.assertFalse((self.home / "prism" / "instances").exists())
+        self.assertFalse((self.home / "state.json").exists())
+
+    def test_a_selection_of_only_skipped_envs_is_red(self):
+        other = support.mk_env(name="other-env", skip="same reason")
+        code = runner.run_selection("all", envs=[self.env, other], log=lambda *_: None)
+        self.assertEqual(code, 1)
+        run_dirs = sorted(paths.runs_dir().iterdir())
+        written = json.loads((run_dirs[0] / report.REPORT_JSON).read_text(encoding="utf-8"))
+        self.assertEqual(written["totals"], {"envs": 2, "passed": 0, "failed": 0, "skipped": 2,
+                                            "checks": 2, "checksFailed": 0, "checksSkipped": 2,
+                                            "watchdogs": 0})
+        self.assertEqual(report.exit_code_for(written), 1)
 
 
 class EmptySelectionTest(unittest.TestCase):
@@ -182,12 +236,15 @@ class WatchLoopTest(unittest.TestCase):
         self.home = self._home.__enter__()
         self.addCleanup(self._home.__exit__, None, None, None)
 
-    def watch(self, text, *, ready, markers, grace=0.05):
+    def watch(self, text, *, ready, markers, grace=0.05, timeout_sec=600):
         env = support.mk_env(
             ready_when={"value": ready[0]} if ready else None,
             checks=[{"type": "log_contains", "value": m} for m in markers] or
             [{"type": "no_crash_reports"}],
         )
+        # The schema floor for timeout_sec is 30s; a test that needs a shorter truth
+        # sets the attribute on the parsed env instead of fighting the validator.
+        env.timeout_sec = timeout_sec
         ready_values, marker_values = runner.readiness_rule(env)
         killed = {}
 
@@ -208,6 +265,8 @@ class WatchLoopTest(unittest.TestCase):
         watch, killed = self.watch("booting\nREADY\nMARKER\n", ready=["READY"], markers=["MARKER"])
         self.assertEqual(watch["stop_reason"], checks.STOP_GOAL_REACHED)
         self.assertTrue(watch["ready_reached"])
+        self.assertTrue(watch["ready_line_reached"])
+        self.assertEqual(watch["missing_markers"], [])
         self.assertTrue(watch["game_exited"])
         self.assertFalse(watch["timed_out"])
         self.assertEqual(watch["exit_code_source"], "runner")
@@ -217,8 +276,23 @@ class WatchLoopTest(unittest.TestCase):
         watch, _killed = self.watch("booting\nREADY\n", ready=["READY"], markers=["MARKER"])
         self.assertEqual(watch["stop_reason"], checks.STOP_READY_TIMEOUT)
         self.assertFalse(watch["ready_reached"])
+        # The ready line was there — the *marker* was the half that failed. That
+        # distinction is exactly what the report has to carry.
+        self.assertTrue(watch["ready_line_reached"])
+        self.assertEqual(watch["missing_markers"], ["MARKER"])
         self.assertTrue(watch["game_exited"])
         self.assertFalse(watch["timed_out"])
+
+    def test_a_ready_line_that_never_appears_is_visible_as_such(self):
+        # A ready line that never lands is bounded by the watchdog, so the env gets
+        # a short budget here: the point is the reported halves, not the waiting.
+        watch, _killed = self.watch("booting\nMARKER\n", ready=["READY"], markers=["MARKER"],
+                                    timeout_sec=1)
+        self.assertTrue(watch["timed_out"])
+        self.assertIsNone(watch["stop_reason"])
+        self.assertFalse(watch["ready_reached"])
+        self.assertFalse(watch["ready_line_reached"])
+        self.assertEqual(watch["missing_markers"], [])
 
     def test_a_ready_timeout_still_lets_exit_code_zero_pass(self):
         watch, _killed = self.watch("booting\nREADY\n", ready=["READY"], markers=["MARKER"])
@@ -249,6 +323,77 @@ class WatchLoopTest(unittest.TestCase):
         self.assertTrue(watch["ready_reached"], "no ready_when means no readiness gate")
         self.assertFalse(watch["timed_out"])
         kill.assert_not_called()
+
+
+class HandoffTest(unittest.TestCase):
+    """A launcher CLI that exits at once may have handed the launch to another Prism."""
+
+    def setUp(self):
+        self._home = support.temp_home()
+        self.home = self._home.__enter__()
+        self.addCleanup(self._home.__exit__, None, None, None)
+        self.env = support.mk_env(ready_when={"value": "READY"},
+                                  checks=[{"type": "log_contains", "value": "MARKER"}])
+        self.ready_values, self.markers = runner.readiness_rule(self.env)
+
+    def watch(self, *, pids_sequence, launcher_exit=0, grace=0.2, owners=()):
+        calls = {"n": 0}
+
+        def fake_pids(*args, **kwargs):
+            index = min(calls["n"], len(pids_sequence) - 1)
+            calls["n"] += 1
+            return pids_sequence[index]
+
+        kills = []
+        # The log deliberately never carries the ready line, so the loop cannot
+        # stop on readiness and the handoff path is the only way out.
+        with mock.patch.object(instance, "game_pids", side_effect=fake_pids), \
+                mock.patch.object(instance, "kill_process_tree",
+                                  side_effect=lambda pids, **kw: kills.append(list(pids))), \
+                mock.patch.object(runner, "_other_launchers", return_value=list(owners)), \
+                mock.patch.object(runner, "POLL_SEC", 0.01), \
+                mock.patch.object(runner, "HANDOFF_GRACE_SEC", grace):
+            watch = runner._watch(self.env, "unit", _FakeProc(code=launcher_exit),
+                                  _FakeFollower("booting\n"), time.time(),
+                                  log=lambda *_: None, ready_values=self.ready_values,
+                                  markers=self.markers)
+        return watch, kills
+
+    def test_a_late_game_is_still_seen_instead_of_reported_as_a_missing_session(self):
+        # the CLI is gone at once; the game only shows up a moment later, exactly
+        # what a handoff to a running Prism process looks like.
+        watch, _kills = self.watch(pids_sequence=[[], [], [], [999], []], owners=["4242"])
+        self.assertTrue(watch["game_started"], "the handoff's game must not be missed")
+        self.assertEqual(watch["exit_code_source"], "handoff")
+        self.assertIsNone(watch["stop_reason"], "no readiness rule, so nothing stops it early")
+        self.assertTrue(any("handed off" in note for note in watch["notes"]), watch["notes"])
+        self.assertTrue(watch["game_exited"])
+
+    def test_the_note_says_nothing_was_found_when_there_is_no_other_launcher(self):
+        watch, _kills = self.watch(pids_sequence=[[], []], owners=())
+        self.assertFalse(watch["game_started"])
+        self.assertTrue(any("waiting up to" in note for note in watch["notes"]), watch["notes"])
+        self.assertFalse(any("handed off" in note for note in watch["notes"]))
+
+    def test_the_grace_is_bounded(self):
+        watch, _kills = self.watch(pids_sequence=[[]], grace=0.05)
+        self.assertFalse(watch["game_started"])
+        self.assertFalse(watch["timed_out"], "a missing launch is not a watchdog timeout")
+
+    def test_a_failing_launch_still_fails_the_session_check(self):
+        watch, _kills = self.watch(pids_sequence=[[]], launcher_exit=1, grace=0.05)
+        self.assertFalse(watch["game_started"])
+        self.assertFalse(watch["timed_out"])
+        self.assertEqual(watch["exit_code"], 1)
+
+    def test_other_launchers_are_matched_on_the_data_root(self):
+        table = {
+            10: (1, f"/opt/homebrew/bin/prismlauncher -d {paths.prism_root()} --launch x"),
+            11: (1, "/Applications/Prism Launcher.app/Contents/MacOS/prismlauncher"),
+            12: (1, "/usr/bin/java -jar someone-elses-launcher.jar"),
+        }
+        with mock.patch.object(instance, "process_table", return_value=table):
+            self.assertEqual(runner._other_launchers(), ["10"])
 
 
 if __name__ == "__main__":

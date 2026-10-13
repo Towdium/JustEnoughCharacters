@@ -422,6 +422,124 @@ class IsolationTest(unittest.TestCase):
         self.assertIn("mods:", report.summary())
 
 
+class OverrideStagingTest(unittest.TestCase):
+    """The pack's non-mod overrides (options.txt, the world seed) are re-staged every run."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.tmp = paths.Path(self._tmp.name)
+        self.root = self.tmp / "prism"
+        self.instance_id = "unit-instance"
+        self.directory = support.instance_dir_with(self.root, self.instance_id)
+        self.minecraft = self.directory / "minecraft"
+        for name in ("mods", "config", "saves", "logs"):
+            (self.minecraft / name).mkdir(parents=True, exist_ok=True)
+        self.run_dir = self.tmp / "runs" / "unit"
+        self.jar = support.write_jar(self.tmp / "jei.jar", mod_id="jei")
+        self.resolved = support.resolved_env(support.mk_env(), [support.artifact("jei", self.jar)])
+
+    def pack_result(self, *, overrides=("options.txt", "saves/jechworld"), digest="d" * 64):
+        pack_dir = self.run_dir / "pack"
+        overrides_dir = pack_dir / "overrides"
+        (overrides_dir / "mods").mkdir(parents=True, exist_ok=True)
+        if "options.txt" in overrides:
+            (overrides_dir / "options.txt").write_text("onboardAccessibility:true\n", encoding="utf-8")
+        if "saves/jechworld" in overrides:
+            world = overrides_dir / "saves" / "jechworld"
+            (world / "region").mkdir(parents=True, exist_ok=True)
+            (world / "level.dat").write_bytes(b"seed level")
+            (world / "region" / "r.0.0.mca").write_bytes(b"seed region")
+        return pack.PackResult(
+            pack_dir=pack_dir, index_path=pack_dir / "modrinth.index.json",
+            mrpack_path=self.run_dir / "unit.mrpack", pack_hash="deadbeef",
+            mod_filenames=[], version_id="unit", dependencies={},
+            extra_overrides=list(overrides), world="jechworld" if "saves/jechworld" in overrides else None,
+            world_digest=digest,
+        )
+
+    def isolate(self, pack_result):
+        return instance.isolate(self.instance_id, self.resolved, self.run_dir,
+                                root=self.root, pack_result=pack_result, log=lambda *_: None)
+
+    def test_the_options_preset_and_the_world_land_in_the_game_directory(self):
+        report = self.isolate(self.pack_result())
+        self.assertEqual((self.minecraft / "options.txt").read_text(encoding="utf-8"),
+                         "onboardAccessibility:true\n")
+        self.assertEqual((self.minecraft / "saves" / "jechworld" / "level.dat").read_bytes(),
+                         b"seed level")
+        self.assertEqual(report.overrides_staged, ["options.txt", "saves/jechworld"])
+        self.assertIn("saves/jechworld", report.summary())
+        self.assertIn("saves/jechworld", report.to_json()["overridesStaged"])
+
+    def test_a_world_a_previous_run_played_in_is_replaced_by_the_seed(self):
+        stale = self.minecraft / "saves" / "jechworld"
+        (stale / "region").mkdir(parents=True)
+        (stale / "level.dat").write_bytes(b"stale level")
+        (stale / "playerdata").mkdir(parents=True)
+        (self.minecraft / "options.txt").write_text("onboardAccessibility:false\n", encoding="utf-8")
+        self.isolate(self.pack_result())
+        self.assertEqual((stale / "level.dat").read_bytes(), b"seed level")
+        self.assertFalse((stale / "playerdata").exists(), "the staged world must not merge")
+        self.assertEqual((self.minecraft / "options.txt").read_text(encoding="utf-8"),
+                         "onboardAccessibility:true\n")
+
+    def test_a_pack_without_a_world_stages_only_the_preset(self):
+        report = self.isolate(self.pack_result(overrides=("options.txt",)))
+        self.assertEqual(report.overrides_staged, ["options.txt"])
+        self.assertEqual(sorted(p.name for p in (self.minecraft / "saves").iterdir()), [])
+
+    def test_a_declared_override_missing_from_the_pack_is_an_error(self):
+        result = self.pack_result()
+        (result.overrides_dir() / "options.txt").unlink()
+        with self.assertRaises(ConfigError):
+            self.isolate(result)
+
+    def test_isolation_without_a_pack_result_behaviour_is_unchanged(self):
+        report = instance.isolate(self.instance_id, self.resolved, self.run_dir, root=self.root,
+                                  log=lambda *_: None)
+        self.assertEqual(report.overrides_staged, [])
+        self.assertFalse((self.minecraft / "options.txt").exists())
+
+
+class LaunchCommandTest(unittest.TestCase):
+    """The launch line is where the world actually gets joined."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.tmp = paths.Path(self._tmp.name)
+
+    def command(self, **kwargs):
+        captured = {}
+
+        def fake_popen(command, **popen_kwargs):
+            captured["command"] = list(command)
+            return mock.Mock(pid=4242)
+
+        with mock.patch.object(instance, "prism_launcher", return_value="prismlauncher"), \
+                mock.patch.object(instance.subprocess, "Popen", side_effect=fake_popen):
+            instance.launch("unit-instance", root=self.tmp / "prism",
+                            log_path=self.tmp / "launcher.log", log=lambda *_: None, **kwargs)
+        return captured["command"]
+
+    def test_a_world_is_joined_through_prisms_own_world_option(self):
+        command = self.command(world="jechworld")
+        self.assertEqual(command, ["prismlauncher", "-d", str(self.tmp / "prism"),
+                                   "--launch", "unit-instance", "--world", "jechworld"])
+
+    def test_without_a_world_no_world_option_is_passed(self):
+        command = self.command()
+        self.assertEqual(command, ["prismlauncher", "-d", str(self.tmp / "prism"),
+                                   "--launch", "unit-instance"])
+        self.assertNotIn("--world", command)
+        self.assertNotIn("--", command, "a bare -- is not a game-argument passthrough")
+
+    def test_extra_arguments_still_come_last(self):
+        command = self.command(world="jechworld", extra_args=["--alive"])
+        self.assertEqual(command[-3:], ["--world", "jechworld", "--alive"])
+
+
 class ProcessHelpersTest(unittest.TestCase):
     def test_descendants_walks_the_tree(self):
         table = {1: (0, "root"), 2: (1, "child"), 3: (2, "grandchild"), 4: (0, "other")}

@@ -9,7 +9,7 @@ import tempfile
 import zipfile
 from pathlib import Path
 
-from lib import envs, resolve
+from lib import envs, resolve, worlds
 from lib.util import sha1_file
 
 
@@ -107,3 +107,54 @@ def instance_dir_with(root, instance_id, *, cfg=True):
             encoding="utf-8",
         )
     return directory
+
+
+def seed_info(root, *, name="jechworld", mc="1.21.1", payload=b"level data", digest=None):
+    """A :class:`worlds.SeedInfo` over a throwaway tree, for tests that only stage it."""
+    directory = Path(root)
+    tree = directory / worlds.WORLD_DIRNAME
+    (tree / "region").mkdir(parents=True, exist_ok=True)
+    (tree / "level.dat").write_bytes(payload)
+    (tree / "region" / "r.0.0.mca").write_bytes(b"region data")
+    (tree / "session.lock").write_bytes(b"\x00" * 8)
+    files = worlds.file_manifest(tree)
+    return worlds.SeedInfo(
+        mc=mc, name=name, digest=digest or worlds.manifest_digest(mc, name, files),
+        directory=directory, files=files,
+        bytes_total=sum(entry["size"] for entry in files),
+        source={"server": f"vanilla-{mc}", "levelType": "flat"},
+        generated_at="2026-01-01T00:00:00+0000",
+    )
+
+
+def write_world_seed(env, *, payload=b"level data", extra_files=(), with_lock=True,
+                     directory=None):
+    """Materialize a *cached* world seed for ``env`` under ``<JT_HOME>/cache/worlds``.
+
+    Writes exactly what ``worlds._store_seed`` writes (a ``world/`` tree plus a
+    manifest whose digest covers it), so the fixture exercises the real cache
+    verification instead of a stub. Returns the verified :class:`worlds.SeedInfo`.
+    """
+    directory = Path(directory) if directory is not None else worlds.seed_dir(env)
+    tree = directory / worlds.WORLD_DIRNAME
+    (tree / "region").mkdir(parents=True, exist_ok=True)
+    (tree / "level.dat").write_bytes(payload)
+    (tree / "region" / "r.0.0.mca").write_bytes(b"region data")
+    for name, content in extra_files:
+        (tree / name).write_bytes(content)
+    if with_lock:
+        (tree / "session.lock").write_bytes(b"\x00" * 8)
+    files = worlds.file_manifest(tree)
+    manifest = {
+        "schema": worlds.SEED_SCHEMA,
+        "mc": env.mc,
+        "name": env.world.name,
+        "digest": worlds.manifest_digest(env.mc, env.world.name, files),
+        "files": files,
+        "source": {"server": f"vanilla-{env.mc}", "levelType": "flat", "seed": "unit"},
+        "generatedAt": "2026-01-01T00:00:00+0000",
+    }
+    (directory / worlds.MANIFEST_NAME).write_text(json.dumps(manifest), encoding="utf-8")
+    info = worlds.verify_seed(env.mc, env.world.name, directory)
+    assert info is not None, "the fixture must produce a verifiable seed"
+    return info

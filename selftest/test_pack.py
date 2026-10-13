@@ -8,7 +8,7 @@ import unittest
 import zipfile
 from pathlib import Path
 
-from lib import pack
+from lib import options, pack
 from lib.errors import ConfigError, DependencyError
 
 from . import support
@@ -20,7 +20,8 @@ class PackTest(unittest.TestCase):
         self.addCleanup(self._tmp.cleanup)
         self.tmp = Path(self._tmp.name)
 
-    def build(self, *, env=None, jars=(("jei", "jei.jar"), ("jech", "jecharacters.jar"))):
+    def build(self, *, env=None, jars=(("jei", "jei.jar"), ("jech", "jecharacters.jar")),
+              seed=None):
         env = env or support.mk_env()
         artifacts = []
         for index, (name, filename) in enumerate(jars):
@@ -28,7 +29,7 @@ class PackTest(unittest.TestCase):
             artifacts.append(support.artifact(name, jar, role="jech" if name == "jech" else "mod"))
         resolved = support.resolved_env(env, artifacts)
         run_dir = self.tmp / "runs" / "unit-run"
-        result = pack.build_pack(env, resolved, run_dir, log=lambda *_: None)
+        result = pack.build_pack(env, resolved, run_dir, seed=seed, log=lambda *_: None)
         return env, resolved, result, run_dir
 
     def test_index_declares_the_loader_and_leaves_files_empty(self):
@@ -115,6 +116,80 @@ class PackTest(unittest.TestCase):
         _env, _resolved, result, _run_dir = self.build()
         from_disk = pack.read_index_file(result.index_path)
         self.assertEqual(from_disk, pack.read_index(result.mrpack_path))
+
+
+class OverridesTest(unittest.TestCase):
+    """Beyond ``mods/``: the options preset and the world seed an env is launched into."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.tmp = Path(self._tmp.name)
+
+    def build(self, env, *, seed=None):
+        jar = support.write_jar(self.tmp / "cache" / "jei.jar", mod_id="jei")
+        resolved = support.resolved_env(env, [support.artifact("jei", jar)])
+        return pack.build_pack(env, resolved, self.tmp / "runs" / "unit-run", seed=seed,
+                               log=lambda *_: None)
+
+    def test_the_options_preset_is_in_the_pack_and_in_its_build_dir(self):
+        result = self.build(support.mk_env())
+        self.assertEqual(result.extra_overrides, ["options.txt"])
+        self.assertIn("overrides/options.txt", pack.listed_overrides(result.mrpack_path))
+        staged = result.overrides_dir() / "options.txt"
+        self.assertEqual(staged.read_text(encoding="utf-8"), options.render())
+        self.assertIn("onboardAccessibility:true", options.render())
+
+    def test_an_env_without_a_world_stages_no_saves_tree(self):
+        result = self.build(support.mk_env())
+        self.assertIsNone(result.world)
+        self.assertIsNone(result.world_digest)
+        self.assertNotIn("saves", result.extra_overrides)
+        self.assertEqual([name for name in pack.listed_overrides(result.mrpack_path)
+                          if "/saves/" in name], [])
+
+    def test_a_declared_world_is_staged_into_overrides_saves(self):
+        env = support.mk_env(world={"name": "jechworld"})
+        seed = support.seed_info(self.tmp / "seed")
+        result = self.build(env, seed=seed)
+        self.assertEqual(result.world, "jechworld")
+        self.assertEqual(result.world_digest, seed.digest)
+        self.assertEqual(result.extra_overrides, ["options.txt", "saves/jechworld"])
+        staged = result.overrides_dir() / "saves" / "jechworld"
+        self.assertTrue((staged / "level.dat").is_file())
+        self.assertFalse((staged / "session.lock").exists())
+        listed = pack.listed_overrides(result.mrpack_path)
+        self.assertIn("overrides/saves/jechworld/level.dat", listed)
+        self.assertIn("overrides/saves/jechworld/region/r.0.0.mca", listed)
+
+    def test_a_declared_world_without_a_seed_is_an_error(self):
+        env = support.mk_env(world={"name": "jechworld"})
+        with self.assertRaises(DependencyError) as caught:
+            self.build(env)
+        self.assertIn("jt seed-world", str(caught.exception))
+
+    def test_staging_a_world_replaces_a_previous_one(self):
+        env = support.mk_env(world={"name": "jechworld"})
+        first = support.seed_info(self.tmp / "seed-a")
+        stale = self.tmp / "seed-old"
+        (stale / "world").mkdir(parents=True)
+        (stale / "world" / "old.mca").write_bytes(b"old")
+        result = self.build(env, seed=support.seed_info(stale))
+        self.assertTrue(result.overrides_dir().joinpath("saves", "jechworld", "old.mca").is_file())
+        result = self.build(env, seed=first)
+        self.assertFalse(result.overrides_dir().joinpath("saves", "jechworld", "old.mca").exists())
+
+    def test_the_world_does_not_change_the_instance_reuse_hash(self):
+        """The instance is keyed on the modset; the world is re-staged every run."""
+        plain = support.mk_env()
+        with_world = support.mk_env(world={"name": "jechworld"})
+        seed = support.seed_info(self.tmp / "seed")
+        jar = support.write_jar(self.tmp / "cache" / "jei.jar", mod_id="jei")
+        artifacts = [support.artifact("jei", jar)]
+        self.assertEqual(pack.modset_hash(plain, support.resolved_env(plain, artifacts)),
+                         pack.modset_hash(with_world, support.resolved_env(with_world, artifacts)))
+        result = self.build(with_world, seed=seed)
+        self.assertEqual(result.pack_hash, pack.modset_hash(with_world, support.resolved_env(with_world, artifacts)))
 
 
 if __name__ == "__main__":

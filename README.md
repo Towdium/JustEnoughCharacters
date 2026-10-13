@@ -25,23 +25,38 @@ python3 jt resolve tag:fabric --exclude tag:112
 python3 jt resolve --list <env>       # show the candidate files a description would match
 python3 jt resolve --no-download <env># pin only
 
+python3 jt seed-world 1.21.1-neoforge # build (or reuse) the world an env is launched into
+
 python3 jt run all --exclude tag:experimental    # build, isolate, launch, judge
 python3 jt run 1.12.2-forge-jei-legacy
+python3 jt run all --exclude tag:experimental --exclude tag:skip  # run only what runs
 
 python3 jt verify runs/<id>           # re-check a run's report.json; non-zero unless it passed
 python3 jt selftest                   # the harness's own offline unit tests
 ```
 
 `jt run` is strictly serial on purpose: a 16 GB machine cannot host two modded
-Minecraft clients at once.
+Minecraft clients at once. `jt seed-world` is serial for the same reason — it
+runs a vanilla dedicated server.
 
 ## What a run does
 
 1. **Resolve** the env (pinning anything still unresolved) and download every jar
    into the cache; the JECh artifact is used in place from its build directory.
-2. **Render the pack** into `runs/<id>/pack` — `files` empty, every jar in
-   `overrides/mods/`. It is kept as the run's exact input record.
-3. **Materialize the instance** — write the env's Prism instance directly:
+   An env that declares **`skip`** stops right here: nothing is resolved, nothing
+   is launched, and the report records `SKIP` with the reason (never a pass — see
+   "States" below).
+2. **Build the world seed** when the env declares `world` and the cache has none:
+   the vanilla dedicated server of the env's own Minecraft version generates a
+   small superflat world, which is cached (content-hashed, ~3.3 MiB for 1.21.1)
+   under `<JT_HOME>/cache/worlds/<mc>-<name>`. A cached seed is re-hashed and
+   reused; a rebuild lays out the same landscape but is not byte-identical
+   (`level.dat` timestamps), and nothing depends on that.
+3. **Render the pack** into `runs/<id>/pack` — `files` empty, every jar in
+   `overrides/mods/`, plus the preset `overrides/options.txt` and, when the env
+   declares `world`, `overrides/saves/<name>/`. It is kept as the run's exact
+   input record.
+4. **Materialize the instance** — write the env's Prism instance directly:
    `instance.cfg` (java, memory, window) plus `mmc-pack.json` (the Minecraft and
    loader components). Memory goes in `MinMemAlloc`/`MaxMemAlloc` with
    `OverrideMemory=true` and the heap stays out of `JvmArgs`: Prism treats
@@ -58,21 +73,44 @@ Minecraft clients at once.
    the CLI keeps the main window open afterwards instead of exiting — a headless
    run can never finish it. Writing the two files Prism reads is the same import
    without its UI, and it is the only dialog-free path.
-4. **Isolate**: re-sync `mods/` from the pack, archive then empty `config/`,
-   empty `saves/` and `logs/`. A stale instance can never influence a verdict.
-5. **Launch** `prismlauncher -d <root> --launch <instance>` and follow
-   `logs/latest.log`, accepting only a file newer than the run start.
-6. **Watchdog** on `timeout_sec`: it kills the process tree and the run fails.
-7. **Stop when ready**: an env may declare `ready_when` — a log line that means
+5. **Isolate**: re-sync `mods/` from the pack, archive then empty `config/`,
+   empty `saves/` and `logs/`, and re-stage the pack's non-mod overrides
+   (`options.txt`, `saves/<world>`) into the game directory. A stale instance can
+   never influence a verdict: a world a previous run played in is replaced by the
+   seed, and an `options.txt` the game rewrote is replaced by the preset.
+6. **Launch** `prismlauncher -d <root> --launch <instance> [--world <name>]` and
+   follow `logs/latest.log`, accepting only a file newer than the run start.
+   `--world` is Prism's own *join world on launch* option; the game-argument
+   passthrough (`-- --quickPlaySingleplayer …`) and the patches-JSON alternative
+   are both rejected, with measurements, in [envs/README.md](envs/README.md).
+7. **Watchdog** on `timeout_sec`: it kills the process tree and the run fails.
+8. **Stop when ready**: an env may declare `ready_when` — a log line that means
    the game got up. Once that line *and* every `log_contains` marker are in the
    log, the runner ends the instance's process tree itself and goes straight to
    judging (`stop_reason: goal-reached`, recorded in the report), so a run does
    not have to wait for a game that will never quit on its own. If the ready line
    lands but a marker never arrives, the run is bounded by a grace period and
    then stopped too (`stop_reason: ready-timeout`), so a broken assertion becomes
-   a FAIL rather than a watchdog kill.
-8. **Judge**: the env's checks plus three always-present `internal:` checks, then
+   a FAIL rather than a watchdog kill. When the launcher CLI exits within a
+   second — Prism handing the launch off to a Prism process that already owns the
+   data root — the runner keeps watching for a bounded grace instead of reading
+   it as "no session".
+9. **Judge**: the env's checks plus three always-present `internal:` checks, then
    write `report.json`, `report.txt` and `junit.xml`.
+
+## States
+
+| state | what it means | exit code |
+| --- | --- | --- |
+| `PASS` | every check of the env passed | 0 |
+| `FAIL` | a check failed, or the run/config was broken | 1 (check) / 2 (config) / 3 (watchdog) |
+| `SKIP` | the env was **not executed** — either a declared `skip`, or a check whose precondition was missing | 1 |
+
+A `SKIP` is never a pass and never silently green: an env with a declared `skip`
+is listed with its reason in `report.txt`, counted in `totals.skipped`, given a
+`<skipped>` testcase in `junit.xml`, and the selection exits 1. Hiding it takes
+an explicit `--exclude tag:skip`. Skipped envs and skipped checks are different
+totals (`totals.skipped` counts envs, `totals.checksSkipped` counts checks).
 
 ## Layout
 
@@ -88,6 +126,8 @@ Everything jt writes lives under **`JT_HOME`**, resolved in this order:
 <JT_HOME>/
   cache/http/    cached API responses (one json per request, no header values)
   cache/mods/    downloaded jars, reused when the sha1 still matches
+  cache/servers/ vanilla server jars, one per Minecraft version (jt seed-world)
+  cache/worlds/  world seeds: <mc>-<name>/world plus a manifest with per-file hashes
   prism/         the Prism data root jt imports into (never the user's own launcher)
   runs/<id>/     report.json, report.txt, junit.xml, run.json, game.log, launcher.log, pack/
   state.json     env -> instance mapping plus the modset hash that justified the reuse
@@ -95,9 +135,10 @@ Everything jt writes lives under **`JT_HOME`**, resolved in this order:
 ```
 
 Repository layout: `jt` is the entry point, `lib/` the implementation (paths,
-envs, resolve, pack, instance, runner, checks, report, cfapi, mrapi, net, secrets,
-select, modmatch, util, errors), `envs/` the test matrix
-([envs/README.md](envs/README.md) is the schema), `selftest/` the offline tests.
+envs, resolve, pack, options, worlds, mojang, instance, runner, checks, report,
+cfapi, mrapi, net, secrets, select, modmatch, util, errors), `envs/` the test
+matrix ([envs/README.md](envs/README.md) is the schema), `selftest/` the offline
+tests.
 
 ## Secrets
 
@@ -116,14 +157,15 @@ allowed, holding `CF_API_KEY=...`.
 | code | meaning |
 | --- | --- |
 | `0` | every check passed |
-| `1` | a check failed, the selection matched nothing, or the report is missing/corrupt (fail-closed) |
+| `1` | a check failed, an env was skipped, the selection matched nothing, or the report is missing/corrupt (fail-closed) |
 | `2` | bad usage, a broken env file, an unresolvable dependency, a missing external tool |
 | `3` | the run exceeded `timeout_sec` (the watchdog fired) |
 
 A multi-env selection reports the highest code it saw. `SKIP` is never a pass: a
 check whose precondition is absent (no new game session, no instance directory)
-skips, while the `internal:` checks FAIL for exactly that reason, so a run with
-missing evidence cannot come out green.
+skips, an env that declares `skip` is not executed at all, and both keep the
+selection red — while the `internal:` checks FAIL for exactly the missing
+evidence, so a run whose evidence is absent cannot come out green.
 
 ## Environment variables
 
@@ -167,30 +209,46 @@ number — `-v 8` matches nothing and silently returns the newest installed JDK
 * Only one Prism Launcher process may own a data root at a time. Prism's CLI
   hands off over a local socket to an instance already running for that root, so
   a leftover launcher from an earlier run turns the next `--launch` into a
-  `handoff` (and a half-second "run"). Nothing in jt detects that today; a CI job
-  should run one env at a time and start from a clean root.
+  handoff. The runner no longer mistakes that for "no session" — it watches for
+  `HANDOFF_GRACE_SEC` and records the handoff plus the other launcher's pid in
+  the run notes — but a CI job should still run one env at a time and start from
+  a clean root, because a handoff means the launch is owned by a process jt did
+  not start.
+* **World seeds and CI.** The seed is built by a vanilla *dedicated server*, so a
+  CI job that runs a world-launched env needs a JDK for that env's major version
+  (already required) and a writable `<JT_HOME>`: the server jar is ~52 MB per
+  version, a seed is ~3.4 MB, and both are cached, so a job pays for them once if
+  the cache is the runner's cache directory. `jt seed-world --exclude tag:skip`
+  builds every seed the matrix needs before the game jobs start.
+* The `1.21.1` rows reach their JEI marker **only with the world loaded**, which
+  is why they declare `world`. The `mv-1.19.2` rows cannot: quick play needs
+  1.20+, so they carry `skip` and a CI selection must decide explicitly whether to
+  exclude them (`--exclude tag:skip`) or accept exit code 1 with the skips named.
+  `moderner-1.21.10` and `26.1.2` are ≥ 1.20 and *could* take a world the same
+  way; they have not been measured yet, so they keep their startup markers.
 * **Known limitation:** a production instance logs at INFO, so DEBUG-level lines
   are not in `latest.log`. The modern line's transformer hit line is exactly such
   a line (`Transformed <class> with <Transformer>`, logged at DEBUG by the
   coremod), so how many classes JECh actually patched cannot be asserted today;
   raising the log4j level for the run is a follow-up, after which those checks can
   be added.
-* **Known limitation:** a run stops at the main menu and loads no world, but some
-  registration work only happens once a world exists. JEI 19.x runs most of its
-  plugin phases — including `registerAdvancedSearch`, the phase that logs JECh's
-  `Registering JEI pinyin search storage` — when a level is loaded, so the whole
-  "JEI plugin present" check family (moderner ×4, 1.21.1 ×2, mv-1.20.1 ×2,
-  mv-1.19.2 ×2) cannot pass on a real `jt run` today: the marker is absent from a
-  65-line main-menu `latest.log` and appears at line 98 the moment a world is
-  joined. The fix is a world-load path in the harness (quick-play plus a staged
-  world), not a weaker assertion; see [envs/README.md](envs/README.md).
+* **Resolved limitation (was): world load.** A run used to stop at the main menu,
+  and JEI 19.x runs `registerAdvancedSearch` — the phase that logs JECh's
+  `Registering JEI pinyin search storage` — only once a level exists. The harness
+  now generates a world seed with the vanilla server (`jt seed-world`), stages it
+  as `saves/jechworld`, and launches the instance through Prism's `--world`
+  option, so the whole "JEI plugin present" family is assertable: both 1.21.1 rows
+  pass on a real run (`stopReason: goal-reached`). See
+  [envs/README.md](envs/README.md) for the rejected launch paths and the seed
+  recipe.
 
 ## Env matrix
 
 16 envs: every (version line, loader) pair, all tagged `smoke`. The
 `experimental` rows have doubtful upstream version pins, `legacy` marks the
-1.12.2 JEI row. Per-env loader/java/target versions, the check families and the
-resolution rules are in [envs/README.md](envs/README.md).
+1.12.2 JEI row, and any env that declares `skip` is also tagged `skip`. Per-env
+loader/java/target versions, the check families and the resolution rules are in
+[envs/README.md](envs/README.md).
 
 | version line | mc | neoforge | fabric | forge |
 | --- | --- | --- | --- | --- |
@@ -213,6 +271,9 @@ python3 jt resolve all --exclude tag:experimental && python3 jt run all --exclud
 * Prism Launcher with its CLI (`JT_PRISM_LAUNCHER` if not on `PATH`), and a
   Minecraft account configured in the Prism root jt uses.
 * The JDKs the envs ask for (8, 17, 21, 25) — each env names only a major
-  version, and the lookup is per-platform (see the table above).
+  version, and the lookup is per-platform (see the table above). The world seeder
+  uses the same lookup for its dedicated server.
 * Built JECh jars for the version line under test, in their checkouts.
 * `CF_API_KEY` for CurseForge resolutions (JEI, fabric-api); Modrinth needs none.
+* Network for two Mojang endpoints when a world seed is built
+  (`piston-meta.mojang.com`); a cached seed needs none.

@@ -1,4 +1,4 @@
-"""The ``jt`` command line: envs, resolve, run, verify, selftest.
+"""The ``jt`` command line: envs, resolve, seed-world, run, verify, selftest.
 
 The dispatch table is small on purpose. Every command either prints what it
 found (``envs``, ``resolve --list``), writes a verdict (``run``, ``selftest``) or
@@ -13,7 +13,9 @@ import json
 import sys
 import unittest
 
-from . import __version__, envs as envs_mod, paths, report as report_mod, resolve, runner
+from . import __version__, envs as envs_mod, instance, paths, report as report_mod, resolve
+from . import runner, worlds
+from .errors import JtError
 
 EXAMPLE_TAG = "example"
 
@@ -38,6 +40,16 @@ def build_parser():
     resolving.add_argument("--list", dest="list_candidates", action="store_true",
                            help="print the candidate files each description resolves against, then exit")
     resolving.set_defaults(func=cmd_resolve)
+
+    seeding = sub.add_parser(
+        "seed-world",
+        help="generate (or reuse) the env's world seed with the vanilla server for its mc version",
+    )
+    seeding.add_argument("selection", help="env name or expression: all | name | a,b | tag:x | regex:x")
+    seeding.add_argument("--exclude", default=None, help="a second expression subtracting from the first")
+    seeding.add_argument("--refresh", action="store_true",
+                         help="rebuild the seed even when the cache verifies against its manifest")
+    seeding.set_defaults(func=cmd_seed_world)
 
     running = sub.add_parser("run", help="build, isolate, launch and judge every selected env")
     running.add_argument("selection", help="env name or expression: all | name | a,b | tag:x | regex:x")
@@ -82,9 +94,49 @@ def cmd_envs(args, log=print):
         log(f"{env.name:28} {env.mod_label:28} {env.java_version:>4} {mods:>5} "
             f"{len(env.checks):>6}  {','.join(env.tags) or '-'}")
         log(f"{'':28} jech: {env.jech.source} ({jech_state})  file: {paths.display(env.path)}")
+        if env.world is not None:
+            log(f"{'':28} world: {env.world.name} (saves/{env.world.name}, seeded by "
+                "jt seed-world)")
+        if env.skip:
+            log(f"{'':28} skip: {env.skip}")
         if EXAMPLE_TAG in env.tags:
             log(f"{'':28} note: tagged '{EXAMPLE_TAG}' - a schema example, not a runnable version line")
     return 0
+
+
+def cmd_seed_world(args, log=print):
+    """Build (or verify and reuse) the world seed every env launched into a world needs.
+
+    An env that declares no world is a no-op, not a failure — it does not need a
+    seed. But a selection in which *nothing* needs one exits 1 and says so: that
+    is the same fail-closed rule the empty selection follows, because a command
+    that verified nothing must not read as success.
+    """
+    paths.ensure_data_dirs()
+    loaded = envs_mod.load_all()
+    selected = _select(loaded, args.selection, args.exclude, log=log)
+    if not selected:
+        return 1
+    wanted = [env for env in selected if env.world is not None]
+    for env in selected:
+        if env.world is None:
+            log(f"{env.name}: declares no world, so there is nothing to seed")
+    if not wanted:
+        log(f"none of the {len(selected)} selected env(s) declares a world; nothing was seeded "
+            "(this is never reported as a pass)")
+        return 1
+    failures = 0
+    for env in wanted:
+        try:
+            seed = worlds.ensure_seed(env, java_home=lambda: instance.java_home_for(env.java_version),
+                                      refresh=args.refresh, log=log)
+        except JtError as exc:
+            log(f"{env.name}: {type(exc).__name__}: {exc}")
+            failures += 1
+            continue
+        log(f"  {env.name}: {seed.describe()}")
+        log(f"  {env.name}: {paths.display(seed.directory)}")
+    return 1 if failures else 0
 
 
 def cmd_resolve(args, log=print):
@@ -170,6 +222,9 @@ def _env_json(env):
         "checks": [{"type": check.type, "name": check.name, "value": check.value}
                    for check in env.checks],
         "readyWhen": ({"value": env.ready_when.value} if env.ready_when is not None else None),
+        "skip": env.skip,
+        "world": ({"name": env.world.name, "savesPath": env.world.saves_path}
+                  if env.world is not None else None),
         "timeout_sec": env.timeout_sec,
         "jvm": {"max_mem_mb": env.jvm.max_mem_mb, "min_mem_mb": env.jvm.min_mem_mb,
                 "window": list(env.jvm.window)},

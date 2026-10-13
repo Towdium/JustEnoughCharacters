@@ -116,6 +116,46 @@ class EnvParsingTest(unittest.TestCase):
         self.assertIsNotNone(env.ready_when)
         self.assertEqual(env.ready_when.value, "Sound engine started")
 
+    def test_skip_is_optional_and_carries_the_reason(self):
+        self.assertIsNone(support.mk_env().skip)
+        env = support.mk_env(skip="  needs a world load  ")
+        self.assertEqual(env.skip, "needs a world load")
+
+    def test_a_skipped_env_carries_the_derived_skip_tag(self):
+        """So a selection can say 'only what runs' as --exclude tag:skip."""
+        plain = support.mk_env()
+        self.assertNotIn("skip", plain.tags)
+        skipped = support.mk_env(tags=["smoke"], skip="why not")
+        self.assertEqual(skipped.tags, ["smoke", "skip"])
+        self.assertEqual(support.mk_env(skip="x", tags=["skip"]).tags, ["skip"],
+                         "the tag is not added twice")
+
+    def test_the_derived_tag_is_never_written_back_to_the_file(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "unit.json"
+            path.write_text(json.dumps(support.env_dict(skip="why not")), encoding="utf-8")
+            env = envs.load_env(path)
+            self.assertIn("skip", env.tags)
+            env.write()
+            self.assertNotIn("skip", json.loads(path.read_text(encoding="utf-8"))["tags"])
+
+    def test_world_is_optional_and_names_the_saves_folder(self):
+        self.assertIsNone(support.mk_env().world)
+        env = support.mk_env(world={"name": "jechworld"})
+        self.assertEqual(env.world.name, "jechworld")
+        self.assertEqual(env.world.saves_path, "saves/jechworld")
+
+    def test_the_shipped_matrix_declares_the_world_and_the_skip(self):
+        """The env files are the record of what is verified and what is not."""
+        loaded = {env.name: env for env in envs.load_all()}
+        for name in ("1.21.1-neoforge", "1.21.1-fabric"):
+            self.assertEqual(loaded[name].world.name, "jechworld", name)
+            self.assertIsNone(loaded[name].skip, name)
+        for name in ("mv-1.19.2-forge", "mv-1.19.2-fabric"):
+            self.assertIn("needs world load", loaded[name].skip, name)
+            self.assertIsNone(loaded[name].world, name)
+            self.assertTrue(loaded[name].checks, "a skipped env keeps its checks as documentation")
+
 
 class EnvRejectionTest(unittest.TestCase):
     def reject(self, data, *needles):
@@ -233,6 +273,21 @@ class EnvRejectionTest(unittest.TestCase):
         self.reject(support.env_dict(ready_when={"value": "x", "timeout": 1}), "unknown key 'timeout'")
         self.reject(support.env_dict(ready_when="Sound engine started"),
                     'env.ready_when must be an object')
+
+    def test_skip_must_be_a_non_empty_string(self):
+        self.reject(support.env_dict(skip="  "), "env.skip must be a non-empty string")
+        self.reject(support.env_dict(skip=5), "env.skip must be a non-empty string")
+        self.reject(support.env_dict(skip=["why"]), "env.skip must be a non-empty string")
+
+    def test_world_requires_a_folder_name(self):
+        self.reject(support.env_dict(world={}), "missing required key 'name'")
+        self.reject(support.env_dict(world={"name": ""}), "must be a non-empty string")
+        self.reject(support.env_dict(world="jechworld"), 'env.world must be an object')
+        self.reject(support.env_dict(world={"name": "saves/jechworld"}),
+                    "must be a plain folder name")
+        self.reject(support.env_dict(world={"name": ".."}), "must be a plain folder name")
+        self.reject(support.env_dict(world={"name": "jechworld", "seed": 1}),
+                    "unknown key 'seed'")
 
     def test_all_problems_are_reported_together(self):
         message = self.reject(

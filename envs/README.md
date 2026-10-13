@@ -32,6 +32,7 @@ ignored too. Everything else must be listed below.
     { "type": "exit_code_zero", "name": "exit-code" }
   ],
   "ready_when": { "value": "Sound engine started" },
+  "world": { "name": "jechworld" },
   "timeout_sec": 600,
   "jvm": { "max_mem_mb": 3072, "min_mem_mb": 1024, "window": [1280, 720] }
 }
@@ -50,6 +51,8 @@ ignored too. Everything else must be listed below.
 | `mods` | yes | list, may be empty |
 | `checks` | yes | list, may be empty (but an env with no checks proves nothing) |
 | `ready_when` | no | `{"value": "<log line>"}`, the line that marks the game as up, see below |
+| `world` | no | `{"name": "<folder>"}`, the world the client is launched into, see below |
+| `skip` | no | a reason string: the env is **not executed**, see below |
 | `timeout_sec` | no | watchdog budget, default 600; the whole run is killed and the run fails with exit code 3 |
 | `jvm` | no | `{max_mem_mb, min_mem_mb, args, window}`; defaults 3072 / 1024 / `[]` / `[1280, 720]` |
 
@@ -108,7 +111,7 @@ Check types:
 | `no_crash_reports` | — | no new file appeared in `minecraft/crash-reports/` during the run |
 | `exit_code_zero` | — | the game ended healthy: the runner deliberately stopped it once it was ready, or the game itself exited 0 (SKIP when Prism handed off to an already-running instance *and* nothing ended it deliberately) |
 
-Two rules keep the checks honest:
+Three rules keep the checks honest:
 
 * A check whose precondition is missing **SKIPs** — it is never rendered as a
   pass. `log_*` checks SKIP when no new game session log appeared; `file_exists`
@@ -119,15 +122,141 @@ Two rules keep the checks honest:
   by default, so DEBUG-level lines (for example the transformer "hit" lines) are
   not in `latest.log` and must not be used in a check until the log4j level is
   raised by the harness.
-* A marker must be reached by a client that stops at the **main menu**. A
-  production `jt run` loads no world, and some registration work is deferred until
-  one exists: JEI 19.x runs most of its plugin phases (including
-  `registerAdvancedSearch`, which is what logs
-  `Registering JEI pinyin search storage`) only once a level is available, so that
-  marker never appears at the main menu no matter how long the run waits. A run
-  whose only evidence is such a marker cannot pass today; either assert a marker
-  emitted during startup, or give the harness a way to load a world first. Verify
-  every new marker against a real `latest.log` (step 4 of "Adding an env").
+* A marker that only appears **once a world is loaded** needs `world` (below).
+  JEI 19.x runs most of its plugin phases — including `registerAdvancedSearch`,
+  which is what logs `Registering JEI pinyin search storage` — at level load; a
+  run that stops at the main menu can never satisfy it, no matter how long it
+  waits. Declaring `world` moves the client into a level and the marker arrives
+  a second or two after the join. Verify every new marker against a real
+  `latest.log` (step 4 of "Adding an env").
+
+### `skip` — an env that is deliberately not executed
+
+```json
+"skip": "JEI registration check needs world load; quickPlay needs 1.20+"
+```
+
+`jt run` never launches a skipped env and never renders it as a pass: the run
+entry is `status: SKIP`, the report prints `[SKIP] <env> — <reason>`, and the
+process exits **1**. "Not verified" is not "verified fine", so hiding a skip
+takes an explicit `--exclude tag:skip`, not an inattentive reading of a green
+run. (An env that declares `skip` carries a derived `skip` *tag* for that
+selection; the tag is never written back into the env file.)
+
+`skip` blocks execution only. `jt envs` still lists the env, `jt resolve` still
+pins and downloads it, `jt seed-world` still maintains its world cache, and the
+env keeps its `checks` as the written-down statement of what it would assert
+(the reason string is what points at the missing capability).
+
+## Launching into a world (`world`)
+
+```json
+"world": { "name": "jechworld" }
+```
+
+An env with `world` is launched with Prism's own *join world on launch* option —
+`prismlauncher -d <root> --launch <instance> --world <name>` — and the seed for
+that world is staged as `saves/<name>/` inside the instance on every run.
+`--world` is a **first-class Prism option**, not a game-argument passthrough:
+Prism knows which game argument each Minecraft version wants
+(`--quickPlaySingleplayer` for 1.20+) and builds it itself. The two paths that
+were tried and rejected are recorded here so nobody re-treads them:
+
+* `prismlauncher --launch <id> -- --quickPlaySingleplayer <world>`: Qt parses
+  everything after `--` as a **positional url**, so the trailing arguments become
+  *resource imports* to the launcher, not game arguments. Measurement: with
+  `-- --quickPlaySingleplayer jechworld` the launcher opens and stays open, no
+  world is joined.
+* A per-instance `.minecraft/patches/*.json` version patch appending to
+  `arguments.game`: workable in principle, but it only ever duplicates what
+  Prism already does, and a patch file has to be kept in sync per loader. Not
+  used.
+
+Name restrictions: `world.name` must be a plain folder name
+(`[A-Za-z0-9][A-Za-z0-9 ._-]*`, not `.`/`..`, no separators) because it becomes
+one directory under `saves/` and one entry inside the pack.
+
+The seed itself is **built by the vanilla dedicated server of the env's own
+Minecraft version**, not by a client:
+
+```bash
+python3 jt seed-world 1.21.1-neoforge     # build (or verify and reuse) the seed
+python3 jt seed-world 1.21.1-neoforge --refresh   # rebuild even a verifying cache
+python3 jt seed-world tag:smoke --exclude tag:112
+```
+
+* the server jar comes from Mojang's `version_manifest_v2.json` → the version's
+  own json → `downloads.server`, is sha1-verified and cached in
+  `<JT_HOME>/cache/servers/server-<mc>.jar` (49.2 MB for 1.21.1);
+* it runs in a scratch directory with `eula.txt` accepted, `level-type=flat`,
+  `level-name=world` and small view/simulation distances, writes `Done (` to its
+  log, then stops over its stdin;
+* `world/` is copied to `<JT_HOME>/cache/worlds/<mc>-<name>/world` next to a
+  `manifest.json` carrying a per-file sha256 list and a digest over it (measured
+  for `1.21.1/jechworld`: 13 files, 3.32 MiB).
+
+An env that declares no world is a no-op here ("declares no world, so there is
+nothing to seed") and not a failure, so a broad selection works; but a selection
+in which *nothing* needs a seed exits 1 and says so, following the same
+fail-closed rule as an empty selection.
+
+The cache key is `(mc, world.name)`, so the two 1.21.1 envs share one seed. The
+manifest is what makes reuse honest: `jt seed-world` (and `jt run`, which builds
+a missing seed itself) re-hashes the tree on every lookup and rebuilds when it
+does not match, so a truncated or hand-edited world is never staged. The world
+tree's `session.lock` is deliberately excluded from the manifest and from
+staging — it is a session artefact that a client rewrites, not part of the seed.
+
+The digest identifies the build that is on disk, not a cross-machine constant:
+the world's *shape* is fixed (flat, a pinned seed), but two builds of the same
+`(mc, world)` are not byte-identical — `level.dat` carries the generation
+timestamps and every region chunk carries a last-update stamp. Nothing depends on
+byte equality across machines; the manifest describes the tree that is actually
+cached.
+
+`jt run` builds a seed when the cache is missing, verifies it when it is there,
+and re-stages it into the instance on every run (a world a previous run played
+in is replaced, never merged).
+
+## Launching without a world
+
+An env without `world` stops at the title screen. The preset `options.txt`
+(below) is still staged, so the client reaches the menu; that is the right shape
+for envs whose markers are emitted during startup (the 1.12.2 rows, the 1.16.5 /
+1.18.2 rows).
+
+## The preset `options.txt`
+
+A freshly materialized instance has no `options.txt`, and a client with no
+`options.txt` shows the **"Welcome to Minecraft!" accessibility onboarding
+screen before the title screen** — a modal page with a Continue button that
+nothing in a headless run can press, so the run never reaches the menu. `jt`
+therefore renders a minimal preset into the pack (`overrides/options.txt`, see
+`lib/options.py`) and stages it into the instance on every run:
+
+```
+onboardAccessibility:true
+```
+
+One key, and only that one:
+
+* `onboardAccessibility:true` marks the accessibility onboarding as finished.
+  The client shows that screen while the value is false, which is also the state
+  of a profile with no `options.txt` at all. (Field `Options.onboardAccessibility`;
+  see the Minecraft Wiki's *Title Screen* and *options.txt* pages, and Mojang's
+  own reproduction steps on MC-310326, which open the screen by deleting
+  `options.txt`.)
+
+Deliberately **not** preset, with the reason: `skipMultiplayerWarning` (the
+warning is for joining a *server*; these runs join single-player),
+`tutorialStep` (tutorial hints are toasts, not screens, and gate nothing), and
+everything cosmetic — volume, resolution, render distance, GUI scale — because a
+preference written down here would silently become part of what a run measures.
+A key an older client does not know is ignored when it loads the file, so one
+preset serves every version line.
+
+Verified on a freshly materialized 1.21.1 instance: with the preset the client
+lands on the title screen, without it the onboarding screen comes first.
 
 ## When is the game ready? (`ready_when`)
 
@@ -144,12 +273,28 @@ rule.
   `latest.log` **and** every `log_contains` value of the env is in it too. At
   that moment the runner ends the instance's process tree itself and judges the
   run; the report records `stopReason: "goal-reached"` and `readyReached: true`.
+* **What the report tells you when it did not hold.** `readyReached` is the whole
+  rule, so a `false` on its own does not say which half was missing. The report
+  prints both halves separately: `readyLineSeen` (was the ready line in the log?)
+  and `missingMarkers` (which `log_contains` values never arrived). On the
+  1.21.1 rows the ready line lands early and the JEI marker only at world load,
+  so the honest reading of a pre-`world` failure there is
+  `readyLineSeen: true, missingMarkers: ['Registering JEI pinyin search storage']`
+  — the marker was the missing half, not the ready line.
 * **Choosing the line.** Pick a stable INFO line vanilla prints exactly once
   when the client has finished coming up (for 1.12.2 and 1.21.1 alike, the
   classic `Sound engine started` / `Setting user:` family is a good start);
   verify it against a real `latest.log` before trusting it. Order matters: since
   every `log_contains` marker must already be there, either pick a ready line
   that comes *after* your markers, or accept that the run waits for the markers.
+
+  For an env with `world`, keep a line that the client prints **whether or not**
+  the world joins (both 1.21.1 rows use `Sound engine started`, which lands ~4s
+  before the join). A world-only line such as
+  `Preparing start region for dimension` reads better but is a trap: if the join
+  ever fails, the ready line never lands, the grace never starts, and the run
+  hangs into the watchdog (exit 3) instead of failing on the marker. With a line
+  that always lands, a failed join becomes a clean `ready-timeout` + FAIL.
 * **A marker that never appears.** The ready line starts a bounded grace window;
   if the markers still have not shown up when it expires, the runner stops the
   run anyway and records `stopReason: "ready-timeout"`. The missing
@@ -159,6 +304,13 @@ rule.
   itself, `exit_code_zero` PASSes whatever code the killed process reported (the
   code is an artefact of the harness). A natural exit 0 also passes; a natural
   exit before the ready line, or a non-zero one, FAILs.
+* **A launcher that exits at once.** Prism's CLI hands a launch off to a Prism
+  process that already owns the data root (a local socket), and then exits 0 in
+  under a second with the game starting milliseconds later. The runner does not
+  read that as "no session": it keeps watching for `HANDOFF_GRACE_SEC` (120s)
+  for a session or a game process, and records the situation in the notes,
+  naming the other launcher's pid when there is one. A genuinely failed launch
+  still ends as a missing session after that grace.
 * **Omitting it.** Without `ready_when` the run behaves as before: it waits for
   the game to exit on its own or for the watchdog.
 
@@ -258,14 +410,33 @@ and says so in the report.
 | `1.21.1-fabric` | 1.21.1 / fabric 0.16.14 | 21 | `1.21.1` | jei 19.37.0.362, fabric-api 0.116.1+1.21.1 |
 | `mv-1.20.1-forge` | 1.20.1 / forge 1.20.1-47.0.35 | 17 | `multiple-version` | jei 15.48.0.179 |
 | `mv-1.20.1-fabric` | 1.20.1 / fabric 0.14.11 | 17 | `multiple-version` | jei 15.48.0.179, fabric-api (see below) |
-| `mv-1.19.2-forge` | 1.19.2 / forge 1.19.2-43.2.3 | 17 | `multiple-version` | jei 11.30.3.1056 |
-| `mv-1.19.2-fabric` | 1.19.2 / fabric 0.14.11 | 17 | `multiple-version` | jei 11.30.3.1056, fabric-api 0.68.0+1.19.2 |
+| `mv-1.19.2-forge` | 1.19.2 / forge 1.19.2-43.2.3 | 17 | `multiple-version` | jei 11.30.3.1056 — **skipped**, see below |
+| `mv-1.19.2-fabric` | 1.19.2 / fabric 0.14.11 | 17 | `multiple-version` | jei 11.30.3.1056, fabric-api 0.68.0+1.19.2 — **skipped** |
 | `mv-1.18.2-forge` | 1.18.2 / forge 1.18.2-40.2.1 | 17 | `multiple-version` | jei 10.2.1.1005 |
 | `mv-1.18.2-fabric` | 1.18.2 / fabric 0.14.9 | 17 | `multiple-version` | jei 10.2.1.1005, fabric-api 0.67.0+1.18.2 |
 | `mv-1.16.5-forge` | 1.16.5 / forge 1.16.5-36.2.39 | 8 | `multiple-version` | jei 7.8.0.1009 (pinned by file id) |
 | `mv-1.16.5-fabric` | 1.16.5 / fabric 0.14.9 | 8 | `multiple-version` | fabric-api 0.42.0+1.16 (smoke) |
 | `1.12.2-forge-hei` | 1.12.2 / forge 1.12.2-14.23.5.2864 | 8 | `1.12.0` (srg jar) | had-enough-items 4.34.0 |
 | `1.12.2-forge-jei-legacy` | 1.12.2 / forge 1.12.2-14.23.5.2864 | 8 | `1.12.0` (srg jar) | jei 4.16.1.301 |
+
+Every row also stages the preset `options.txt`. The two envs that are *launched
+into a world*, and the two that are *skipped*, are called out below and in the
+table above:
+
+| env | runs? | world | why |
+| --- | --- | --- | --- |
+| `1.21.1-neoforge`, `1.21.1-fabric` | yes | `world: {name: jechworld}` | the JEI plugin marker needs a loaded level |
+| `mv-1.19.2-forge`, `mv-1.19.2-fabric` | **no** — `skip` | none | same marker, but quick play needs 1.20+ |
+| the other 12 | yes | none | markers are emitted during startup |
+
+The `mv-1.19.2` rows are the one family with no path to their marker today: JEI
+11.x's `registerAdvancedSearch` (the phase that logs JECh's storage marker) also
+runs at level load, and the only non-interactive way to load a level —
+`--quickPlaySingleplayer` — does not exist before 1.20. So the envs stay in the
+matrix with their checks written down, and `skip` names exactly what is missing.
+Removing the `skip` is a follow-up that needs one of: a 1.19.2-era way to join a
+world from the command line, or an in-game runner (a test mod that loads a world
+and quits). Neither is in place; a weaker assertion is not an option.
 
 The version strings above are not invented: they mirror each checkout's
 `gradle.properties` (`neo_version`, `forge_version`, `fabric_loader_version`,
@@ -296,6 +467,17 @@ has a JEI plugin and can be asserted on its registration marker.
   `no_crash_reports`, `exit_code_zero`; the fabric rows add
   `log_not_contains "Can't create config file!"` and
   `file_exists config/jecharacters.json`.
+
+  Of those ten rows, only the **two 1.21.1 rows are measured against a real run**
+  — they declare `world`, and their marker arrives a second after the join. The
+  two `mv-1.19.2` rows carry `skip`: the same marker needs a loaded level and
+  quick play does not exist before 1.20. The remaining six rows (`moderner` ×4,
+  `mv-1.20.1` ×2) are ≥ 1.20 and therefore *could* take a `world` the same way,
+  but no run of theirs has been measured for this harness round, so nothing is
+  claimed about them here: whether their JEI version defers this phase to level
+  load is the first thing to establish when they are next exercised. Adding
+  `"world": {"name": "jechworld"}` needs no harness change; it needs a measured
+  run and their own `ready_when` line.
 * **B — no JEI plugin** (mv-1.16.5 ×2, mv-1.18.2 ×2): the failure markers only —
   `log_not_contains "Could not find targets.json. JechTransformer will not be loaded."`,
   `no_crash_reports`, `exit_code_zero`.
@@ -323,7 +505,15 @@ has a JEI plugin and can be asserted on its registration marker.
 2. Read the checkout's `gradle.properties` and copy the loader / api / jei
    versions from there instead of typing a remembered version.
 3. Check which family the new line belongs to (`unzip -l <jar> | grep JechJeiPlugin`).
-4. Pick a `ready_when` line from a real run's `latest.log` (a first, exploratory
+4. Decide whether a marker needs a loaded level. If it does, add
+   `"world": {"name": "jechworld"}` and pick a `ready_when` line the client
+   prints **whether or not** the join succeeds (see "When is the game ready?").
+   `jt run` builds the seed itself; `jt seed-world <name>` builds it ahead of time.
+5. Pick a `ready_when` line from a real run's `latest.log` (a first, exploratory
    `jt run` may end at the watchdog — that log is still the evidence to read).
-5. `jt envs` (does it load?), then `jt resolve <name>` (does the description pin
-   to exactly one file?), then `jt run <name>`.
+6. If the marker is unreachable for a version-line reason, do not soften the
+   check: keep the check as written, add `"skip": "<the missing capability>"`,
+   and say so here.
+7. `jt seed-world <name>` (when step 4 applied), then `jt envs` (does it load?),
+   then `jt resolve <name>` (does the description pin to exactly one file?),
+   then `jt run <name>`.

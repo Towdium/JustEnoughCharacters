@@ -102,7 +102,7 @@ class InstanceInfo:
 
 class IsolationReport:
     def __init__(self, *, mods_dir, removed, staged, config_archived, config_archive,
-                 saves_cleared, logs_cleared, notes=()):
+                 saves_cleared, logs_cleared, overrides_staged=(), notes=()):
         self.mods_dir = mods_dir
         self.removed = removed
         self.staged = list(staged)
@@ -110,6 +110,8 @@ class IsolationReport:
         self.config_archive = config_archive
         self.saves_cleared = saves_cleared
         self.logs_cleared = logs_cleared
+        # Non-mod overrides re-staged from the pack: "options.txt", "saves/<world>".
+        self.overrides_staged = list(overrides_staged)
         self.notes = list(notes)
 
     def to_json(self):
@@ -121,13 +123,15 @@ class IsolationReport:
             "configArchive": str(self.config_archive) if self.config_archive else None,
             "savesCleared": self.saves_cleared,
             "logsCleared": self.logs_cleared,
+            "overridesStaged": self.overrides_staged,
             "notes": self.notes,
         }
 
     def summary(self):
+        staged = f", overrides {', '.join(self.overrides_staged)}" if self.overrides_staged else ""
         return (f"mods: -{self.removed} +{len(self.staged)}, config archived "
                 f"{self.config_archived} file(s), saves cleared {self.saves_cleared}, "
-                f"logs cleared {self.logs_cleared}")
+                f"logs cleared {self.logs_cleared}{staged}")
 
 
 # ---------------------------------------------------------------------------
@@ -584,12 +588,16 @@ def archive_dir(source, dest):
     return count
 
 
-def isolate(instance_id, resolved, run_dir, *, root=None, log=print):
+def isolate(instance_id, resolved, run_dir, *, root=None, pack_result=None, log=print):
     """Make the instance match the pack exactly, discarding every previous run.
 
     Every run re-syncs ``mods/`` from the pack (delete-then-stage), archives then
-    empties ``config/`` and empties ``saves/`` and ``logs/``. Nothing here depends
-    on the previous run's state, so a stale instance can never influence a verdict.
+    empties ``config/``, empties ``saves/`` and ``logs/``, and re-stages the pack's
+    non-mod overrides — the ``options.txt`` preset and the env's world seed — into
+    the game directory. Nothing here depends on the previous run's state, so a
+    stale instance can never influence a verdict: a world a previous run played in
+    is replaced by the seed, and an ``options.txt`` the game rewrote is replaced by
+    the preset.
     """
     run_dir = Path(run_dir)
     mc = game_dir(instance_id, root)
@@ -618,15 +626,50 @@ def isolate(instance_id, resolved, run_dir, *, root=None, log=print):
     saves_cleared = clear_dir(mc / "saves")
     logs_cleared = clear_dir(mc / "logs")
 
+    overrides_staged = []
+    if pack_result is not None:
+        overrides_staged = stage_override_tree(mc, pack_result, log=log)
+
     report = IsolationReport(
         mods_dir=mods_dir, removed=removed, staged=staged, config_archived=archived,
         config_archive=config_archive, saves_cleared=saves_cleared, logs_cleared=logs_cleared,
-        notes=notes,
+        overrides_staged=overrides_staged, notes=notes,
     )
     log(f"isolation [{instance_id}]: {report.summary()}")
     for note in notes:
         log(f"isolation [{instance_id}]: note: {note}")
     return report
+
+
+def stage_override_tree(minecraft_dir, pack_result, *, log=print):
+    """Copy the pack's non-mod overrides into the game directory.
+
+    A file override is copied over; a directory override (the world seed) replaces
+    whatever is there, so the staged tree is exactly the pack's tree and never a
+    merge of two worlds.
+    """
+    staged = []
+    source_root = pack_result.overrides_dir()
+    for relative in pack_result.extra_overrides:
+        source = source_root / relative
+        dest = Path(minecraft_dir) / relative
+        if not source.exists():
+            raise ConfigError(
+                f"the pack declares override {relative!r} but {paths.display(source)} does not exist"
+            )
+        if source.is_dir():
+            if dest.exists():
+                shutil.rmtree(dest)
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copytree(source, dest, symlinks=True)
+            copied = sum(1 for entry in dest.rglob("*") if entry.is_file())
+            log(f"isolation: staged {relative} ({copied} file(s)) from the pack")
+        else:
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source, dest)
+            log(f"isolation: staged {relative} from the pack")
+        staged.append(relative)
+    return staged
 
 
 # ---------------------------------------------------------------------------
@@ -736,11 +779,22 @@ def _signal(pid, signum):
 # ---------------------------------------------------------------------------
 
 
-def launch(instance_id, *, root=None, log_path, extra_args=(), log=print):
-    """Start the instance in the background; returns the launcher Popen."""
+def launch(instance_id, *, root=None, log_path, extra_args=(), world=None, log=print):
+    """Start the instance in the background; returns the launcher Popen.
+
+    ``world`` selects Prism's own *join world on launch* option (``-w/--world``),
+    which is what makes the client load a world instead of stopping at the title
+    screen. It is a first-class Prism option, not a game-argument passthrough:
+    Prism 11 builds the version-appropriate game argument for it itself (it knows
+    ``--quickPlaySingleplayer``), whereas a bare ``-- <args>`` is parsed by Qt as
+    "everything after this is a positional url" and turns the trailing arguments
+    into resource *imports*, which is not what a launch wants.
+    """
     root = Path(root) if root else paths.prism_root()
     exe = prism_launcher()
     command = [exe, "-d", str(root), "--launch", instance_id]
+    if world:
+        command.extend(["--world", world])
     command.extend(extra_args)
     Path(log_path).parent.mkdir(parents=True, exist_ok=True)
     handle = open(log_path, "ab", buffering=0)

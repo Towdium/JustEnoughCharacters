@@ -75,11 +75,18 @@ def finalize(report, *, finished_at, duration_ms):
                 checks_skipped += 1
         if entry.get("watchdog"):
             watchdogs += 1
-    failed_envs = [e for e in envs if e.get("status") != checks_mod.PASS]
+    # An env that is not PASS is not verified: a FAILed check, a config error, a
+    # watchdog and a *declared skip* all count here. A skip is a deliberate
+    # decision not to verify, which must never read as a pass — the selection is
+    # red and the reason is in the report, so hiding it takes an explicit
+    # ``--exclude`` rather than a silent green.
+    skipped_envs = [e for e in envs if e.get("status") == checks_mod.SKIP]
+    unverified = [e for e in envs if e.get("status") != checks_mod.PASS]
     report["totals"] = {
         "envs": len(envs),
-        "passed": len(envs) - len(failed_envs),
-        "failed": len(failed_envs),
+        "passed": len(envs) - len(unverified),
+        "failed": len(unverified) - len(skipped_envs),
+        "skipped": len(skipped_envs),
         "checks": checks_total,
         "checksFailed": checks_failed,
         "checksSkipped": checks_skipped,
@@ -90,8 +97,15 @@ def finalize(report, *, finished_at, duration_ms):
         if not report.get("reason"):
             report["reason"] = "no env was executed, so nothing was verified"
     else:
-        report["status"] = checks_mod.FAIL if failed_envs else checks_mod.PASS
-        if not failed_envs:
+        report["status"] = checks_mod.FAIL if unverified else checks_mod.PASS
+        if unverified:
+            if len(skipped_envs) == len(unverified):
+                names = ", ".join(str(e.get("name")) for e in skipped_envs)
+                report["reason"] = (
+                    f"{len(skipped_envs)} env(s) were not executed (declared skip: {names}); "
+                    "a skipped env is never a pass"
+                )
+        else:
             report["reason"] = report.get("reason") or "every env passed every check"
     return report
 
@@ -131,13 +145,23 @@ def render_text(report):
         f"duration:  {report.get('durationMs', 0)} ms",
         f"totals:    {totals.get('passed', 0)}/{totals.get('envs', 0)} env passed, "
         f"{totals.get('checks', 0) - totals.get('checksFailed', 0) - totals.get('checksSkipped', 0)}"
-        f"/{totals.get('checks', 0)} checks passed, {totals.get('checksSkipped', 0)} skipped, "
+        f"/{totals.get('checks', 0)} checks passed, {totals.get('checksSkipped', 0)} checks skipped, "
         f"{totals.get('watchdogs', 0)} watchdog",
     ]
+    if totals.get("skipped"):
+        lines.append(
+            f"skipped:   {totals['skipped']} env(s) were NOT executed (declared skip) — "
+            "a skipped env is never a pass"
+        )
     if report.get("reason"):
         lines.append(f"reason:    {report['reason']}")
     for entry in envs:
         lines.append("")
+        if entry.get("status") == checks_mod.SKIP:
+            lines.append(f"[SKIP] {entry.get('name', '?')} — {entry.get('skipReason') or 'skipped'}")
+            for note in entry.get("notes") or []:
+                lines.append(f"    note: {note}")
+            continue
         lines.append(
             f"[{entry.get('status', '?')}] {entry.get('name', '?')} "
             f"({entry.get('mc', '?')}/{((entry.get('loader') or {}).get('type', '?'))} "
@@ -153,6 +177,19 @@ def render_text(report):
             lines.append(
                 f"    ready_when={entry.get('readyWhen')!r} "
                 f"readyReached={bool(entry.get('readyReached'))}"
+            )
+            # ``readyReached`` is the whole rule (line AND markers); naming the half
+            # that was missing is what makes the field actionable.
+            lines.append(
+                f"    readyLineSeen={bool(entry.get('readyLineSeen'))} "
+                f"missingMarkers={entry.get('missingMarkers') or '[]'}"
+            )
+        world = entry.get("world") or {}
+        if world:
+            lines.append(
+                f"    world={world.get('name')} ({world.get('savesPath')}) "
+                f"seed={str(world.get('digest'))[:16]} files={world.get('files')} "
+                f"source={world.get('source')} reused={bool(world.get('reused'))}"
             )
         for mod in entry.get("mods") or []:
             pin = mod.get("pin") or {}
@@ -170,30 +207,44 @@ def render_text(report):
 
 
 def render_junit(report):
+    """One testcase per check, plus a synthesized one for an env with no checks.
+
+    The header's counts are accumulated from the testcases actually rendered, not
+    from ``totals``: a skipped env carries no checks in the report but still gets
+    a ``<skipped>`` testcase, and a header that disagrees with its own suites
+    confuses CI parsers.
+    """
     envs = report.get("envs") or []
-    totals = report.get("totals") or {}
-    tests = totals.get("checks", 0)
-    failures = totals.get("checksFailed", 0)
-    skipped = totals.get("checksSkipped", 0)
-    lines = ['<?xml version="1.0" encoding="UTF-8"?>']
-    lines.append(
-        f'<testsuites name="jech-compat" tests="{tests}" failures="{failures}" '
-        f'skipped="{skipped}" time="{report.get("durationMs", 0) / 1000.0:.3f}">'
-    )
+    suites = []
+    tests = failures = skipped = 0
     for entry in envs:
         entry_checks = entry.get("checks") or []
+        if entry.get("status") == checks_mod.SKIP and not entry_checks:
+            # A skipped env has no checks to report; give it one testcase anyway,
+            # so CI shows the skip instead of an empty, invisible suite.
+            entry_checks = [{"name": "env-skip", "type": "skip", "status": checks_mod.SKIP,
+                             "detail": entry.get("skipReason") or "declared skip"}]
         entry_failures = sum(1 for c in entry_checks if c.get("status") == checks_mod.FAIL)
         entry_skipped = sum(1 for c in entry_checks if c.get("status") == checks_mod.SKIP)
-        lines.append(
+        tests += len(entry_checks)
+        failures += entry_failures
+        skipped += entry_skipped
+        lines = [
             f'  <testsuite name={quoteattr(str(entry.get("name", "?")))} '
             f'tests="{len(entry_checks)}" failures="{entry_failures}" skipped="{entry_skipped}" '
-            f'time="{(entry.get("durationMs") or 0) / 1000.0:.3f}">'
-        )
-        lines.append("    <properties>")
+            f'time="{(entry.get("durationMs") or 0) / 1000.0:.3f}">',
+            "    <properties>",
+        ]
         for key in ("mc", "instanceId", "packHash", "log"):
             value = entry.get(key)
             if value:
                 lines.append(f'      <property name={quoteattr(str(key))} value={quoteattr(str(value))} />')
+        world = entry.get("world") or {}
+        if world.get("digest"):
+            lines.append(
+                f'      <property name="world" '
+                f'value={quoteattr(str(world.get("name")) + "@" + str(world.get("digest"))[:16])} />'
+            )
         loader = entry.get("loader") or {}
         if loader.get("type"):
             loader_label = f"{loader.get('type')}-{loader.get('version')}"
@@ -213,8 +264,12 @@ def render_junit(report):
                 lines.append(f'      <skipped message={quoteattr(detail[:200])} />')
             lines.append("    </testcase>")
         lines.append("  </testsuite>")
-    lines.append("</testsuites>")
-    return "\n".join(lines) + "\n"
+        suites.append("\n".join(lines))
+    header = (
+        f'<testsuites name="jech-compat" tests="{tests}" failures="{failures}" '
+        f'skipped="{skipped}" time="{report.get("durationMs", 0) / 1000.0:.3f}">'
+    )
+    return "\n".join(['<?xml version="1.0" encoding="UTF-8"?>', header] + suites + ["</testsuites>"]) + "\n"
 
 
 # ---------------------------------------------------------------------------
@@ -288,8 +343,9 @@ def verify_run(target, *, log=print):
     totals = report.get("totals") or {}
     log(f"run {report.get('runId')}: {report.get('status')} — "
         f"{totals.get('passed', 0)}/{totals.get('envs', 0)} env passed, "
+        f"{totals.get('skipped', 0)} skipped, "
         f"{totals.get('checksFailed', 0)} failed check(s), "
-        f"{totals.get('checksSkipped', 0)} skipped, "
+        f"{totals.get('checksSkipped', 0)} skipped check(s), "
         f"{totals.get('watchdogs', 0)} watchdog")
     explanation = (report.get("selection") or {}).get("explanation")
     if explanation:
@@ -298,6 +354,10 @@ def verify_run(target, *, log=print):
         log(f"reason: {report['reason']}")
     for entry in report.get("envs") or []:
         if entry.get("status") == checks_mod.PASS:
+            continue
+        if entry.get("status") == checks_mod.SKIP:
+            log(f"SKIP {entry.get('name')}: {entry.get('skipReason') or 'declared skip'} "
+                "— not executed, not a pass")
             continue
         log(f"FAIL {entry.get('name')}: exitCode={entry.get('exitCode')} "
             f"timedOut={bool(entry.get('timedOut'))}")

@@ -82,6 +82,7 @@
       "name": "exit-code"
     }
   ],
+  "skip": "JEI registration check needs world load; quickPlay needs 1.20+",
   "timeout_sec": 600,
   "jvm": {
     "max_mem_mb": 3072,

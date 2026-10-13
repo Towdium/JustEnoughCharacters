@@ -26,12 +26,13 @@ Exit codes: 0 pass, 1 a check failed, 2 a configuration or infrastructure error,
 
 from __future__ import annotations
 
+import os
 import time
 from pathlib import Path
 
 from . import checks as checks_mod
 from . import envs as envs_mod
-from . import instance, pack as pack_mod, paths, report as report_mod, resolve
+from . import instance, options, pack as pack_mod, paths, report as report_mod, resolve, worlds
 from .errors import EXIT_FAIL, EXIT_OK, EXIT_USAGE, EXIT_WATCHDOG, JtError
 from .select import Selection
 from .util import atomic_write_json, atomic_write_text, now_iso, now_stamp, sanitize_name
@@ -45,6 +46,14 @@ LAUNCHER_EXIT_GRACE_SEC = 60
 # runner stops at once; the grace only bounds a run whose markers never arrive,
 # turning it into an assertion FAIL instead of a watchdog kill.
 READY_GRACE_SEC = 120
+# When the launcher CLI exits without a sign of a game, it usually handed the
+# launch off to a Prism process that already owns this data root (Prism's CLI
+# talks to the running instance over a local socket), and that process launches
+# the game a moment later. Breaking out the instant the CLI's exit code lands
+# would report "no session" for a game that is starting right now, so the run
+# gives the handoff this much time to produce a session or a game process. It
+# only ever costs this long on a path that is already a failure.
+HANDOFF_GRACE_SEC = 120
 CONFIG_ERROR = "configError"
 
 
@@ -131,7 +140,12 @@ def run_env(env, *, refresh=False, log=print, selection_label=None):
         "watchdog": False,
         "stopReason": None,
         "readyReached": None,
+        "readyLineSeen": None,
+        "missingMarkers": [],
         "readyWhen": env.ready_when.value if env.ready_when is not None else None,
+        "skipReason": env.skip,
+        "world": ({"name": env.world.name, "savesPath": env.world.saves_path}
+                  if env.world is not None else None),
         "instanceId": None,
         "instanceReused": False,
         "instanceImported": False,
@@ -146,26 +160,42 @@ def run_env(env, *, refresh=False, log=print, selection_label=None):
         "mrpack": None,
     }
 
-    try:
-        _execute(env, run_dir, entry, started_wall=started_wall, refresh=refresh, log=log)
-    except JtError as exc:
-        entry[CONFIG_ERROR] = True
-        entry["notes"].append(f"{type(exc).__name__}: {exc}")
+    if env.skip:
+        # A declared skip is a first-class outcome: the env is not executed, and
+        # the report says so instead of rendering it as a pass. See envs.README.md
+        # for why a skip keeps a selection red rather than quietly greening it.
+        entry["status"] = checks_mod.SKIP
+        entry["exitCodeKind"] = "skip"
         entry["checks"] = [
-            checks_mod.result("internal:run", "internal", checks_mod.FAIL, str(exc)),
+            checks_mod.result("internal:skip", "internal", checks_mod.SKIP,
+                              f"declared skip: {env.skip}"),
         ]
-        entry["status"] = checks_mod.FAIL
-        entry["exitCodeKind"] = "config"
-        log(f"{env.name}: {exc}")
-    except OSError as exc:
-        entry[CONFIG_ERROR] = True
-        entry["notes"].append(f"OSError: {exc}")
-        entry["checks"] = [
-            checks_mod.result("internal:run", "internal", checks_mod.FAIL, f"OSError: {exc}"),
-        ]
-        entry["status"] = checks_mod.FAIL
-        entry["exitCodeKind"] = "config"
-        log(f"{env.name}: OSError: {exc}")
+        entry["notes"].append(
+            f"skip: the env declares skip={env.skip!r}, so nothing was executed and nothing "
+            "was verified"
+        )
+        log(f"SKIP {env.name}: {env.skip}")
+    else:
+        try:
+            _execute(env, run_dir, entry, started_wall=started_wall, refresh=refresh, log=log)
+        except JtError as exc:
+            entry[CONFIG_ERROR] = True
+            entry["notes"].append(f"{type(exc).__name__}: {exc}")
+            entry["checks"] = [
+                checks_mod.result("internal:run", "internal", checks_mod.FAIL, str(exc)),
+            ]
+            entry["status"] = checks_mod.FAIL
+            entry["exitCodeKind"] = "config"
+            log(f"{env.name}: {exc}")
+        except OSError as exc:
+            entry[CONFIG_ERROR] = True
+            entry["notes"].append(f"OSError: {exc}")
+            entry["checks"] = [
+                checks_mod.result("internal:run", "internal", checks_mod.FAIL, f"OSError: {exc}"),
+            ]
+            entry["status"] = checks_mod.FAIL
+            entry["exitCodeKind"] = "config"
+            log(f"{env.name}: OSError: {exc}")
 
     duration_ms = (time.monotonic() - started) * 1000
     entry["finishedAt"] = now_iso()
@@ -174,7 +204,7 @@ def run_env(env, *, refresh=False, log=print, selection_label=None):
         entry["exitCodeKind"] = "watchdog"
     elif entry["status"] == checks_mod.PASS:
         entry["exitCodeKind"] = "pass"
-    elif not entry.get(CONFIG_ERROR):
+    elif not entry.get(CONFIG_ERROR) and entry["status"] != checks_mod.SKIP:
         entry["exitCodeKind"] = "check"
 
     exit_code = env_exit_code(entry)
@@ -187,7 +217,13 @@ def run_env(env, *, refresh=False, log=print, selection_label=None):
 
 
 def env_exit_code(entry):
-    """The per-env exit code: 0 pass, 1 failed check, 2 config/infra error, 3 watchdog."""
+    """The per-env exit code: 0 pass, 1 failed check or a declared skip, 2 config, 3 watchdog.
+
+    A skipped env exits 1 on purpose. The harness never reports "not verified" as
+    success: a `jt run` whose selection contains a skipped env is red, and the
+    report names the skip reason. Excluding the env (``--exclude``) is the way to
+    a green selection, not hiding the skip behind a zero.
+    """
     kind = entry.get("exitCodeKind")
     if kind == "watchdog" or entry.get("watchdog") or entry.get("timedOut"):
         return EXIT_WATCHDOG
@@ -221,25 +257,46 @@ def _execute(env, run_dir, entry, *, started_wall, refresh, log):
     for note in resolved.notes:
         entry["notes"].append(note)
 
+    # The world seed is built before the pack, because the pack carries it: an env
+    # that declares a world is launched into it, and a missing seed is built here
+    # (once — every later run, and every env naming the same pair, reuses it).
+    seed = None
+    if env.world is not None:
+        # The JDK is only resolved when the seed actually has to be built: a cache
+        # hit re-hashes the tree and returns without touching java_home.
+        seed = worlds.ensure_seed(env, java_home=lambda: instance.java_home_for(env.java_version),
+                                  log=log)
+        entry["world"] = worlds.describe(env, seed)
+        entry["notes"].append(
+            f"world: launched into {env.world.saves_path} (seed {seed.digest[:16]}, "
+            f"{len(seed.files)} file(s), {'reused' if seed.reused else 'built'} from "
+            f"{seed.source.get('server', '?')})"
+        )
+    entry["notes"].append(
+        "options: preset options.txt stages " + ", ".join(options.keys()) + " (see lib/options.py)"
+    )
+
     # The same (env, modset) always maps to the same instance id; naming the pack
     # after it makes the import deterministic, so a retry reuses one instance
     # instead of accumulating suffixed ones.
     digest = instance.modset_hash(env, resolved)
     instance_label = instance.instance_id_for(env, digest)
-    pack_result = pack_mod.build_pack(env, resolved, run_dir, version_id=instance_label, log=log)
+    pack_result = pack_mod.build_pack(env, resolved, run_dir, version_id=instance_label,
+                                      seed=seed, log=log)
     entry["mrpack"] = paths.display(pack_result.mrpack_path)
     entry["packHash"] = pack_result.pack_hash
     entry["dependencies"] = pack_result.dependencies
     log(f"{env.name}: pack {paths.display(pack_result.mrpack_path)} "
         f"({len(pack_result.mod_filenames)} jar(s) in overrides/mods, files list empty, "
-        f"instance {instance_label})")
+        f"overrides {', '.join(pack_result.extra_overrides)}, instance {instance_label})")
 
     info = instance.ensure_instance(env, resolved, pack_result, refresh=refresh, log=log)
     entry["instanceId"] = info.instance_id
     entry["instanceReused"] = info.reused
     entry["instanceImported"] = info.imported
 
-    isolation = instance.isolate(info.instance_id, resolved, run_dir, log=log)
+    isolation = instance.isolate(info.instance_id, resolved, run_dir, pack_result=pack_result,
+                                 log=log)
     entry["isolation"] = isolation.to_json()
     entry["notes"].extend(isolation.notes)
 
@@ -251,7 +308,8 @@ def _execute(env, run_dir, entry, *, started_wall, refresh, log):
 
     ready_values, markers = readiness_rule(env)
     crash_before = crash_report_snapshot(minecraft_dir)
-    proc = instance.launch(info.instance_id, log_path=launcher_log, log=log)
+    proc = instance.launch(info.instance_id, log_path=launcher_log,
+                           world=env.world.name if env.world is not None else None, log=log)
     follower = instance.LogFollower(log_path, started_wall, poll=POLL_SEC)
     watch = _watch(env, info.instance_id, proc, follower, started_wall, log=log,
                    ready_values=ready_values, markers=markers)
@@ -262,6 +320,13 @@ def _execute(env, run_dir, entry, *, started_wall, refresh, log):
     entry["exitCodeSource"] = watch["exit_code_source"]
     entry["stopReason"] = watch["stop_reason"]
     entry["readyReached"] = watch["ready_reached"]
+    # ``readyReached`` is the *whole* readiness rule (the ready line AND every
+    # marker), so a False on its own does not say which half was missing. Both
+    # halves are recorded separately: "the ready line was there but the marker
+    # never arrived" and "the ready line never arrived" are different bugs.
+    entry["readyLineSeen"] = watch["ready_line_reached"]
+    entry["missingMarkers"] = watch["missing_markers"]
+    entry["notes"].extend(watch["notes"])
     if watch["timed_out"]:
         entry["notes"].append(
             f"watchdog: the run exceeded timeout_sec={env.timeout_sec}; the process tree was killed"
@@ -360,6 +425,9 @@ def _watch(env, instance_id, proc, follower, started_wall, *, log, ready_values=
     launcher_died_early = False
     stop_reason = None
     ready_seen_at = None
+    handoff_deadline = None
+    handoff_noted = False
+    notes = []
     pids = []
 
     while True:
@@ -388,7 +456,27 @@ def _watch(env, instance_id, proc, follower, started_wall, *, log, ready_values=
         if game_started and not pids:
             break
         if not game_started and proc.poll() is not None:
-            break
+            # The launcher is gone and no game showed up yet: either it handed the
+            # launch off to another Prism process that owns this data root (which
+            # starts the game a moment later), or the launch genuinely failed.
+            # Wait out the bounded grace so the first case is not reported as a
+            # missing session, then decide.
+            if handoff_deadline is None:
+                handoff_deadline = now + HANDOFF_GRACE_SEC
+            if not handoff_noted:
+                handoff_noted = True
+                owners = _other_launchers()
+                if owners:
+                    note = (f"the launcher CLI exited (code {proc.poll()}) while another Prism "
+                            f"process owns this data root (pid(s) {', '.join(owners)}); the launch "
+                            "was handed off to it")
+                else:
+                    note = (f"the launcher CLI exited (code {proc.poll()}) with no game process; "
+                            f"waiting up to {HANDOFF_GRACE_SEC}s in case the launch appears late")
+                log(f"{env.name}: {note}")
+                notes.append(note)
+            if time.time() >= deadline or time.time() >= handoff_deadline:
+                break
         if time.time() >= deadline:
             timed_out = True
             break
@@ -416,18 +504,36 @@ def _watch(env, instance_id, proc, follower, started_wall, *, log, ready_values=
     # in the process table for a moment, which must not read as "still running".
     game_exited = bool(stop_reason) or (
         game_started and not instance.game_pids(instance_id, exclude=(proc.pid,)))
-    ready_reached = True if not ready_values else (
-        ready_line_seen(follower.text, ready_values) and all_markers_seen(follower.text, markers))
+    ready_line_reached = True if not ready_values else ready_line_seen(follower.text, ready_values)
+    missing = ([value for value in markers if value not in follower.text]
+               if session_started else list(markers))
     return {
         "timed_out": timed_out,
         "stop_reason": stop_reason,
-        "ready_reached": ready_reached,
+        # An env without ``ready_when`` has no readiness gate at all, so readiness
+        # is not in question; with one, it is the ready line *and* every marker.
+        "ready_reached": True if not ready_values else (ready_line_reached and not missing),
+        "ready_line_reached": ready_line_reached,
+        "missing_markers": missing,
         "game_started": game_started,
         "game_exited": game_exited,
         "exit_code": exit_code,
         "exit_code_source": source,
         "duration_sec": time.time() - started_wall,
+        "notes": notes,
     }
+
+
+def _other_launchers():
+    """Pids of Prism processes (other than this one) that own jt's data root."""
+    root = str(paths.prism_root())
+    owners = []
+    for pid, (_ppid, command) in instance.process_table().items():
+        if pid == os.getpid() or "prismlauncher" not in command:
+            continue
+        if root in command:
+            owners.append(str(pid))
+    return sorted(owners)
 
 
 def _reap(proc, *, log, timeout):

@@ -43,6 +43,17 @@ def entry(**overrides):
     return data
 
 
+def skip_entry(**overrides):
+    """An env the runner did not execute because the env file declared a skip."""
+    data = {"name": "skipped-env", "status": checks.SKIP, "exitCodeKind": "skip",
+            "skipReason": "needs a world load, and quick play needs 1.20+",
+            "checks": [checks.result("internal:skip", "internal", checks.SKIP,
+                                     "declared skip: needs a world load")],
+            "world": None}
+    data.update(overrides)
+    return entry(**data)
+
+
 def make_report(*entries, expression="all"):
     built = report.new_report(run_id="unit-run", selection=Selection.parse(expression),
                               started_at="2026-01-01T00:00:00+0000")
@@ -58,8 +69,28 @@ class RollUpTest(unittest.TestCase):
         built = make_report(entry())
         self.assertEqual(built["status"], checks.PASS)
         self.assertEqual(report.exit_code_for(built), 0)
-        self.assertEqual(built["totals"], {"envs": 1, "passed": 1, "failed": 0, "checks": 2,
-                                           "checksFailed": 0, "checksSkipped": 0, "watchdogs": 0})
+        self.assertEqual(built["totals"], {"envs": 1, "passed": 1, "failed": 0, "skipped": 0,
+                                           "checks": 2, "checksFailed": 0, "checksSkipped": 0,
+                                           "watchdogs": 0})
+
+    def test_a_skipped_env_is_not_a_pass_and_keeps_the_selection_red(self):
+        skipped = skip_entry()
+        built = make_report(entry(name="real-env"), skipped)
+        self.assertEqual(built["status"], checks.FAIL)
+        self.assertEqual(report.exit_code_for(built), 1)
+        self.assertEqual(built["totals"]["passed"], 1)
+        self.assertEqual(built["totals"]["skipped"], 1)
+        self.assertEqual(built["totals"]["failed"], 0, "a skip is not a failed check")
+        self.assertIn("declared skip", built["reason"])
+        self.assertIn(skipped["name"], built["reason"])
+
+    def test_a_lone_skipped_env_is_its_own_reason(self):
+        built = make_report(skip_entry())
+        self.assertEqual(built["status"], checks.FAIL)
+        self.assertEqual(built["totals"]["passed"], 0)
+        self.assertIn("never a pass", built["reason"])
+        self.assertIn("skip", report.render_text(built))
+        self.assertIn("were NOT executed", report.render_text(built))
 
     def test_a_failed_check_is_exit_code_one(self):
         failed = entry(status=checks.FAIL, exitCode=1,
@@ -126,6 +157,39 @@ class WriteTest(unittest.TestCase):
         self.assertIn("jech-loaded", text)
         self.assertIn("exit codes:", text)
         self.assertIn("0 = every check passed", text)
+
+    def test_report_text_names_the_skip_reason_not_a_pass(self):
+        text = report.render_text(make_report(skip_entry()))
+        self.assertIn("[SKIP] skipped-env", text)
+        self.assertIn("quick play needs 1.20+", text)
+
+    def test_report_text_shows_the_world_seed_a_run_used(self):
+        world = {"name": "jechworld", "savesPath": "saves/jechworld",
+                 "digest": "a" * 64, "files": 7, "bytes": 4096,
+                 "source": "vanilla-1.21.1", "reused": False}
+        text = report.render_text(make_report(entry(world=world)))
+        self.assertIn("world=jechworld", text)
+        self.assertIn("seed=aaaaaaaaaaaaaaaa", text)
+        self.assertIn("vanilla-1.21.1", text)
+
+    def test_a_skipped_env_still_gets_a_junit_testcase(self):
+        """An env with no checks must not vanish from the CI report."""
+        skipped = skip_entry(checks=[])
+        report.write_report(self.dir, make_report(skipped))
+        root = ElementTree.fromstring((self.dir / report.JUNIT_XML).read_text(encoding="utf-8"))
+        suite = root.find("testsuite")
+        self.assertEqual(suite.attrib["tests"], "1")
+        self.assertEqual(suite.attrib["skipped"], "1")
+        skipped_case = suite.find("testcase/skipped")
+        self.assertIsNotNone(skipped_case)
+        self.assertIn("quick play needs 1.20+", skipped_case.attrib["message"])
+
+    def test_junit_records_the_world_seed_as_a_property(self):
+        world = {"name": "jechworld", "savesPath": "saves/jechworld", "digest": "b" * 64}
+        report.write_report(self.dir, make_report(entry(world=world)))
+        text = (self.dir / report.JUNIT_XML).read_text(encoding="utf-8")
+        self.assertIn('name="world"', text)
+        self.assertIn("jechworld@bbbbbbbbbbbbbbbb", text)
 
     def test_empty_selection_text_says_nothing_ran(self):
         built = report.new_report(run_id="unit", selection=Selection.parse(""),

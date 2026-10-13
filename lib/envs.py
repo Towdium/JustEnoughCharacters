@@ -104,6 +104,29 @@ class ReadyWhen:
         return f"ReadyWhen({self.value!r})"
 
 
+class WorldSpec:
+    """The optional staged world an env is launched into.
+
+    A world turns a run from "the client reached the main menu" into "the client
+    is inside a level", which is the only state some registration work happens in
+    (JEI 19.x runs ``registerAdvancedSearch`` — the phase that logs JECh's
+    ``Registering JEI pinyin search storage`` — when a level is loaded). The seed
+    itself is produced by ``jt seed-world`` with a vanilla dedicated server and
+    cached under ``<JT_HOME>/cache/worlds``; the env only names it.
+    """
+
+    def __init__(self, name):
+        self.name = name
+
+    @property
+    def saves_path(self):
+        """Where the world sits inside the instance's ``minecraft`` directory."""
+        return f"saves/{self.name}"
+
+    def __repr__(self):
+        return f"WorldSpec({self.name!r})"
+
+
 class JechSpec:
     def __init__(self, source, path, expect_mod_id, slug, describe, pin, project, raw):
         self.source = source
@@ -143,9 +166,13 @@ class Env:
     """One parsed, validated env file."""
 
     def __init__(self, *, name, tags, mc, loader, java_version, jech, mods, checks,
-                 timeout_sec, jvm, path, raw, ready_when=None):
+                 timeout_sec, jvm, path, raw, ready_when=None, skip=None, world=None):
         self.name = name
-        self.tags = tags
+        # An env that declares ``skip`` also carries the ``skip`` tag, so a
+        # selection can say "everything runnable" as ``--exclude tag:skip``
+        # instead of naming the skipped envs one by one. The tag is derived, not
+        # written: ``write()`` persists ``raw``, which never gains it.
+        self.tags = list(tags) + (["skip"] if skip and "skip" not in tags else [])
         self.mc = mc
         self.loader = loader
         self.java_version = java_version
@@ -155,6 +182,8 @@ class Env:
         self.timeout_sec = timeout_sec
         self.jvm = jvm
         self.ready_when = ready_when
+        self.skip = skip
+        self.world = world
         self.path = Path(path)
         self.raw = raw
 
@@ -194,7 +223,7 @@ def parse_env(data, path="<dict>"):
         raise EnvSchemaError(f"{path}: env must be a json object, got {type(data).__name__}")
 
     _reject_unknown(data, {"name", "tags", "mc", "loader", "java", "jech", "mods", "checks",
-                           "timeout_sec", "jvm", "ready_when"}, "env", problems)
+                           "timeout_sec", "jvm", "ready_when", "skip", "world"}, "env", problems)
 
     name = _string(data, "name", "env", problems, required=True)
     if name is not None and not _NAME_RE.match(name):
@@ -212,6 +241,8 @@ def parse_env(data, path="<dict>"):
     timeout_sec = _parse_timeout(data.get("timeout_sec"), problems)
     jvm = _parse_jvm(data.get("jvm"), problems)
     ready_when = _parse_ready_when(data.get("ready_when"), problems)
+    skip = _parse_skip(data.get("skip"), problems)
+    world = _parse_world(data.get("world"), problems)
 
     if problems:
         raise EnvSchemaError(
@@ -220,7 +251,7 @@ def parse_env(data, path="<dict>"):
 
     return Env(name=name, tags=tags, mc=mc, loader=loader, java_version=java_version, jech=jech,
                mods=mods, checks=checks, timeout_sec=timeout_sec, jvm=jvm, path=path, raw=data,
-               ready_when=ready_when)
+               ready_when=ready_when, skip=skip, world=world)
 
 
 def load_all(directory=None):
@@ -249,6 +280,9 @@ def find_env(selector, directory=None):
 
 _NAME_RE = re.compile(r"^[A-Za-z0-9._-]+$")
 _VERSION_RE = re.compile(r"^\d+(\.\d+)+$")
+# A world name becomes one directory under saves/ and one zip entry inside the
+# pack, so it may not carry a separator or a parent-directory hop.
+_WORLD_NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9 ._-]*$")
 
 
 def _reject_unknown(data, allowed, context, problems):
@@ -363,6 +397,40 @@ def _parse_ready_when(data, problems):
     _reject_unknown(data, {"value"}, "env.ready_when", problems)
     value = _string(data, "value", "env.ready_when", problems, required=True)
     return ReadyWhen(value) if value else None
+
+
+def _parse_skip(data, problems):
+    """``skip`` is optional; when present it is the reason the env is not executed.
+
+    A skipped env is never run and never rendered as a pass — the reason is
+    required precisely so the report can say *why* nothing was verified.
+    """
+    if data is None:
+        return None
+    if not isinstance(data, str) or not data.strip():
+        problems.append("env.skip must be a non-empty string (the reason the env is not run)")
+        return None
+    return data.strip()
+
+
+def _parse_world(data, problems):
+    """``world`` is optional; when present it must be ``{"name": "<saves folder>"}``."""
+    if data is None:
+        return None
+    if not isinstance(data, dict):
+        problems.append('env.world must be an object {"name": "<world folder>"}')
+        return None
+    _reject_unknown(data, {"name"}, "env.world", problems)
+    name = _string(data, "name", "env.world", problems, required=True)
+    if name is None:
+        return None
+    if not _WORLD_NAME_RE.match(name) or name in (".", ".."):
+        problems.append(
+            f"env.world.name {name!r} must be a plain folder name (no path separators, "
+            "not '.' or '..'): it becomes saves/<name> inside the instance"
+        )
+        return None
+    return WorldSpec(name)
 
 
 def _parse_describe(data, context, problems):

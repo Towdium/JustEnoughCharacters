@@ -9,6 +9,14 @@ Two reasons:
 * ``overrides`` is copied into the instance verbatim, which is what lets the
   isolation step rebuild ``mods/`` from one authoritative source.
 
+The same authoritative-input rule covers the two things an instance needs beyond
+its mods:
+
+* ``overrides/options.txt`` — the minimal preset that keeps the accessibility
+  onboarding screen out of the startup path (see ``lib.options``);
+* ``overrides/saves/<name>/`` — the world seed an env is launched into, rendered
+  from the cache ``jt seed-world`` maintains (see ``lib.worlds``).
+
 The build directory lives under ``runs/<id>/pack`` and the zip next to it, so a
 run's exact input set survives with the report.
 """
@@ -21,7 +29,7 @@ import shutil
 import zipfile
 from pathlib import Path
 
-from . import envs
+from . import envs, options, worlds
 from .errors import ConfigError, DependencyError
 from .util import atomic_write_text, dump_json_text, load_json, sha256_json
 
@@ -34,7 +42,7 @@ INDEX_GAME = "minecraft"
 
 class PackResult:
     def __init__(self, *, pack_dir, index_path, mrpack_path, pack_hash, mod_filenames, version_id,
-                 dependencies):
+                 dependencies, extra_overrides=(), world=None, world_digest=None):
         self.pack_dir = Path(pack_dir)
         self.index_path = Path(index_path)
         self.mrpack_path = Path(mrpack_path)
@@ -42,9 +50,17 @@ class PackResult:
         self.mod_filenames = list(mod_filenames)
         self.version_id = version_id
         self.dependencies = dict(dependencies)
+        # Overrides beyond ``mods/``, as pack-relative posix paths ("options.txt",
+        # "saves/jechworld"). What the isolation step has to stage as well.
+        self.extra_overrides = list(extra_overrides)
+        self.world = world
+        self.world_digest = world_digest
 
     def mods_dir(self):
         return self.pack_dir / OVERRIDES_DIR / MODS_SUBDIR
+
+    def overrides_dir(self):
+        return self.pack_dir / OVERRIDES_DIR
 
     def __repr__(self):
         return f"PackResult({self.mrpack_path.name}, {len(self.mod_filenames)} mod(s))"
@@ -103,8 +119,8 @@ def modset_hash(env, resolved):
     })
 
 
-def build_pack(env, resolved, run_dir, *, version_id=None, log=print):
-    """Stage ``overrides/mods`` + the index, then zip them into ``<env.name>.mrpack``."""
+def build_pack(env, resolved, run_dir, *, version_id=None, seed=None, log=print):
+    """Stage ``overrides/`` (mods, options.txt, the world seed) and zip the index."""
     run_dir = Path(run_dir)
     pack_dir = run_dir / "pack"
     mods_dir = pack_dir / OVERRIDES_DIR / MODS_SUBDIR
@@ -128,6 +144,8 @@ def build_pack(env, resolved, run_dir, *, version_id=None, log=print):
         _link_or_copy(artifact.path, dest)
         staged.append(artifact.filename)
 
+    extra_overrides = stage_overrides(env, pack_dir, seed=seed, log=log)
+
     index = build_index(env, resolved, version_id=version_id)
     index_path = pack_dir / INDEX_NAME
     atomic_write_text(index_path, dump_json_text(index))
@@ -143,7 +161,49 @@ def build_pack(env, resolved, run_dir, *, version_id=None, log=print):
         mod_filenames=staged,
         version_id=index["versionId"],
         dependencies=index["dependencies"],
+        extra_overrides=extra_overrides,
+        world=env.world.name if env.world is not None else None,
+        world_digest=seed.digest if (env.world is not None and seed is not None) else None,
     )
+
+
+def stage_overrides(env, pack_dir, *, seed=None, log=print):
+    """Write the non-mod overrides: ``options.txt`` and, when declared, the world.
+
+    Returns the pack-relative posix paths of what it staged, so the caller (and
+    the report) knows exactly which extra inputs a run carried.
+    """
+    overrides_dir = Path(pack_dir) / OVERRIDES_DIR
+    overrides_dir.mkdir(parents=True, exist_ok=True)
+    staged = []
+
+    options_path = overrides_dir / options.FILENAME
+    atomic_write_text(options_path, options.render())
+    staged.append(options.FILENAME)
+    log(f"pack: overrides/{options.FILENAME} preset ({', '.join(options.keys())})")
+
+    if env.world is None:
+        return staged
+    if seed is None:
+        raise DependencyError(
+            f"{env.name}: the env is launched into the world {env.world.name!r} but no seed was "
+            f"supplied; run jt seed-world {env.name} first (jt run builds it automatically)"
+        )
+    target = overrides_dir / env.world.saves_path
+    worlds.stage_world(seed.world_dir, target)
+    staged.append(env.world.saves_path)
+    log(f"pack: overrides/{env.world.saves_path} <- seed {seed.digest[:16]} "
+        f"({len(seed.files)} file(s), {seed.bytes_total} bytes)")
+    return staged
+
+
+def listed_overrides(mrpack_path):
+    """Every non-mod entry the pack carries, as pack-relative posix paths."""
+    with zipfile.ZipFile(mrpack_path) as archive:
+        names = [name for name in archive.namelist()
+                 if name.startswith(OVERRIDES_DIR + "/") and not name.endswith("/")
+                 and not name.startswith(f"{OVERRIDES_DIR}/{MODS_SUBDIR}/")]
+    return sorted(names)
 
 
 def _link_or_copy(source, dest):
