@@ -1,5 +1,5 @@
 {
-  "_comment": "1.12.2 line against legacy Just Enough Items 4.16.x. No 'Registering JEI pinyin search index' check here: that line is emitted by JechJeiPlugin.registerAdvancedSearch, and legacy JEI 4.16.1.301 has no mezz/jei/api/IAdvancedSearchRegistry to implement (75 classes under mezz/jei/api, none of them the search API; HEI 4.34.0 has it). With legacy JEI the integration is the classic ASM path instead — its two markers below are the assertion, and the extra check pins the suffix-tree patch only this path applies.",
+  "_comment": "1.12.2 line against legacy Just Enough Items 4.16.x. No 'Registering JEI pinyin search index' check here: that line is emitted by JechJeiPlugin.registerAdvancedSearch, and legacy JEI 4.16.1.301 has no mezz/jei/api/IAdvancedSearchRegistry to implement (75 classes under mezz/jei/api, none of them the search API; HEI 4.34.0 has it). With legacy JEI the integration is the classic ASM path instead — its two markers below are the assertion, and the extra check pins the suffix-tree patch only this path applies. Declared `skip` on 2026-10-14: the 1.12.2 client cannot boot in this checkout's Gradle dev run on this arm64 machine (LWJGL 2's macOS natives are x86_64/i386-only, the only JDK 8 here is arm64), and the instance launcher whose arm64 natives substitution made the row green is retired — measured, with the probe log and the native architectures, in envs/README.md `The 1.12.2 rows and the gradle backend`. The checks stay as written.",
   "name": "1.12.2-forge-jei-legacy",
   "tags": [
     "112",
@@ -15,6 +15,7 @@
   "java": {
     "version": 8
   },
+  "skip": "MC 1.12.2's client cannot boot in the checkout's Gradle dev run on this arm64 machine (LWJGL 2 mac natives are x86_64-only) and the instance launcher that substituted arm64 natives is retired; see envs/README.md",
   "jech": {
     "source": "local-build",
     "project": "1.12.0",

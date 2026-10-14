@@ -258,6 +258,115 @@ step once the split package is dealt with:
   on the machine's default JDK. The client's own JDK still comes from the module's
   toolchain (8 for 1.16.5, 17 for the rest).
 
+### The 1.12.2 rows and the gradle backend
+
+Both `1.12.2-*` rows are **declared `skip`** (2026-10-14): on this machine a
+1.12.2 client cannot be dev-run at all, and the instance backend that used to
+carry them is retired. Measured end to end with the checkout's own task and no
+harness property in play (`Data/jech-compat/112-gradle-20261014/`, `1.12.0`
+checkout, Gradle 9.3.1, client toolchain 8):
+
+* **The bare run does not even resolve.** `./gradlew runClient` in `1.12.0` dies
+  in `:runtimeClasspath`: Forge's maven mirror serves
+  `ca.weblite:java-objc-bridge:1.0.0`'s POM and its main jar but **404s the
+  `natives-osx` classifier jar** the 1.12.2 `classes-macos` variant selects
+  (`maven.minecraftforge.net/.../java-objc-bridge-1.0.0-natives-osx.jar` → 404,
+  while the same file on `libraries.minecraft.net` → 200, 5629 bytes). Gradle
+  pins a module to the first repository that answers with metadata, so the mirror
+  that has the POM wins and the one that has the jar is never asked. That is
+  repository rot, not a checkout defect, and one declaration works around it —
+  see the recipe below. With it added, the task gets past resolution and launches
+  the client.
+* **Then the client cannot load a window.** The launcher
+  (`net.minecraftforge.legacydev.MainClient`, the checkout's own JDK 8) dies in
+  Minecraft's initialization:
+
+  ```
+  java.lang.UnsatisfiedLinkError: <cache>/natives/liblwjgl.dylib: dlopen(...):
+    tried: '...liblwjgl.dylib' (fat file, but missing compatible architecture
+    (have 'i386,x86_64', need 'arm64e' or 'arm64e.v1' or 'arm64' or 'arm64'))
+      at net.minecraft.client.Minecraft.getSystemTime(Minecraft.java:3159)
+  ```
+
+  MC 1.12.2 is a LWJGL **2** title and LWJGL 2's macOS natives exist for
+  i386/x86_64 only; this machine is arm64 and every JDK it has is arm64
+  (`/usr/libexec/java_home -V`). The dev-run path has nothing to substitute:
+  ForgeGradle's slime-launcher extracts the official natives jars it resolved
+  (`lwjgl-platform-2.9.2-nightly-20140822-natives-osx.jar`,
+  `jinput-platform-2.0.5-natives-osx.jar`,
+  `java-objc-bridge-1.0.0-natives-osx.jar`) into its cache and points the
+  client's `nativesDirectory` at them.
+* **What made the same row green on the instance backend was the launcher, not
+  the checkout.** The `1.12.2-forge-jei-legacy` instance ran on the *same* arm64
+  JDK 8 (`instance.cfg`: `JavaPath=…/azul-1.8.0_492/…`,
+  `JavaRealArchitecture=aarch64`), but its `natives/liblwjgl.dylib` and
+  `openal.dylib` are **arm64** binaries, `libjinput-osx.dylib` is fat
+  x86_64+arm64, and its classpath carries `java-objc-bridge-1.1.0-mmachina.1`
+  instead of 1.0.0. Those come from the launcher's own meta for
+  `org.lwjgl:2.9.4-nightly-20150209`, which declares an extra
+  `natives-osx-arm64` classifier with a URL and sha1 pointing at a third-party
+  build (`github.com/theofficialgman/lwjgl3-binaries-arm64`, branch
+  `lwjgl-2.9.4`). No env file can add that: it is a launcher-side natives
+  substitution, i.e. exactly the capability a Prism-free future drops.
+* **Names are not the blocker here, though — that expectation is settled the
+  other way.** `FMLDeobfTweaker.injectIntoClassLoader` registers
+  `net.minecraftforge.fml.common.asm.transformers.DeobfuscationTransformer`
+  unconditionally ("Deobfuscation transformer, always last",
+  `net/minecraftforge/fml/common/launcher/FMLDeobfTweaker.java:36-38`), and in a
+  deobfuscated environment its `shouldTransform` still accepts everything outside
+  `net.minecraft.*`, `net.minecraftforge.*` and the twelve exempt library
+  prefixes (`…/fml/common/asm/transformers/DeobfuscationTransformer.java:46-51,
+  78-91`), so a third-party mod class loaded from a production jar is still run
+  through `FMLRemappingAdapter`. The probe log's
+  `Managed to load a deobfuscated Minecraft name- we are in a deobfuscated
+  environment. Skipping runtime deobfuscation` is
+  `CoreModManager.handleLaunch`'s own environment probe
+  (`…/fml/relauncher/CoreModManager.java:192-215`) and what it skips is the other
+  direction. **Untested, however:** the client never reached mod loading —
+  `Searching <game dir>/mods for mods` is the last FML line before the native
+  crash — so "JEI 4.16.1 loads in a dev run" is an expectation, not a
+  measurement.
+* **What already works, so a future pass does not redo it.** The checkout's
+  coremod *is* discovered in a dev run (`Found and added coremod:
+  me.towdium.jecharacters.core.JechCore`, and
+  `Found a command line coremod : me.towdium.jecharacters.core.JechCore` — the
+  launcher turns the project's `META-INF/MANIFEST.MF` into
+  `-Dfml.coreMods.load`), `<game dir>/mods` is scanned, and JECh's coremod ran
+  far enough to write `<game dir>/config/JustEnoughCharacters.cfg`
+  (`JechCore.injectData` → `JechConfig.init`), which is the row's
+  `config-generated` check. The untested half is the mod that has to load after
+  Minecraft bootstraps.
+* **The recipe, for whenever someone gives the backend natives.** All of it is
+  outside the env files:
+  1. give the module a repository that still serves the macOS native classifier,
+     declared **first** and group-restricted so the module resolves where the POM
+     *and* the jar both exist:
+
+     ```groovy
+     repositories {
+         maven { url = 'https://libraries.minecraft.net/'; content { includeGroup 'ca.weblite' } }
+         minecraft.mavenizer(it)   // then fg.forgeMaven, fg.minecraftLibsMaven, … as upstream
+     }
+     ```
+  2. make the client able to load an arm64 window: either substitute an arm64
+     LWJGL 2 natives set into the run the way the launcher's meta does (the same
+     `natives-osx-arm64` jar, plus a `java.library.path` that wins over the
+     slime-launcher's natives directory — the LWJGL version on the run classpath
+     is part of that substitution), or run the client on an x86_64 JDK 8 under
+     Rosetta (none is installed, and an env has no field for the client's JDK by
+     design);
+  3. only then re-probe whether the two rows' markers are reachable in a dev run.
+     If they are, wire `runClient` the way the property-guarded recipe above does
+     (`jechRunDir`; a 1.12.2 row is menu-level, since there is no quick-play
+     before 1.20).
+
+Until then both rows carry `skip` with the measured reason, their checks stay
+written down (nothing was weakened to make them go away), and the `1.12.0`
+checkout is left as upstream has it — the probe's repository declaration was
+reverted. The probe and control logs are
+`Data/jech-compat/112-gradle-20261014/` (`01-control-nomods.log`,
+`02-control-nomods-info.log`, `03-probe-jei-legacy.log`).
+
 ### `uitest` — running the checkout's in-client UI test harness
 
 ```json
@@ -399,7 +508,11 @@ pins and downloads it, `jt seed-world` still maintains its world cache, and the
 env keeps its `checks` as the written-down statement of what it would assert
 (the reason string is what points at the missing capability).
 
-`mv-1.19.2-forge` is the only row left that carries `skip`. That skip was re-measured on
+Three rows carry `skip` today: `mv-1.19.2-forge`, below, and the two `1.12.2-*`
+rows, whose reason is a launch-layer one (the checkout's Gradle dev run cannot
+boot a 1.12.2 client on this arm64 machine, and the instance backend that
+substituted arm64 natives for it is retired — "The 1.12.2 rows and the gradle
+backend"). The `mv-1.19.2-forge` skip was re-measured on
 2026-10-14 rather than inherited: `mv-1.19.2-forge` was run with a real seed
 staged (`saves/jechworld`, 14 files) and launched as
 `prismlauncher --launch … --world jechworld`. The client reached
@@ -782,12 +895,12 @@ and says so in the report.
 | `mv-1.18.2-fabric` | 1.18.2 / fabric 0.14.9 | 17 | `multiple-version` (gradle) | jei 10.2.1.1005, fabric-api 0.67.0+1.18.2 |
 | `mv-1.16.5-forge` | 1.16.5 / forge 1.16.5-36.2.42 | 8 | `multiple-version` | jei 7.8.0.1009 (pinned by file id) |
 | `mv-1.16.5-fabric` | 1.16.5 / fabric 0.14.9 | 8 | `multiple-version` (gradle) | fabric-api 0.42.0+1.16 (smoke) |
-| `1.12.2-forge-hei` | 1.12.2 / forge 1.12.2-14.23.5.2864 | 8 | `1.12.0` (srg jar) | had-enough-items 4.34.0 |
-| `1.12.2-forge-jei-legacy` | 1.12.2 / forge 1.12.2-14.23.5.2864 | 8 | `1.12.0` (srg jar) | jei 4.16.1.301 |
+| `1.12.2-forge-hei` | 1.12.2 / forge 1.12.2-14.23.5.2864 | 8 | `1.12.0` (srg jar) | had-enough-items 4.34.0 — **skipped**, see below |
+| `1.12.2-forge-jei-legacy` | 1.12.2 / forge 1.12.2-14.23.5.2864 | 8 | `1.12.0` (srg jar) | jei 4.16.1.301 — **skipped**, see below |
 
 Every row also stages the preset `options.txt`. The seven envs that are
 *launched into a world*, the row that loads its own, the row that claims no level
-at all, and the one that is *skipped*, are called out below and in the table
+at all, and the ones that are *skipped*, are called out below and in the table
 above:
 
 | env | runs? | world | why |
@@ -797,7 +910,8 @@ above:
 | `moderner` ×4, `mv-1.20.1` ×2 | yes | `world: {name: jechworld}` | same marker, same level-load phase (measured 2026-10-14) |
 | `mv-1.19.2-forge` | **no** — `skip` | none | same marker, but quick play needs 1.20+ (re-measured 2026-10-14) |
 | `mv-1.19.2-fabric` | yes | none | the menu-level smoke row: no marker to reach, so no level (gradle backend) |
-| `mv-1.16.5` ×2, `mv-1.18.2` ×2, `1.12.2` ×2 | yes | none | markers are emitted during startup |
+| `mv-1.16.5` ×2, `mv-1.18.2` ×2 | yes | none | markers are emitted during startup |
+| `1.12.2` ×2 | **no** — `skip` | none | markers are emitted during startup, but no launch path boots a 1.12.2 client on this machine (2026-10-14) |
 
 Every env but `1.21.1-neoforge` also declares
 `ready_when: Sound engine started`; without it a client that reaches the title
@@ -974,6 +1088,12 @@ has a JEI plugin and can be asserted on its registration marker.
   the dotted spelling there would be a check that can never pass. Likewise the
   suffix-tree patch is logged as `mezz/jei/suffixtree/GeneralizedSuffixTree` —
   the 1.12.2-era JEI package, not the 1.16+ `mezz/jei/search/suffixtree` one.
+
+  Both rows are declared `skip` (2026-10-14). The checks above stay as the
+  written record of what each row verifies; what stops them is one layer below,
+  the launch: no path on this machine boots a 1.12.2 client any more. The
+  measurement, and what a future pass would have to give the Gradle backend, are
+  in "The 1.12.2 rows and the gradle backend" above.
 
 ## Adding an env
 

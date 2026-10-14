@@ -1,5 +1,5 @@
 {
-  "_comment": "1.12.2 line against Had Enough Items (the JEI fork). The srg classifier is required: the build directory also holds the non-srg jar, and only the srg one is a 1.12.2 runtime jar. With HEI the legacy GeneralizedSuffixTree constructor patch is not applied (that is the legacy-JEI path only), so that check is absent here.",
+  "_comment": "1.12.2 line against Had Enough Items (the JEI fork). The srg classifier is required: the build directory also holds the non-srg jar, and only the srg one is a 1.12.2 runtime jar. With HEI the legacy GeneralizedSuffixTree constructor patch is not applied (that is the legacy-JEI path only), so that check is absent here. Declared `skip` on 2026-10-14: the 1.12.2 client cannot boot in this checkout's Gradle dev run on this arm64 machine (LWJGL 2's macOS natives are x86_64/i386-only, the only JDK 8 here is arm64), and the instance launcher whose arm64 natives substitution made the row green is retired — measured, with the probe log and the native architectures, in envs/README.md `The 1.12.2 rows and the gradle backend`. The checks stay as written.",
   "name": "1.12.2-forge-hei",
   "tags": [
     "112",
@@ -14,6 +14,7 @@
   "java": {
     "version": 8
   },
+  "skip": "MC 1.12.2's client cannot boot in the checkout's Gradle dev run on this arm64 machine (LWJGL 2 mac natives are x86_64-only) and the instance launcher that substituted arm64 natives is retired; see envs/README.md",
   "jech": {
     "source": "local-build",
     "project": "1.12.0",

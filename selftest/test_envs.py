@@ -168,21 +168,35 @@ class EnvParsingTest(unittest.TestCase):
         self.assertEqual(loaded["1.21.1-fabric"].world.name, "jechworld")
         for name in ("1.21.1-neoforge", "1.21.1-fabric", "mv-1.20.1-fabric"):
             self.assertIsNone(loaded[name].skip, name)
-        # `mv-1.19.2-forge` is the one row that cannot reach its marker: JEI 11.x
+        # `mv-1.19.2-forge` cannot reach its marker: JEI 11.x
         # logs the storage marker while a level loads, and no non-interactive way
         # to load a level exists before 1.20, so the row carries `skip` and its
         # checks stay written down as documentation. A skip is still a
         # first-class result (see the runner tests); these envs simply have one.
         # The row is also not a gradle row: the multiple-version forge modules
         # cannot carry the mod under test in a dev run (measured 2026-10-14).
-        self.assertEqual([env.name for env in loaded.values() if env.skip],
-                         ["mv-1.19.2-forge"])
+        # The two `1.12.2-*` rows joined it on the same day for a different
+        # reason: their client cannot boot in the `1.12.0` checkout's Gradle dev
+        # run on this arm64 machine (LWJGL 2's macOS natives are x86_64/i386-only
+        # while the only JDK 8 here is arm64), and the instance launcher whose
+        # arm64 natives substitution used to carry them is retired — measured, see
+        # envs/README.md, "The 1.12.2 rows and the gradle backend".
+        self.assertEqual(sorted(env.name for env in loaded.values() if env.skip),
+                         ["1.12.2-forge-hei", "1.12.2-forge-jei-legacy", "mv-1.19.2-forge"])
         skipped = loaded["mv-1.19.2-forge"]
         self.assertIsNone(skipped.world, "a world is what the row is missing")
         self.assertIn("jei-storage-registered", [check.name for check in skipped.checks],
                       "the skip names the one capability the row is missing")
         self.assertIsNone(loaded["mv-1.19.2-fabric"].skip)
         self.assertIsNone(loaded["mv-1.19.2-fabric"].world)
+        # A skipped 1.12.2 row keeps everything but the launch: its checks are the
+        # written record of what the row verifies, and it is skipped by the
+        # *launch* layer, not by weakening an assertion.
+        for name, marker in (("1.12.2-forge-jei-legacy", "legacy-tree-transformed"),
+                             ("1.12.2-forge-hei", "jei-index-registered")):
+            row = loaded[name]
+            self.assertIsNone(row.gradle, f"{name} has no working gradle wiring")
+            self.assertIn(marker, [check.name for check in row.checks], name)
 
     def test_every_shipped_env_declares_a_stopping_rule(self):
         """No env that is actually executed may be left without ``ready_when``.
@@ -536,8 +550,10 @@ class ViaTest(unittest.TestCase):
         loaded = {env.name: env for env in envs.load_all()}
         # Every row that declares a ``gradle`` block: the 1.21.1 pair, the four
         # moderner rows (2026-10-14) and the four multiple-version fabric rows
-        # (same day). Everything else still launches through Prism — today that is
-        # the two 1.12.2 rows and the four multiple-version forge rows. The
+        # (same day). Every other row still *selects* the instance backend — today
+        # the four multiple-version forge rows and the two 1.12.2 rows, the latter
+        # now carrying `skip` (see the skip test above), so nothing but the backend
+        # label is left of the 1.12.2 pair. The
         # backend is a per-(line, loader) decision, not a per-line one: the
         # multiple-version pair is split inside the line on purpose, because a
         # probe of that checkout's Forge dev runs (2026-10-14) ended in a JPMS

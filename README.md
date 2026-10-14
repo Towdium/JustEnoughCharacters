@@ -496,9 +496,11 @@ window has to be able to appear. Bootstrap checklist, in order:
   menu-level smoke row that claims no marker (see
   [envs/README.md](envs/README.md)). The `moderner` ×4 and
   `mv-1.20.1` ×2 rows are also launched into a world and were measured the same
-  way: seven envs in all stop at `goal-reached` on a real join, only
-  `mv-1.19.2-forge` is skipped, and the harness row loads its own level rather
-  than joining one.
+  way: seven envs in all stop at `goal-reached` on a real join, the two
+  `1.12.2-*` rows are skipped rather than launched at all (their checkout's dev
+  run cannot boot a 1.12.2 client on this machine — see "Env matrix" below and
+  [envs/README.md](envs/README.md), "The 1.12.2 rows and the gradle backend"),
+  and the harness row loads its own level rather than joining one.
 * **Known limitation:** a production instance logs at INFO, so DEBUG-level lines
   are not in `latest.log`. The modern line's transformer hit line is exactly such
   a line (`Transformed <class> with <Transformer>`, logged at DEBUG by the
@@ -523,8 +525,13 @@ window has to be able to appear. Bootstrap checklist, in order:
 
 16 envs: every (version line, loader) pair, all tagged `smoke`. Ten of them — the
 `1.21.1` pair, the four `moderner` rows and the four `multiple-version` *fabric*
-rows — launch through the checkout's Gradle backend rather than Prism; the other
-six use Prism. The `experimental` rows have
+rows — launch through the checkout's Gradle backend rather than Prism. Of the
+other six, the four `multiple-version` *forge* rows still select the instance
+launcher, and the two `1.12.2` rows declare `skip`: their checkout's Gradle dev
+run cannot boot a 1.12.2 client on this arm64 machine, and the instance launcher
+whose natives substitution used to carry them is retired (measured 2026-10-14 —
+[envs/README.md](envs/README.md), "The 1.12.2 rows and the gradle backend"), so
+three of the sixteen are never executed. The `experimental` rows have
 doubtful upstream version pins, `legacy` marks the 1.12.2 JEI row, and any env
 that declares `skip` is also tagged `skip`. Per-env loader/java/target versions,
 the check families and the resolution rules are in
@@ -552,12 +559,20 @@ split package on 1.18.2/1.19.2/1.20.1, a broken dev artifact on 1.16.5 — measu
 2026-10-14, with the control runs). Details and the wiring recipe in
 [envs/README.md](envs/README.md), "Forge rows and the gradle backend".
 
-One row is expected to keep the matrix red, and it is not a harness failure:
+Three rows are expected to keep the matrix red, and none of them is a harness
+failure:
 
 * `mv-1.19.2-forge` — declared `skip` (no quick-play world
   join before 1.20; re-measured 2026-10-14), so a selection without
   `--exclude tag:skip` exits 1 with the skip named. Its fabric sibling no longer
   skips: as a gradle row it is a menu-level smoke row with no marker to reach.
+* `1.12.2-forge-jei-legacy` and `1.12.2-forge-hei` — declared `skip` on the same
+  day: the `1.12.0` checkout's Gradle dev run cannot boot a 1.12.2 client on this
+  arm64 machine (LWJGL 2's macOS natives are x86_64/i386-only and there is no
+  arm64 substitute on the dev-run path), and the instance launcher that used to
+  substitute arm64 natives for it is retired. Measured, with the no-mod control,
+  the native crash and the launcher's own natives set:
+  [envs/README.md](envs/README.md), "The 1.12.2 rows and the gradle backend".
 
 `mv-1.16.5-forge` used to be the second such row, and the redness was the
 finding: the built jar declares `forge [36.2.41,)` in its own `mods.toml` while
