@@ -1,0 +1,25 @@
+{
+  "required": true,
+  "package": "me.towdium.jecharacters.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "minVersion": "0.8",
+  "mixins": [
+  ],
+  "client": [
+    "uitest.ChatComponentAccessor",
+    "uitest.ClientPacketListenerMixin",
+    "uitest.InputConstantsMixin",
+    "uitest.JechSearchStorageMixin",
+    "uitest.KeyMappingAccessor",
+    "uitest.KeyboardHandlerAccessor",
+    "uitest.KeyboardHandlerMixin",
+    "uitest.MatchMixin",
+    "uitest.MinecraftMixin",
+    "uitest.MinecraftModifierMixin",
+    "uitest.MouseHandlerAccessor",
+    "uitest.MouseHandlerMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

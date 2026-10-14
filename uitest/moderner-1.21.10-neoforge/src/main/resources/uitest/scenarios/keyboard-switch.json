@@ -1,0 +1,39 @@
+{
+  "name": "keyboard-switch",
+  "group": "jei",
+  "tags": ["jei"],
+  "requiresWorld": true,
+  "scenarioTimeoutMs": 120000,
+  "steps": [
+    {"do": "log", "text": "keyboard-switch: put JECh on 小鹤双拼 through JECh's own chat command"},
+    {"do": "command", "text": "/jech keyboard xiaohe"},
+    {"do": "record_matches", "clear": true},
+
+    {"do": "log", "text": "keyboard-switch: open the inventory and focus JEI's search bar (the harness's level is creative, so this is the creative inventory)"},
+    {"do": "press_bind", "bind": "inventory"},
+    {"do": "wait_until_screen", "screen": "CreativeModeInventoryScreen"},
+    {"do": "wait_ms", "ms": 500},
+    {"do": "press_bind", "bind": "key.jei.focusSearch"},
+    {"do": "wait_ms", "ms": 300},
+
+    {"do": "log", "text": "keyboard-switch: the bar is JEI's own field, so clear it the way a player would"},
+    {"do": "press_key", "key": "backspace", "times": 24},
+
+    {"do": "log", "text": "keyboard-switch: 石头 is ui+tz on 小鹤双拼, so this key order must reach 石"},
+    {"do": "type_text", "text": "uitz"},
+    {"do": "assert_match_recorded", "query_contains": "uitz", "candidate_contains": "石", "expect": true, "within_ms": 4000},
+    {"do": "screenshot", "label": "xiaohe-uitz"},
+
+    {"do": "record_matches", "clear": true},
+    {"do": "press_key", "key": "backspace", "times": 24},
+    {"do": "log", "text": "keyboard-switch: 全拼's own key order is the negative control"},
+    {"do": "type_text", "text": "shitou"},
+    {"do": "assert_match_recorded", "query_contains": "shitou", "candidate_contains": "石", "expect": false, "within_ms": 2000},
+    {"do": "screenshot", "label": "xiaohe-shitou"},
+
+    {"do": "close_screen"},
+    {"do": "wait_until_screen", "screen": null},
+    {"do": "command", "text": "/jech keyboard quanpin"},
+    {"do": "log", "text": "keyboard-switch: back on 全拼, so nothing after this scenario depends on the switch"}
+  ]
+}
