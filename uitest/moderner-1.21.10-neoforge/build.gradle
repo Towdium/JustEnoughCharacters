@@ -1,0 +1,362 @@
+// The standalone in-client UI test harness for JECh moderner / MC 1.21.10 /
+// NeoForge — one independent Gradle build per version line, living in
+// compat-tests/uitest/. The skeleton is uitest/1.21.1-neoforge's (the A1
+// template); the engine is the moderner checkout's own copy, moved here as it
+// stands (its Port notes are the authority for the 1.21.10 deltas).
+//
+// This build is a mod project of its own: the whole `main` source set is the
+// jechtest mod — engine, @Mod entry point and scenarios together — and the run
+// loads it as the one local mod while the two jars under test (JECh's built jar
+// and the pinned JEI jar) travel in as project properties.
+//
+// Properties every run understands (all of them optional except the two jars):
+//   -PjechTest=<selection>      the scenario selection; without it no run wiring
+//                               is active and the client boots as a plain client
+//   -PjechRunDir=<dir>          a game directory outside this project (jt's
+//                               redirect); the report follows the game into
+//                               <game dir>/uitest
+//   -PjechJar=<abs path>        the JECh neoforge jar under test (REQUIRED)
+//   -PjeiJar=<abs path>         the pinned JEI jar (REQUIRED)
+//   -PjechTestExclude / -PjechTestGuiScale / -PjechTestWindow=WxH /
+//   -PjechTestInputMode / -PjechTestWatchdogSec / -PjechTestKeepOpen /
+//   -PjechTestHeadless          the same dials the checkout's harness run had
+//
+// The properties travel to the client as system properties, not program
+// arguments, because Minecraft's own argument parser rejects arguments it does
+// not know.
+
+plugins {
+    id 'java-library'
+    id 'eclipse'
+    id 'idea'
+    id 'net.neoforged.moddev' version '2.0.141'
+}
+
+version = mod_version
+group = 'me.towdium.jecharacters.uitest'
+
+// The two jars under test, passed in as absolute paths (jt resolves/builds them
+// and always spells the path, so a stale copy in this tree cannot be tested by
+// accident). Fail-closed at configuration time: a run without them would boot a
+// client with no mod under test and silently prove nothing.
+def jechJarProp = providers.gradleProperty('jechJar')
+def jeiJarProp = providers.gradleProperty('jeiJar')
+def requireJar = { name, prop ->
+    if (!prop.isPresent()) {
+        throw new GradleException(
+            "the ${name} project property is required: this build tests jars it is handed "
+                + "(jt passes it; by hand: -P${name}=/abs/path.jar)")
+    }
+    def file = new File(prop.get())
+    if (!file.isFile()) {
+        throw new GradleException("the ${name} project property names no file: ${file}")
+    }
+    return file
+}
+def jechJarFile = requireJar('jechJar', jechJarProp)
+def jeiJarFile = requireJar('jeiJar', jeiJarProp)
+
+// --- the run wiring the checkout's gradle/jech-uitest.gradle carried ---
+
+// The output directory is captured as locals: inside a run or task closure the
+// script's own properties are not the closure's delegate, so a script-level name
+// would not resolve there.
+def jechUiTestRunDir = project.findProperty('jechRunDir')?.toString()
+def jechUiTestOutDir = jechUiTestRunDir == null
+        ? new File(projectDir, 'runs/client-tests')
+        : new File(jechUiTestRunDir, 'uitest')
+def jechUiTestSelection = project.findProperty('jechTest')?.toString()
+def jechUiTestExclude = project.findProperty('jechTestExclude')?.toString() ?: ''
+def jechUiTestGuiScale = project.findProperty('jechTestGuiScale')?.toString()
+def jechUiTestWindow = project.findProperty('jechTestWindow')?.toString()
+def jechUiTestInputMode = project.findProperty('jechTestInputMode')?.toString()
+def jechUiTestWatchdogSec = project.findProperty('jechTestWatchdogSec')?.toString()
+def jechUiTestKeepOpen = project.hasProperty('jechTestKeepOpen')
+def jechUiTestHeadless = project.hasProperty('jechTestHeadless')
+
+// The real input driver warps the OS cursor, which needs a visible, focused
+// window. Rejected at configuration time rather than quietly downgraded to the
+// synthetic driver.
+if (jechUiTestHeadless && jechUiTestInputMode != null && jechUiTestInputMode.equalsIgnoreCase('REAL')) {
+    throw new GradleException(
+        '-PjechTestHeadless cannot be combined with -PjechTestInputMode=REAL: the real input driver '
+            + 'moves the OS cursor and needs a visible, focused window'
+    )
+}
+
+// The window size is given as WxH; anything else is ignored rather than guessed at.
+def jechUiTestWindowWidth = null
+def jechUiTestWindowHeight = null
+if (jechUiTestWindow != null) {
+    def parts = jechUiTestWindow.toLowerCase().split('x')
+    if (parts.length == 2) {
+        jechUiTestWindowWidth = parts[0].trim()
+        jechUiTestWindowHeight = parts[1].trim()
+    }
+}
+
+base {
+    archivesName = 'jechtest-' + minecraft_version + '-neoforge'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    // PinIn (the mod under test's runtime library) is published on jitpack.
+    maven { url = 'https://jitpack.io' }
+}
+
+// The jars under test ride the *source set's* runtime classpath, not the run's
+// additionalRuntimeClasspath: in a ModDevGradle dev run FML discovers mods from
+// the run's source-set runtime classpath (which is how the checkout's own runs
+// load JEI through localRuntime), while additionalRuntimeClasspath entries are
+// class-path-only and are never scanned for a mods.toml (measured 2026-10-14:
+// a JECh jar handed over that way stayed "jecharacters is not installed").
+// `localRuntime` here mirrors the checkout's own configuration of that name.
+configurations {
+    localRuntime
+    runtimeClasspath.extendsFrom localRuntime
+}
+
+// The harness engine compiles against the mod under test's own classes (the
+// Match/JechSearchStorage mixins target them) and nothing else beyond Minecraft.
+dependencies {
+    compileOnly files(jechJarFile)
+    // The two jars under test, as loaded mods of the run.
+    localRuntime files(jechJarFile)
+    localRuntime files(jeiJarFile)
+    // PinIn types appear in the signatures the recorder's JechSearchStorage tap
+    // walks (TreeSearcher), so the compiler needs the library too.
+    compileOnly "com.github.towdium:PinIn:${verpinin}"
+    // The nullness annotations the ported engine carries are CLASS-retention and
+    // compile-only: nothing at runtime reads them.
+    compileOnly 'org.jspecify:jspecify:1.0.1'
+}
+
+neoForge {
+    version = neo_version
+
+    parchment {
+        minecraftVersion = parchment_minecraft_version
+        mappingsVersion = parchment_mappings_version
+    }
+
+    mods {
+        // The harness mod, and the only local mod this project declares: the mod
+        // under test reaches the run as a jar (below), not as a source set.
+        jechtest {
+            sourceSet(sourceSets.main)
+        }
+    }
+
+    runs {
+        // The harness's one run. Its own game directory keeps a harness boot from
+        // ever sharing a latest.log or a world with an ordinary client, and the
+        // -PjechTest wiring lives here.
+        clientTests {
+            client()
+            // -PjechRunDir is jt's redirect: the harness run gets that game
+            // directory instead of its own, and the run's output follows the game
+            // into <game dir>/uitest. That keeps a jt run's report, screenshots
+            // and junit.xml inside the run directory jt builds, archives and
+            // cleans. -PjechQuickPlayWorld is deliberately *not* honoured here:
+            // the runner stands up its own flat level (WorldBootstrap) and quits
+            // the client when it is done, so joining a world on launch would only
+            // race the world the scenarios are actually asserted against.
+            if (jechUiTestRunDir != null) {
+                gameDirectory = layout.dir(providers.provider { new File(jechUiTestRunDir) })
+            } else {
+                gameDirectory = jechUiTestOutDir
+            }
+            // No dependencies { } here on purpose: FML unpacks the jar-in-jar
+            // entries of a classpath mod in a dev run too, so the JECh jar under
+            // test brings its own PinIn and coremod (measured 2026-10-14: adding
+            // PinIn here on top produced "Module PinIn reads another module named
+            // PinIn"). The checkout's own module could put PinIn on the plain
+            // runtime classpath and let every run inherit it; this build has no
+            // module under test to inherit from, so the jar's own embedding is
+            // the one source.
+            if (jechUiTestSelection != null) {
+                systemProperty 'jech.uitest.run', jechUiTestSelection
+                systemProperty 'jech.uitest.out', jechUiTestOutDir.absolutePath
+                systemProperty 'jech.uitest.exclude', jechUiTestExclude
+                if (jechUiTestGuiScale != null) systemProperty 'jech.uitest.guiScale', jechUiTestGuiScale
+                if (jechUiTestWindowWidth != null) systemProperty 'jech.uitest.windowWidth', jechUiTestWindowWidth
+                if (jechUiTestWindowHeight != null) systemProperty 'jech.uitest.windowHeight', jechUiTestWindowHeight
+                if (jechUiTestInputMode != null) systemProperty 'jech.uitest.inputMode', jechUiTestInputMode
+                if (jechUiTestWatchdogSec != null) systemProperty 'jech.uitest.watchdogSec', jechUiTestWatchdogSec
+                if (jechUiTestKeepOpen) systemProperty 'jech.uitest.keepOpen', 'true'
+            }
+            if (jechUiTestHeadless) systemProperty 'jech.uitest.headless', 'true'
+        }
+    }
+}
+
+// The harness mod's own mods.toml, expanded the way a mod project's is. The
+// [[mixins]] entry there is what makes FML apply jechtest.mixins.json — and only
+// when the jechtest mod is loaded.
+def generateModMetadata = tasks.register('generateModMetadata', ProcessResources) {
+    def replaceProperties = [
+            minecraft_version_range: "[${minecraft_version},)",
+            neo_version_range      : neo_version_range,
+            loader_version_range   : loader_version_range,
+            mod_id                 : mod_id,
+            mod_version            : mod_version
+    ]
+    inputs.properties replaceProperties
+    expand replaceProperties
+    from 'src/main/templates'
+    into 'build/generated/sources/modMetadata'
+}
+sourceSets.main.resources.srcDir generateModMetadata
+neoForge.ideSyncTask generateModMetadata
+
+idea {
+    module {
+        downloadSources = true
+        downloadJavadoc = true
+    }
+}
+
+// Deletes the previous run's output so the verification task can never read an
+// older verdict. A real task dependency, not a doFirst: Gradle snapshots a task's
+// inputs before running its actions, so a doFirst is never reached when the
+// runtime classpath fails to resolve - exactly the case the delete exists for.
+def jechUiTestCleanReport = tasks.register('jechCleanUiTestReport', Delete) {
+    group = 'verification'
+    description = 'Deletes the previous JECh UI test run output.'
+    if (jechUiTestRunDir == null) {
+        // Why not `delete jechUiTestOutDir` here: in this form that directory is
+        // the run's whole game directory, and <game dir>/jech-scenarios inside it
+        // is an *input* - the hot folder a scenario is dropped into so it needs no
+        // rebuild. Removing the directory wholesale would take the hot channel
+        // with it and a dropped file would never be discovered, so enumerate the
+        // directory's own direct children and delete all of them except that hot
+        // folder (every bare run is still a clean, one-shot environment). A
+        // Provider, not a File list, so the listing is taken when the task runs
+        // rather than while the script is configured.
+        delete providers.provider {
+            def children = jechUiTestOutDir.listFiles()
+            children == null ? [] : children.findAll { it.name != 'jech-scenarios' }
+        }
+    } else {
+        // With -PjechRunDir the run borrows a game directory a launcher owns; only
+        // the harness's own output directory under it (<game dir>/uitest) is ours
+        // to clear.
+        delete jechUiTestOutDir
+    }
+}
+
+// The options.txt a bare run of this harness needs, written into the game
+// directory this build owns. The delete above takes the previous one with the
+// rest of the output, so without this a harness run boots on the client's fresh
+// defaults (en_us, onboarding not done).
+//
+// Two keys, and only those (the same fixture lib/options.py stages for a jt run):
+//
+//   lang:zh_cn - the JEI scenarios assert that a pinyin query reaches a Chinese
+//                item name (石头). A client in en_us has no such names, so those
+//                scenarios would fail on a correct build. This is a fixture of
+//                the scenario, not a preference.
+//   onboardAccessibility:true - the "Welcome to Minecraft!" page is shown while
+//                this is false, and nothing in a run can press its Continue
+//                button.
+//
+// A key_* line must never be added here. This file carries no "version:" line,
+// so the client's Options.dataFix reads it as data-version 0 and runs the legacy
+// chain, where OptionsKeyLwjgl3Fix does Integer.parseInt on every key_* value; a
+// modern binding with a modifier ("key.keyboard.f:CONTROL") is not a number, the
+// fixer throws, Options.load() catches it, and EVERY option - lang included -
+// stays at its default (measured 2026-10-14). The JEI focus key needs no pinning
+// anyway: a fresh game directory has no override, so the scenarios press JEI's
+// own registered default (JEI 26.3 registers a plain F on this line).
+//
+// A run handed a game directory by a launcher (-PjechRunDir, as jt does) is NOT
+// preset from here: that directory belongs to the launcher, which stages its own
+// options.txt into it (jt's preset carries the same two keys). Two writers of one
+// file would only drift.
+def jechUiTestPresetOptions = tasks.register('jechPresetUiTestOptions') {
+    group = 'verification'
+    description = 'Writes the options.txt a bare harness run needs into the harness game directory.'
+    onlyIf { jechUiTestSelection != null && jechUiTestRunDir == null }
+    dependsOn jechUiTestCleanReport
+    def outDir = jechUiTestOutDir
+    inputs.property('jechUiTestOptions', 'onboardAccessibility:true\nlang:zh_cn\n')
+    outputs.file(new File(outDir, 'options.txt'))
+    doLast {
+        def preset = new File(outDir, 'options.txt')
+        preset.parentFile.mkdirs()
+        preset.text = 'onboardAccessibility:true\nlang:zh_cn\n'
+        logger.lifecycle("jechtest-uitest: preset ${preset} (${preset.text.trim().replace('\n', ', ')})")
+    }
+}
+
+def jechUiTestVerify = tasks.register('verifyJechUiTest') {
+    group = 'verification'
+    description = 'Reads the UI test report and fails the build unless every scenario passed.'
+    onlyIf { jechUiTestSelection != null }
+    doLast {
+        def report = new File(jechUiTestOutDir, 'report.json')
+        if (!report.isFile()) {
+            throw new GradleException(
+                "no UI test report at ${report} - the client crashed, never reached the runner, "
+                    + 'or -PjechTest matched no scenarios'
+            )
+        }
+        def run = new groovy.json.JsonSlurper().parse(report)
+        def totals = run.totals
+        logger.lifecycle(
+            "jechtest-uitest ${run.status}: ${totals.passed}/${totals.scenarios} scenarios passed, "
+                + "${totals.checks - totals.checksFailed}/${totals.checks} checks passed, "
+                + "${totals.captures} captures, ${run.durationMs} ms"
+        )
+        def failures = []
+        run.scenarios.each { scenario ->
+            if (scenario.status != 'PASS') {
+                failures.add("scenario ${scenario.name}: ${scenario.status}"
+                    + (scenario.message == null ? '' : " (${scenario.message})"))
+            }
+            scenario.steps.each { step ->
+                if (step.status != 'PASS') {
+                    logger.error("  step ${step.index} ${step.name}: ${step.status}"
+                        + (step.waitingFor == null ? '' : " waitingFor=${step.waitingFor}"))
+                    step.checks.each { check ->
+                        if (!check.passed) {
+                            logger.error("    check ${check.label} FAILED"
+                                + (check.detail == null ? '' : " (${check.detail})"))
+                        }
+                    }
+                    step.captures.each { capture ->
+                        logger.error("    capture ${capture.path}"
+                            + (capture.suspect ? ' SUSPECT flat colour' : ''))
+                    }
+                    if (step.error != null) {
+                        logger.error("    error ${step.error.type}: ${step.error.message}")
+                    }
+                }
+            }
+        }
+        if (!failures.isEmpty()) {
+            throw new GradleException('UI test failed:\n  ' + failures.join('\n  '))
+        }
+    }
+}
+
+// The run task's hook is a configureEach: the task is created by MDG after this
+// script is evaluated. A missing report is itself a failure, which is what makes
+// a client that crashed before the runner started show up as a red build.
+tasks.configureEach { task ->
+    if (task.name != 'runClientTests' || jechUiTestSelection == null) return
+    task.dependsOn jechUiTestCleanReport
+    // ordered after the delete, so the preset is not deleted with the rest of the output
+    task.dependsOn jechUiTestPresetOptions
+    task.finalizedBy jechUiTestVerify
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}

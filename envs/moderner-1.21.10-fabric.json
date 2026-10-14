@@ -1,5 +1,5 @@
 {
-  "_comment": "moderner line, MC 1.21.10, fabric (fabric-legacy module). fabric-api version is fabric_version in moderner/gradle.properties; the fabric variant needs it (1.21.10 fabric.mod.json declares the legacy \"fabric\": \"*\" + the common code is compiled against fabric-api). Launched through the checkout's own Gradle run task (gradle launch), and through the harness's own run task: this row runs JECh's in-client UI test harness (env.uitest selects the scenarios), so the client drives its own scenarios and writes report.json, its captures and junit.xml before it quits itself. Two consequences: the row declares no ready_when -- jt's ready_when is a stopping rule for a client that would otherwise run forever, and stopping this one early would kill it mid-scenario and leave no report -- and it declares no world either, because the level it is asserted against is the one the harness's runner creates and pins itself (the JEI plugin marker therefore still arrives). All three artifacts ride that run's classpath (via=dev-classpath): the module registers its own sources as the mod, modRuntimeOnly puts the env's own jei-1.21.10-fabric:26.3.0.31 on it (loom remaps it: remapped.mezz.jei:jei-1.21.10-fabric) and modImplementation puts fabric-api:0.138.3+1.21.10 there — so nothing is staged into mods/. The harness wiring lives on that same loom client run (gradle/jech-uitest-fabric.gradle): without -PjechTest the harness source sets never reach its class path. The wrapper is Gradle 9.5, which runs on the machine default JDK (JBR 25), so daemon_java is null.",
+  "_comment": "moderner line, MC 1.21.10, fabric (the checkout's fabric-legacy module). fabric-api version is fabric_version in moderner/gradle.properties; the fabric variant needs it (1.21.10 fabric.mod.json declares the legacy \"fabric\": \"*\" + the common code is compiled against fabric-api). Runs the standalone in-client UI test harness (uitest/moderner-1.21.10-fabric, an independent loom build in this repository) through the three-stage pipeline config->build->test: jt resolves and pins, builds/reuses the JECh jar from the moderner checkout's fabric-legacy module and compiles the harness build, then launches that build's runClient with the jars under test as -PjechJar/-PjeiJar. The client drives its own scenarios and writes report.json, its captures and junit.xml before it quits itself. Three consequences carried over from the checkout-backend shape: the row declares no ready_when (stopping this client early would kill it mid-scenario and leave no report), no world (the level asserted against is the one the harness's runner creates and pins itself, so the JEI plugin marker still arrives), and no gradle block (the harness build is the launch layer). jech, jei and fabric-api all carry via=dev-classpath: the harness build stages the two jars under test into the run's mods/ folder itself (production fabric jars are intermediary-named; the loader's dev-mode remapper brings them into the run's namespace) and takes fabric-api as its own remapped Gradle dependency at exactly the pinned version, so there is nothing for jt to stage.",
   "name": "moderner-1.21.10-fabric",
   "tags": [
     "moderner",
@@ -14,12 +14,9 @@
   "java": {
     "version": 21
   },
-  "gradle": {
-    "task": ":fabric-legacy:runClient",
-    "daemon_java": null
-  },
   "uitest": {
-    "selection": "tag:smoke,tag:jei"
+    "selection": "tag:smoke,tag:jei",
+    "project": "uitest/moderner-1.21.10-fabric"
   },
   "jech": {
     "source": "local-build",
