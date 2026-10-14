@@ -1,5 +1,5 @@
 {
-  "_comment": "moderner line, MC 26.1.2 (unobfuscated). jei version is jei_unobfuscated_version in moderner/gradle.properties.",
+  "_comment": "moderner line, MC 26.1.2 (unobfuscated). jei version is jei_unobfuscated_version in moderner/gradle.properties. Launched through the checkout's own Gradle run task (gradle backend); the wrapper is Gradle 9.5, which runs on the machine default JDK, so daemon_java is null, while the client's JDK 25 comes from the module's own toolchain. jech and jei both carry via=dev-classpath: neoforge-unobfuscated/build.gradle registers sourceSets.main as the mod and puts mezz.jei:jei-26.1.2-neoforge:29.16.0.46 in localRuntime — the same version this env pins (jei_unobfuscated_version, checked against the run's classpath) — so staging either jar would load that mod id twice.",
   "name": "moderner-26.1.2-neoforge",
   "tags": [
     "moderner",
@@ -15,17 +15,23 @@
   "java": {
     "version": 25
   },
+  "gradle": {
+    "task": ":neoforge-unobfuscated:runClient",
+    "daemon_java": null
+  },
   "jech": {
     "source": "local-build",
     "project": "moderner",
     "path": "neoforge-unobfuscated/build/libs/jecharacters-26.1.2-neoforge-*.jar",
-    "expectModId": "jecharacters"
+    "expectModId": "jecharacters",
+    "via": "dev-classpath"
   },
   "mods": [
     {
       "name": "jei",
       "source": "curseforge",
       "slug": "jei",
+      "via": "dev-classpath",
       "describe": {
         "version": "29.16.0.46"
       },

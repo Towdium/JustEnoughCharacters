@@ -1,5 +1,5 @@
 {
-  "_comment": "moderner line, MC 1.21.10, fabric (fabric-legacy module). fabric-api version is fabric_version in moderner/gradle.properties; the fabric variant needs it (1.21.10 fabric.mod.json declares the legacy \"fabric\": \"*\" + the common code is compiled against fabric-api).",
+  "_comment": "moderner line, MC 1.21.10, fabric (fabric-legacy module). fabric-api version is fabric_version in moderner/gradle.properties; the fabric variant needs it (1.21.10 fabric.mod.json declares the legacy \"fabric\": \"*\" + the common code is compiled against fabric-api). Launched through the checkout's own Gradle run task (gradle backend); the wrapper is Gradle 9.5, which runs on the machine default JDK (JBR 25), so daemon_java is null. All three artifacts ride that run's classpath (via=dev-classpath): the module registers its own sources as the mod, modRuntimeOnly puts the env's own jei-1.21.10-fabric:26.3.0.31 on it (loom remaps it: remapped.mezz.jei:jei-1.21.10-fabric) and modImplementation puts fabric-api:0.138.3+1.21.10 there — so nothing is staged into mods/.",
   "name": "moderner-1.21.10-fabric",
   "tags": [
     "moderner",
@@ -14,17 +14,23 @@
   "java": {
     "version": 21
   },
+  "gradle": {
+    "task": ":fabric-legacy:runClient",
+    "daemon_java": null
+  },
   "jech": {
     "source": "local-build",
     "project": "moderner",
     "path": "fabric-legacy/build/libs/jecharacters-1.21.10-fabric-*.jar",
-    "expectModId": "jecharacters"
+    "expectModId": "jecharacters",
+    "via": "dev-classpath"
   },
   "mods": [
     {
       "name": "jei",
       "source": "curseforge",
       "slug": "jei",
+      "via": "dev-classpath",
       "describe": {
         "version": "26.3.0.31"
       },
@@ -40,6 +46,7 @@
       "name": "fabric-api",
       "source": "curseforge",
       "slug": "fabric-api",
+      "via": "dev-classpath",
       "describe": {
         "version": "0.138.3+1.21.10"
       },

@@ -180,6 +180,38 @@ with the task and the checkout).
   fabric-api is `dev-classpath`, since loom remaps the declared
   `modImplementation` onto the run's classpath).
 
+  The four `moderner` rows (moved to this backend on 2026-10-14) are `dev-classpath`
+  for every artifact, JECh included: each of that line's four modules already puts
+  the env's own dependencies on the run's classpath — `localRuntime` JEI at
+  exactly the pinned version in both NeoForge modules (`jei_version` for 1.21.10,
+  `jei_unobfuscated_version` for 26.1.2), `modRuntimeOnly` JEI and
+  `modImplementation` fabric-api in `fabric-legacy`, and `runtimeOnly` JEI and
+  `implementation` fabric-api in `fabric-unobfuscated` — so nothing is staged into
+  `mods/`. Three things differ from the 1.21.1 rows and are worth knowing before
+  editing either side of the contract:
+  * `daemon_java` is `null`: the moderner wrapper is Gradle 9.5 and runs on the
+    machine's default JDK (JBR 25), where 1.21.1's Gradle 8.13 could not. The
+    *client's* JDK is the checkout's own and is not read from the env: 21 for
+    `neoforge` (its toolchain), 25 for both 26.1.2 modules (toolchain), and 25 for
+    `fabric-legacy` too — that module declares no toolchain, only
+    `sourceCompatibility = 21`, so its `runClient` is launched by the JDK that runs
+    Gradle. Measured `runClient` javaLauncher: neoforge 21, fabric-legacy 25,
+    neoforge-unobfuscated 25, fabric-unobfuscated 25.
+  * both NeoForge modules *already* had a quick-play property of their own —
+    `quickPlaySingleplayerWorld`, read by their client run — and a fixed
+    `run/client/Dev` game directory. The harness's `jechRunDir` and
+    `jechQuickPlayWorld` are added **next to** them, not instead of them: the game
+    directory is overridden only when `-PjechRunDir` is present (the original
+    default line stays), and a plain
+    `./gradlew :neoforge:runClient -PquickPlaySingleplayerWorld=x` behaves exactly
+    as before.
+  * the fabric modules had no `runs` block at all; their wiring is one added
+    `loom { runs { client { … } } }` that only adds arguments to loom's default
+    client run. Their `me/towdium/jecharacters/targets.json` needs no build-file
+    change: the line's own `dev.vfyjxf.gradle.jech` plugin already routes
+    `generateTargetConfig` into `processResources` (the 1.21.1 module's plugin does
+    not, which is why that one wires it by hand).
+
   The `gradle` task and the properties are the *contract* between the harness and
   a checkout: changing a task name or a property name in a checkout means
   changing the env that names it. The 1.21.1 fabric module additionally routes
@@ -387,9 +419,10 @@ window has to be able to appear. Bootstrap checklist, in order:
   the cache is the runner's cache directory. `jt seed-world --exclude tag:skip`
   builds every seed the matrix needs before the game jobs start.
 * The `1.21.1` rows reach their JEI marker **only with the world loaded**, which
-  is why they declare `world` — and they are the two rows that launch through the
-  checkout's Gradle task rather than Prism (see "The `gradle` backend"); their
-  world travels as `-PjechQuickPlayWorld`. The `mv-1.19.2` rows cannot: quick
+  is why they declare `world` — and they are two of the six rows that launch
+  through the checkout's Gradle task rather than Prism (the other four are the
+  `moderner` rows, moved there on 2026-10-14); their world travels as
+  `-PjechQuickPlayWorld`. The `mv-1.19.2` rows cannot: quick
   play needs
   1.20+, so they carry `skip` and a CI selection must decide explicitly whether to
   exclude them (`--exclude tag:skip`) or accept exit code 1 with the skips named.
@@ -422,10 +455,12 @@ window has to be able to appear. Bootstrap checklist, in order:
 
 ## Env matrix
 
-16 envs: every (version line, loader) pair, all tagged `smoke`. The
-`experimental` rows have doubtful upstream version pins, `legacy` marks the
-1.12.2 JEI row, and any env that declares `skip` is also tagged `skip`. Per-env
-loader/java/target versions, the check families and the resolution rules are in
+16 envs: every (version line, loader) pair, all tagged `smoke`. Six of them — the
+`1.21.1` pair and the four `moderner` rows — launch through the checkout's Gradle
+backend rather than Prism; the other ten use Prism. The `experimental` rows have
+doubtful upstream version pins, `legacy` marks the 1.12.2 JEI row, and any env
+that declares `skip` is also tagged `skip`. Per-env loader/java/target versions,
+the check families and the resolution rules are in
 [envs/README.md](envs/README.md).
 
 | version line | mc | neoforge | fabric | forge |

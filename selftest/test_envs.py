@@ -450,8 +450,12 @@ class ViaTest(unittest.TestCase):
 
     def test_the_other_shipped_envs_keep_the_prism_backend(self):
         loaded = {env.name: env for env in envs.load_all()}
+        # Every row that declares a ``gradle`` block: the 1.21.1 pair plus the four
+        # moderner rows (migrated to the gradle backend 2026-10-14). Everything
+        # else still launches through Prism.
+        gradle_row_prefixes = ("1.21.1-", "moderner-")
         prism_envs = [env for name, env in loaded.items()
-                      if not name.startswith("1.21.1-")]
+                      if not name.startswith(gradle_row_prefixes)]
         self.assertTrue(prism_envs)
         for env in prism_envs:
             self.assertIsNone(env.gradle, env.name)
@@ -459,6 +463,37 @@ class ViaTest(unittest.TestCase):
             self.assertEqual(env.jech.via, envs.DEFAULT_VIA, env.name)
             for mod in env.mods:
                 self.assertEqual(mod.via, envs.DEFAULT_VIA, f"{env.name}/{mod.name}")
+
+    def test_the_moderner_rows_ride_the_classpath_too(self):
+        """The four moderner rows are the same contract, in the modern line.
+
+        Each of that line's four modules already puts the env's own dependencies on
+        the run's classpath: the neoforge pair declares JEI through ``localRuntime``
+        at exactly the version the env pins (``jei_version`` for 1.21.10,
+        ``jei_unobfuscated_version`` for 26.1.2), ``fabric-legacy`` through
+        ``modRuntimeOnly`` and ``modImplementation`` fabric-api, and
+        ``fabric-unobfuscated`` through ``runtimeOnly`` JEI and ``implementation``
+        fabric-api. JECh's own sources are the module the run registers, so nothing
+        is staged into ``mods/`` — a second copy of a mod id the run already carries
+        is a double load, not a second opinion. Their Gradle 9.5 wrappers run on the
+        machine's default JDK, so they declare no ``daemon_java``.
+        """
+        loaded = {env.name: env for env in envs.load_all()}
+        expected = {
+            "moderner-1.21.10-neoforge": ":neoforge:runClient",
+            "moderner-1.21.10-fabric": ":fabric-legacy:runClient",
+            "moderner-26.1.2-neoforge": ":neoforge-unobfuscated:runClient",
+            "moderner-26.1.2-fabric": ":fabric-unobfuscated:runClient",
+        }
+        for name, task in expected.items():
+            env = loaded[name]
+            self.assertEqual(env.backend, envs.GRADLE_BACKEND, name)
+            self.assertEqual(env.gradle.task, task, name)
+            self.assertEqual(env.gradle.project_dir, "moderner", name)
+            self.assertIsNone(env.gradle.daemon_java, f"{name}: Gradle 9.5 runs on the default JDK")
+            self.assertEqual(env.jech.via, "dev-classpath", name)
+            for mod in env.mods:
+                self.assertEqual(mod.via, "dev-classpath", f"{name}/{mod.name}")
 
 
 class CheckoutWiringTest(unittest.TestCase):
@@ -493,6 +528,39 @@ class CheckoutWiringTest(unittest.TestCase):
             # The wiring must be conditional: a dev run with neither property must
             # keep the checkout's own defaults.
             self.assertIn("isPresent()", text, f"{name}: the wiring is not property-guarded")
+        self.assertTrue(checked, "no checkout found; the wiring contract was not verified")
+
+    def test_the_moderner_modules_read_the_harness_properties(self):
+        """The same contract for the four moderner modules.
+
+        Two details are specific to that line and are asserted here so a later edit
+        cannot quietly drop them: the neoforge pair *already* had a quick-play
+        property of its own (``quickPlaySingleplayerWorld``) and a fixed
+        ``run/client/Dev`` game directory, both of which must survive next to the
+        harness's ``jechRunDir``/``jechQuickPlayWorld``, and the fabric pair had no
+        run configuration at all before — its wiring only adds the two properties
+        to loom's default client run.
+        """
+        from lib import instance
+        loaded = {env.name: env for env in envs.load_all()}
+        checked = []
+        for name in ("moderner-1.21.10-neoforge", "moderner-1.21.10-fabric",
+                     "moderner-26.1.2-neoforge", "moderner-26.1.2-fabric"):
+            env = loaded[name]
+            path = self.build_gradle(env)
+            if not path.is_file():
+                continue
+            text = path.read_text(encoding="utf-8")
+            checked.append(name)
+            for needle in (instance.GRADLE_RUN_DIR_PROPERTY,
+                           instance.GRADLE_QUICK_PLAY_PROPERTY):
+                self.assertIn(needle, text, f"{name}: {path} does not read {needle!r}")
+            self.assertIn("isPresent()", text, f"{name}: the wiring is not property-guarded")
+            if "neoforge" in env.gradle.task:
+                self.assertIn("quickPlaySingleplayerWorld", text,
+                              f"{name}: the checkout's own quick-play property was dropped")
+                self.assertIn("run/client/Dev", text,
+                              f"{name}: the checkout's own default game directory was dropped")
         self.assertTrue(checked, "no checkout found; the wiring contract was not verified")
 
     def test_the_fabric_module_puts_the_generated_targets_on_the_dev_classpath(self):

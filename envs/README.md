@@ -68,6 +68,14 @@ report records which backend ran (`runBackend`, and a `gradle` object with the
 task and checkout). See [README.md](../README.md), "The `gradle` backend",
 for the full contract between the harness and a checkout.
 
+Six rows use it today: `1.21.1-{neoforge,fabric}` and
+`moderner-{1.21.10,26.1.2}-{neoforge,fabric}` (the four moderner rows since
+2026-10-14, running `:neoforge:runClient`, `:fabric-legacy:runClient`,
+`:neoforge-unobfuscated:runClient` and `:fabric-unobfuscated:runClient` in the
+`moderner` checkout). Their `daemon_java` is `21` for the 1.21.1 pair (Gradle
+8.13) and `null` for the moderner rows (Gradle 9.5 runs on the machine's default
+JDK).
+
 | key | required | meaning |
 | --- | --- | --- |
 | `task` | yes | the Gradle task, spelled from the build root (`:neoforge:runClient`) |
@@ -81,9 +89,14 @@ for the full contract between the harness and a checkout.
 | `via` | `game-dir` (default) / `dev-classpath` | where the artifact's jar goes. `game-dir` copies it into the game directory's `mods/` — what a production instance needs. `dev-classpath` stages nothing: the checkout's own run provides it (the module's sources registered as the mod, or a declared `localRuntime` / `modImplementation` dependency). It is still resolved, pinned and reported; staging it as well would load the same mod id twice |
 
 A `via` that contradicts what the checkout actually provides is not detectable
-from the env file — the two 1.21.1 envs are the written record of the choice (see
-the check in `selftest/test_envs.py`), and a wrong one shows up as a duplicate-mod
-error in the run's log rather than as a silent pass.
+from the env file — the six gradle rows are the written record of the choice (see
+the checks in `selftest/test_envs.py`), and a wrong one shows up as a duplicate-mod
+error in the run's log rather than as a silent pass. All four `moderner` rows are
+`dev-classpath` for every artifact, including JECh: each of that line's modules
+already declares its own runtime dependencies for JEI (both NeoForge modules,
+`localRuntime` at exactly the pinned version; `fabric-legacy`, `modRuntimeOnly`;
+`fabric-unobfuscated`, `runtimeOnly`) and for fabric-api, and the module under
+test *is* the run's own source set.
 
 `loader.type` is one of `forge`, `neoforge`, `fabric`, `quilt`.
 
@@ -231,6 +244,13 @@ then JECh's `Registering JEI pinyin search storage` a second later). The
 emitted at startup (and the 1.16.5/1.18.2 jars carry no JEI plugin at all), so a
 world would only add a level load to what they assert. `mv-1.19.2` cannot join
 one — see the `skip` section above.
+
+A `gradle` env carries the same world a different way: the harness hands it over
+as `-PjechQuickPlayWorld=<name>` and the checkout's own run configuration appends
+`--quickPlaySingleplayer <name>` to the client's arguments — no Prism option is
+involved, and the game directory is the run's own `runs/<id>/game`. The six
+gradle rows (`1.21.1` ×2 and `moderner` ×4) join that way; the seed is staged into
+`saves/<name>/` there exactly as it is for a Prism instance.
 
 One caveat that cost a full watchdog on the way (recorded so the next person
 reads it as designed, not as a bug): a run whose client dies *before* the ready
