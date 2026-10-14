@@ -1,5 +1,5 @@
 {
-  "_comment": "multiple-version line, MC 1.20.1 forge. Exact jar name (the same directory also holds a -dev-shadow jar, so a glob would be ambiguous).",
+  "_comment": "multiple-version line, MC 1.20.1 forge, smoke env. Launched through Prism, which stages the built jar into mods/ and joins the seeded world; it is not launched through the checkout's Gradle run task, because the multiple-version Forge modules cannot carry the mod under test in a dev run (measured 2026-10-14 — see `Forge rows and the gradle backend` in envs/README.md for the JPMS split package that kills 1.18.2/1.19.2/1.20.1 and the broken dev artifact that kills 1.16.5). The row needs the world: JEI 15 defers `registerAdvancedSearch` — the phase that logs JECh's storage marker — to level load.",
   "name": "mv-1.20.1-forge",
   "tags": [
     "mv",
@@ -57,11 +57,11 @@
       "name": "exit-code"
     }
   ],
-  "ready_when": {
-    "value": "Sound engine started"
-  },
   "world": {
     "name": "jechworld"
+  },
+  "ready_when": {
+    "value": "Sound engine started"
   },
   "timeout_sec": 600,
   "jvm": {

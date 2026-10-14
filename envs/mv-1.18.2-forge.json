@@ -1,5 +1,5 @@
 {
-  "_comment": "multiple-version line, MC 1.18.2 forge. This line has no JEI plugin class, so there is no plugin log marker to assert; the checks stay on the failure markers.",
+  "_comment": "multiple-version line, MC 1.18.2 forge, smoke env. Launched through Prism, which stages the built jar into mods/; it is not launched through the checkout's Gradle run task, because the multiple-version Forge modules cannot carry the mod under test in a dev run (measured 2026-10-14 — see `Forge rows and the gradle backend` in envs/README.md for the reasons and their evidence: a JPMS split package on 1.18.2/1.19.2/1.20.1, a broken dev artifact on 1.16.5). This line has no JEI plugin class, so there is no plugin log marker to assert and the checks stay on the failure markers; it has no world either, because they are all startup markers.",
   "name": "mv-1.18.2-forge",
   "tags": [
     "mv",

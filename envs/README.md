@@ -149,6 +149,115 @@ pinned api cannot be a Gradle mod dependency at all (see that row's note).
 | `fabric` | the **fabric-loader** version (not the fabric-api version) | `0.16.14`, `0.19.2` |
 | `quilt` | the quilt-loader version | |
 
+### Forge rows and the gradle backend
+
+The four `multiple-version` forge rows are the only rows *inside* a migrated
+version line that stayed on Prism — the fabric half of the same checkout runs on
+the gradle backend. That split is measured, not assumed: on 2026-10-14 the four
+modules were wired the same way the fabric ones were (property guards in the
+client run, `targets.json` through `processResources`, JEI as a dev-only mod
+dependency, `daemon_java: 17`) and each module was then run bare, with no harness
+property, to separate "the checkout cannot be dev-run" from "the harness wires it
+wrongly". Two independent blockers came out, and neither is in the harness:
+
+* **1.18.2 / 1.19.2 / 1.20.1 — a JPMS split package.** The dev run dies before
+  Minecraft starts:
+
+  ```
+  java.lang.module.ResolutionException: Module generated_<hash> contains package
+  me.towdium.jecharacters, module jecharacters exports package
+  me.towdium.jecharacters to generated_<hash>
+      at cpw.mods.modlauncher.ModuleLayerHandler.buildLayer(ModuleLayerHandler.java:75)
+  ```
+
+  Forge's module layer wants one module per package. Here there are two: the
+  platform module's own output (its `src/` — the `@Mod` class lives there — plus
+  the `:common-main` sources the root `build.gradle` copies into every impl
+  module) and the jar loom injects out of the `:common` project (its
+  `META-INF/mods.toml` makes the loader treat it as a mod too). Both put classes
+  in `me.towdium.jecharacters`, and both are needed at runtime — the injected
+  side carries the version-level classes the module calls
+  (`JustEnoughCharacters.init`, `PlatformUtils`, `JechSearchStorage`, the JEI
+  plugin) — so the split cannot be removed by dropping an env's dependency, and
+  the fix would have to change where the checkout puts its classes (upstream's
+  design), not what an env declares. Fabric never notices: fabric-loader has no
+  module layer, which is why the same duplication is harmless in the four fabric
+  siblings.
+
+  This is not the harness's doing. A plain `./gradlew :1.20.1:forge:runClient`
+  with no `-PjechRunDir` and no world fails identically (measured 2026-10-14: the
+  control run in `Data/jech-compat/mv-gradle-4env-20261014/`), and the same holds
+  for 1.18.2 with a different module hash. The rows therefore stay on Prism,
+  where they are green.
+
+* **1.16.5 — the checkout's own dev artifact is broken.** No module layer here
+  (1.16.5 is pre-JPMS), so the client boots and renders the overlay, then dies in
+
+  ```
+  java.lang.NoSuchMethodError: 'com.mojang.math.Transformation
+  com.mojang.math.Transformation.func_227987_b_()'
+      at net.minecraft.core.BlockMath.<clinit>(BlockMath.java:26)
+  ```
+
+  In the merged dev jar loom builds for forge 1.16.5-36.2.42, `BlockMath` still
+  calls the SRG name, while the `com.mojang.math.Transformation` on the same run
+  classpath has only the named members — the artifact is inconsistent with
+  itself, and no JECh code is on that path. Deleting the cached 36.2.42
+  mappings/merged jars and letting loom rebuild them reproduced it exactly, so it
+  is not a half-written cache. 36.2.39's cached artifact does not show it, but
+  the shipped jar's own `mods.toml` demands `forge [36.2.41,)`, so pinning the
+  checkout back is not an option — the version bump belongs to the fix described
+  under the check families below.
+
+  **The published jar is unaffected**: it is built by
+  `transformProductionForge`/`remapJar` and is what the Prism row stages, and the
+  row is green (measured 2026-10-14). What is broken is only a development run.
+
+Both blockers belong to the checkout, so the probe's module edits were reverted
+(the checkout is as upstream has it, plus the `forge_version` bump) and the rows
+run on Prism. The recipe is recorded here so a future pass can re-apply it in one
+step once the split package is dealt with:
+
+* in each module's client run, guard the two properties this way — loom joins
+  `runDir` onto the module directory with `new File(projectDir, runDir)`, so an
+  absolute game directory has to travel as `project.relativePath(new File(...))`:
+
+  ```groovy
+  def jechRunDir = providers.gradleProperty("jechRunDir")
+  def jechQuickPlayWorld = providers.gradleProperty("jechQuickPlayWorld")
+  // inside runs { client { ... } }
+  if (jechRunDir.isPresent()) { runDir project.relativePath(new File(jechRunDir.get())) }
+  if (jechQuickPlayWorld.isPresent()) {
+      programArg "--quickPlaySingleplayer"; programArg jechQuickPlayWorld.get()
+  }
+  ```
+* route the generated targets through `processResources` and keep the jar tasks
+  from seeing the same path twice. Forge's coremod resolves
+  `ASMAPI.loadData('me/towdium/jecharacters/targets.json')` **relative to the
+  coremod**, which in a dev run is the module's resource output — the plugin's
+  extra output directory only reaches the jar, so the run threw
+  `NoSuchFileException` from `CoreMod.initialize` before this was added (measured
+  on 1.16.5):
+
+  ```groovy
+  processResources { from(tasks.named("generateTargetConfig")) { into "me/towdium/jecharacters" } }
+  tasks.named("jar", Jar) { duplicatesStrategy = DuplicatesStrategy.EXCLUDE }
+  // and the same line inside shadowJar { }
+  ```
+* add JEI as a *dev-only mod dependency*, not a staged jar: a Forge dev run has no
+  runtime remapper of its own, so a production jar in `mods/` would be SRG-named
+  inside a named-namespace runtime, while loom's mod dependency remapper is what
+  makes a classpath mod work. `modRuntimeOnly("mezz.jei:jei-<mc>-forge:<version>")
+  { transitive = false }` in the three 1.18.2+ modules (the maven file is
+  byte-identical to the CurseForge pin, same size and sha1), and upstream's own
+  `modImplementation "curse.maven:jei-238222:4371666"` in 1.16.5. `transitive =
+  false` matters: `jei-<mc>-forge` already carries the `mezz/jei/common` classes,
+  and letting its `-common` sibling in produced
+  `duplicate input class mezz/jei/common/...` during the run.
+* `daemon_java: 17` for all four: the wrapper is Gradle 8.1.1, which cannot start
+  on the machine's default JDK. The client's own JDK still comes from the module's
+  toolchain (8 for 1.16.5, 17 for the rest).
+
 ### `uitest` — running the checkout's in-client UI test harness
 
 ```json
@@ -542,7 +651,9 @@ rule.
   died before FML flushed the report the `no_crash_reports` check reads. The
   settle makes that verdict repeatable (both re-runs FAIL on the same check, with
   the crash report named in the run); it is skipped when the game has already
-  exited, and it costs 3s per run.
+  exited, and it costs 3s per run. (That row was red at the time for its own
+  reason — the loader/metadata mismatch fixed later the same day; see the check
+  families below.)
 * **`exit_code_zero` with a stopping rule.** When the runner ended the session
   itself, `exit_code_zero` PASSes whatever code the killed process reported (the
   code is an artefact of the harness). A natural exit 0 also passes; a natural
@@ -669,7 +780,7 @@ and says so in the report.
 | `mv-1.19.2-fabric` | 1.19.2 / fabric 0.16.14 (see below) | 17 | `multiple-version` (gradle) | jei 11.30.3.1056, fabric-api 0.77.0+1.19.2 |
 | `mv-1.18.2-forge` | 1.18.2 / forge 1.18.2-40.2.1 | 17 | `multiple-version` | jei 10.2.1.1005 |
 | `mv-1.18.2-fabric` | 1.18.2 / fabric 0.14.9 | 17 | `multiple-version` (gradle) | jei 10.2.1.1005, fabric-api 0.67.0+1.18.2 |
-| `mv-1.16.5-forge` | 1.16.5 / forge 1.16.5-36.2.39 | 8 | `multiple-version` | jei 7.8.0.1009 (pinned by file id) |
+| `mv-1.16.5-forge` | 1.16.5 / forge 1.16.5-36.2.42 | 8 | `multiple-version` | jei 7.8.0.1009 (pinned by file id) |
 | `mv-1.16.5-fabric` | 1.16.5 / fabric 0.14.9 | 8 | `multiple-version` (gradle) | fabric-api 0.42.0+1.16 (smoke) |
 | `1.12.2-forge-hei` | 1.12.2 / forge 1.12.2-14.23.5.2864 | 8 | `1.12.0` (srg jar) | had-enough-items 4.34.0 |
 | `1.12.2-forge-jei-legacy` | 1.12.2 / forge 1.12.2-14.23.5.2864 | 8 | `1.12.0` (srg jar) | jei 4.16.1.301 |
@@ -806,22 +917,31 @@ has a JEI plugin and can be asserted on its registration marker.
   are startup markers, and the JECh jars for 1.16.5/1.18.2 contain no
   `JechJeiPlugin.class` at all (`unzip -l <jar> | grep JechJeiPlugin` is empty).
 
-  **`mv-1.16.5-forge` is red, and the redness is the finding** (2026-10-14, not a
-  harness bug — do not "fix" it by relaxing the env): its built jar refuses to
-  load on the Forge version its own checkout pins. `multiple-version/1.16.5/forge/
-  src/main/resources/META-INF/mods.toml:18` hardcodes
+  **`mv-1.16.5-forge` was red, and the redness was the finding — fixed in the
+  checkout and re-measured 2026-10-14.** Its built jar refused to load on the
+  Forge version its own checkout pinned: `multiple-version/1.16.5/forge/src/
+  main/resources/META-INF/mods.toml:18` hardcodes
   `versionRange = "[36.2.41,)"` for `forge`, while
-  `multiple-version/1.16.5/gradle.properties:5` pins `forge_version=36.2.39`, so
-  FML answers `Mod jecharacters requires forge 36.2.41 or above / Currently,
-  forge is 36.2.39`, abandons mod loading and writes
-  `crash-<stamp>-fml.txt`; the client still reaches the title screen with a
+  `multiple-version/1.16.5/gradle.properties` pinned `forge_version=36.2.39`, so
+  FML answered `Mod jecharacters requires forge 36.2.41 or above / Currently,
+  forge is 36.2.39`, abandoned mod loading and wrote
+  `crash-<stamp>-fml.txt`; the client still reached the title screen with a
   broken mod state (`Cowardly refusing to send event … to a broken mod state` in
-  `latest.log`, ~1s *before* the ready line). `no_crash_reports` catches it, and
-  the failure mode is worth knowing about: raising the env's Forge to 36.2.41+
-  would hide the mismatch rather than report it, so the env stays on the pinned
-  36.2.39 until upstream's metadata agrees with its own properties. The other
-  three rows of this family are green; `mv-1.16.5-fabric` has no Forge at all,
-  and neither 1.18.2 jar declares any dependency block.
+  `latest.log`, ~1s *before* the ready line) and `no_crash_reports` caught it.
+  The mismatch was in the checkout, not in the env, so the checkout was fixed
+  rather than the env: `forge_version` is now `36.2.42`, which satisfies the
+  jar's own requirement, and the row then ran to `goal-reached` with all four
+  checks green — `[PASS] mv-1.16.5-forge in 48.0s`
+  (`Data/jech-compat/runs/mv-1.16.5-forge-20261014-145306`). The env's
+  `loader.version` moved with it (`1.16.5-36.2.42`); nothing else about the row
+  changed, and it still stages the **production** jar into `mods/`, because the
+  checkout's Forge dev run cannot host that jar (see "Forge rows and the gradle
+  backend"). The first attempt at this verification never ran: the two runs
+  recorded on 2026-10-14 08:13/08:16 died in Prism's `AuthFlow` (`令牌刷新失败`),
+  which is why this section still described the pre-fix state until the
+  2026-10-14 afternoon run above. The other three rows of this family are green;
+  `mv-1.16.5-fabric` has no Forge at all, and neither 1.18.2 jar declares any
+  dependency block.
 * **C — 1.12.2** (both rows):
   `log_contains "Transforming class mezz/jei/ingredients/IngredientFilter for JEI integration."`,
   `log_not_contains "Invalid config syntax:"`,

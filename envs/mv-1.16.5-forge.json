@@ -1,5 +1,5 @@
 {
-  "_comment": "multiple-version line, MC 1.16.5 forge, smoke env. The jei row is pinned by file id below to exercise the pin-is-used-directly path; 1.16.5 ships no JEI plugin class.",
+  "_comment": "multiple-version line, MC 1.16.5 forge, smoke env. Launched through Prism, which stages the built jar into mods/. It is not launched through the checkout's Gradle run task: the multiple-version Forge modules cannot carry the mod under test in a dev run (measured 2026-10-14 — see `Forge rows and the gradle backend` in envs/README.md for the evidence). The loader is 36.2.42 rather than the 36.2.39 the checkout originally pinned: the built jar's own mods.toml declares `forge [36.2.41,)`, so on 36.2.39 FML refused the mod and wrote a crash report (that red was the finding, measured 2026-10-14), and 1.16.5/gradle.properties now pins forge_version=36.2.42, so the requirement is satisfied — on that loader the row ran to goal-reached with every check green (2026-10-14). The jei row is pinned by file id below to exercise the pin-is-used-directly path; 1.16.5 ships no JEI plugin class, so there is no plugin log marker to assert and the checks stay on the failure markers.",
   "name": "mv-1.16.5-forge",
   "tags": [
     "mv",

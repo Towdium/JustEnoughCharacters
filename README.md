@@ -538,25 +538,34 @@ the check families and the resolution rules are in
 | `mv` | 1.20.1 | — | `0.16.14` (see envs README) | `47.0.35` |
 | `mv` | 1.19.2 | — | `0.16.14` (see envs README) | `43.2.3` |
 | `mv` | 1.18.2 | — | `0.14.9` | `40.2.1` |
-| `mv` | 1.16.5 | — | `0.14.9` | `36.2.39` |
+| `mv` | 1.16.5 | — | `0.14.9` | `36.2.42` |
 | `112` | 1.12.2 | — | — | `14.23.5.2864` (HEI and legacy JEI) |
 
 ```bash
 python3 jt resolve all --exclude tag:experimental && python3 jt run all --exclude tag:experimental
 ```
 
-Two rows are expected to keep the matrix red, and neither is a harness failure:
+The four `mv` forge rows are the one place where a version line is split across
+both backends: its fabric half runs on Gradle and its forge half stays on Prism,
+because that checkout's Forge dev runs cannot host the mod under test (a JPMS
+split package on 1.18.2/1.19.2/1.20.1, a broken dev artifact on 1.16.5 — measured
+2026-10-14, with the control runs). Details and the wiring recipe in
+[envs/README.md](envs/README.md), "Forge rows and the gradle backend".
+
+One row is expected to keep the matrix red, and it is not a harness failure:
 
 * `mv-1.19.2-forge` — declared `skip` (no quick-play world
   join before 1.20; re-measured 2026-10-14), so a selection without
   `--exclude tag:skip` exits 1 with the skip named. Its fabric sibling no longer
   skips: as a gradle row it is a menu-level smoke row with no marker to reach.
-* `mv-1.16.5-forge` — FAILs on `no-crash-reports`: the built jar declares
-  `forge [36.2.41,)` in its own `mods.toml` while its checkout pins
-  `forge_version=36.2.39`, so FML refuses to load the mod and dumps a crash
-  report. That is a real upstream mismatch this harness exists to surface; the
-  env stays on the pinned Forge rather than being raised to hide it. Details in
-  [envs/README.md](envs/README.md).
+
+`mv-1.16.5-forge` used to be the second such row, and the redness was the
+finding: the built jar declares `forge [36.2.41,)` in its own `mods.toml` while
+its checkout pinned `forge_version=36.2.39`, so FML refused the mod and dumped a
+crash report. The checkout was fixed (`forge_version=36.2.42`, satisfying the
+jar's own requirement) and the row re-measured on 2026-10-14: `[PASS]` in 48s
+with every check green. The env's `loader.version` moved with the fix — the
+mismatch was never in the env. Details in [envs/README.md](envs/README.md).
 
 ## Requirements
 

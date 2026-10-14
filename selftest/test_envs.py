@@ -168,16 +168,19 @@ class EnvParsingTest(unittest.TestCase):
         self.assertEqual(loaded["1.21.1-fabric"].world.name, "jechworld")
         for name in ("1.21.1-neoforge", "1.21.1-fabric", "mv-1.20.1-fabric"):
             self.assertIsNone(loaded[name].skip, name)
-        # mv-1.19.2-forge is the one row left that cannot reach its marker: JEI
-        # 11.x's `registerAdvancedSearch` runs at level load and there is no
-        # non-interactive way to load a level before 1.20. Its fabric sibling is
-        # in the same no-quick-play position but no longer skips: it moved to the
-        # gradle backend as a *menu-level* smoke row, so it declares no world and
-        # claims nothing of the storage marker.
-        self.assertIn("needs world load", loaded["mv-1.19.2-forge"].skip)
-        self.assertIsNone(loaded["mv-1.19.2-forge"].world)
-        self.assertTrue(loaded["mv-1.19.2-forge"].checks,
-                        "a skipped env keeps its checks as documentation")
+        # `mv-1.19.2-forge` is the one row that cannot reach its marker: JEI 11.x
+        # logs the storage marker while a level loads, and no non-interactive way
+        # to load a level exists before 1.20, so the row carries `skip` and its
+        # checks stay written down as documentation. A skip is still a
+        # first-class result (see the runner tests); these envs simply have one.
+        # The row is also not a gradle row: the multiple-version forge modules
+        # cannot carry the mod under test in a dev run (measured 2026-10-14).
+        self.assertEqual([env.name for env in loaded.values() if env.skip],
+                         ["mv-1.19.2-forge"])
+        skipped = loaded["mv-1.19.2-forge"]
+        self.assertIsNone(skipped.world, "a world is what the row is missing")
+        self.assertIn("jei-storage-registered", [check.name for check in skipped.checks],
+                      "the skip names the one capability the row is missing")
         self.assertIsNone(loaded["mv-1.19.2-fabric"].skip)
         self.assertIsNone(loaded["mv-1.19.2-fabric"].world)
 
@@ -532,17 +535,20 @@ class ViaTest(unittest.TestCase):
     def test_the_other_shipped_envs_keep_the_prism_backend(self):
         loaded = {env.name: env for env in envs.load_all()}
         # Every row that declares a ``gradle`` block: the 1.21.1 pair, the four
-        # moderner rows (2026-10-14) and the four multiple-version *fabric* rows
-        # (2026-10-14, the second migration). Everything else still launches
-        # through Prism. The backend is a per-(line, loader) decision, not a
-        # per-line one: the eight multiple-version rows split four fabric on
-        # Gradle and four forge on Prism, and the 1.16.5 pair sits on opposite
-        # backends.
+        # moderner rows (2026-10-14) and the four multiple-version fabric rows
+        # (same day). Everything else still launches through Prism — today that is
+        # the two 1.12.2 rows and the four multiple-version forge rows. The
+        # backend is a per-(line, loader) decision, not a per-line one: the
+        # multiple-version pair is split inside the line on purpose, because a
+        # probe of that checkout's Forge dev runs (2026-10-14) ended in a JPMS
+        # split package on 1.18.2/1.19.2/1.20.1 and a broken dev artifact on
+        # 1.16.5 — see envs/README.md, "Forge rows and the gradle backend".
         gradle_rows = {
             "1.21.1-neoforge", "1.21.1-fabric",
             "moderner-1.21.10-neoforge", "moderner-1.21.10-fabric",
             "moderner-26.1.2-neoforge", "moderner-26.1.2-fabric",
-            "mv-1.16.5-fabric", "mv-1.18.2-fabric", "mv-1.19.2-fabric", "mv-1.20.1-fabric",
+            "mv-1.16.5-fabric", "mv-1.18.2-fabric",
+            "mv-1.19.2-fabric", "mv-1.20.1-fabric",
         }
         self.assertFalse(gradle_rows - set(loaded), "a named gradle row does not exist")
         prism_envs = [env for name, env in loaded.items() if name not in gradle_rows]

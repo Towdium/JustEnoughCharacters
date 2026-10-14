@@ -342,8 +342,11 @@ class SeedWorldCliTest(unittest.TestCase):
             code, output = self.cli(["envs"])
         self.assertEqual(code, 0)
         self.assertIn("world: jechworld", output)
-        self.assertIn("skip: JEI registration check needs world load", output)
         self.assertIn("uitest: tag:smoke,tag:jei", output)
+        # `mv-1.19.2-forge` carries the one skip: it cannot load a level before
+        # 1.20, so its storage marker is unreachable (see the matrix test in
+        # test_envs.py). A skip is a first-class result, so `jt envs` prints it.
+        self.assertIn("skip:", output)
 
     def test_envs_json_carries_the_skip_and_the_world(self):
         with support.temp_home():
@@ -357,10 +360,11 @@ class SeedWorldCliTest(unittest.TestCase):
         self.assertIsNone(listed["1.21.1-neoforge"]["world"])
         self.assertEqual(listed["1.21.1-neoforge"]["uitest"], {"selection": "tag:smoke,tag:jei"})
         self.assertIsNone(listed["1.21.1-fabric"]["uitest"])
-        # mv-1.19.2-forge is the one row left that skips (no quick play before
-        # 1.20); its fabric sibling moved to the gradle backend as a menu-level
-        # smoke row, so it declares neither a skip nor a world.
-        self.assertIn("quickPlay", listed["mv-1.19.2-forge"]["skip"])
+        # mv-1.19.2-forge is the skipped row: it declares the storage marker it
+        # cannot reach, and names what is missing instead of pretending to run.
+        self.assertEqual([name for name, item in listed.items() if item["skip"]],
+                         ["mv-1.19.2-forge"])
+        self.assertIn("quickPlay needs 1.20+", listed["mv-1.19.2-forge"]["skip"])
         self.assertIsNone(listed["mv-1.19.2-forge"]["world"])
         self.assertIsNone(listed["mv-1.19.2-fabric"]["skip"])
         self.assertIsNone(listed["mv-1.19.2-fabric"]["world"])
