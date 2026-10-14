@@ -257,8 +257,11 @@ matched, with screenshots as the evidence to look at.
 * **The block is the switch, and Gradle is where it lands.** The selection travels
   to the checkout as the project property `-PjechTest=<selection>` (the only gate
   on that wiring: without it the checkout loads no harness mod at all), so the
-  env's `gradle.task` has to be the harness's own run task — `:neoforge:runClientTests`
-  in the 1.21.1 checkout, which honours `-PjechRunDir` exactly as `runClient` does.
+  env's `gradle.task` has to name the run that carries and runs the harness — the
+  neoforge modules' `:neoforge:runClientTests` (in both the `1.21.1` and the
+  `moderner` checkout) and the fabric module's `:fabric-legacy:runClient`
+  (`moderner`), whose harness rides loom's only client run. All of them honour
+  `-PjechRunDir` exactly as the plain `runClient` does.
   `uitest` without `gradle` is refused by the schema: there would be no run to pass
   it to. Every term of the selection carries its own prefix (`tag:smoke,tag:jei`),
   because a bare term is a scenario-*name* match.
@@ -277,9 +280,9 @@ matched, with screenshots as the evidence to look at.
   scenario failed, so the checkout's own `verifyJechUiTest` fails the Gradle build,
   and `uitest_report` fails on the report, naming the scenario that failed.
 
-`envs/README.md` has the block's schema and the row that uses it; the scenario
-vocabulary is documented where the scenarios live, in the checkout
-(`neoforge/src/uitest/resources/uitest/scenarios/README.md`).
+`envs/README.md` has the block's schema and the rows that use it (the three
+harness rows); the scenario vocabulary is documented where the scenarios live, in
+the checkout (`neoforge/src/uitest/resources/uitest/scenarios/README.md`).
 
 ## States
 

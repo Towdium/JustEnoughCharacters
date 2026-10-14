@@ -77,9 +77,12 @@ Ten rows use it today: six in the modern checkouts, four in the older line.
   `:fabric-legacy:runClient`, `:neoforge-unobfuscated:runClient` and
   `:fabric-unobfuscated:runClient` in the `moderner` checkout). Their
   `daemon_java` is `21` for the 1.21.1 pair (Gradle 8.13) and `null` for the
-  moderner rows (Gradle 9.5 runs on the machine's default JDK). One of these six
-  does not run `runClient`: `1.21.1-neoforge` runs `:neoforge:runClientTests`,
-  the checkout's UI test harness run (see `uitest` below).
+  moderner rows (Gradle 9.5 runs on the machine's default JDK). Two of these six
+  do not run the plain client task: `1.21.1-neoforge` and
+  `moderner-1.21.10-neoforge` run `:neoforge:runClientTests`, the checkout's UI
+  test harness run (see `uitest` below). `moderner-1.21.10-fabric` runs the
+  harness too, but on loom's own `client` run — the only run that module has —
+  which the harness's class-path addition turns into a harness run.
 * the four `multiple-version` fabric rows, migrated 2026-10-14:
   `mv-1.16.5-fabric`, `mv-1.18.2-fabric`, `mv-1.19.2-fabric` and
   `mv-1.20.1-fabric`, running `:<mc>:fabric:runClient` in that checkout. Their
@@ -420,10 +423,12 @@ What changes for such a row:
 The selection names the scenarios the row was measured with instead of saying
 `all`, for the same reason a row's `world` is written down: a row asserts what it
 was measured with, and a scenario added later cannot silently change that.
-`1.21.1-neoforge` is the only row that runs the harness today, with
-`tag:smoke,tag:jei` (four scenarios: `smoke` and `json-smoke` by tag, and the two
-JEI ones by tag). The scenarios themselves — and the step vocabulary a scenario
-is written in — are documented in the checkout, next to the scenarios
+Three rows run the harness today, all with `tag:smoke,tag:jei` (four scenarios:
+`smoke` and `json-smoke` by tag, and the two JEI ones by tag) —
+`1.21.1-neoforge` (the `1.21.1` checkout's neoforge module) and both
+`moderner-1.21.10` rows (that line's `neoforge` and `fabric-legacy` modules).
+The scenarios themselves — and the step vocabulary a scenario is written in —
+are documented in the checkout, next to the scenarios
 (`neoforge/src/uitest/resources/uitest/scenarios/README.md`).
 
 ### `jech` — the mod under test
@@ -498,7 +503,7 @@ Three rules keep the checks honest:
   ConfigManager` and never the marker — JEI 15 (1.20.1), 19 (1.21.1), 26
   (1.21.10/26.1.2) all behave this way. A row that runs the in-client harness
   gets that level without declaring `world`: the harness's runner stands up its
-  own flat level (`1.21.1-neoforge` does, see `uitest` above).
+  own flat level (the three harness rows do, see `uitest` above).
 
 ### `skip` — an env that is deliberately not executed
 
@@ -588,15 +593,16 @@ so nobody re-treads them:
   launcher already did, and a patch file has to be kept in sync per loader. Not
   used.
 
-Which rows declare it, as measured on 2026-10-14: `1.21.1-fabric`, the four
-`moderner` rows and `mv-1.20.1-fabric` — six of the seven rows that carry a
-`world` block, the seventh being the `skip`ped `mv-1.20.1-forge` — all run to
+Which rows declare it, as measured on 2026-10-14: `1.21.1-fabric`, the two
+`moderner-26.1.2` rows and `mv-1.20.1-fabric` — four of the five rows that carry
+a `world` block, the fifth being the `skip`ped `mv-1.20.1-forge` — all run to
 `stopReason: goal-reached` on a real join (`vfyjxf_ joined the game`, then
 JECh's `Registering JEI pinyin search storage` a second later).
-`1.21.1-neoforge` left the list when it moved to the in-client harness
-(2026-10-14): the level it is asserted against is the one the harness's own
-runner creates, so the row declares no `world` (see `uitest` above) — the marker
-still arrives, because the level does. The `mv-1.16.5` and `mv-1.18.2` rows
+The three harness rows (`1.21.1-neoforge` and both `moderner-1.21.10` rows) left
+the list when they moved to the in-client harness (2026-10-14): the level they
+are asserted against is the one the harness's own runner creates, so those rows
+declare no `world` (see `uitest` above) — the marker still arrives, because the
+level does. The `mv-1.16.5` and `mv-1.18.2` rows
 keep no world either — of their four files only the two fabric halves run, since
 both forge halves are `skip`ped: their markers are emitted at startup (and the
 1.16.5/1.18.2 jars carry no JEI plugin at all), so a world would only add a level
@@ -604,11 +610,12 @@ load to what they assert. `mv-1.19.2-forge` cannot join one — see the `skip`
 section above — while `mv-1.19.2-fabric` is the same MC version but a gradle row
 that claims no marker, so it is a menu-level row by design: no world, no marker.
 
-Every one of those six rows carries its world that same way — the harness hands it
+Every one of those four rows carries its world that same way — the harness hands it
 over as `-PjechQuickPlayWorld=<name>` and the checkout's own run configuration
 appends `--quickPlaySingleplayer <name>` to the client's arguments — and the game
 directory is the run's own `runs/<id>/game`, with the seed staged into
-`saves/<name>/` there. `1.21.1-neoforge`'s `runClientTests` run deliberately does
+`saves/<name>/` there. A harness run (`1.21.1-neoforge`'s `runClientTests`, and
+the `moderner-1.21.10` pair's harness runs) deliberately does
 not honour the property: the harness's runner does its own level management.
 
 One caveat that cost a full watchdog on the way (recorded so the next person
@@ -810,18 +817,20 @@ rule.
   FAIL. A genuinely failed launch still ends as a missing session: a launcher
   that exits with no game process behind it is reported as exactly that.
 * **Omitting it.** Without `ready_when` the run behaves as before: it waits for
-  the game to exit on its own or for the watchdog. No shipped env omits it: a
-  modded client that reaches the title screen never exits on its own, so an env
-  without a stopping rule can only end in a watchdog kill (exit 3) — i.e. it is
-  a broken env, not a lenient one. Every other env file in `envs/` declares
-  `Sound engine started`, which the client prints in 1.12.2 through 26.1.2 alike
-  (verified against each client jar), and which lands *before* the world join so
-  a failed join still becomes a clean `ready-timeout`.
-* **The one row that omits it, and must.** An env with a `uitest` block runs the
+  the game to exit on its own or for the watchdog. No shipped env that stops at a
+  screen omits it: a modded client that reaches the title screen never exits on
+  its own, so an env without a stopping rule can only end in a watchdog kill
+  (exit 3) — i.e. it is a broken env, not a lenient one. Every such env file in
+  `envs/` declares `Sound engine started`, which the client prints in 1.12.2
+  through 26.1.2 alike (verified against each client jar), and which lands
+  *before* the world join so a failed join still becomes a clean
+  `ready-timeout`.
+* **The rows that omit it, and must.** An env with a `uitest` block runs the
   checkout's in-client harness, whose own runner quits the client when the
   selection is done. A stopping rule there would end the session mid-scenario and
   leave the run with no report — so such a row declares no `ready_when`, and the
-  absence is the correct shape rather than a broken env (`1.21.1-neoforge`; see
+  absence is the correct shape rather than a broken env (the three harness rows:
+  `1.21.1-neoforge`, `moderner-1.21.10-neoforge`, `moderner-1.21.10-fabric`; see
   `uitest` above and the assertion in `selftest/test_envs.py`).
 
 ## Pins
@@ -929,26 +938,27 @@ and says so in the report.
 | `1.12.2-forge-hei` | 1.12.2 / forge 1.12.2-14.23.5.2864 | 8 | `1.12.0` (srg jar) | had-enough-items 4.34.0 — **skipped**, see below |
 | `1.12.2-forge-jei-legacy` | 1.12.2 / forge 1.12.2-14.23.5.2864 | 8 | `1.12.0` (srg jar) | jei 4.16.1.301 — **skipped**, see below |
 
-Every row also stages the preset `options.txt`. The six envs that are
-*launched into a world*, the row that loads its own, the rows that claim no level
-at all, and the six that are *skipped*, are called out below and in the table
-above:
+Every row also stages the preset `options.txt`. The four envs that are
+*launched into a world*, the three rows that load their own, the rows that claim
+no level at all, and the six that are *skipped*, are called out below and in the
+table above:
 
 | env | runs? | world | why |
 | --- | --- | --- | --- |
-| `1.21.1-neoforge` | yes | none — `uitest` | the row runs the checkout's in-client harness, which stands up and pins its own flat level, and is judged by the harness's own report |
+| `1.21.1-neoforge`, `moderner-1.21.10` ×2 | yes | none — `uitest` | these rows run the checkout's in-client harness, which stands up and pins its own flat level, and are judged by the harness's own report |
 | `1.21.1-fabric` | yes | `world: {name: jechworld}` | the JEI plugin marker needs a loaded level |
-| `moderner` ×4, `mv-1.20.1-fabric` | yes | `world: {name: jechworld}` | same marker, same level-load phase (measured 2026-10-14) |
+| `moderner-26.1.2` ×2, `mv-1.20.1-fabric` | yes | `world: {name: jechworld}` | same marker, same level-load phase (measured 2026-10-14) |
 | `mv-1.19.2-fabric`, `mv-1.16.5-fabric`, `mv-1.18.2-fabric` | yes | none | the menu-level rows: no marker claimed at all, or one emitted at startup |
 | `mv-1.20.1-forge` | **no** — `skip` | `world: {name: jechworld}` | its checkout's Forge dev run cannot host the mod under test and the instance launcher is gone (2026-10-14) |
 | `mv-1.18.2-forge`, `mv-1.16.5-forge` | **no** — `skip` | none | same reason: no launch layer, and the checkout's Forge dev run cannot host the mod (2026-10-14) |
 | `mv-1.19.2-forge` | **no** — `skip` | none | the marker needs a loaded level, but quick play needs 1.20+ (re-measured 2026-10-14) |
 | `1.12.2` ×2 | **no** — `skip` | none | markers are emitted during startup, but no launch path boots a 1.12.2 client on this machine (2026-10-14) |
 
-Every env but `1.21.1-neoforge` also declares
+Every env but the three harness rows (`1.21.1-neoforge`,
+`moderner-1.21.10-neoforge`, `moderner-1.21.10-fabric`) also declares
 `ready_when: Sound engine started`; without it a client that reaches the title
-screen runs until the watchdog (see "Omitting it"). The harness row omits it on
-purpose: its own runner quits the client, so a stopping rule would end the run
+screen runs until the watchdog (see "Omitting it"). The harness rows omit it on
+purpose: their own runner quits the client, so a stopping rule would end the run
 mid-scenario (see `uitest`).
 
 `mv-1.19.2-forge` is the row with no path to its marker: JEI 11.x's
@@ -1047,19 +1057,20 @@ has a JEI plugin and can be asserted on its registration marker.
 
   Those nine rows load a level when they run, except the two that carry `skip` —
   `mv-1.19.2-forge`, whose marker needs a level the row cannot reach, and
-  `mv-1.20.1-forge`, whose launch layer is gone (re-measured 2026-10-14). Seven
-  env files declare `world` — the quick-play rows — and six of them run;
-  `1.21.1-neoforge` gets its level from the in-client harness
-  instead (see `uitest`). Those six plus `1.21.1-neoforge` were all measured
-  against a real run —
-  `1.21.1` ×2, `moderner` ×4 and `mv-1.20.1-fabric` all reach a level
+  `mv-1.20.1-forge`, whose launch layer is gone (re-measured 2026-10-14). Five
+  env files declare `world` — the quick-play rows — and four of them run; the
+  three harness rows (`1.21.1-neoforge`, `moderner-1.21.10-neoforge`,
+  `moderner-1.21.10-fabric`) get their level from the in-client harness
+  instead (see `uitest`). Those four plus the three harness rows were all
+  measured against a real run —
+  `1.21.1` ×2, `moderner-26.1.2` ×2 and `mv-1.20.1-fabric` all reach a level
   with their marker present a second after `joined the game` (re-measured
   2026-10-14). So
   the level-load claim holds for JEI 15 (1.20.1), JEI 19 (1.21.1), JEI 26
   (1.21.10) and JEI 29 (26.1.2): each of them defers `registerAdvancedSearch`
-  until a level exists. `1.21.1-neoforge` adds `uitest_report` to this set: the
-  row's own scenarios are the evidence, and the log checks stay as the "the mod
-  loaded" half.
+  until a level exists. The three harness rows add `uitest_report` to this set:
+  each row's own scenarios are the evidence, and the log checks stay as the "the
+  mod loaded" half.
 * **B — no JEI plugin** (mv-1.16.5 ×2, mv-1.18.2 ×2): the failure markers only —
   `log_not_contains "Could not find targets.json. JechTransformer will not be loaded."`,
   `no_crash_reports`, `exit_code_zero`. These rows have no world: their markers

@@ -232,7 +232,7 @@ class EnvParsingTest(unittest.TestCase):
                 continue
             self.assertIsNotNone(env.ready_when, f"{env.name} declares no ready_when")
 
-    def test_the_shipped_harness_row_declares_what_it_runs(self):
+    def test_the_shipped_harness_rows_declare_what_they_run(self):
         """``uitest`` is a row's own statement of which scenarios it was measured with.
 
         The selection names scenarios rather than saying ``all``, for the same
@@ -242,18 +242,21 @@ class EnvParsingTest(unittest.TestCase):
         judged by the log alone it would pass on a client that never ran one.
         """
         rows = {env.name: env for env in envs.load_all() if env.uitest is not None}
-        self.assertEqual(list(rows), ["1.21.1-neoforge"],
+        self.assertEqual(list(rows),
+                         ["1.21.1-neoforge", "moderner-1.21.10-fabric",
+                          "moderner-1.21.10-neoforge"],
                          "a row that runs the in-client harness is a decision, not a default")
-        env = rows["1.21.1-neoforge"]
-        self.assertEqual(env.uitest.selection, "tag:smoke,tag:jei")
-        self.assertNotEqual(env.uitest.selection, "all")
-        # Every term carries its own prefix: the harness's grammar ORs bare terms as *names*, so
-        # "tag:smoke,jei" would select the smoke scenarios and nothing else, silently running two of
-        # the four scenarios this row was measured with.
-        for term in env.uitest.selection.split(","):
-            self.assertTrue(":" in term,
-                            f"{term!r} has no selector prefix, so it can only match a scenario name")
-        self.assertIn("uitest_report", [check.type for check in env.checks])
+        for name, env in rows.items():
+            self.assertEqual(env.uitest.selection, "tag:smoke,tag:jei", name)
+            self.assertNotEqual(env.uitest.selection, "all", name)
+            # Every term carries its own prefix: the harness's grammar ORs bare terms as *names*, so
+            # "tag:smoke,jei" would select the smoke scenarios and nothing else, silently running two
+            # of the four scenarios this row was measured with.
+            for term in env.uitest.selection.split(","):
+                self.assertTrue(":" in term,
+                                f"{name}: {term!r} has no selector prefix, so it can only match a "
+                                "scenario name")
+            self.assertIn("uitest_report", [check.type for check in env.checks], name)
 
     def test_the_shipped_matrix_declares_a_world_only_where_it_was_measured(self):
         """``world`` is a premise about the marker, not a decoration.
@@ -263,12 +266,12 @@ class EnvParsingTest(unittest.TestCase):
         play argument (1.20+); the rest assert startup markers and must stay
         without one, so a row cannot silently acquire a level load it was not
         measured with. ``1.21.1-neoforge`` left the set when it moved to the
-        in-client harness: its level is the harness's own, and a quick-play join
-        would race the level the scenarios are asserted against.
+        in-client harness, and both ``moderner-1.21.10`` rows followed it there:
+        their level is the harness's own, and a quick-play join would race the
+        level the scenarios are asserted against.
         """
         measured = {
             "1.21.1-fabric",
-            "moderner-1.21.10-neoforge", "moderner-1.21.10-fabric",
             "moderner-26.1.2-neoforge", "moderner-26.1.2-fabric",
             "mv-1.20.1-forge", "mv-1.20.1-fabric",
         }
@@ -634,10 +637,14 @@ class ViaTest(unittest.TestCase):
         is staged into ``mods/`` — a second copy of a mod id the run already carries
         is a double load, not a second opinion. Their Gradle 9.5 wrappers run on the
         machine's default JDK, so they declare no ``daemon_java``.
+
+        ``moderner-1.21.10-neoforge`` names the harness's own run task rather than
+        the plain client run, because only that run loads the harness mod
+        (``:neoforge:runClientTests``, as ``1.21.1-neoforge`` does).
         """
         loaded = {env.name: env for env in envs.load_all()}
         expected = {
-            "moderner-1.21.10-neoforge": ":neoforge:runClient",
+            "moderner-1.21.10-neoforge": ":neoforge:runClientTests",
             "moderner-1.21.10-fabric": ":fabric-legacy:runClient",
             "moderner-26.1.2-neoforge": ":neoforge-unobfuscated:runClient",
             "moderner-26.1.2-fabric": ":fabric-unobfuscated:runClient",

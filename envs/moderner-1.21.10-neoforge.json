@@ -1,5 +1,5 @@
 {
-  "_comment": "moderner line, MC 1.21.10. Loader/jei versions mirror moderner/gradle.properties. Launched through the checkout's own Gradle run task (gradle launch); the wrapper is Gradle 9.5, which runs on the machine default JDK (JBR 25), so daemon_java is null. jech and jei both carry via=dev-classpath: the run's classpath already provides them -- the neoforge module registers sourceSets.main as the mod (the source of the jar under test) and build.gradle puts mezz.jei:jei-1.21.10-neoforge:26.3.0.31 in localRuntime, the very version this env pins (jei_version) -- so copying either jar into mods/ would load that mod id twice.",
+  "_comment": "moderner line, MC 1.21.10. Loader/jei versions mirror moderner/gradle.properties. Launched through the checkout's own Gradle run task (gradle launch), and through the harness's own run task: this row runs JECh's in-client UI test harness (env.uitest selects the scenarios), so the client drives its own scenarios and writes report.json, its captures and junit.xml before it quits itself. Two consequences: the row declares no ready_when -- jt's ready_when is a stopping rule for a client that would otherwise run forever, and stopping this one early would kill it mid-scenario and leave no report -- and it declares no world either, because the level it is asserted against is the one the harness's runner creates and pins itself (the JEI plugin marker therefore still arrives). The harness wiring lives on the checkout's own clientTests run, which is the only run that loads the jechtest mod; it honours -PjechRunDir exactly as runClient does, so jt keeps owning the game directory. The wrapper is Gradle 9.5, which runs on the machine default JDK (JBR 25), so daemon_java is null. jech and jei both carry via=dev-classpath: the run's classpath already provides them -- the neoforge module registers sourceSets.main as the mod (the source of the jar under test) and build.gradle puts mezz.jei:jei-1.21.10-neoforge:26.3.0.31 in localRuntime, the very version this env pins (jei_version) -- so copying either jar into mods/ would load that mod id twice.",
   "name": "moderner-1.21.10-neoforge",
   "tags": [
     "moderner",
@@ -15,8 +15,11 @@
     "version": 21
   },
   "gradle": {
-    "task": ":neoforge:runClient",
+    "task": ":neoforge:runClientTests",
     "daemon_java": null
+  },
+  "uitest": {
+    "selection": "tag:smoke,tag:jei"
   },
   "jech": {
     "source": "local-build",
@@ -55,6 +58,10 @@
       "name": "transformer-loaded"
     },
     {
+      "type": "uitest_report",
+      "name": "uitest-report"
+    },
+    {
       "type": "no_crash_reports",
       "name": "no-crash-reports"
     },
@@ -63,11 +70,6 @@
       "name": "exit-code"
     }
   ],
-  "ready_when": {
-    "value": "Sound engine started"
-  },
-  "world": {
-    "name": "jechworld"
-  },
+  "world": null,
   "timeout_sec": 600
 }

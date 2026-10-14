@@ -1,5 +1,5 @@
 {
-  "_comment": "moderner line, MC 1.21.10, fabric (fabric-legacy module). fabric-api version is fabric_version in moderner/gradle.properties; the fabric variant needs it (1.21.10 fabric.mod.json declares the legacy \"fabric\": \"*\" + the common code is compiled against fabric-api). Launched through the checkout's own Gradle run task (gradle launch); the wrapper is Gradle 9.5, which runs on the machine default JDK (JBR 25), so daemon_java is null. All three artifacts ride that run's classpath (via=dev-classpath): the module registers its own sources as the mod, modRuntimeOnly puts the env's own jei-1.21.10-fabric:26.3.0.31 on it (loom remaps it: remapped.mezz.jei:jei-1.21.10-fabric) and modImplementation puts fabric-api:0.138.3+1.21.10 there — so nothing is staged into mods/.",
+  "_comment": "moderner line, MC 1.21.10, fabric (fabric-legacy module). fabric-api version is fabric_version in moderner/gradle.properties; the fabric variant needs it (1.21.10 fabric.mod.json declares the legacy \"fabric\": \"*\" + the common code is compiled against fabric-api). Launched through the checkout's own Gradle run task (gradle launch), and through the harness's own run task: this row runs JECh's in-client UI test harness (env.uitest selects the scenarios), so the client drives its own scenarios and writes report.json, its captures and junit.xml before it quits itself. Two consequences: the row declares no ready_when -- jt's ready_when is a stopping rule for a client that would otherwise run forever, and stopping this one early would kill it mid-scenario and leave no report -- and it declares no world either, because the level it is asserted against is the one the harness's runner creates and pins itself (the JEI plugin marker therefore still arrives). All three artifacts ride that run's classpath (via=dev-classpath): the module registers its own sources as the mod, modRuntimeOnly puts the env's own jei-1.21.10-fabric:26.3.0.31 on it (loom remaps it: remapped.mezz.jei:jei-1.21.10-fabric) and modImplementation puts fabric-api:0.138.3+1.21.10 there — so nothing is staged into mods/. The harness wiring lives on that same loom client run (gradle/jech-uitest-fabric.gradle): without -PjechTest the harness source sets never reach its class path. The wrapper is Gradle 9.5, which runs on the machine default JDK (JBR 25), so daemon_java is null.",
   "name": "moderner-1.21.10-fabric",
   "tags": [
     "moderner",
@@ -17,6 +17,9 @@
   "gradle": {
     "task": ":fabric-legacy:runClient",
     "daemon_java": null
+  },
+  "uitest": {
+    "selection": "tag:smoke,tag:jei"
   },
   "jech": {
     "source": "local-build",
@@ -81,6 +84,10 @@
       "name": "config-generated"
     },
     {
+      "type": "uitest_report",
+      "name": "uitest-report"
+    },
+    {
       "type": "no_crash_reports",
       "name": "no-crash-reports"
     },
@@ -89,11 +96,6 @@
       "name": "exit-code"
     }
   ],
-  "ready_when": {
-    "value": "Sound engine started"
-  },
-  "world": {
-    "name": "jechworld"
-  },
+  "world": null,
   "timeout_sec": 600
 }
