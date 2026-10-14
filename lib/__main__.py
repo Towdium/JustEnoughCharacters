@@ -101,8 +101,12 @@ def cmd_envs(args, log=print):
             log(f"{'':28} world: {env.world.name} (saves/{env.world.name}, seeded by "
                 "jt seed-world)")
         if env.uitest is not None:
-            log(f"{'':28} uitest: {env.uitest.selection} (the checkout's in-client scenarios; "
-                "the harness report is the evidence)")
+            if env.uitest.project is not None:
+                log(f"{'':28} uitest: {env.uitest.selection} (standalone harness build "
+                    f"{env.uitest.project}; the harness report is the evidence)")
+            else:
+                log(f"{'':28} uitest: {env.uitest.selection} (the checkout's in-client scenarios; "
+                    "the harness report is the evidence)")
         if env.skip:
             log(f"{'':28} skip: {env.skip}")
         if EXAMPLE_TAG in env.tags:
@@ -234,7 +238,10 @@ def _env_json(env):
         "skip": env.skip,
         "world": ({"name": env.world.name, "savesPath": env.world.saves_path}
                   if env.world is not None else None),
-        "uitest": ({"selection": env.uitest.selection} if env.uitest is not None else None),
+        "uitest": ({"selection": env.uitest.selection,
+                    **({"project": env.uitest.project} if env.uitest.project is not None else {}),
+                    **({"options": env.uitest.options} if env.uitest.options else {})}
+                   if env.uitest is not None else None),
         "timeout_sec": env.timeout_sec,
         "file": paths.display(env.path),
     }

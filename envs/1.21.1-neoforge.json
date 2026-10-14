@@ -1,5 +1,5 @@
 {
-  "_comment": "1.21.1 line. Loader/jei versions mirror 1.21.1/gradle.properties. Launched through the checkout's own Gradle run task (gradle launch), and through the harness's own run task: this row runs JECh's in-client UI test harness (env.uitest selects the scenarios), so the client drives its own scenarios and writes report.json, its captures and junit.xml before it quits itself. Two consequences: the row declares no ready_when -- jt's ready_when is a stopping rule for a client that would otherwise run forever, and stopping this one early would kill it mid-scenario and leave no report -- and it declares no world either, because the level it is asserted against is the one the harness's runner creates and pins itself (the JEI plugin marker therefore still arrives). jech and jei both carry via=dev-classpath: the run's classpath already provides them -- the neoforge module registers sourceSets.main as the mod (the source of the jar under test) and build.gradle puts mezz.jei:jei-1.21.1-neoforge:19.37.0.362 in localRuntime -- so copying either jar into mods/ would load that mod id twice.",
+  "_comment": "1.21.1 line. Loader/jei versions mirror 1.21.1/gradle.properties. Runs the standalone in-client UI test harness (uitest/1.21.1-neoforge, an independent Gradle build in this repository) through the three-stage pipeline config->build->test: jt resolves and pins, builds/reuses the JECh jar from the 1.21.1 checkout and compiles the harness build, then launches that build's runClientTests with the jars under test as -PjechJar/-PjeiJar. The client drives its own scenarios and writes report.json, its captures and junit.xml before it quits itself. Three consequences carried over from the checkout-backend shape: the row declares no ready_when (stopping this client early would kill it mid-scenario and leave no report), no world (the level asserted against is the one the harness's runner creates and pins itself, so the JEI plugin marker still arrives), and no gradle block (the harness build is the launch layer). jech and jei both carry via=dev-classpath: the standalone build loads every jar itself - the JECh jar and the pinned JEI jar ride the run's legacy classpath (localRuntime) - so there is nothing for jt to stage, and a staged copy would double-load.",
   "name": "1.21.1-neoforge",
   "tags": [
     "1211",
@@ -14,13 +14,9 @@
   "java": {
     "version": 21
   },
-  "gradle": {
-    "task": ":neoforge:runClientTests",
-    "project_dir": "1.21.1",
-    "daemon_java": 21
-  },
   "uitest": {
-    "selection": "tag:smoke,tag:jei"
+    "selection": "tag:smoke,tag:jei",
+    "project": "uitest/1.21.1-neoforge"
   },
   "jech": {
     "source": "local-build",

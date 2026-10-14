@@ -1,5 +1,5 @@
 {
-  "_comment": "1.21.1 line, fabric. fabric-api version is fabric_version in 1.21.1/gradle.properties. Launched through the checkout's own Gradle run task (gradle launch). jech and fabric-api carry via=dev-classpath (the loom run registers the fabric module's own sources and remaps modImplementation fabric-api onto the run's classpath); jei has no place on that classpath, so its jar is the one jar staged into mods/.",
+  "_comment": "1.21.1 line, fabric. fabric-api version is fabric_version in 1.21.1/gradle.properties. Runs the standalone in-client UI test harness (uitest/1.21.1-fabric, an independent loom build in this repository) through the three-stage pipeline config->build->test. The harness build stages the two jars under test into the run's mods/ folder itself (production fabric jars are intermediary-named; the loader's dev-mode remapper brings them into the run's namespace) and takes fabric-api as its own remapped Gradle dependency at exactly the pinned version, so jech, jei and fabric-api all carry via=dev-classpath: there is nothing for jt to stage. The row is a harness row since this move (2026-10-15): it declares no ready_when and no world, because the harness's own runner creates and pins its flat level and quits the client when the selection is done.",
   "name": "1.21.1-fabric",
   "tags": [
     "1211",
@@ -14,9 +14,13 @@
   "java": {
     "version": 21
   },
-  "gradle": {
-    "task": ":fabric:runClient",
-    "daemon_java": 21
+  "uitest": {
+    "selection": "tag:smoke,tag:jei",
+    "project": "uitest/1.21.1-fabric",
+    "options": {
+      "version": "3955",
+      "key_key.jei.focusSearch": "key.keyboard.f"
+    }
   },
   "jech": {
     "source": "local-build",
@@ -30,6 +34,7 @@
       "name": "jei",
       "source": "curseforge",
       "slug": "jei",
+      "via": "dev-classpath",
       "describe": {
         "version": "19.37.0.362"
       },
@@ -80,6 +85,10 @@
       "name": "config-generated"
     },
     {
+      "type": "uitest_report",
+      "name": "uitest-report"
+    },
+    {
       "type": "no_crash_reports",
       "name": "no-crash-reports"
     },
@@ -88,11 +97,6 @@
       "name": "exit-code"
     }
   ],
-  "ready_when": {
-    "value": "Sound engine started"
-  },
-  "world": {
-    "name": "jechworld"
-  },
+  "world": null,
   "timeout_sec": 600
 }

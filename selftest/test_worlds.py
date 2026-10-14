@@ -303,13 +303,13 @@ class SeedWorldCliTest(unittest.TestCase):
 
     def test_a_verified_cache_is_reused_and_reported(self):
         with support.temp_home():
-            env = envs.find_env("1.21.1-fabric")
+            env = envs.find_env("moderner-26.1.2-fabric")
             seed = support.write_world_seed(env)
-            code, output = self.cli(["seed-world", "1.21.1-fabric"])
+            code, output = self.cli(["seed-world", "moderner-26.1.2-fabric"])
         self.assertEqual(code, 0)
         self.assertIn("reused", output)
         self.assertIn(seed.digest[:16], output)
-        self.assertIn("vanilla-1.21.1", output)
+        self.assertIn("vanilla-26.1.2", output)
 
     def test_a_selection_where_nothing_needs_a_seed_fails_loudly(self):
         with support.temp_home():
@@ -321,9 +321,9 @@ class SeedWorldCliTest(unittest.TestCase):
 
     def test_a_mixed_selection_seeds_what_needs_it_and_exits_zero(self):
         with support.temp_home():
-            env = envs.find_env("1.21.1-fabric")
+            env = envs.find_env("moderner-26.1.2-fabric")
             seed = support.write_world_seed(env)
-            code, output = self.cli(["seed-world", "1.12.2-forge-hei,1.21.1-fabric"])
+            code, output = self.cli(["seed-world", "1.12.2-forge-hei,moderner-26.1.2-fabric"])
         self.assertEqual(code, 0)
         self.assertIn(seed.digest[:16], output)
         self.assertIn("declares no world", output)
@@ -331,9 +331,9 @@ class SeedWorldCliTest(unittest.TestCase):
     def test_a_skipped_env_is_still_seedable_when_it_declares_a_world(self):
         """``skip`` stops execution, not cache maintenance."""
         with support.temp_home():
-            env = envs.find_env("1.21.1-fabric")
+            env = envs.find_env("mv-1.20.1-forge")
             seed = support.write_world_seed(env)
-            code, output = self.cli(["seed-world", "1.21.1-fabric"])
+            code, output = self.cli(["seed-world", "mv-1.20.1-forge"])
         self.assertEqual(code, 0)
         self.assertIn(seed.digest[:16], output)
 
@@ -355,13 +355,25 @@ class SeedWorldCliTest(unittest.TestCase):
             code, output = self.cli(["envs", "--json"])
         self.assertEqual(code, 0)
         listed = {item["name"]: item for item in json.loads(output)}
-        self.assertIsNone(listed["1.21.1-fabric"]["skip"])
-        self.assertEqual(listed["1.21.1-fabric"]["world"]["savesPath"], "saves/jechworld")
-        # The harness row (1.21.1-neoforge) has no world of its own: the level is
-        # the one the checkout's in-client runner creates.
+        self.assertIsNone(listed["mv-1.20.1-fabric"]["skip"])
+        self.assertEqual(listed["mv-1.20.1-fabric"]["world"]["savesPath"], "saves/jechworld")
+        # Both 1.21.1 rows are harness rows now (the standalone builds since
+        # 2026-10-15): neither declares a world, because the level asserted
+        # against is the one the in-client runner creates and pins itself, and
+        # both carry the scenario selection instead. The fabric row also pins
+        # JEI's focusSearch binding in the preset (JEI 19.x on fabric registers
+        # no usable default), which is why its uitest block carries options.
+        self.assertIsNone(listed["1.21.1-fabric"]["world"])
+        self.assertIsNone(listed["1.21.1-fabric"]["readyWhen"])
+        self.assertEqual(listed["1.21.1-fabric"]["uitest"],
+                         {"selection": "tag:smoke,tag:jei",
+                          "project": "uitest/1.21.1-fabric",
+                          "options": {"version": "3955",
+                                      "key_key.jei.focusSearch": "key.keyboard.f"}})
         self.assertIsNone(listed["1.21.1-neoforge"]["world"])
-        self.assertEqual(listed["1.21.1-neoforge"]["uitest"], {"selection": "tag:smoke,tag:jei"})
-        self.assertIsNone(listed["1.21.1-fabric"]["uitest"])
+        self.assertEqual(listed["1.21.1-neoforge"]["uitest"],
+                         {"selection": "tag:smoke,tag:jei",
+                          "project": "uitest/1.21.1-neoforge"})
         # mv-1.19.2-forge is the row that cannot load a level before 1.20, so it
         # declares the storage marker it cannot reach and names what is missing
         # instead of pretending to run; the four multiple-version forge rows lost

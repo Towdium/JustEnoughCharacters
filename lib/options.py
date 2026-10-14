@@ -119,9 +119,24 @@ def preset(mc=None):
     return tuple((key, code if value == "<code>" else value, why) for key, value, why in PRESET)
 
 
-def render(mc=None):
-    """The preset as ``options.txt`` text (one ``key:value`` per line)."""
-    return "".join(f"{key}:{value}\n" for key, value, _why in preset(mc))
+def render(mc=None, extra=None):
+    """The preset as ``options.txt`` text (one ``key:value`` per line).
+
+    ``extra`` is an env's ``uitest.options`` declaration: additional keys the row
+    needs beyond the two-line base preset, written **first** (a ``version:`` key
+    among them very first — the safe-with-key_* ordering the trap below
+    describes). The one user of that slot today is a standalone fabric row
+    pinning ``key_key.jei.focusSearch:key.keyboard.f``, which is only safe ahead
+    of a ``version:<data version>`` line (with it the legacy fixer chain never
+    runs and the binding loads cleanly).
+    """
+    def _order(item):
+        key, _value = item
+        return (0 if key == "version" else 1, key)
+
+    lines = [f"{key}:{value}\n" for key, value in sorted((extra or {}).items(), key=_order)]
+    lines += [f"{key}:{value}\n" for key, value, _why in preset(mc)]
+    return "".join(lines)
 
 
 def keys():

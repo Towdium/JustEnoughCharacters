@@ -183,10 +183,15 @@ def stage_overrides(env, pack_dir, *, seed=None, log=print):
     staged = []
 
     options_path = overrides_dir / options.FILENAME
-    atomic_write_text(options_path, options.render(env.mc))
+    # An env's ``uitest.options`` adds row-specific keys on top of the base
+    # preset (a standalone fabric row pins JEI's focusSearch binding there);
+    # everything else keeps the two-line base.
+    extra_options = env.uitest.options if env.uitest is not None else None
+    atomic_write_text(options_path, options.render(env.mc, extra=extra_options))
     staged.append(options.FILENAME)
-    log(f"pack: overrides/{options.FILENAME} preset "
-        f"({', '.join(f'{key}={value}' for key, value, _why in options.explain(env.mc))})")
+    described = [f"{key}={value}" for key, value, _why in options.explain(env.mc)]
+    described += [f"{key}={value}" for key, value in sorted((extra_options or {}).items())]
+    log(f"pack: overrides/{options.FILENAME} preset ({', '.join(described)})")
 
     if env.world is None:
         return staged

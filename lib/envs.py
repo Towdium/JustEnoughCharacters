@@ -120,15 +120,26 @@ class GradleSpec:
 
 
 class UiTestSpec:
-    """The optional ``env.uitest`` block: run the checkout's in-client UI test harness.
+    """The optional ``env.uitest`` block: run the in-client UI test harness.
 
-    An env that declares this block runs the checkout's UI test harness inside
-    the client: the selection is handed to Gradle as ``-PjechTest=<selection>``,
-    which is the only gate on the harness wiring, so the run loads the harness
-    mod, drives the scenarios the selection names, and writes its own report,
-    captures and ``junit.xml`` into ``<game dir>/uitest`` before it quits the
-    client itself. The env's ``gradle.task`` therefore has to be the harness's
-    own run task — the block only says *which scenarios*, never *how to launch*.
+    An env that declares this block runs the UI test harness inside the client:
+    the selection is handed to Gradle as ``-PjechTest=<selection>``, which is the
+    only gate on the harness wiring, so the run loads the harness mod, drives the
+    scenarios the selection names, and writes its own report, captures and
+    ``junit.xml`` into ``<game dir>/uitest`` before it quits the client itself.
+
+    Which Gradle the block needs depends on ``project``:
+
+    * ``project`` absent — the *checkout backend* (the original shape): the env
+      must also declare ``gradle``, and its ``gradle.task`` has to be the
+      checkout's own harness run task (``:neoforge:runClientTests``); the block
+      only says *which scenarios*, never *how to launch*.
+    * ``project`` present — the *standalone backend*: a path relative to the
+      compat-tests repository naming the harness's own independent Gradle build
+      (``uitest/1.21.1-neoforge``). The three-stage pipeline builds/reuses the
+      JECh jar, compiles that build, then launches its run task there, passing
+      the jars under test in as ``-PjechJar``/``-PjeiJar``; the env needs no
+      ``gradle`` block, and the run task name is the build's own business.
 
     * ``selection`` — the harness's scenario selection expression, in the
       grammar its own ``ScenarioSelection`` accepts: ``all``, a scenario name,
@@ -136,15 +147,25 @@ class UiTestSpec:
       ``regex:<pattern>``. It is passed through verbatim; an expression that
       matches nothing is a failed run, not an empty pass.
 
+    * ``options`` — additional ``options.txt`` keys the row's preset needs
+      beyond the base two (``{"version": "3955", "key_key.jei.focusSearch":
+      "key.keyboard.f"}``). The keys land in the pack's preset ahead of the base
+      lines, with a declared ``version`` first — the only ordering under which a
+      ``key_*`` line is loadable at all (see lib/options.py's trap note). This
+      is how a standalone fabric row pins a binding the pinned JEI itself does
+      not provide a usable default for.
+
     The evidence is read back by the ``uitest_report`` check, so an env with this
     block is judged by the harness's own verdict rather than by the log alone.
     """
 
-    def __init__(self, selection):
+    def __init__(self, selection, project=None, options=None):
         self.selection = selection
+        self.project = project
+        self.options = dict(options) if options else None
 
     def __repr__(self):
-        return f"UiTestSpec({self.selection!r})"
+        return f"UiTestSpec({self.selection!r}, project={self.project!r}, options={self.options!r})"
 
 
 class ReadyWhen:
@@ -324,21 +345,47 @@ def parse_env(data, path="<dict>"):
     # — because the Prism instance backend was removed on 2026-10-14 (see
     # envs/README.md). An env that names no run task cannot be executed, and that
     # is a configuration error rather than a run that quietly launches nothing;
-    # the only other honest state is a declared ``skip``, which says why.
-    if gradle is None and skip is None:
+    # the only other honest state is a declared ``skip``, which says why. The one
+    # alternative to naming a checkout task is naming a standalone harness build
+    # (``uitest.project``), which carries its own launch layer.
+    standalone_uitest = uitest is not None and uitest.project is not None
+    if gradle is None and not standalone_uitest and skip is None:
         problems.append(
             "env.gradle is required: the Prism instance launcher was removed on 2026-10-14, so the "
             "checkout's own Gradle run task is the only launch layer. Declare "
-            '{"task": ":<module>:runClient", "daemon_java": <n>} (see envs/README.md), or declare '
+            '{"task": ":<module>:runClient", "daemon_java": <n>} (see envs/README.md), or run the '
+            "standalone harness build by adding \"project\" to env.uitest, or declare "
             "skip with the reason the row cannot run"
         )
     # The selection is handed to Gradle as a project property, so there has to be
-    # a Gradle run to hand it to.
-    if uitest is not None and gradle is None:
+    # a Gradle run to hand it to: either the checkout backend's own task (the
+    # original shape) or the standalone build the block itself names.
+    if uitest is not None and gradle is None and not standalone_uitest:
         problems.append(
-            "env.uitest requires env.gradle: the scenario selection travels to the checkout as the "
-            "-PjechTest project property, which only the gradle launch can pass"
+            "env.uitest requires env.gradle (or env.uitest.project for the standalone harness "
+            "build): the scenario selection travels to the run as the -PjechTest project property, "
+            "which only a Gradle launch can pass"
         )
+    # A standalone build IS the launch layer; naming a checkout task as well would
+    # leave two launchers for one env, and which one ran would be undefined.
+    if standalone_uitest and gradle is not None:
+        problems.append(
+            "env.uitest.project and env.gradle are mutually exclusive: the standalone harness "
+            "build carries its own run task, so a checkout task alongside it would name a second "
+            "launcher for the same env"
+        )
+    # On the standalone backend the harness build loads every jar itself (the
+    # JECh jar and the JEI jar as -P properties, fabric-api as its own Gradle
+    # dependency), so there is nothing for the isolation step to stage — and a
+    # ``game-dir`` jar would be loaded twice (staged copy and the build's own).
+    if standalone_uitest:
+        for label, spec in [("jech", jech)] + [(f"mods[{m.name}]", m) for m in mods]:
+            if spec.via == "game-dir":
+                problems.append(
+                    f"env.{label} declares via \"game-dir\", but a standalone uitest env stages "
+                    "nothing: the harness build loads every jar itself, so a staged copy would "
+                    "double-load. Drop the via (\"dev-classpath\" is the standalone shape)"
+                )
 
     if problems:
         raise EnvSchemaError(
@@ -558,7 +605,7 @@ def _parse_uitest(data, problems):
     if not isinstance(data, dict):
         problems.append('env.uitest must be an object {"selection": "tag:smoke"}')
         return None
-    _reject_unknown(data, {"selection"}, "env.uitest", problems)
+    _reject_unknown(data, {"selection", "project", "options"}, "env.uitest", problems)
     # ``_string`` already refuses a missing, null or blank selection and trims it
     # (which is also why no example is repeated in its message). What is left to
     # check is that the value survives being handed to Gradle as one argv element.
@@ -567,9 +614,50 @@ def _parse_uitest(data, problems):
         problems.append("env.uitest.selection must be one line without control characters "
                         "(it is passed to Gradle verbatim)")
         selection = None
+    # ``project`` opts the env into the standalone backend: a path relative to the
+    # compat-tests repository that names the harness's own Gradle build. The shape
+    # is checked here (a plain relative path with no hop out of the repository);
+    # whether the directory actually holds a build is the pipeline's to verify,
+    # where the missing build is named with the full expected path.
+    project = _string(data, "project", "env.uitest", problems, required=False)
+    if project is not None:
+        if project.startswith("/") or project.startswith("~") or ".." in project.split("/"):
+            problems.append(
+                "env.uitest.project must be a plain path relative to the compat-tests repository "
+                f"(got {project!r}); absolute paths and '..' segments are not accepted"
+            )
+            project = None
+    # ``options`` are extra preset keys (see the class docstring). A key_* entry
+    # without a version entry would re-create the OptionsKeyLwjgl3Fix trap the
+    # base preset avoids, so the pair is enforced here rather than at run time.
+    extra_options = None
+    if "options" in data:
+        raw_options = data.get("options")
+        if not isinstance(raw_options, dict) or not raw_options:
+            problems.append('env.uitest.options must be a non-empty object {"key": "value"}')
+        else:
+            extra_options = {}
+            for key, value in raw_options.items():
+                if not isinstance(key, str) or not key.strip():
+                    problems.append("env.uitest.options keys must be non-empty strings")
+                    extra_options = None
+                    break
+                if not isinstance(value, str) or not value.strip() or "\n" in value:
+                    problems.append(
+                        f"env.uitest.options[{key!r}] must be a one-line non-empty string")
+                    extra_options = None
+                    break
+                extra_options[key.strip()] = value.strip()
+            if extra_options is not None and any(k.startswith("key_") for k in extra_options):
+                if "version" not in extra_options:
+                    problems.append(
+                        "env.uitest.options declares a key_* binding but no version: without the "
+                        "version line the client's legacy options fixer NumberFormatExceptions on "
+                        "the binding and drops every option, lang included (see lib/options.py)")
+                    extra_options = None
     if selection is None:
         return None
-    return UiTestSpec(selection)
+    return UiTestSpec(selection, project=project, options=extra_options)
 
 
 def _parse_describe(data, context, problems):

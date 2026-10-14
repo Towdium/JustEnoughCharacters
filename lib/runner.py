@@ -31,6 +31,7 @@ from pathlib import Path
 from . import checks as checks_mod
 from . import envs as envs_mod
 from . import instance, options, pack as pack_mod, paths, report as report_mod, resolve, worlds
+from . import uitest_pipeline
 from .errors import EXIT_FAIL, EXIT_OK, EXIT_USAGE, EXIT_WATCHDOG, ConfigError, JtError
 from .select import Selection
 from .util import atomic_write_json, atomic_write_text, now_iso, now_stamp, sanitize_name
@@ -250,6 +251,8 @@ def _env_report(run_id, env, entry, started_iso, duration_ms, *, selection_label
 
 
 def _execute(env, run_dir, entry, *, started_wall, refresh, log):
+    log(f"{uitest_pipeline.STAGE_PREFIX} config: resolving {env.name} "
+        f"(jech {env.jech.source}, {len(env.mods)} target mod(s), {len(env.checks)} check(s))")
     resolved = resolve.resolve_env(env, refresh=refresh, download=True, log=log)
     entry["mods"] = [artifact.to_json() for artifact in resolved.artifacts]
     for note in resolved.notes:
@@ -290,36 +293,59 @@ def _execute(env, run_dir, entry, *, started_wall, refresh, log):
         f"({len(pack_result.mod_filenames)} jar(s) in overrides/mods, files list empty, "
         f"overrides {', '.join(pack_result.extra_overrides)})")
 
-    # The launch layer: the checkout's own Gradle run task. Everything above
-    # (resolve, seed, pack) and everything below (isolation, watching, judging) is
-    # independent of it: isolation owns the game directory, the runner watches the
-    # process tree below the wrapper it started, and the log lands under that game
-    # directory.
-    if env.gradle is None:
-        # Unreachable through the schema, which refuses an env that is neither
-        # skipped nor given a run task (see envs.parse_env). Kept fail-closed so a
-        # programmatically built env cannot silently launch nothing.
-        raise ConfigError(
-            f"{env.name}: no gradle run task (env.gradle); the Prism instance launcher was removed "
-            "on 2026-10-14, so there is no launch layer for this env"
-        )
-    checkout = checkout_dir(env, log=log)
-    minecraft_dir = instance.run_game_dir(run_dir)
-    # The in-client UI test selection (when the env asks for the harness): it
-    # travels to the checkout as -PjechTest, which is the only gate on that
-    # wiring, so a run without it loads no harness at all.
+    # The launch layer: exactly one. The checkout backend runs the checkout's own
+    # Gradle run task; the standalone backend (an env whose ``uitest`` block names
+    # a ``project``) runs that harness build's run task through the three-stage
+    # pipeline. Everything above (resolve, seed, pack) and everything below
+    # (isolation, watching, judging) is independent of which one an env uses.
     uitest_selection = env.uitest.selection if env.uitest is not None else None
-    entry["gradle"] = {
-        "task": env.gradle.task,
-        "projectDir": paths.display(checkout),
-        "daemonJava": env.gradle.daemon_java,
-        "args": list(env.gradle.args),
-        "uitestSelection": uitest_selection,
-    }
+    standalone = env.uitest is not None and env.uitest.project is not None
+    jar_args = []
+    if standalone:
+        # Stage build: the JECh jar (built if the checkout has none) and the
+        # harness build's own compile, both before anything is staged, so a build
+        # failure never leaves a half-run behind. Gradle itself runs on the JDK
+        # the env names — the same rule the checkout backend's daemon_java follows.
+        harness_dir = uitest_pipeline.harness_build_dir(env, log=log)
+        gradle_home = instance.java_home_for(env.java_version)
+        jech_jar = uitest_pipeline.ensure_jech_jar(env, resolved, java_home=gradle_home, log=log)
+        jar_args = uitest_pipeline.jar_arguments(jech_jar, resolved)
+        uitest_pipeline.compile_harness(env, harness_dir, jar_args, java_home=gradle_home, log=log)
+        run_task = uitest_pipeline.run_task_of(env)
+        checkout = harness_dir
+        entry["gradle"] = {
+            "task": run_task,
+            "projectDir": paths.display(checkout),
+            "daemonJava": env.java_version,
+            "args": list(jar_args),
+            "uitestSelection": uitest_selection,
+        }
+        log(f"{env.name}: standalone harness build {env.uitest.project!r} — "
+            f"{uitest_pipeline.STAGE_PREFIX} test: launching {run_task}")
+    elif env.gradle is None:
+        # Unreachable through the schema, which refuses an env with neither a run
+        # task, a standalone harness build, nor a declared skip (see
+        # envs.parse_env). Kept fail-closed so a programmatically built env
+        # cannot silently launch nothing.
+        raise ConfigError(
+            f"{env.name}: no launch layer (env.gradle and env.uitest.project are both absent); the "
+            "Prism instance launcher was removed on 2026-10-14"
+        )
+    else:
+        checkout = checkout_dir(env, log=log)
+        run_task = env.gradle.task
+        entry["gradle"] = {
+            "task": env.gradle.task,
+            "projectDir": paths.display(checkout),
+            "daemonJava": env.gradle.daemon_java,
+            "args": list(env.gradle.args),
+            "uitestSelection": uitest_selection,
+        }
+    minecraft_dir = instance.run_game_dir(run_dir)
     log(f"{env.name}: gradle run: " + " ".join(instance.gradle_command(
-        checkout, env.gradle.task, minecraft_dir,
+        checkout, run_task, minecraft_dir,
         world=env.world.name if env.world is not None else None, uitest=uitest_selection)
-        + list(env.gradle.args)))
+        + jar_args + (list(env.gradle.args) if env.gradle is not None else [])))
     if uitest_selection is not None:
         # The env makes no claim about where that output lands: the checkout's
         # own harness wiring does, and the uitest_report check reads it back
@@ -343,11 +369,22 @@ def _execute(env, run_dir, entry, *, started_wall, refresh, log):
     entry["launcherLog"] = paths.display(launcher_log)
 
     crash_before = crash_report_snapshot(minecraft_dir)
-    proc = instance.launch_gradle(checkout, env.gradle.task, minecraft_dir,
+    # The launch itself. The standalone backend hands the jars under test over as
+    # extra project properties and runs the harness build's own run task; the
+    # checkout backend stays exactly as it was, its daemon_java included.
+    if standalone:
+        launcher_java = instance.java_home_for(env.java_version)
+        log(f"{env.name}: gradle JAVA_HOME={paths.display(launcher_java)} "
+            f"(the env's java {env.java_version} runs the harness build's Gradle)")
+        extra_args = list(jar_args)
+    else:
+        launcher_java = gradle_java_home(env, log=log)
+        extra_args = list(env.gradle.args)
+    proc = instance.launch_gradle(checkout, run_task, minecraft_dir,
                                   world=env.world.name if env.world is not None else None,
                                   uitest=uitest_selection,
-                                  java_home=gradle_java_home(env, log=log),
-                                  log_path=launcher_log, extra_args=env.gradle.args, log=log)
+                                  java_home=launcher_java,
+                                  log_path=launcher_log, extra_args=extra_args, log=log)
     # The game is a java process under this launcher whose working directory is
     # this run's game directory. The tracker searches until it has found the client
     # and re-checks it by signal afterwards (see the class).
