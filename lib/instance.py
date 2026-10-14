@@ -1,6 +1,6 @@
-"""Prism Launcher management: data root, import, instance.cfg, reuse, isolation.
+"""Game directory isolation and the two launch backends.
 
-Everything here follows the measured Prism CLI behaviour recorded in the
+The Prism half follows the measured Prism CLI behaviour recorded in the
 ``prism-pack-lifecycle`` skill:
 
 * ``-I`` must receive a **local** file; handing Prism a url makes it open dialogs
@@ -13,10 +13,22 @@ Everything here follows the measured Prism CLI behaviour recorded in the
 * ``latest.log`` may belong to a previous session, so a session is only accepted
   when the file is newer than the run's start timestamp.
 
-The module owns exactly one absolute path: ``/usr/libexec/java_home``, the macOS
-JDK lookup helper, overridable through ``$JT_JAVA_HOME_CMD``. It is a platform
-tool path, not a project path, and it is the only way to honour the env's
-``java.version`` on this machine.
+The gradle half launches through the checkout's own run task
+(``./gradlew <task> --no-daemon -PjechRunDir=<gameDir>``): the game directory is
+handed to the build, the client boots inside it, and ``latest.log`` is read from
+``<gameDir>/logs``. Gradle passes the client's own arguments through an
+``@argfile``, so neither argv nor the environment is visible in ``ps``; the
+client process is identified by its **working directory** instead (``lsof -a -p
+<pid> -d cwd``, overridable through ``$JT_LSOF``), which is what
+``GradleGameTracker`` does — search once per second until the client appears,
+then only re-check liveness.
+
+Machine-specific tool locations live here and nowhere else. The one hard-coded
+absolute path is ``/usr/libexec/java_home``, the macOS JDK lookup helper,
+overridable through ``$JT_JAVA_HOME_CMD``; ``lsof`` (needed to name the client
+process on the gradle path) is resolved from ``$JT_LSOF`` and then ``$PATH``.
+Both are platform tool paths, not project paths, and they are the only way to
+honour the env's ``java.version`` and to identify the client on this machine.
 """
 
 from __future__ import annotations
@@ -61,6 +73,26 @@ LOG_NAME = "latest.log"
 STATE_VERSION = 1
 IMPORT_TIMEOUT_SEC = 1800
 IMPORT_GRACE_SEC = 2.0
+
+# The Gradle backend's contract with the checkout's build files: the wrapper it
+# runs, and the two project properties the checkout's run configuration reads to
+# point the client at the harness's game directory and at a world to join. They
+# are properties (not environment variables) so a plain `./gradlew runClient`
+# without them keeps the checkout's own default behaviour.
+GRADLE_WRAPPER = "gradlew"
+GRADLE_RUN_DIR_PROPERTY = "jechRunDir"
+GRADLE_QUICK_PLAY_PROPERTY = "jechQuickPlayWorld"
+# How a Gradle-launched client is identified in the process table: the client's
+# *working directory* is the game directory the run was given (both loaders launch
+# it there), and that is the only per-run fact available. The client's own argv
+# cannot carry one — ModDevGradle passes every JVM and program argument through
+# ``@argfile`` files, which the process table does not show — and a name-based
+# rule ("a java descendant that is not Gradle") matched Gradle's own short-lived
+# toolchain probe, which made the runner read a vanished probe as "the game
+# exited" and abandon a run that had not launched anything yet.
+LSOF_ENV = "JT_LSOF"
+MIN_GRADLE_GAME_SEARCH_SEC = 1.0
+
 
 # The Prism/MultiMC component uid that carries each loader, and whether the
 # component version is the bare loader version or the ``<mc>-<loader>`` string
@@ -183,6 +215,26 @@ def instance_cfg_path(instance_id, root=None):
 
 def latest_log_path(instance_id, root=None):
     return game_dir(instance_id, root) / "logs" / LOG_NAME
+
+
+def log_path_in(minecraft_dir):
+    """``<game dir>/logs/latest.log`` for a game directory the caller owns.
+
+    The Prism backend asks :func:`latest_log_path` (it has an instance id); the
+    Gradle backend only has a directory, so both end up reading the same file.
+    """
+    return Path(minecraft_dir) / "logs" / LOG_NAME
+
+
+def run_game_dir(run_dir):
+    """The game directory a Gradle-backed run gets: ``<runs>/<id>/game``.
+
+    Under the run's own directory on purpose: the game directory is an input the
+    harness owns and rewrites on every run (mods, config, saves, options.txt), and
+    a per-run location keeps it out of the checkout while leaving no state behind
+    for the next run to inherit.
+    """
+    return Path(run_dir) / "game"
 
 
 def list_instances(root=None):
@@ -588,7 +640,8 @@ def archive_dir(source, dest):
     return count
 
 
-def isolate(instance_id, resolved, run_dir, *, root=None, pack_result=None, log=print):
+def isolate(instance_id, resolved, run_dir, *, root=None, pack_result=None, game_dir_path=None,
+            log=print):
     """Make the instance match the pack exactly, discarding every previous run.
 
     Every run re-syncs ``mods/`` from the pack (delete-then-stage), archives then
@@ -598,23 +651,35 @@ def isolate(instance_id, resolved, run_dir, *, root=None, pack_result=None, log=
     stale instance can never influence a verdict: a world a previous run played in
     is replaced by the seed, and an ``options.txt`` the game rewrote is replaced by
     the preset.
+
+    ``game_dir_path`` overrides where that directory is. The Prism backend leaves
+    it out (the instance id decides it); the Gradle backend has no instance and
+    passes the directory the run was given.
     """
     run_dir = Path(run_dir)
-    mc = game_dir(instance_id, root)
+    mc = Path(game_dir_path) if game_dir_path is not None else game_dir(instance_id, root)
     notes = []
 
+    # Only the artifacts that travel as files: an artifact the checkout's Gradle
+    # run already carries on its classpath (``via: dev-classpath``) must not be
+    # copied here, or the loader would see the same mod id twice.
+    staged_artifacts = resolved.staged
     mods_dir = mc / "mods"
     removed = clear_dir(mods_dir)
     staged = []
-    for artifact in resolved.artifacts:
+    for artifact in staged_artifacts:
         if artifact.path is None or not artifact.path.is_file():
             raise ConfigError(f"{artifact.name}: {artifact.filename} is missing from the cache")
         shutil.copy2(artifact.path, mods_dir / artifact.filename)
         staged.append(artifact.filename)
-    expected = {artifact.filename for artifact in resolved.artifacts}
+    expected = {artifact.filename for artifact in staged_artifacts}
     present = {p.name for p in mods_dir.iterdir() if p.is_file()}
     if present != expected:
         notes.append(f"mods/ after sync holds {sorted(present)} (expected {sorted(expected)})")
+    for artifact in resolved.artifacts:
+        if not artifact.staged:
+            notes.append(f"{artifact.name} ({artifact.filename}) rides the checkout's classpath "
+                         "(via=dev-classpath), not staged into mods/")
 
     config_archive = run_dir / "pre-run-config"
     archived = archive_dir(mc / "config", config_archive)
@@ -723,6 +788,142 @@ def game_pids(instance_id, *, root=None, exclude=()):
     return sorted(pids)
 
 
+def lsof_command():
+    """The ``lsof`` executable: ``$JT_LSOF`` first, then ``$PATH``.
+
+    lsof is how a process's working directory is read; it is a base-system tool on
+    macOS and Linux (where this harness runs), and it can read the directory of a
+    process this user owns without elevation, which ``ps`` cannot report at all.
+    """
+    configured = os.environ.get(LSOF_ENV)
+    if configured:
+        candidate = Path(os.path.expanduser(configured))
+        if not candidate.is_file():
+            raise ToolMissingError(
+                f"{LSOF_ENV} points at {configured!r}, which is not an executable file"
+            )
+        return str(candidate)
+    found = shutil.which("lsof")
+    if found:
+        return found
+    raise ToolMissingError(
+        "lsof was not found on PATH. It is how the harness reads a Gradle-launched "
+        f"client's working directory (the only per-run identity available); set {LSOF_ENV} "
+        "to its path if it is not on PATH."
+    )
+
+
+def cwd_of(pid, *, command=None):
+    """The working directory of a process, or ``None`` when it cannot be read."""
+    argv = shlex.split(command) if command else [lsof_command()]
+    argv += ["-a", "-p", str(int(pid)), "-d", "cwd"]
+    try:
+        completed = subprocess.run(argv, capture_output=True, text=True, timeout=30, check=False)
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise JtError(f"cannot read the working directory of pid {pid} ({exc})")
+    lines = [line for line in completed.stdout.splitlines() if line.strip()]
+    if len(lines) < 2:
+        return None
+    # ``COMMAND PID USER FD TYPE DEVICE SIZE/OFF NODE NAME`` — NAME is the tail and
+    # may itself contain spaces, so it is taken with a bounded split.
+    fields = lines[-1].split(None, 8)
+    if len(fields) < 9:
+        return None
+    return fields[8]
+
+
+def pid_alive(pid):
+    """Whether a pid still exists (same signal-0 probe :func:`kill_process_tree` uses)."""
+    try:
+        os.kill(int(pid), 0)
+        return True
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+
+
+def gradle_game_pids(launch_pid, game_dir, *, command=None):
+    """Pids of the game JVM a Gradle run task started, matched on its working directory.
+
+    :func:`game_pids` matches the *instance directory* in a process's command line;
+    a Gradle run has no such argument to match (see the module comments). What it
+    does have is the client's working directory, which both loaders set to the game
+    directory the run was given — so the game is "a java process under this
+    launcher whose cwd is this run's game directory", the same *kind* of evidence
+    the Prism backend uses (a path only this run has).
+
+    A name heuristic was tried first and was wrong in a way that mattered: "any
+    java descendant that is not Gradle" also matched the short-lived toolchain
+    probe Gradle forks while configuring, so the runner saw a pid, recorded "the
+    game started", watched the probe disappear and stopped the run as if the client
+    had exited — before the client was even launched. The launcher, the client and
+    everything else were then left running.
+    """
+    wanted = str(Path(game_dir))
+    table = process_table()
+    candidates = descendants([int(launch_pid)], table) - {os.getpid(), int(launch_pid)}
+    pids = []
+    for pid in sorted(candidates):
+        command_line = table.get(pid, (0, ""))[1]
+        if "java" not in command_line.casefold():
+            continue
+        cwd = cwd_of(pid, command=command)
+        if cwd is None:
+            continue
+        # The launcher hands the client the directory, not a normalised form of it:
+        # compare resolved paths so a trailing separator or a symlink in the middle
+        # cannot hide the game.
+        if _same_dir(cwd, wanted):
+            pids.append(pid)
+    return pids
+
+
+def _same_dir(left, right):
+    try:
+        return Path(left).resolve() == Path(right).resolve()
+    except OSError:  # pragma: no cover - resolve() is tolerant, but be safe
+        return str(left) == str(right)
+
+
+class GradleGameTracker:
+    """Finds the Gradle-launched client once, then tracks it cheaply.
+
+    The search costs an ``lsof`` per java candidate per poll, so it runs until the
+    client is found (with a floor between attempts) and never again: after that the
+    already-known pids are re-checked with signal 0. ``pids()`` is what the watch
+    loop calls, so its answer has the same meaning as ``instance.game_pids`` on the
+    Prism side.
+    """
+
+    def __init__(self, launch_pid, game_dir, *, command=None,
+                 interval=MIN_GRADLE_GAME_SEARCH_SEC, clock=time.monotonic):
+        self.launch_pid = int(launch_pid)
+        self.game_dir = Path(game_dir)
+        self.command = command
+        self.interval = interval
+        self.clock = clock
+        self.found = []
+        self.searches = 0
+        self._last_search = None
+
+    def pids(self):
+        if self.found:
+            self.found = [pid for pid in self.found if pid_alive(pid)]
+            return list(self.found)
+        now = self.clock()
+        if self._last_search is not None and now - self._last_search < self.interval:
+            return []
+        self._last_search = now
+        self.searches += 1
+        self.found = gradle_game_pids(self.launch_pid, self.game_dir, command=self.command)
+        return list(self.found)
+
+    def __repr__(self):
+        return (f"GradleGameTracker(launcher={self.launch_pid}, game_dir={self.game_dir}, "
+                f"found={self.found})")
+
+
 def descendants(pids, table=None):
     table = table if table is not None else process_table()
     wanted = set(int(pid) for pid in pids)
@@ -804,6 +1005,54 @@ def launch(instance_id, *, root=None, log_path, extra_args=(), world=None, log=p
     proc = subprocess.Popen(command, stdin=subprocess.DEVNULL, stdout=handle, stderr=subprocess.STDOUT,
                             **kwargs)
     log(f"launch: {' '.join(command)} (pid {proc.pid}, log {paths.display(log_path)})")
+    return proc
+
+
+def gradle_command(checkout, task, game_dir, *, world=None, wrapper=GRADLE_WRAPPER):
+    """The ``./gradlew`` argv that runs one env's client inside its checkout.
+
+    ``--no-daemon``: a resident Gradle daemon would keep a several-hundred-megabyte
+    JVM alive between runs, which this machine's memory budget does not want.
+
+    The game directory and the world are handed over as **project properties**,
+    not as game arguments: the checkout's own run configuration is what turns them
+    into ``gameDirectory``/``--quickPlaySingleplayer`` for whichever loader the
+    module uses. That is also why the property names live in the checkout's build
+    files — see the ``gradle`` backend section of README.md.
+    """
+    command = [str(Path(checkout) / wrapper), task, "--no-daemon",
+               f"-P{GRADLE_RUN_DIR_PROPERTY}={game_dir}"]
+    if world:
+        command.append(f"-P{GRADLE_QUICK_PLAY_PROPERTY}={world}")
+    return command
+
+
+def launch_gradle(checkout, task, game_dir, *, world=None, java_home=None, log_path, extra_args=(),
+                  log=print):
+    """Start the checkout's Gradle run task in the background; returns the Popen.
+
+    The client's JDK is *not* chosen here — the checkout's own toolchain decides
+    that. ``java_home`` is the JDK that runs Gradle itself, set only when the env
+    asks for one (a wrapper too old for the machine's default JDK).
+
+    Gradle's own output goes to ``log_path``; the game's log is the one the client
+    writes under the game directory, which the caller follows separately.
+    """
+    checkout = Path(checkout)
+    command = gradle_command(checkout, task, game_dir, world=world)
+    command.extend(extra_args)
+    Path(log_path).parent.mkdir(parents=True, exist_ok=True)
+    env = dict(os.environ)
+    if java_home is not None:
+        env["JAVA_HOME"] = str(java_home)
+    handle = open(log_path, "ab", buffering=0)
+    kwargs = {}
+    if os.name == "posix":
+        kwargs["start_new_session"] = True
+    proc = subprocess.Popen(command, cwd=str(checkout), env=env, stdin=subprocess.DEVNULL,
+                            stdout=handle, stderr=subprocess.STDOUT, **kwargs)
+    log(f"launch: {' '.join(command)} (cwd {paths.display(checkout)}, pid {proc.pid}, "
+        f"log {paths.display(log_path)})")
     return proc
 
 

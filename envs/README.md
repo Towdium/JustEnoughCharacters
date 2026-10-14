@@ -53,8 +53,37 @@ ignored too. Everything else must be listed below.
 | `ready_when` | no | `{"value": "<log line>"}`, the line that marks the game as up, see below |
 | `world` | no | `{"name": "<folder>"}`, the world the client is launched into, see below |
 | `skip` | no | a reason string: the env is **not executed**, see below |
+| `gradle` | no | `{task, project_dir, daemon_java}` — run the checkout's Gradle run task instead of launching a Prism instance, see below |
 | `timeout_sec` | no | watchdog budget, default 600; the whole run is killed and the run fails with exit code 3 |
 | `jvm` | no | `{max_mem_mb, min_mem_mb, args, window}`; defaults 3072 / 1024 / `[]` / `[1280, 720]` |
+
+### `gradle` — launching through the checkout instead of Prism
+
+An env with a `gradle` block is executed by running a Gradle task in the checkout
+under test (`./gradlew <task> --no-daemon -PjechRunDir=<game dir>`, plus
+`-PjechQuickPlayWorld=<world>` when the env declares a world) instead of by
+launching a Prism instance. Everything else — resolution, the world seed, the
+pack, isolation, the watchdog, `ready_when`, the checks — is unchanged, and the
+report records which backend ran (`runBackend`, and a `gradle` object with the
+task and checkout). See [README.md](../README.md), "The `gradle` backend",
+for the full contract between the harness and a checkout.
+
+| key | required | meaning |
+| --- | --- | --- |
+| `task` | yes | the Gradle task, spelled from the build root (`:neoforge:runClient`) |
+| `project_dir` | no | the checkout to run in, relative to `$JT_JECH_ROOT`; defaults to the env's `jech.project`, so the task always runs where the artifact under test was built |
+| `daemon_java` | no | the major version of the JDK that runs **Gradle** (its `JAVA_HOME`), e.g. `21` for a Gradle 8.13 wrapper on a Java 25 machine; absent/`null` keeps the ambient `JAVA_HOME`. This is not the client's JDK: that comes from the checkout's own toolchain |
+
+`env.jech` and each `mods[]` entry take one more optional key:
+
+| key | values | meaning |
+| --- | --- | --- |
+| `via` | `game-dir` (default) / `dev-classpath` | where the artifact's jar goes. `game-dir` copies it into the game directory's `mods/` — what a production instance needs. `dev-classpath` stages nothing: the checkout's own run provides it (the module's sources registered as the mod, or a declared `localRuntime` / `modImplementation` dependency). It is still resolved, pinned and reported; staging it as well would load the same mod id twice |
+
+A `via` that contradicts what the checkout actually provides is not detectable
+from the env file — the two 1.21.1 envs are the written record of the choice (see
+the check in `selftest/test_envs.py`), and a wrong one shows up as a duplicate-mod
+error in the run's log rather than as a silent pass.
 
 `loader.type` is one of `forge`, `neoforge`, `fabric`, `quilt`.
 

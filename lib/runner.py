@@ -33,7 +33,7 @@ from pathlib import Path
 from . import checks as checks_mod
 from . import envs as envs_mod
 from . import instance, options, pack as pack_mod, paths, report as report_mod, resolve, worlds
-from .errors import EXIT_FAIL, EXIT_OK, EXIT_USAGE, EXIT_WATCHDOG, JtError
+from .errors import EXIT_FAIL, EXIT_OK, EXIT_USAGE, EXIT_WATCHDOG, ConfigError, JtError
 from .select import Selection
 from .util import atomic_write_json, atomic_write_text, now_iso, now_stamp, sanitize_name
 
@@ -302,29 +302,64 @@ def _execute(env, run_dir, entry, *, started_wall, refresh, log):
         f"({len(pack_result.mod_filenames)} jar(s) in overrides/mods, files list empty, "
         f"overrides {', '.join(pack_result.extra_overrides)}, instance {instance_label})")
 
-    info = instance.ensure_instance(env, resolved, pack_result, refresh=refresh, log=log)
-    entry["instanceId"] = info.instance_id
-    entry["instanceReused"] = info.reused
-    entry["instanceImported"] = info.imported
+    # The launch layer. A ``gradle`` block in the env replaces Prism with a Gradle
+    # run task inside the checkout under test; everything above (resolve, seed,
+    # pack) and everything below (isolation, watching, judging) is the same, so
+    # the two backends differ in exactly the three facts below: which directory
+    # the game gets, which process is the launcher, and where its log lands.
+    ready_values, markers = readiness_rule(env)
+    pids_fn = None
+    owners_fn = None
+    if env.gradle is not None:
+        checkout = checkout_dir(env, log=log)
+        minecraft_dir = instance.run_game_dir(run_dir)
+        entry["gradle"] = {
+            "task": env.gradle.task,
+            "projectDir": paths.display(checkout),
+            "daemonJava": env.gradle.daemon_java,
+        }
+        log(f"{env.name}: gradle backend: " + " ".join(instance.gradle_command(
+            checkout, env.gradle.task, minecraft_dir,
+            world=env.world.name if env.world is not None else None)))
+    else:
+        info = instance.ensure_instance(env, resolved, pack_result, refresh=refresh, log=log)
+        entry["instanceId"] = info.instance_id
+        entry["instanceReused"] = info.reused
+        entry["instanceImported"] = info.imported
+        minecraft_dir = instance.game_dir(info.instance_id)
 
-    isolation = instance.isolate(info.instance_id, resolved, run_dir, pack_result=pack_result,
-                                 log=log)
+    entry["runBackend"] = env.backend
+    isolation = instance.isolate(entry["instanceId"] or instance_label, resolved, run_dir,
+                                 pack_result=pack_result, game_dir_path=minecraft_dir, log=log)
     entry["isolation"] = isolation.to_json()
     entry["notes"].extend(isolation.notes)
 
-    minecraft_dir = instance.game_dir(info.instance_id)
-    log_path = instance.latest_log_path(info.instance_id)
-    launcher_log = run_dir / "launcher.log"
+    log_path = instance.log_path_in(minecraft_dir)
+    launcher_log = run_dir / ("gradle.log" if env.gradle is not None else "launcher.log")
     entry["log"] = paths.display(log_path)
     entry["launcherLog"] = paths.display(launcher_log)
 
-    ready_values, markers = readiness_rule(env)
     crash_before = crash_report_snapshot(minecraft_dir)
-    proc = instance.launch(info.instance_id, log_path=launcher_log,
-                           world=env.world.name if env.world is not None else None, log=log)
+    owned_launcher = env.gradle is not None
+    if env.gradle is not None:
+        proc = instance.launch_gradle(checkout, env.gradle.task, minecraft_dir,
+                                      world=env.world.name if env.world is not None else None,
+                                      java_home=gradle_java_home(env, log=log),
+                                      log_path=launcher_log, log=log)
+        # The game is a java process under this launcher whose working directory is
+        # this run's game directory, and there is no Prism process to hand a launch
+        # off to, so both matchers are replaced. The tracker searches until it has
+        # found the client and re-checks it by signal afterwards (see the class).
+        tracker = instance.GradleGameTracker(proc.pid, minecraft_dir)
+        pids_fn = tracker.pids
+        owners_fn = lambda: []
+    else:
+        proc = instance.launch(entry["instanceId"], log_path=launcher_log,
+                               world=env.world.name if env.world is not None else None, log=log)
     follower = instance.LogFollower(log_path, started_wall, poll=POLL_SEC)
-    watch = _watch(env, info.instance_id, proc, follower, started_wall, log=log,
-                   ready_values=ready_values, markers=markers)
+    watch = _watch(env, entry["instanceId"], proc, follower, started_wall, log=log,
+                   ready_values=ready_values, markers=markers, pids_fn=pids_fn,
+                   owners_fn=owners_fn, owned_launcher=owned_launcher)
 
     entry["timedOut"] = watch["timed_out"]
     entry["watchdog"] = watch["timed_out"]
@@ -386,6 +421,41 @@ def _execute(env, run_dir, entry, *, started_wall, refresh, log):
             log(f"{env.name}: launcher.log tail:\n{tail}")
 
 
+def checkout_dir(env, *, log=None):
+    """The checkout a gradle env runs its task in (``$JT_JECH_ROOT/<project_dir>``).
+
+    Fail-closed: a missing directory or a missing wrapper is a configuration
+    error with the path in it, never a launch that quietly does nothing.
+    """
+    directory = resolve.jech_base_root() / env.gradle.project_dir
+    if not directory.is_dir():
+        raise ConfigError(
+            f"{env.name}: gradle.project_dir {env.gradle.project_dir!r} is not a directory under the "
+            f"JECh root ({paths.display(directory)})"
+        )
+    if not (directory / "gradlew").is_file():
+        raise ConfigError(
+            f"{env.name}: {paths.display(directory)} holds no gradlew wrapper, so the env's gradle "
+            f"task {env.gradle.task!r} cannot be run there"
+        )
+    return directory
+
+
+def gradle_java_home(env, *, log=None):
+    """The JDK that runs Gradle (``env.gradle.daemon_java``), or ``None`` for the ambient one.
+
+    Not the client's JDK: the checkout's own toolchain decides that. This is only
+    for a wrapper whose Gradle is too old for the machine's default JDK.
+    """
+    if env.gradle.daemon_java is None:
+        return None
+    home = instance.java_home_for(env.gradle.daemon_java)
+    if log:
+        log(f"{env.name}: gradle JAVA_HOME={paths.display(home)} "
+            f"(daemon_java={env.gradle.daemon_java})")
+    return home
+
+
 def readiness_rule(env):
     """``(ready values, required markers)`` for one env's stopping rule.
 
@@ -419,7 +489,8 @@ def all_markers_seen(log_text, markers):
     return all(value in log_text for value in markers)
 
 
-def _watch(env, instance_id, proc, follower, started_wall, *, log, ready_values=(), markers=()):
+def _watch(env, instance_id, proc, follower, started_wall, *, log, ready_values=(), markers=(),
+           pids_fn=None, owners_fn=None, owned_launcher=False):
     """Track the game until it is ready, it exits, the launcher gives up, or the watchdog fires.
 
     When the env declares ``ready_when`` the run gets a stopping rule: the moment
@@ -431,7 +502,23 @@ def _watch(env, instance_id, proc, follower, started_wall, *, log, ready_values=
     line lands but a marker never arrives, the run is bounded by
     ``READY_GRACE_SEC`` and then stopped too (``stop_reason=ready-timeout``), so a
     broken assertion surfaces as a FAIL instead of an unbounded hang.
+
+    ``pids_fn`` and ``owners_fn`` are how a launch layer says "these are the
+    game's processes" and "these are the other processes that own this launch":
+    the Prism backend matches on the instance directory (and looks for a Prism
+    process that may have received a handoff), the Gradle backend on the process
+    tree below the wrapper it started (and has nothing to hand off to).
+
+    ``owned_launcher`` says the launcher process is this run's own — a Gradle
+    invocation, which must not survive a run that never got a session. A Prism CLI
+    is not in that category: one that outlives the game may still be draining and
+    ending it would turn its exit code into a signal, so it is deliberately left
+    to exit on its own.
     """
+    if pids_fn is None:
+        pids_fn = lambda: instance.game_pids(instance_id, exclude=(proc.pid,))
+    if owners_fn is None:
+        owners_fn = _other_launchers
     deadline = started_wall + env.timeout_sec
     session_started = False
     game_started = False
@@ -451,7 +538,7 @@ def _watch(env, instance_id, proc, follower, started_wall, *, log, ready_values=
             follower.poll_once()
         else:
             session_started = follower.wait_for_session(min(now + POLL_SEC, deadline), log=log)
-        pids = instance.game_pids(instance_id, exclude=(proc.pid,))
+        pids = pids_fn()
         if pids:
             game_started = True
             if proc.poll() is not None:
@@ -488,7 +575,7 @@ def _watch(env, instance_id, proc, follower, started_wall, *, log, ready_values=
                 handoff_deadline = now + HANDOFF_GRACE_SEC
             if not handoff_noted:
                 handoff_noted = True
-                owners = _other_launchers()
+                owners = owners_fn()
                 if owners:
                     note = (f"the launcher CLI exited (code {proc.poll()}) while another Prism "
                             f"process owns this data root (pid(s) {', '.join(owners)}); the launch "
@@ -509,7 +596,20 @@ def _watch(env, instance_id, proc, follower, started_wall, *, log, ready_values=
     was_running = bool(pids)
     if stop_reason or timed_out or was_running:
         instance.kill_process_tree(sorted(set(pids) | {proc.pid}), log=log)
-    exit_code = _reap(proc, log=log, timeout=LAUNCHER_EXIT_GRACE_SEC)
+    elif owned_launcher and proc.poll() is None and not session_started:
+        # The run gave up on a launcher that is still alive and never produced a
+        # session: everything it will ever start is still to come, so the tree it
+        # owns is ended here rather than left behind (a Gradle daemon keeps its
+        # JVMs, and the client it launches with them).
+        instance.kill_process_tree([proc.pid], log=log)
+    exit_code = _reap(proc, log=log, timeout=LAUNCHER_EXIT_GRACE_SEC,
+                      leave_alone=not owned_launcher)
+    if exit_code is None and owned_launcher:
+        # An owned launcher is never left behind: whatever it is still doing, this
+        # run is over and a Gradle daemon plus a client it keeps alive is exactly
+        # the memory this machine does not have.
+        instance.kill_process_tree([proc.pid], log=log)
+        log(f"{env.name}: the gradle launcher outlived its grace period; its process tree was ended")
     if stop_reason:
         source = "runner"
     elif launcher_died_early:
@@ -525,8 +625,7 @@ def _watch(env, instance_id, proc, follower, started_wall, *, log, ready_values=
             f"after {time.time() - started_wall:.0f}s)")
     # A run the runner ended is exited by definition: SIGKILLed children can linger
     # in the process table for a moment, which must not read as "still running".
-    game_exited = bool(stop_reason) or (
-        game_started and not instance.game_pids(instance_id, exclude=(proc.pid,)))
+    game_exited = bool(stop_reason) or (game_started and not pids_fn())
     ready_line_reached = True if not ready_values else ready_line_seen(follower.text, ready_values)
     missing = ([value for value in markers if value not in follower.text]
                if session_started else list(markers))
@@ -559,13 +658,14 @@ def _other_launchers():
     return sorted(owners)
 
 
-def _reap(proc, *, log, timeout):
+def _reap(proc, *, log, timeout, leave_alone=True):
     if proc.poll() is not None:
         return proc.returncode
     try:
         return proc.wait(timeout=timeout)
     except Exception:
-        log("launcher process did not exit within the grace period; leaving it alone")
+        if leave_alone:
+            log("launcher process did not exit within the grace period; leaving it alone")
         return None
 
 

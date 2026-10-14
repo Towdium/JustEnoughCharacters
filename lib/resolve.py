@@ -19,7 +19,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from . import cfapi, mrapi, modmatch, paths
+from . import cfapi, envs, mrapi, modmatch, paths
 from .errors import DependencyError, JtError
 from .net import BROWSER_USER_AGENT, HttpClient
 from .util import fold, jar_mod_ids, sha1_file
@@ -33,11 +33,14 @@ LOCAL_BUILD_TAG = "local-build"
 
 class ResolvedArtifact:
     def __init__(self, *, role, name, source, filename, path=None, source_path=None,
-                 sha1=None, size=0, url=None, pin=None, detail=""):
+                 sha1=None, size=0, url=None, pin=None, detail="", via=envs.DEFAULT_VIA):
         self.role = role                  # "jech" or "mod"
         self.name = name                  # env-visible name
         self.source = source
         self.filename = filename
+        # "game-dir" stages the jar into the game directory's mods/; "dev-classpath"
+        # stages nothing because the checkout's Gradle run already carries it.
+        self.via = via
         self.path = Path(path) if path else None            # jar to stage into mods/
         self.source_path = Path(source_path) if source_path else None
         self.sha1 = sha1
@@ -45,6 +48,11 @@ class ResolvedArtifact:
         self.url = url
         self.pin = pin or {}
         self.detail = detail
+
+    @property
+    def staged(self):
+        """Whether this artifact has to be copied into the game directory's mods/."""
+        return self.via != "dev-classpath"
 
     def describe(self):
         where = str(self.path or self.source_path or "?")
@@ -59,6 +67,7 @@ class ResolvedArtifact:
             "sha1": self.sha1,
             "size": self.size,
             "pin": self.pin,
+            "via": self.via,
             "detail": self.detail,
         }
 
@@ -80,6 +89,16 @@ class ResolvedEnv:
     @property
     def mods(self):
         return [a for a in self.artifacts if a.role == "mod"]
+
+    @property
+    def staged(self):
+        """The artifacts that have to be copied into the game directory's mods/.
+
+        Everything else rides the checkout's own development classpath (see
+        ``envs.MOD_VIA``); keeping the filter here means the pack, the isolation
+        step and the report can never disagree about what the game will load.
+        """
+        return [a for a in self.artifacts if a.staged]
 
     def __repr__(self):
         return f"ResolvedEnv({self.env.name!r}, {len(self.artifacts)} artifact(s))"
@@ -115,7 +134,7 @@ def resolve_env(env, *, refresh=False, download=True, list_only=False, log=print
         artifact = ResolvedArtifact(
             role="jech", name="jech", source=LOCAL_BUILD_TAG, filename=jar.name,
             source_path=jar, path=jar, sha1=sha1_file(jar), size=jar.stat().st_size,
-            detail=f"local build for {jech.expect_mod_id}",
+            detail=f"local build for {jech.expect_mod_id}", via=jech.via,
         )
         artifacts.append(artifact)
     else:
@@ -139,7 +158,7 @@ def resolve_env(env, *, refresh=False, download=True, list_only=False, log=print
                 f"({pin.get('filename')})")
         artifact = _artifact_from_pin(
             role="jech", name="jech", source=jech.source, pin=pin,
-            detail=f"{jech.slug} {(jech.describe or {}).get('version', '')}",
+            detail=f"{jech.slug} {(jech.describe or {}).get('version', '')}", via=jech.via,
         )
         artifacts.append(artifact)
 
@@ -164,7 +183,8 @@ def resolve_env(env, *, refresh=False, download=True, list_only=False, log=print
             log(f"{env.name}: pinned {mod.name} -> {pin.get('fileId') or pin.get('versionId')} "
                 f"({pin.get('filename')})")
         artifacts.append(_artifact_from_pin(role="mod", name=mod.name, source=mod.source, pin=pin,
-                                            detail=f"{mod.slug} {(mod.describe or {}).get('version', '')}"))
+                                            detail=f"{mod.slug} {(mod.describe or {}).get('version', '')}",
+                                            via=mod.via))
 
     # 3. downloads
     if download:
@@ -203,6 +223,18 @@ def search_roots(env, env_root):
     return [Path(env_root) / project, Path(env_root)]
 
 
+def jech_base_root():
+    """The root the version-line checkouts live under.
+
+    ``$JT_JECH_ROOT`` relocates the whole search (the selftest uses it, and CI
+    points it at the branch checkout root); the default is the checkout directory
+    that holds ``compat-tests``, which is right both on this workstation (its
+    sibling directories are the version lines) and for a submodule CI layout.
+    """
+    env_root = os.environ.get(JECH_ROOT_ENV)
+    return Path(os.path.expanduser(env_root)) if env_root else paths.jech_root()
+
+
 def local_build_jar(env):
     """The jar the env's ``jech.path`` glob selects, from the JECh checkouts.
 
@@ -221,12 +253,7 @@ def local_build_jar(env):
         raise DependencyError(
             f"{env.name}: jech.path must be relative to a JECh checkout, got an absolute path"
         )
-    env_root = os.environ.get(JECH_ROOT_ENV)
-    # $JT_JECH_ROOT relocates the whole search (the selftest uses it, and CI points
-    # it at the branch checkout root); the default is the checkout directory that
-    # holds ``compat-tests``, which is right both on this workstation (its sibling
-    # directories are the version lines) and for a submodule CI layout.
-    base_root = Path(os.path.expanduser(env_root)) if env_root else paths.jech_root()
+    base_root = jech_base_root()
     ordered_roots = search_roots(env, base_root)
     if ordered_roots:
         searched = list(ordered_roots)
@@ -278,7 +305,7 @@ def cache_path_for(filename):
     return paths.mods_cache_dir() / filename
 
 
-def _artifact_from_pin(*, role, name, source, pin, detail):
+def _artifact_from_pin(*, role, name, source, pin, detail, via=envs.DEFAULT_VIA):
     filename = pin.get("filename")
     if not filename:
         raise DependencyError(
@@ -288,7 +315,7 @@ def _artifact_from_pin(*, role, name, source, pin, detail):
     return ResolvedArtifact(
         role=role, name=name, source=source, filename=filename,
         path=cache_path_for(filename), sha1=pin.get("sha1"), size=pin.get("size") or 0,
-        url=pin.get("downloadUrl"), pin=pin, detail=detail,
+        url=pin.get("downloadUrl"), pin=pin, detail=detail, via=via,
     )
 
 

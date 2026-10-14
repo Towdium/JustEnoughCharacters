@@ -129,7 +129,7 @@ def build_pack(env, resolved, run_dir, *, version_id=None, seed=None, log=print)
     mods_dir.mkdir(parents=True, exist_ok=True)
 
     staged = []
-    for artifact in resolved.artifacts:
+    for artifact in resolved.staged:
         if artifact.path is None or not artifact.path.is_file():
             raise DependencyError(
                 f"{artifact.name}: {artifact.filename} is not in the cache "
@@ -143,6 +143,13 @@ def build_pack(env, resolved, run_dir, *, version_id=None, seed=None, log=print)
             )
         _link_or_copy(artifact.path, dest)
         staged.append(artifact.filename)
+    # An artifact the checkout's own Gradle run already carries (``via:
+    # dev-classpath``) is deliberately absent from ``overrides/mods``: staging it
+    # would put a second copy of the same mod id in front of the loader.
+    for artifact in resolved.artifacts:
+        if not artifact.staged:
+            log(f"pack: {artifact.name} ({artifact.filename}) stays on the checkout's dev "
+                "classpath (via=dev-classpath), not staged into overrides/mods")
 
     extra_overrides = stage_overrides(env, pack_dir, seed=seed, log=log)
 

@@ -19,6 +19,18 @@ from .util import atomic_write_text, dump_json_text, load_json
 LOADER_TYPES = ("forge", "neoforge", "fabric", "quilt")
 MOD_SOURCES = ("curseforge", "modrinth")
 JECH_SOURCES = ("local-build", "curseforge", "modrinth")
+# Where an artifact's jar ends up. ``game-dir`` copies it into the instance's
+# ``mods/`` (what a production instance needs); ``dev-classpath`` stages nothing
+# because the checkout's own Gradle run already carries it — either as the mod
+# under test (the source set the run config registers) or as a declared
+# dependency (``localRuntime`` / ``modImplementation``), and a second copy of the
+# same mod id in ``mods/`` is a double load, not a second opinion.
+MOD_VIA = ("game-dir", "dev-classpath")
+DEFAULT_VIA = "game-dir"
+# Which launch layer an env asks for: the Prism instance the harness builds, or a
+# Gradle run task inside the checkout under test (``env.gradle``).
+PRISM_BACKEND = "prism"
+GRADLE_BACKEND = "gradle"
 CHECK_TYPES = ("log_contains", "log_not_contains", "log_regex", "no_crash_reports", "exit_code_zero",
                "file_exists")
 CHECK_VALUE_REQUIRED = ("log_contains", "log_not_contains", "log_regex", "file_exists")
@@ -74,17 +86,53 @@ class JvmSpec:
 
 
 class ModSpec:
-    def __init__(self, name, source, slug, describe, pin, raw):
+    def __init__(self, name, source, slug, describe, pin, raw, via=DEFAULT_VIA):
         self.name = name
         self.source = source
         self.slug = slug
         self.describe = describe
         self.pin = pin
+        # ``game-dir`` (default) stages the jar into the instance's mods/;
+        # ``dev-classpath`` records it but stages nothing, because the checkout's
+        # Gradle run already provides it.
+        self.via = via
         self.raw = raw
 
     @property
     def pinned(self):
         return isinstance(self.pin, dict) and bool(self.pin)
+
+
+class GradleSpec:
+    """The optional ``env.gradle`` block: launch through a Gradle run task.
+
+    An env that declares this block is executed by running a Gradle task inside
+    the JECh checkout under test (``./gradlew <task>``) instead of by launching a
+    Prism instance. The checkout's own run configuration owns the client's JDK
+    (its toolchain) and its runtime classpath; the harness owns the game
+    directory, the isolation around it and the judging. An env without the block
+    keeps the Prism backend, untouched.
+
+    * ``task`` — the Gradle task to run, spelled from the build root
+      (``:neoforge:runClient``), never a bare ``runClient``: the build root is the
+      version-line checkout and the modules are its subprojects.
+    * ``project_dir`` — the directory to run Gradle in, relative to
+      ``$JT_JECH_ROOT``; defaults to the env's ``jech.project``, so the two
+      always name the same checkout unless an env says otherwise.
+    * ``daemon_java`` — the major version of the JDK that *runs Gradle* (its
+      JAVA_HOME), for a wrapper whose Gradle cannot run on the machine default;
+      ``None`` keeps the ambient JAVA_HOME. It is not the client's JDK: that
+      comes from the checkout's toolchain.
+    """
+
+    def __init__(self, task, project_dir, daemon_java=None):
+        self.task = task
+        self.project_dir = project_dir
+        self.daemon_java = daemon_java
+
+    def __repr__(self):
+        return (f"GradleSpec({self.task!r}, project_dir={self.project_dir!r}, "
+                f"daemon_java={self.daemon_java!r})")
 
 
 class ReadyWhen:
@@ -128,7 +176,8 @@ class WorldSpec:
 
 
 class JechSpec:
-    def __init__(self, source, path, expect_mod_id, slug, describe, pin, project, raw):
+    def __init__(self, source, path, expect_mod_id, slug, describe, pin, project, raw,
+                 via=DEFAULT_VIA):
         self.source = source
         self.path = path
         self.expect_mod_id = expect_mod_id
@@ -136,6 +185,8 @@ class JechSpec:
         self.describe = describe
         self.pin = pin
         self.project = project
+        # The mod under test is staged like any other artifact; see ``MOD_VIA``.
+        self.via = via
         self.raw = raw
 
     @property
@@ -166,7 +217,8 @@ class Env:
     """One parsed, validated env file."""
 
     def __init__(self, *, name, tags, mc, loader, java_version, jech, mods, checks,
-                 timeout_sec, jvm, path, raw, ready_when=None, skip=None, world=None):
+                 timeout_sec, jvm, path, raw, ready_when=None, skip=None, world=None,
+                 gradle=None):
         self.name = name
         # An env that declares ``skip`` also carries the ``skip`` tag, so a
         # selection can say "everything runnable" as ``--exclude tag:skip``
@@ -184,6 +236,9 @@ class Env:
         self.ready_when = ready_when
         self.skip = skip
         self.world = world
+        # ``None`` means the Prism backend; a :class:`GradleSpec` switches the
+        # launch layer to a Gradle run task inside the checkout.
+        self.gradle = gradle
         self.path = Path(path)
         self.raw = raw
 
@@ -193,6 +248,11 @@ class Env:
     @property
     def mod_label(self):
         return f"{self.mc}/{self.loader.type}"
+
+    @property
+    def backend(self):
+        """``"gradle"`` when the env runs a checkout's Gradle run task, else ``"prism"``."""
+        return GRADLE_BACKEND if self.gradle is not None else PRISM_BACKEND
 
     def write(self):
         """Persist the (possibly pin-updated) raw dict back to the env file."""
@@ -223,7 +283,8 @@ def parse_env(data, path="<dict>"):
         raise EnvSchemaError(f"{path}: env must be a json object, got {type(data).__name__}")
 
     _reject_unknown(data, {"name", "tags", "mc", "loader", "java", "jech", "mods", "checks",
-                           "timeout_sec", "jvm", "ready_when", "skip", "world"}, "env", problems)
+                           "timeout_sec", "jvm", "ready_when", "skip", "world", "gradle"},
+                    "env", problems)
 
     name = _string(data, "name", "env", problems, required=True)
     if name is not None and not _NAME_RE.match(name):
@@ -243,6 +304,11 @@ def parse_env(data, path="<dict>"):
     ready_when = _parse_ready_when(data.get("ready_when"), problems)
     skip = _parse_skip(data.get("skip"), problems)
     world = _parse_world(data.get("world"), problems)
+    # ``project_dir`` defaults to the checkout ``jech.project`` already names, so
+    # a gradle env cannot accidentally run a different checkout's task than the
+    # one its artifact was resolved from.
+    gradle = _parse_gradle(data.get("gradle"), problems,
+                           default_project=(jech.project if jech is not None else None))
 
     if problems:
         raise EnvSchemaError(
@@ -251,7 +317,7 @@ def parse_env(data, path="<dict>"):
 
     return Env(name=name, tags=tags, mc=mc, loader=loader, java_version=java_version, jech=jech,
                mods=mods, checks=checks, timeout_sec=timeout_sec, jvm=jvm, path=path, raw=data,
-               ready_when=ready_when, skip=skip, world=world)
+               ready_when=ready_when, skip=skip, world=world, gradle=gradle)
 
 
 def load_all(directory=None):
@@ -433,6 +499,47 @@ def _parse_world(data, problems):
     return WorldSpec(name)
 
 
+def _parse_via(data, context, problems, *, default=DEFAULT_VIA):
+    """``via`` — where this artifact's jar is staged. Absent means ``game-dir``."""
+    value = data.get("via")
+    if value is None:
+        return default
+    if not isinstance(value, str) or value.strip() not in MOD_VIA:
+        problems.append(f"{context}.via must be one of {', '.join(MOD_VIA)}, got {value!r}")
+        return default
+    return value.strip()
+
+
+def _parse_gradle(data, problems, *, default_project=None):
+    """``env.gradle`` — present means "launch through the checkout's Gradle run task"."""
+    if data is None:
+        return None
+    if not isinstance(data, dict):
+        problems.append('env.gradle must be an object {"task": ..., "project_dir": ..., '
+                        '"daemon_java": ...}')
+        return None
+    _reject_unknown(data, {"task", "project_dir", "daemon_java"}, "env.gradle", problems)
+    task = _string(data, "task", "env.gradle", problems, required=True)
+    project_dir = _string(data, "project_dir", "env.gradle", problems, required=False)
+    if project_dir is None and "project_dir" not in data:
+        project_dir = default_project
+    if not project_dir:
+        problems.append(
+            "env.gradle.project_dir is required (the checkout directory to run gradle in, relative "
+            "to $JT_JECH_ROOT) unless jech.project already names it"
+        )
+        project_dir = None
+    elif Path(project_dir).is_absolute():
+        problems.append("env.gradle.project_dir must be relative to the JECh root, not absolute")
+        project_dir = None
+    daemon_java = None
+    if data.get("daemon_java") is not None:
+        daemon_java = _int(data, "daemon_java", "env.gradle", problems, required=False, minimum=8)
+    if task and project_dir:
+        return GradleSpec(task, project_dir, daemon_java)
+    return None
+
+
 def _parse_describe(data, context, problems):
     if not isinstance(data, dict):
         problems.append(f"{context}.describe must be an object {{\"version\": \"...\"}}")
@@ -472,7 +579,8 @@ def _parse_jech(data, problems, mc, loader):
     if not isinstance(data, dict):
         problems.append("env.jech must be an object {source, ...}")
         return None
-    _reject_unknown(data, {"source", "path", "expectModId", "slug", "describe", "pin", "project"},
+    _reject_unknown(data, {"source", "path", "expectModId", "slug", "describe", "pin", "project",
+                           "via"},
                     "env.jech", problems)
     source = _string(data, "source", "env.jech", problems, required=True)
     if source is not None and source not in JECH_SOURCES:
@@ -496,7 +604,8 @@ def _parse_jech(data, problems, mc, loader):
             problems.append("env.jech.describe is required when source is "
                             f"{source!r} (the JECh version to pin)")
         pin = _parse_pin(data.get("pin"), source, "env.jech", problems)
-    return JechSpec(source, path, expect, slug, describe, pin, project, data)
+    via = _parse_via(data, "env.jech", problems)
+    return JechSpec(source, path, expect, slug, describe, pin, project, data, via=via)
 
 
 def _parse_mods(data, problems):
@@ -510,7 +619,7 @@ def _parse_mods(data, problems):
         if not isinstance(item, dict):
             problems.append(f"{context} must be an object")
             continue
-        _reject_unknown(item, {"name", "source", "slug", "describe", "pin", "tags"},
+        _reject_unknown(item, {"name", "source", "slug", "describe", "pin", "tags", "via"},
                         context, problems)
         name = _string(item, "name", context, problems, required=True)
         if name and name in seen:
@@ -526,8 +635,9 @@ def _parse_mods(data, problems):
             problems.append(f"{context}.describe is required (the version to pin)")
         pin = _parse_pin(item.get("pin"), source, context, problems) if source else None
         tags = _string_list(item, "tags", context, problems, required=False)
+        via = _parse_via(item, context, problems)
         if name and source and slug and describe:
-            mods.append(ModSpec(name, source, slug, describe, pin, item))
+            mods.append(ModSpec(name, source, slug, describe, pin, item, via=via))
     return mods
 
 

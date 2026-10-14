@@ -1,5 +1,5 @@
 {
-  "_comment": "1.21.1 line, fabric. fabric-api version is fabric_version in 1.21.1/gradle.properties.",
+  "_comment": "1.21.1 line, fabric. fabric-api version is fabric_version in 1.21.1/gradle.properties. Launched through the checkout's own Gradle run task (gradle backend). jech and fabric-api carry via=dev-classpath (the loom run registers the fabric module's own sources and remaps modImplementation fabric-api onto the run's classpath); jei has no place on that classpath, so its jar is the one jar staged into mods/.",
   "name": "1.21.1-fabric",
   "tags": [
     "1211",
@@ -14,11 +14,16 @@
   "java": {
     "version": 21
   },
+  "gradle": {
+    "task": ":fabric:runClient",
+    "daemon_java": 21
+  },
   "jech": {
     "source": "local-build",
     "project": "1.21.1",
     "path": "fabric/build/libs/jecharacters-1.21.1-fabric-*.jar",
-    "expectModId": "jecharacters"
+    "expectModId": "jecharacters",
+    "via": "dev-classpath"
   },
   "mods": [
     {
@@ -40,6 +45,7 @@
       "name": "fabric-api",
       "source": "curseforge",
       "slug": "fabric-api",
+      "via": "dev-classpath",
       "describe": {
         "version": "0.116.1+1.21.1"
       },

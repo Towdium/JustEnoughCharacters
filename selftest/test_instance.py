@@ -421,6 +421,36 @@ class IsolationTest(unittest.TestCase):
         self.assertEqual(payload["savesCleared"], 1)
         self.assertIn("mods:", report.summary())
 
+    def test_a_dev_classpath_artifact_is_not_staged_and_says_so(self):
+        """A jar the checkout's own run already carries must not be copied in.
+
+        Staging it would put a second copy of the same mod id in front of the
+        loader — a double load, not a second opinion.
+        """
+        dev_jar = support.write_jar(self.tmp / "jech.jar", mod_id="jecharacters")
+        artifact = support.artifact("jech", dev_jar)
+        artifact.via = "dev-classpath"
+        resolved = support.resolved_env(support.mk_env(),
+                                        [support.artifact("jei", self.jar), artifact])
+        report = instance.isolate(self.instance_id, resolved, self.run_dir, root=self.root,
+                                  log=lambda *_: None)
+        self.assertEqual(report.staged, ["jei.jar"])
+        present = sorted(p.name for p in (self.minecraft / "mods").iterdir())
+        self.assertEqual(present, ["jei.jar"], "the dev-classpath jar must not land in mods/")
+        self.assertTrue(any("dev-classpath" in note for note in report.notes), report.notes)
+
+    def test_an_explicit_game_directory_overrides_the_instance_one(self):
+        """The gradle backend has no instance; it hands over the directory directly."""
+        game = self.tmp / "runs" / "unit" / "game"
+        (game / "config").mkdir(parents=True)
+        report = instance.isolate("unused", self.resolved, self.run_dir, root=self.root,
+                                  game_dir_path=game, log=lambda *_: None)
+        self.assertEqual(report.mods_dir, game / "mods")
+        self.assertEqual(sorted(p.name for p in (game / "mods").iterdir()), ["jei.jar"])
+        self.assertEqual(sorted(p.name for p in (self.minecraft / "mods").iterdir()),
+                         ["readme.txt", "stale.jar"],
+                         "the instance's own game directory must stay untouched")
+
 
 class OverrideStagingTest(unittest.TestCase):
     """The pack's non-mod overrides (options.txt, the world seed) are re-staged every run."""
@@ -538,6 +568,166 @@ class LaunchCommandTest(unittest.TestCase):
     def test_extra_arguments_still_come_last(self):
         command = self.command(world="jechworld", extra_args=["--alive"])
         self.assertEqual(command[-3:], ["--world", "jechworld", "--alive"])
+
+
+class GradleLaunchTest(unittest.TestCase):
+    """The Gradle backend's command line, game directory and log location."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.tmp = paths.Path(self._tmp.name)
+        self.checkout = self.tmp / "1.21.1"
+        (self.checkout / "gradlew").parent.mkdir(parents=True, exist_ok=True)
+        (self.checkout / "gradlew").write_text("#!/bin/sh\n", encoding="utf-8")
+
+    def test_the_command_names_the_task_the_game_dir_and_no_daemon(self):
+        command = instance.gradle_command(self.checkout, ":neoforge:runClient",
+                                          self.tmp / "game")
+        self.assertEqual(command, [
+            str(self.checkout / "gradlew"), ":neoforge:runClient", "--no-daemon",
+            f"-P{instance.GRADLE_RUN_DIR_PROPERTY}={self.tmp / 'game'}",
+        ])
+        self.assertNotIn(f"-P{instance.GRADLE_QUICK_PLAY_PROPERTY}", " ".join(command))
+
+    def test_a_world_is_passed_as_a_project_property(self):
+        command = instance.gradle_command(self.checkout, ":fabric:runClient", self.tmp / "game",
+                                          world="jechworld")
+        self.assertIn(f"-P{instance.GRADLE_QUICK_PLAY_PROPERTY}=jechworld", command)
+
+    def test_the_game_dir_is_under_the_run_directory(self):
+        self.assertEqual(instance.run_game_dir(self.tmp / "runs" / "rid"),
+                         self.tmp / "runs" / "rid" / "game")
+
+    def test_the_log_lives_in_the_game_directory_not_the_checkout(self):
+        game = instance.run_game_dir(self.tmp / "runs" / "rid")
+        self.assertEqual(instance.log_path_in(game), game / "logs" / "latest.log")
+        self.assertNotIn(str(self.checkout), str(instance.log_path_in(game)))
+
+    def test_launch_gradle_runs_in_the_checkout_and_sets_java_home_only_when_asked(self):
+        captured = {}
+
+        def fake_popen(command, **kwargs):
+            captured["command"] = list(command)
+            captured["kwargs"] = kwargs
+            return mock.Mock(pid=4242)
+
+        with mock.patch.object(instance.subprocess, "Popen", side_effect=fake_popen):
+            instance.launch_gradle(self.checkout, ":fabric:runClient", self.tmp / "game",
+                                   world="jechworld", java_home=self.tmp / "jdk21",
+                                   log_path=self.tmp / "gradle.log", log=lambda *_: None)
+        self.assertEqual(captured["kwargs"]["cwd"], str(self.checkout))
+        self.assertEqual(captured["kwargs"]["env"]["JAVA_HOME"], str(self.tmp / "jdk21"))
+        self.assertTrue(str(captured["command"][0]).endswith("gradlew"))
+
+        with mock.patch.object(instance.subprocess, "Popen", side_effect=fake_popen), \
+                mock.patch.dict(os.environ, {"JAVA_HOME": "/ambient/jdk"}, clear=False):
+            instance.launch_gradle(self.checkout, ":fabric:runClient", self.tmp / "game",
+                                   log_path=self.tmp / "gradle.log", log=lambda *_: None)
+        self.assertEqual(captured["kwargs"]["env"]["JAVA_HOME"], "/ambient/jdk",
+                         "without daemon_java the ambient JAVA_HOME is left alone")
+
+    def test_the_game_is_matched_on_its_working_directory(self):
+        game_dir = "/runs/rid/game"
+        table = {
+            100: (1, "/bin/sh ./gradlew :fabric:runClient --no-daemon"),
+            101: (100, "/opt/jdk21/bin/java org.gradle.wrapper.GradleWrapperMain :fabric:runClient"),
+            102: (101, "/opt/jdk21/bin/java org.gradle.launcher.daemon.bootstrap.GradleDaemon 8.13"),
+            103: (102, "/opt/jdk21/bin/java -Dfabric.dli.config=x net.fabricmc.devlaunchinjector.Main"),
+            104: (102, "/opt/jdk21/bin/java -Xmx32m -cp . JavaProbe"),
+        }
+        cwds = {100: "/checkout", 101: "/checkout", 102: "/checkout", 103: game_dir,
+                104: "/checkout"}
+        with mock.patch.object(instance, "process_table", return_value=table), \
+                mock.patch.object(instance, "cwd_of", side_effect=lambda pid, **kw: cwds[pid]):
+            self.assertEqual(instance.gradle_game_pids(100, game_dir), [103])
+
+    def test_a_gradle_toolchain_probe_is_never_mistaken_for_the_game(self):
+        """The bug a name heuristic caused: Gradle's own probe looked like a game.
+
+        The probe is a java descendant that is not a Gradle JVM by name, so
+        "any java that is not Gradle" matched it. The runner then recorded "the
+        game started", watched the probe vanish a moment later and ended the run
+        as if the client had exited — before the client was even launched, and
+        without ending the launcher it had started.
+        """
+        table = {
+            100: (1, "./gradlew :neoforge:runClient --no-daemon"),
+            101: (100, "/opt/jdk21/bin/java org.gradle.launcher.daemon.bootstrap.GradleDaemon"),
+            102: (101, "/azul-1.8/bin/java -Xmx32m -cp . JavaProbe"),
+        }
+        # The probe runs in the module directory, like every other Gradle JVM.
+        with mock.patch.object(instance, "process_table", return_value=table), \
+                mock.patch.object(instance, "cwd_of", return_value="/checkout"):
+            self.assertEqual(instance.gradle_game_pids(100, "/runs/rid/game"), [])
+
+    def test_a_client_in_another_run_s_game_directory_is_not_this_run(self):
+        """The identity is this run's own directory, not "some game directory"."""
+        other = "/runs/other-rid/game"
+        table = {100: (1, "./gradlew"), 103: (100, "/opt/jdk21/bin/java net.fabricmc.Main")}
+        with mock.patch.object(instance, "process_table", return_value=table), \
+                mock.patch.object(instance, "cwd_of", return_value=other):
+            self.assertEqual(instance.gradle_game_pids(100, "/runs/this-rid/game"), [])
+
+    def test_a_non_java_launcher_child_is_not_the_game(self):
+        table = {100: (1, "./gradlew task"), 101: (100, "/bin/sh child-script")}
+        with mock.patch.object(instance, "process_table", return_value=table), \
+                mock.patch.object(instance, "cwd_of") as cwd:
+            self.assertEqual(instance.gradle_game_pids(100, "/runs/rid/game"), [])
+        cwd.assert_not_called()
+
+    def test_cwd_of_reads_the_name_column(self):
+        table = {4242: (1, "java -jar x.jar")}
+        with mock.patch.object(instance, "process_table", return_value=table), \
+                mock.patch.object(instance, "lsof_command", return_value="lsof"), \
+                mock.patch.object(instance.subprocess, "run",
+                                  return_value=mock.Mock(stdout=(
+                                      "COMMAND  PID USER   FD   TYPE DEVICE SIZE/OFF   NODE NAME\n"
+                                      "java    4242 user  cwd    DIR   1,14      384 65 /run dir/game\n"),
+                                  )):
+            self.assertEqual(instance.cwd_of(4242), "/run dir/game")
+
+    def test_cwd_of_returns_none_for_a_gone_process(self):
+        with mock.patch.object(instance, "lsof_command", return_value="lsof"), \
+                mock.patch.object(instance.subprocess, "run",
+                                  return_value=mock.Mock(stdout="")):
+            self.assertIsNone(instance.cwd_of(4242))
+
+
+class GradleGameTrackerTest(unittest.TestCase):
+    """The search runs until the client is found, then only liveness is re-checked."""
+
+    def test_the_search_stops_once_the_client_is_found_and_liveness_takes_over(self):
+        clock = {"now": 0.0}
+        alive = {"pids": []}
+
+        def fake_search(launch_pid, game_dir, **kwargs):
+            found = list(alive["pids"])
+            return found
+
+        with mock.patch.object(instance, "gradle_game_pids", side_effect=fake_search) as search, \
+                mock.patch.object(instance, "pid_alive", side_effect=lambda pid: pid in alive["pids"]):
+            tracker = instance.GradleGameTracker(100, "/runs/rid/game", interval=1.0,
+                                                 clock=lambda: clock["now"])
+            self.assertEqual(tracker.pids(), [], "nothing found on the first search")
+            clock["now"] = 0.5
+            self.assertEqual(tracker.pids(), [], "too soon to search again")
+            self.assertEqual(search.call_count, 1)
+
+            alive["pids"] = [999]
+            clock["now"] = 2.0
+            self.assertEqual(tracker.pids(), [999])
+            self.assertEqual(search.call_count, 2)
+
+            # Once found, the search is never repeated: liveness is enough.
+            for step in range(1, 6):
+                clock["now"] = 2.0 + step
+                self.assertEqual(tracker.pids(), [999])
+            self.assertEqual(search.call_count, 2)
+
+            alive["pids"] = []
+            self.assertEqual(tracker.pids(), [], "a dead client is reported as gone")
+            self.assertEqual(search.call_count, 2, "and the search does not start over")
 
 
 class ProcessHelpersTest(unittest.TestCase):

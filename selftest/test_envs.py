@@ -338,5 +338,187 @@ class EnvRejectionTest(unittest.TestCase):
         self.assertGreaterEqual(message.count("  - "), 3)
 
 
+class GradleBlockTest(unittest.TestCase):
+    """``env.gradle`` selects the launch layer; its absence keeps Prism."""
+
+    def reject(self, data, *needles):
+        with self.assertRaises(EnvSchemaError) as caught:
+            envs.parse_env(data, "<unit>")
+        message = str(caught.exception)
+        for needle in needles:
+            self.assertIn(needle, message, f"expected {needle!r} in:\n{message}")
+        return message
+
+    def test_an_env_without_the_block_is_the_prism_backend(self):
+        env = support.mk_env()
+        self.assertIsNone(env.gradle)
+        self.assertEqual(env.backend, envs.PRISM_BACKEND)
+
+    def test_the_block_switches_the_backend_and_keeps_its_fields(self):
+        env = support.mk_env(gradle={"task": ":neoforge:runClient", "project_dir": "1.21.1",
+                                     "daemon_java": 21})
+        self.assertEqual(env.backend, envs.GRADLE_BACKEND)
+        self.assertEqual(env.gradle.task, ":neoforge:runClient")
+        self.assertEqual(env.gradle.project_dir, "1.21.1")
+        self.assertEqual(env.gradle.daemon_java, 21)
+
+    def test_project_dir_defaults_to_the_jech_project(self):
+        """The task runs in the same checkout the artifact was resolved from."""
+        env = support.mk_env(gradle={"task": ":fabric:runClient"})
+        self.assertEqual(env.gradle.project_dir, "1.21.1")
+        self.assertIsNone(env.gradle.daemon_java, "no daemon_java means the ambient JAVA_HOME")
+
+    def test_the_task_is_required(self):
+        self.reject(support.env_dict(gradle={"project_dir": "1.21.1"}),
+                    "missing required key 'task'")
+
+    def test_project_dir_may_not_be_absolute(self):
+        self.reject(support.env_dict(gradle={"task": "runClient", "project_dir": "/tmp/x"}),
+                    "must be relative")
+
+    def test_an_unknown_key_in_the_block_is_rejected(self):
+        self.reject(support.env_dict(gradle={"task": "runClient", "project_dir": "x", "java": 21}),
+                    "unknown key 'java'")
+
+    def test_daemon_java_must_be_a_plausible_major_version(self):
+        self.reject(support.env_dict(gradle={"task": "runClient", "project_dir": "x",
+                                            "daemon_java": "21"}),
+                    "must be an integer")
+        self.reject(support.env_dict(gradle={"task": "runClient", "project_dir": "x",
+                                            "daemon_java": 4}),
+                    "must be >= 8")
+
+    def test_an_env_without_jech_project_still_needs_an_explicit_project_dir(self):
+        data = support.env_dict(gradle={"task": "runClient"})
+        data["jech"] = {"source": "curseforge", "slug": "jecharacters",
+                        "describe": {"version": "1"}, "pin": {"fileId": 1, "filename": "j.jar"}}
+        with self.assertRaises(EnvSchemaError) as caught:
+            envs.parse_env(data, "<unit>")
+        self.assertIn("project_dir is required", str(caught.exception))
+
+
+class ViaTest(unittest.TestCase):
+    """``via`` decides whether an artifact is staged into mods/ or rides the classpath."""
+
+    def test_the_default_is_game_dir(self):
+        env = support.mk_env()
+        self.assertEqual(env.jech.via, envs.DEFAULT_VIA)
+        self.assertEqual(env.mods[0].via, envs.DEFAULT_VIA)
+
+    def test_dev_classpath_is_accepted_on_the_mod_under_test_and_on_mods(self):
+        data = support.env_dict()
+        data["jech"]["via"] = "dev-classpath"
+        data["mods"][0]["via"] = "dev-classpath"
+        env = envs.parse_env(data, "<unit>")
+        self.assertEqual(env.jech.via, "dev-classpath")
+        self.assertEqual(env.mods[0].via, "dev-classpath")
+
+    def test_an_unknown_value_is_rejected_with_the_allowed_ones(self):
+        for key in ("jech", "mods"):
+            data = support.env_dict()
+            if key == "jech":
+                data["jech"]["via"] = "classpath"
+            else:
+                data["mods"][0]["via"] = "classpath"
+            with self.assertRaises(EnvSchemaError) as caught:
+                envs.parse_env(data, "<unit>")
+            message = str(caught.exception)
+            self.assertIn("via must be one of", message)
+            self.assertIn("dev-classpath", message)
+
+    def test_the_shipped_gradle_envs_stage_only_what_the_checkout_lacks(self):
+        """The two 1.21.1 rows are the dev-classpath contract, written down.
+
+        NeoForge's checkout provides JECh's sources *and* JEI through
+        ``localRuntime``, so both ride the classpath; the Fabric checkout provides
+        JECh's sources and ``modImplementation`` fabric-api, but nothing for JEI,
+        so JEI's jar is the one jar staged into ``mods/``.
+        """
+        loaded = {env.name: env for env in envs.load_all()}
+        neoforge = loaded["1.21.1-neoforge"]
+        self.assertEqual(neoforge.backend, envs.GRADLE_BACKEND)
+        self.assertEqual(neoforge.gradle.task, ":neoforge:runClient")
+        self.assertEqual(neoforge.jech.via, "dev-classpath")
+        self.assertEqual([mod.via for mod in neoforge.mods], ["dev-classpath"])
+
+        fabric = loaded["1.21.1-fabric"]
+        self.assertEqual(fabric.backend, envs.GRADLE_BACKEND)
+        self.assertEqual(fabric.gradle.task, ":fabric:runClient")
+        self.assertEqual(fabric.jech.via, "dev-classpath")
+        self.assertEqual({mod.name: mod.via for mod in fabric.mods},
+                         {"jei": "game-dir", "fabric-api": "dev-classpath"})
+
+    def test_the_other_shipped_envs_keep_the_prism_backend(self):
+        loaded = {env.name: env for env in envs.load_all()}
+        prism_envs = [env for name, env in loaded.items()
+                      if not name.startswith("1.21.1-")]
+        self.assertTrue(prism_envs)
+        for env in prism_envs:
+            self.assertIsNone(env.gradle, env.name)
+            self.assertEqual(env.backend, envs.PRISM_BACKEND, env.name)
+            self.assertEqual(env.jech.via, envs.DEFAULT_VIA, env.name)
+            for mod in env.mods:
+                self.assertEqual(mod.via, envs.DEFAULT_VIA, f"{env.name}/{mod.name}")
+
+
+class CheckoutWiringTest(unittest.TestCase):
+    """The gradle contract: the harness's properties must be read by the checkout.
+
+    Read-only and layout-tolerant: with the workstation layout (one checkout per
+    version line under the JECh root) both build files are found and checked; in a
+    CI checkout, where the branch root already *is* the version line, the module
+    path does not resolve this way and the check is skipped rather than faked.
+    """
+
+    def build_gradle(self, env):
+        from lib import resolve
+        module = env.gradle.task.lstrip(":").split(":")[0]
+        path = (resolve.jech_base_root() / env.gradle.project_dir / module / "build.gradle")
+        return path
+
+    def test_both_1_21_1_modules_read_the_harness_properties(self):
+        from lib import instance
+        loaded = {env.name: env for env in envs.load_all()}
+        checked = []
+        for name in ("1.21.1-neoforge", "1.21.1-fabric"):
+            env = loaded[name]
+            path = self.build_gradle(env)
+            if not path.is_file():
+                continue
+            text = path.read_text(encoding="utf-8")
+            checked.append(name)
+            for needle in (instance.GRADLE_RUN_DIR_PROPERTY,
+                           instance.GRADLE_QUICK_PLAY_PROPERTY):
+                self.assertIn(needle, text, f"{name}: {path} does not read {needle!r}")
+            # The wiring must be conditional: a dev run with neither property must
+            # keep the checkout's own defaults.
+            self.assertIn("isPresent()", text, f"{name}: the wiring is not property-guarded")
+        self.assertTrue(checked, "no checkout found; the wiring contract was not verified")
+
+    def test_the_fabric_module_puts_the_generated_targets_on_the_dev_classpath(self):
+        """A dev run must carry ``targets.json`` even though only the jar gets it.
+
+        The jech plugin wires the generated transformer targets into the jar task
+        alone, so ``runClient`` (which resolves the module's own resources) has no
+        ``me/towdium/jecharacters/targets.json``, the mixin plugin throws
+        "Could not find targets.json", and JECh's class transformer silently never
+        loads — a real JECh behaviour this harness exists to catch, so the checkout
+        has to close it for a dev run as well.
+        """
+        from lib import resolve
+        loaded = {env.name: env for env in envs.load_all()}
+        env = loaded["1.21.1-fabric"]
+        path = (resolve.jech_base_root() / env.gradle.project_dir / "fabric" / "build.gradle")
+        if not path.is_file():
+            self.skipTest(f"{path} not present in this layout")
+        text = path.read_text(encoding="utf-8")
+        self.assertIn("generateTargetConfig", text,
+                      "the dev run must carry the generated transformer targets")
+        self.assertIn("processResources", text,
+                      "the generated targets must reach the module's resource output")
+        self.assertIn("duplicatesStrategy", text,
+                      "the jar task fails on the now-duplicated generated file")
+
+
 if __name__ == "__main__":
     unittest.main()

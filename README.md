@@ -1,8 +1,9 @@
 # jt — the JECh compatibility test harness
 
 `jt` launches Just Enough Characters together with a mod it must interoperate
-with (JEI, or its 1.12.2-era forks), inside a throwaway Prism Launcher instance,
-and judges the run from evidence instead of from a human reading a log: the
+with (JEI, or its 1.12.2-era forks) — inside a throwaway Prism Launcher instance,
+or, for an env that asks for it, through the checkout's own Gradle run task — and
+judges the run from evidence instead of from a human reading a log: the
 game's log, its crash reports, whether it exited, and the files it was supposed
 to write. One env file per (version line, loader) pair describes the whole
 experiment — the JECh build under test, the mods and exact versions to load, the
@@ -56,7 +57,9 @@ runs a vanilla dedicated server.
    `overrides/mods/`, plus the preset `overrides/options.txt` and, when the env
    declares `world`, `overrides/saves/<name>/`. It is kept as the run's exact
    input record.
-4. **Materialize the instance** — write the env's Prism instance directly:
+4. **Materialize the instance** (*Prism backend only*; a `gradle` env skips this
+   and runs its checkout's task instead) — write the env's Prism instance
+   directly:
    `instance.cfg` (java, memory, window) plus `mmc-pack.json` (the Minecraft and
    loader components). Memory goes in `MinMemAlloc`/`MaxMemAlloc` with
    `OverrideMemory=true` and the heap stays out of `JvmArgs`: Prism treats
@@ -77,12 +80,17 @@ runs a vanilla dedicated server.
    empty `saves/` and `logs/`, and re-stage the pack's non-mod overrides
    (`options.txt`, `saves/<world>`) into the game directory. A stale instance can
    never influence a verdict: a world a previous run played in is replaced by the
-   seed, and an `options.txt` the game rewrote is replaced by the preset.
+   seed, and an `options.txt` the game rewrote is replaced by the preset. Only
+   artifacts with `via: game-dir` are staged — see "The `gradle` backend" for the
+   other value, and note the Prism backend's game directory is the instance's
+   while a `gradle` run's is its own `runs/<id>/game`.
 6. **Launch** `prismlauncher -d <root> --launch <instance> [--world <name>]` and
    follow `logs/latest.log`, accepting only a file newer than the run start.
    `--world` is Prism's own *join world on launch* option; the game-argument
    passthrough (`-- --quickPlaySingleplayer …`) and the patches-JSON alternative
    are both rejected, with measurements, in [envs/README.md](envs/README.md).
+   A `gradle` env launches `./gradlew <task>` instead and follows the same
+   `logs/latest.log` under its own game directory — see "The `gradle` backend".
 7. **Watchdog** on `timeout_sec`: it kills the process tree and the run fails.
 8. **Stop when ready**: an env may declare `ready_when` — a log line that means
    the game got up. Once that line *and* every `log_contains` marker are in the
@@ -102,6 +110,97 @@ runs a vanilla dedicated server.
    it as "no session".
 9. **Judge**: the env's checks plus three always-present `internal:` checks, then
    write `report.json`, `report.txt` and `junit.xml`.
+
+## The `gradle` backend
+
+An env may declare a **`gradle`** block instead of being launched as a Prism
+instance. Everything outside the launch layer stays identical — resolution,
+downloads, the world seed, isolation, the watchdog, `ready_when`, the log
+follower and the checks — so the two backends are two answers to one question
+("what process starts the client, and where does its game directory live?"), and
+the report records which answer was used (`runBackend`, plus a `gradle` object
+with the task and the checkout).
+
+```json
+"gradle": {
+  "task": ":neoforge:runClient",
+  "project_dir": "1.21.1",
+  "daemon_java": 21
+}
+```
+
+* **The block is the switch.** An env with it runs `./gradlew <task>` in
+  `<JT_JECH_ROOT>/<project_dir>`; an env without it keeps the Prism backend.
+  `project_dir` defaults to the env's `jech.project`, so the task always runs in
+  the checkout the artifact under test was built from.
+* **`--no-daemon`** on every invocation: a resident Gradle daemon would keep a
+  several-hundred-megabyte JVM alive between runs, and the point of the backend
+  is that a run's cost ends with the run.
+* **`daemon_java` is the JDK that runs Gradle**, not the client's: the client's
+  JDK comes from the checkout's own toolchain. Set it only when the wrapper
+  cannot run on the machine's default JDK (Gradle 8.13 cannot run on Java 25);
+  `null`/absent keeps the ambient `JAVA_HOME`. The lookup is the same
+  `/usr/libexec/java_home` one the Prism backend uses, and the answer is verified
+  against the JDK's own `release` file.
+* **The game directory is `runs/<id>/game`**, handed to the checkout as the
+  project property `-PjechRunDir`. The checkout's run configuration turns it into
+  `gameDirectory` (NeoForge's ModDevGradle) or `runDir` (Fabric Loom) — with Loom
+  it is passed as a path *relative* to the module, because Loom joins the setting
+  onto the module directory rather than replacing it. That directory is also the
+  client's **working directory**, which is how the runner finds the game in the
+  process table: the client's own command line cannot carry it — ModDevGradle
+  hands its JVM and program arguments over through `@argfile` files and Fabric
+  Loom's DevLaunchInjector through a config file it reads by path, so neither
+  loader's game directory is visible in the process table — so the identity is
+  "the java process under this launcher whose cwd is this run's game directory",
+  the same *kind* of identity the Prism backend uses (a path only this run has,
+  never a name). Reading a cwd needs `lsof` (`$JT_LSOF` to relocate it). Both
+  wirings are **property-guarded**: a plain `./gradlew runClient` gets neither the
+  property nor the flag and behaves exactly as before.
+* **The world** travels the same way, as `-PjechQuickPlayWorld`; the checkout adds
+  `--quickPlaySingleplayer <world>` to the client's program arguments. There is no
+  Prism `--world` to lean on here, and the world must already be staged in the
+  game directory (isolation does that from the pack's overrides).
+* **Mods: `via`.** Each artifact (the mod under test and each `mods[]` entry) may
+  carry `"via"`, which decides whether its jar is staged into the game
+  directory's `mods/`:
+  * `game-dir` (**default**) — the jar is copied from the cache. Use it for
+    anything the checkout does not already have on the run's classpath.
+  * `dev-classpath` — nothing is staged; the artifact is still resolved, pinned
+    and reported, but the checkout's own run provides it (the module's sources
+    registered as the mod, or a dependency such as `localRuntime` /
+    `modImplementation`). Staging it anyway would put **two copies of one mod id**
+    in front of the loader.
+
+  Both 1.21.1 rows use `dev-classpath` for the JECh artifact — the module under
+  test *is* that run's source set, so its jar has no place in `mods/`. The
+  NeoForge checkout also declares `localRuntime "mezz.jei:jei-…"` at exactly the
+  pinned version, so its JEI is `dev-classpath` too; the Fabric checkout has no
+  JEI dependency, so there JEI is the one jar staged as `game-dir` (and
+  fabric-api is `dev-classpath`, since loom remaps the declared
+  `modImplementation` onto the run's classpath).
+
+  The `gradle` task and the properties are the *contract* between the harness and
+  a checkout: changing a task name or a property name in a checkout means
+  changing the env that names it. The 1.21.1 fabric module additionally routes
+  the jech plugin's generated transformer targets through `processResources`:
+  the plugin wires them into the `jar` task only, so a development run — which
+  resolves the module's own resource output — had no
+  `me/towdium/jecharacters/targets.json`, and JECh logged "Could not find
+  targets.json. JechTransformer will not be loaded." (the neoforge module gets the
+  same file from `coremod-neoforge`, which the run's classpath already carries).
+* A run whose launcher is this run's own (a Gradle invocation) is always cleaned
+  up: if it never produces a session, or outlives its exit grace, its process
+  tree is ended. A Prism CLI in that state is still left alone — one that outlives
+  the game may be draining, and ending it would turn its exit code into a signal.
+* **Both backends need a live display.** The client opens a real window, so if the
+  machine's display has gone to sleep mid-run the client dies at startup with
+  `Failed to find a primary monitor` / `glfwGetPrimaryMonitor failed` on
+  `EARLYDISPLAY`, `runClient` exits 1, and the env FAILs on its markers. That is
+  an environment condition, not a verdict on JECh: re-run with the display awake.
+  The failure is recognisable from the report's `exitCodeKind` (`check`, source
+  `launcher`, exit code 1 with no session) plus the `EARLYDISPLAY` line in the
+  game log — this is why the harness records the log next to every report.
 
 ## States
 
@@ -135,6 +234,7 @@ Everything jt writes lives under **`JT_HOME`**, resolved in this order:
   cache/worlds/  world seeds: <mc>-<name>/world plus a manifest with per-file hashes
   prism/         the Prism data root jt imports into (never the user's own launcher)
   runs/<id>/     report.json, report.txt, junit.xml, run.json, game.log, launcher.log, pack/
+                 and, for a gradle run, game/ (its game directory) plus gradle.log
   state.json     env -> instance mapping plus the modset hash that justified the reuse
   secrets.env    machine-local secrets, see below
 ```
@@ -182,6 +282,7 @@ evidence, so a run whose evidence is absent cannot come out green.
 | `JT_PRISM_LAUNCHER` | path to the Prism Launcher CLI when it is not on `PATH` |
 | `JT_JAVA_HOME_CMD` | the JDK lookup command, `{version}` placeholder; defaults to macOS's `java_home` |
 | `JT_JAVA_<N>_HOME` | an explicit JDK home per major version, for platforms without that helper |
+| `JT_LSOF` | the `lsof` binary, used to read a Gradle-launched client's working directory |
 
 The lookup never trusts the helper blindly: every candidate is accepted only
 after the JDK's own `release` file reports the requested major version. macOS's
@@ -286,7 +387,10 @@ window has to be able to appear. Bootstrap checklist, in order:
   the cache is the runner's cache directory. `jt seed-world --exclude tag:skip`
   builds every seed the matrix needs before the game jobs start.
 * The `1.21.1` rows reach their JEI marker **only with the world loaded**, which
-  is why they declare `world`. The `mv-1.19.2` rows cannot: quick play needs
+  is why they declare `world` — and they are the two rows that launch through the
+  checkout's Gradle task rather than Prism (see "The `gradle` backend"); their
+  world travels as `-PjechQuickPlayWorld`. The `mv-1.19.2` rows cannot: quick
+  play needs
   1.20+, so they carry `skip` and a CI selection must decide explicitly whether to
   exclude them (`--exclude tag:skip`) or accept exit code 1 with the skips named.
   (Re-measured 2026-10-14: Prism only passes the quick-play game argument to
@@ -354,8 +458,11 @@ Two rows are expected to keep the matrix red, and neither is a harness failure:
 ## Requirements
 
 * `python3` (3.9+), no third-party packages.
-* Prism Launcher with its CLI (`JT_PRISM_LAUNCHER` if not on `PATH`), and a
-  Minecraft account configured in the Prism root jt uses.
+* **For the Prism backend**: Prism Launcher with its CLI (`JT_PRISM_LAUNCHER` if
+  not on `PATH`), and a Minecraft account configured in the Prism root jt uses.
+* **For the gradle backend**: the version line's own checkout (its `gradlew`
+  wrapper and a JDK its Gradle can start on — see `daemon_java`), and `lsof`.
+  No Prism, no account: the client is a development run.
 * The JDKs the envs ask for (8, 17, 21, 25) — each env names only a major
   version, and the lookup is per-platform (see the table above). The world seeder
   uses the same lookup for its dedicated server.

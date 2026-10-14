@@ -94,6 +94,10 @@ def cmd_envs(args, log=print):
         log(f"{env.name:28} {env.mod_label:28} {env.java_version:>4} {mods:>5} "
             f"{len(env.checks):>6}  {','.join(env.tags) or '-'}")
         log(f"{'':28} jech: {env.jech.source} ({jech_state})  file: {paths.display(env.path)}")
+        if env.gradle is not None:
+            log(f"{'':28} backend: gradle {env.gradle.task} in "
+                f"{env.gradle.project_dir} (daemon_java "
+                f"{env.gradle.daemon_java if env.gradle.daemon_java else 'ambient'})")
         if env.world is not None:
             log(f"{'':28} world: {env.world.name} (saves/{env.world.name}, seeded by "
                 "jt seed-world)")
@@ -214,11 +218,15 @@ def _env_json(env):
         "mc": env.mc,
         "loader": {"type": env.loader.type, "version": env.loader.version},
         "java": {"version": env.java_version},
+        "backend": env.backend,
+        "gradle": ({"task": env.gradle.task, "projectDir": env.gradle.project_dir,
+                    "daemonJava": env.gradle.daemon_java} if env.gradle is not None else None),
         "jech": {"source": env.jech.source, "pinned": env.jech.pinned,
                  "expectedModId": env.jech.expect_mod_id, "path": env.jech.path,
-                 "slug": env.jech.slug},
+                 "slug": env.jech.slug, "via": env.jech.via},
         "mods": [{"name": mod.name, "source": mod.source, "slug": mod.slug,
-                  "describe": mod.describe, "pin": mod.pin} for mod in env.mods],
+                  "describe": mod.describe, "pin": mod.pin, "via": mod.via}
+                 for mod in env.mods],
         "checks": [{"type": check.type, "name": check.name, "value": check.value}
                    for check in env.checks],
         "readyWhen": ({"value": env.ready_when.value} if env.ready_when is not None else None),

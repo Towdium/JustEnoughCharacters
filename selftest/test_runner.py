@@ -378,6 +378,82 @@ class WatchLoopTest(unittest.TestCase):
         kill.assert_not_called()
 
 
+class _AliveProc:
+    """A launcher that is still running (and answers -15 once it is ended)."""
+
+    def __init__(self, pid=4242):
+        self.pid = pid
+
+    def poll(self):
+        return None
+
+    def wait(self, timeout=None):
+        return -15
+
+
+class _NoSessionFollower:
+    """A log that never becomes a session, so readiness can never stop the loop."""
+
+    def __init__(self):
+        self.text = ""
+        self.session_started = False
+
+    def wait_for_session(self, deadline, *, log=None, sleep=None):
+        return False
+
+    def poll_once(self):
+        return ""
+
+
+class OwnedLauncherTest(unittest.TestCase):
+    """A Gradle launcher this run started must not outlive a run that gave up.
+
+    The break below is the shape the false-positive matcher produced: the runner
+    believes it saw the game (a pid appears), then reads the next sample as "the
+    game exited" and stops — while the launcher it started is still alive and has
+    not launched anything yet. For a Prism CLI that state is left alone (one that
+    outlives the game may still be draining); for a Gradle invocation it is not.
+    """
+
+    def setUp(self):
+        self._home = support.temp_home()
+        self.home = self._home.__enter__()
+        self.addCleanup(self._home.__exit__, None, None, None)
+        self.env = support.mk_env(ready_when={"value": "READY"},
+                                  checks=[{"type": "log_contains", "value": "MARKER"}])
+        self.env.timeout_sec = 5
+        self.ready_values, self.markers = runner.readiness_rule(self.env)
+
+    def watch(self, *, owned, pids_sequence):
+        calls = {"n": 0}
+
+        def pids_fn():
+            index = min(calls["n"], len(pids_sequence) - 1)
+            calls["n"] += 1
+            return list(pids_sequence[index])
+
+        killed = []
+        with mock.patch.object(instance, "kill_process_tree",
+                               side_effect=lambda pids, **kw: killed.append(list(pids))), \
+                mock.patch.object(runner, "POLL_SEC", 0.01):
+            watch = runner._watch(self.env, "unit", _AliveProc(), _NoSessionFollower(),
+                                  time.time(), log=lambda *_: None, ready_values=self.ready_values,
+                                  markers=self.markers, pids_fn=pids_fn, owners_fn=lambda: [],
+                                  owned_launcher=owned)
+        return watch, killed
+
+    def test_an_owned_launcher_is_ended_when_the_run_gives_up_without_a_session(self):
+        watch, killed = self.watch(owned=True, pids_sequence=[[999], [], []])
+        self.assertIsNone(watch["stop_reason"])
+        self.assertTrue(watch["game_started"], "the pid that appeared was taken for a game")
+        self.assertEqual(killed, [[4242]], "the launcher must not be left running")
+
+    def test_a_prism_launcher_is_left_alone_in_the_same_state(self):
+        watch, killed = self.watch(owned=False, pids_sequence=[[999], [], []])
+        self.assertIsNone(watch["stop_reason"])
+        self.assertEqual(killed, [], "a Prism CLI that outlived the game exits on its own")
+
+
 class HandoffTest(unittest.TestCase):
     """A launcher CLI that exits at once may have handed the launch to another Prism."""
 

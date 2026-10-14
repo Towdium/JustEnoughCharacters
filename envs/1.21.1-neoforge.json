@@ -1,5 +1,5 @@
 {
-  "_comment": "1.21.1 line. Loader/jei versions mirror 1.21.1/gradle.properties.",
+  "_comment": "1.21.1 line. Loader/jei versions mirror 1.21.1/gradle.properties. Launched through the checkout's own Gradle run task (gradle backend). jech and jei both carry via=dev-classpath: the run's classpath already provides them -- the neoforge module registers sourceSets.main as the mod (the source of the jar under test) and build.gradle puts mezz.jei:jei-1.21.1-neoforge:19.37.0.362 in localRuntime -- so copying either jar into mods/ would load that mod id twice.",
   "name": "1.21.1-neoforge",
   "tags": [
     "1211",
@@ -14,17 +14,24 @@
   "java": {
     "version": 21
   },
+  "gradle": {
+    "task": ":neoforge:runClient",
+    "project_dir": "1.21.1",
+    "daemon_java": 21
+  },
   "jech": {
     "source": "local-build",
     "project": "1.21.1",
     "path": "neoforge/build/libs/jecharacters-1.21.1-neoforge-*.jar",
-    "expectModId": "jecharacters"
+    "expectModId": "jecharacters",
+    "via": "dev-classpath"
   },
   "mods": [
     {
       "name": "jei",
       "source": "curseforge",
       "slug": "jei",
+      "via": "dev-classpath",
       "describe": {
         "version": "19.37.0.362"
       },
