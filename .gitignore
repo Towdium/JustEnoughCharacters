@@ -2,3 +2,10 @@ __pycache__/
 *.pyc
 .DS_Store
 runs/
+
+# uitest line builds: each uitest/<slug>/ is its own Gradle build, so its own
+# build output and bare-run game directories stay out of the repository.
+uitest/*/build/
+uitest/*/.gradle/
+uitest/*/runs/
+
