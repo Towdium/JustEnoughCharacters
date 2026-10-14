@@ -1,0 +1,42 @@
+modLoader = "javafml"
+loaderVersion = "${loader_version_range}"
+license = "MIT License"
+
+# The harness mixins belong to this mod alone, so they are applied only when this mod is loaded.
+# No run except the clientTests run loads this mod, and the jecharacters jar never carries any of it.
+[[mixins]]
+config = "jechtest.mixins.json"
+
+[[mods]]
+modId = "jechtest"
+version = "${mod_version}"
+displayName = "JECh UI Test Harness"
+description = '''
+    Dev-only UI test harness for Just Enough Characters: the scenario engine ported from the
+    CloudLib in-client UI test harness (frame-clock runner, scenario DSL, synthetic/real input
+    seams, screen capture and the JUnit/JSON report). Never shipped.
+'''
+authors = "vfyjxf_"
+
+[[dependencies.jechtest]]
+modId = "neoforge"
+type = "required"
+versionRange = "${neo_version_range}"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.jechtest]]
+modId = "minecraft"
+type = "required"
+versionRange = "${minecraft_version_range}"
+ordering = "NONE"
+side = "BOTH"
+
+# The engine drives the game through the mod under test's own code paths, so jecharacters has to be
+# loaded first.
+[[dependencies.jechtest]]
+modId = "${mod_id}"
+type = "required"
+versionRange = "[0,)"
+ordering = "AFTER"
+side = "BOTH"
