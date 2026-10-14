@@ -185,6 +185,12 @@ loom {
     }
 }
 
+// The game directory the run actually uses: the harness's own when bare, the
+// launcher's (-PjechRunDir) when handed one. The out directory below is a
+// different thing — where the report lands — which under -PjechRunDir is a
+// subdirectory of the game directory.
+def jechUiTestGameDir = jechUiTestRunDir == null ? jechUiTestOutDir : new File(jechUiTestRunDir)
+
 // Stages the two jars under test into the run's game directory mods/ folder,
 // after the clean task and before the run. Production fabric jars are
 // intermediary-named; the loader's dev-mode remapper (loom passes
@@ -198,7 +204,7 @@ def stageUiTestMods = tasks.register('stageUiTestMods', Copy) {
     dependsOn tasks.named('jechCleanUiTestReport')
     from(jechJarFile)
     from(jeiJarFile)
-    into new File(jechUiTestOutDir, 'mods')
+    into new File(jechUiTestGameDir, 'mods')
 }
 
 // Deletes the previous run's output so the verification task can never read an
