@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -219,6 +220,118 @@ class FileExistsTest(unittest.TestCase):
     def test_it_is_evaluated_even_when_no_session_started(self):
         """The filesystem is evidence in its own right: fail-closed, never a silent skip."""
         result = checks.evaluate_one(spec("file_exists", "config/absent.json"),
+                                     self.ctx(session_started=False, game_started=False,
+                                              game_exited=False))
+        self.assertEqual(result["status"], checks.FAIL)
+
+
+class UiTestReportTest(unittest.TestCase):
+    """The harness's own verdict, read from the report it writes before it quits.
+
+    The harness reports the same way jt does — a status plus totals — so the check
+    is mostly about believing nothing else: a report that is missing, unreadable,
+    a shape this version does not know, or that contradicts itself is a FAIL.
+    """
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.minecraft = Path(self._tmp.name) / "minecraft"
+        (self.minecraft / checks.UITEST_REPORT_DIR).mkdir(parents=True)
+
+    def report(self, data, *, relative=None):
+        path = self.minecraft / (relative or checks.UITEST_REPORT_DEFAULT)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(data if isinstance(data, str) else json.dumps(data), encoding="utf-8")
+        return path
+
+    def payload(self, *, status="PASS", failed=0, errored=0, scenarios=None, schema=None):
+        return {
+            "schema": checks.UITEST_REPORT_SCHEMA if schema is None else schema,
+            "runId": "unit",
+            "status": status,
+            "totals": {"scenarios": 2, "passed": 2 - failed - errored, "failed": failed,
+                       "errored": errored, "skipped": 0, "steps": 9, "checks": 6,
+                       "checksFailed": 0, "captures": 3},
+            "scenarios": scenarios if scenarios is not None else [
+                {"name": "smoke", "status": "PASS", "message": None},
+                {"name": "jei-pinyin-search", "status": "PASS", "message": None},
+            ],
+        }
+
+    def ctx(self, **kwargs):
+        defaults = dict(minecraft_dir=self.minecraft, session_started=True, game_started=True,
+                        game_exited=True, exit_code=0, exit_code_source="launcher")
+        defaults.update(kwargs)
+        return checks.CheckContext(**defaults)
+
+    def test_a_passing_report_passes_and_names_the_tally(self):
+        self.report(self.payload())
+        result = checks.evaluate_one(spec("uitest_report"), self.ctx())
+        self.assertEqual(result["status"], checks.PASS)
+        self.assertIn("2/2 scenarios", result["detail"])
+        self.assertIn("6/6 checks", result["detail"])
+        self.assertIn(checks.UITEST_CAPTURES_DIR, result["detail"])
+
+    def test_a_failing_report_fails_and_names_the_scenario(self):
+        scenarios = [
+            {"name": "smoke", "status": "PASS", "message": None},
+            {"name": "jei-pinyin-search", "status": "FAIL",
+             "message": "assert_match_recorded candidate_contains 石"},
+        ]
+        self.report(self.payload(status="FAIL", failed=1, scenarios=scenarios))
+        result = checks.evaluate_one(spec("uitest_report"), self.ctx())
+        self.assertEqual(result["status"], checks.FAIL)
+        self.assertIn("jei-pinyin-search=FAIL", result["detail"])
+        self.assertIn("candidate_contains", result["detail"])
+
+    def test_a_report_that_is_not_there_fails_rather_than_skips(self):
+        result = checks.evaluate_one(spec("uitest_report"), self.ctx())
+        self.assertEqual(result["status"], checks.FAIL)
+        self.assertIn(checks.UITEST_REPORT_DEFAULT, result["detail"])
+
+    def test_a_report_that_cannot_be_read_fails(self):
+        self.report("{not json")
+        result = checks.evaluate_one(spec("uitest_report"), self.ctx())
+        self.assertEqual(result["status"], checks.FAIL)
+        self.assertIn("could not be read as JSON", result["detail"])
+
+    def test_a_report_from_a_schema_this_check_does_not_know_fails(self):
+        self.report(self.payload(schema=2))
+        result = checks.evaluate_one(spec("uitest_report"), self.ctx())
+        self.assertEqual(result["status"], checks.FAIL)
+        self.assertIn("schema", result["detail"])
+
+    def test_totals_that_disagree_with_the_status_fail(self):
+        self.report(self.payload(status="PASS", failed=1))
+        result = checks.evaluate_one(spec("uitest_report"), self.ctx())
+        self.assertEqual(result["status"], checks.FAIL)
+
+    def test_a_report_without_readable_totals_fails(self):
+        self.report({"schema": checks.UITEST_REPORT_SCHEMA, "status": "PASS", "totals": {}})
+        result = checks.evaluate_one(spec("uitest_report"), self.ctx())
+        self.assertEqual(result["status"], checks.FAIL)
+        self.assertIn("failed/errored", result["detail"])
+
+    def test_an_explicit_path_is_resolved_against_the_minecraft_dir(self):
+        self.report(self.payload(), relative="other/report.json")
+        result = checks.evaluate_one(spec("uitest_report", "other/report.json"), self.ctx())
+        self.assertEqual(result["status"], checks.PASS)
+        stray = Path(self._tmp.name) / "other"
+        stray.mkdir()
+        (stray / "report.json").write_text(json.dumps(self.payload()), encoding="utf-8")
+        result = checks.evaluate_one(spec("uitest_report", "other/report.json"),
+                                     self.ctx(minecraft_dir=self.minecraft / "nested"))
+        self.assertEqual(result["status"], checks.FAIL)
+
+    def test_without_an_instance_directory_it_skips(self):
+        result = checks.evaluate_one(spec("uitest_report"), self.ctx(minecraft_dir=None))
+        self.assertEqual(result["status"], checks.SKIP)
+        self.assertIn("instance directory", result["detail"])
+
+    def test_it_is_evaluated_even_when_no_session_started(self):
+        """A crashed client is exactly the case this check exists for."""
+        result = checks.evaluate_one(spec("uitest_report"),
                                      self.ctx(session_started=False, game_started=False,
                                               game_exited=False))
         self.assertEqual(result["status"], checks.FAIL)

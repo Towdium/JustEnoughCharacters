@@ -303,9 +303,9 @@ class SeedWorldCliTest(unittest.TestCase):
 
     def test_a_verified_cache_is_reused_and_reported(self):
         with support.temp_home():
-            env = envs.find_env("1.21.1-neoforge")
+            env = envs.find_env("1.21.1-fabric")
             seed = support.write_world_seed(env)
-            code, output = self.cli(["seed-world", "1.21.1-neoforge"])
+            code, output = self.cli(["seed-world", "1.21.1-fabric"])
         self.assertEqual(code, 0)
         self.assertIn("reused", output)
         self.assertIn(seed.digest[:16], output)
@@ -321,9 +321,9 @@ class SeedWorldCliTest(unittest.TestCase):
 
     def test_a_mixed_selection_seeds_what_needs_it_and_exits_zero(self):
         with support.temp_home():
-            env = envs.find_env("1.21.1-neoforge")
+            env = envs.find_env("1.21.1-fabric")
             seed = support.write_world_seed(env)
-            code, output = self.cli(["seed-world", "1.12.2-forge-hei,1.21.1-neoforge"])
+            code, output = self.cli(["seed-world", "1.12.2-forge-hei,1.21.1-fabric"])
         self.assertEqual(code, 0)
         self.assertIn(seed.digest[:16], output)
         self.assertIn("declares no world", output)
@@ -343,14 +343,20 @@ class SeedWorldCliTest(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertIn("world: jechworld", output)
         self.assertIn("skip: JEI registration check needs world load", output)
+        self.assertIn("uitest: tag:smoke,tag:jei", output)
 
     def test_envs_json_carries_the_skip_and_the_world(self):
         with support.temp_home():
             code, output = self.cli(["envs", "--json"])
         self.assertEqual(code, 0)
         listed = {item["name"]: item for item in json.loads(output)}
-        self.assertIsNone(listed["1.21.1-neoforge"]["skip"])
-        self.assertEqual(listed["1.21.1-neoforge"]["world"]["savesPath"], "saves/jechworld")
+        self.assertIsNone(listed["1.21.1-fabric"]["skip"])
+        self.assertEqual(listed["1.21.1-fabric"]["world"]["savesPath"], "saves/jechworld")
+        # The harness row (1.21.1-neoforge) has no world of its own: the level is
+        # the one the checkout's in-client runner creates.
+        self.assertIsNone(listed["1.21.1-neoforge"]["world"])
+        self.assertEqual(listed["1.21.1-neoforge"]["uitest"], {"selection": "tag:smoke,tag:jei"})
+        self.assertIsNone(listed["1.21.1-fabric"]["uitest"])
         self.assertIn("quickPlay", listed["mv-1.19.2-fabric"]["skip"])
         self.assertIsNone(listed["mv-1.19.2-fabric"]["world"])
 

@@ -595,6 +595,17 @@ class GradleLaunchTest(unittest.TestCase):
                                           world="jechworld")
         self.assertIn(f"-P{instance.GRADLE_QUICK_PLAY_PROPERTY}=jechworld", command)
 
+    def test_a_ui_test_selection_is_passed_as_one_project_property(self):
+        """The selection goes over as one argv element, commas and all."""
+        command = instance.gradle_command(self.checkout, ":neoforge:runClientTests",
+                                          self.tmp / "game", uitest="tag:smoke,jei")
+        self.assertIn(f"-P{instance.GRADLE_UITEST_PROPERTY}=tag:smoke,jei", command)
+
+    def test_without_a_selection_no_ui_test_property_is_passed(self):
+        """An ordinary row must not switch the harness on by accident."""
+        command = instance.gradle_command(self.checkout, ":neoforge:runClient", self.tmp / "game")
+        self.assertNotIn(f"-P{instance.GRADLE_UITEST_PROPERTY}", " ".join(command))
+
     def test_the_game_dir_is_under_the_run_directory(self):
         self.assertEqual(instance.run_game_dir(self.tmp / "runs" / "rid"),
                          self.tmp / "runs" / "rid" / "game")

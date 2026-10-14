@@ -32,12 +32,15 @@ DEFAULT_VIA = "game-dir"
 PRISM_BACKEND = "prism"
 GRADLE_BACKEND = "gradle"
 CHECK_TYPES = ("log_contains", "log_not_contains", "log_regex", "no_crash_reports", "exit_code_zero",
-               "file_exists")
+               "file_exists", "uitest_report")
 CHECK_VALUE_REQUIRED = ("log_contains", "log_not_contains", "log_regex", "file_exists")
 
 # Checks whose value is a path inside the instance's minecraft directory, and
 # therefore must stay relative: an absolute value would silently escape it.
-CHECK_PATH_TYPES = ("file_exists",)
+# ``uitest_report``'s is optional and its default lives in checks.py; the rest
+# require one.
+CHECK_PATH_TYPES = ("file_exists", "uitest_report")
+CHECK_PATH_OPTIONAL_TYPES = ("uitest_report",)
 
 # The id key a resolved pin must carry, per source.
 _PIN_ID_KEYS = {"curseforge": "fileId", "modrinth": "versionId"}
@@ -135,6 +138,34 @@ class GradleSpec:
                 f"daemon_java={self.daemon_java!r})")
 
 
+class UiTestSpec:
+    """The optional ``env.uitest`` block: run the checkout's in-client UI test harness.
+
+    An env that declares this block runs the checkout's UI test harness inside
+    the client: the selection is handed to Gradle as ``-PjechTest=<selection>``,
+    which is the only gate on the harness wiring, so the run loads the harness
+    mod, drives the scenarios the selection names, and writes its own report,
+    captures and ``junit.xml`` into ``<game dir>/uitest`` before it quits the
+    client itself. The env's ``gradle.task`` therefore has to be the harness's
+    own run task — the block only says *which scenarios*, never *how to launch*.
+
+    * ``selection`` — the harness's scenario selection expression, in the
+      grammar its own ``ScenarioSelection`` accepts: ``all``, a scenario name,
+      ``a,b`` (terms are OR-ed), ``tag:<tag>``, ``group:<group>``, ``mod:<mod>``,
+      ``regex:<pattern>``. It is passed through verbatim; an expression that
+      matches nothing is a failed run, not an empty pass.
+
+    The evidence is read back by the ``uitest_report`` check, so an env with this
+    block is judged by the harness's own verdict rather than by the log alone.
+    """
+
+    def __init__(self, selection):
+        self.selection = selection
+
+    def __repr__(self):
+        return f"UiTestSpec({self.selection!r})"
+
+
 class ReadyWhen:
     """The optional log line that marks the game as *ready* for this env.
 
@@ -218,7 +249,7 @@ class Env:
 
     def __init__(self, *, name, tags, mc, loader, java_version, jech, mods, checks,
                  timeout_sec, jvm, path, raw, ready_when=None, skip=None, world=None,
-                 gradle=None):
+                 gradle=None, uitest=None):
         self.name = name
         # An env that declares ``skip`` also carries the ``skip`` tag, so a
         # selection can say "everything runnable" as ``--exclude tag:skip``
@@ -239,6 +270,10 @@ class Env:
         # ``None`` means the Prism backend; a :class:`GradleSpec` switches the
         # launch layer to a Gradle run task inside the checkout.
         self.gradle = gradle
+        # ``None`` means "judge this run by the log alone"; a :class:`UiTestSpec`
+        # makes the checkout's in-client UI test harness run too, and its report
+        # the evidence (see lib/checks.py's ``uitest_report``).
+        self.uitest = uitest
         self.path = Path(path)
         self.raw = raw
 
@@ -283,7 +318,7 @@ def parse_env(data, path="<dict>"):
         raise EnvSchemaError(f"{path}: env must be a json object, got {type(data).__name__}")
 
     _reject_unknown(data, {"name", "tags", "mc", "loader", "java", "jech", "mods", "checks",
-                           "timeout_sec", "jvm", "ready_when", "skip", "world", "gradle"},
+                           "timeout_sec", "jvm", "ready_when", "skip", "world", "gradle", "uitest"},
                     "env", problems)
 
     name = _string(data, "name", "env", problems, required=True)
@@ -309,6 +344,15 @@ def parse_env(data, path="<dict>"):
     # one its artifact was resolved from.
     gradle = _parse_gradle(data.get("gradle"), problems,
                            default_project=(jech.project if jech is not None else None))
+    uitest = _parse_uitest(data.get("uitest"), problems)
+    # The selection is handed to Gradle as a project property, so there has to be
+    # a Gradle run to hand it to; the Prism backend has nowhere to pass it and
+    # would silently run the client with no harness at all.
+    if uitest is not None and gradle is None:
+        problems.append(
+            "env.uitest requires env.gradle: the scenario selection travels to the checkout as the "
+            "-PjechTest project property, which only the gradle backend can pass"
+        )
 
     if problems:
         raise EnvSchemaError(
@@ -317,7 +361,7 @@ def parse_env(data, path="<dict>"):
 
     return Env(name=name, tags=tags, mc=mc, loader=loader, java_version=java_version, jech=jech,
                mods=mods, checks=checks, timeout_sec=timeout_sec, jvm=jvm, path=path, raw=data,
-               ready_when=ready_when, skip=skip, world=world, gradle=gradle)
+               ready_when=ready_when, skip=skip, world=world, gradle=gradle, uitest=uitest)
 
 
 def load_all(directory=None):
@@ -540,6 +584,27 @@ def _parse_gradle(data, problems, *, default_project=None):
     return None
 
 
+def _parse_uitest(data, problems):
+    """``env.uitest`` — present means "run the checkout's in-client UI test harness"."""
+    if data is None:
+        return None
+    if not isinstance(data, dict):
+        problems.append('env.uitest must be an object {"selection": "tag:smoke"}')
+        return None
+    _reject_unknown(data, {"selection"}, "env.uitest", problems)
+    # ``_string`` already refuses a missing, null or blank selection and trims it
+    # (which is also why no example is repeated in its message). What is left to
+    # check is that the value survives being handed to Gradle as one argv element.
+    selection = _string(data, "selection", "env.uitest", problems, required=True)
+    if selection is not None and any(char in selection for char in "\n\r\t\0"):
+        problems.append("env.uitest.selection must be one line without control characters "
+                        "(it is passed to Gradle verbatim)")
+        selection = None
+    if selection is None:
+        return None
+    return UiTestSpec(selection)
+
+
 def _parse_describe(data, context, problems):
     if not isinstance(data, dict):
         problems.append(f"{context}.describe must be an object {{\"version\": \"...\"}}")
@@ -681,6 +746,24 @@ def _parse_checks(data, problems):
                         f"got an absolute path: {absolute[0]!r}"
                     )
                     value = None
+        elif type_ in CHECK_PATH_OPTIONAL_TYPES:
+            # An optional path, and the only checks shaped that way: the artifact
+            # they read has one well-known location in the game directory, so an
+            # env may name another one but usually says nothing.
+            if value is not None:
+                if not isinstance(value, str) or not value.strip():
+                    problems.append(f"{context}.value must be a non-empty path relative to the "
+                                    f"instance's minecraft directory for {type_} (or omitted, to use "
+                                    "the default location)")
+                    value = None
+                elif Path(value.strip()).is_absolute():
+                    problems.append(
+                        f"{context}.value must be relative to the instance's minecraft directory, "
+                        f"got an absolute path: {value!r}"
+                    )
+                    value = None
+                else:
+                    value = value.strip()
         elif value is not None:
             problems.append(f"{context}.value is not allowed for {type_}")
             value = None

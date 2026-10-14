@@ -108,6 +108,21 @@ class EnvParsingTest(unittest.TestCase):
                                         "value": ["config/a.json", "config/b.json"]}])
         self.assertEqual(listed.checks[0].value, ["config/a.json", "config/b.json"])
 
+    def test_uitest_is_optional_and_holds_one_selection(self):
+        self.assertIsNone(support.mk_env().uitest)
+        env = support.mk_env(gradle={"task": ":neoforge:runClientTests", "project_dir": "1.21.1"},
+                             uitest={"selection": "tag:smoke,jei"})
+        self.assertEqual(env.uitest.selection, "tag:smoke,jei")
+        self.assertIn("tag:smoke,jei", repr(env.uitest))
+
+    def test_a_uitest_report_check_takes_an_optional_relative_path(self):
+        default = support.mk_env(checks=[{"type": "uitest_report"}])
+        self.assertEqual(default.checks[0].type, "uitest_report")
+        self.assertIsNone(default.checks[0].value, "the harness's own location is the default")
+        self.assertEqual(default.checks[0].name, "uitest_report")
+        named = support.mk_env(checks=[{"type": "uitest_report", "value": "runs/report.json"}])
+        self.assertEqual(named.checks[0].value, "runs/report.json")
+
     def test_ready_when_is_optional(self):
         self.assertIsNone(support.mk_env().ready_when)
 
@@ -148,8 +163,10 @@ class EnvParsingTest(unittest.TestCase):
     def test_the_shipped_matrix_declares_the_world_and_the_skip(self):
         """The env files are the record of what is verified and what is not."""
         loaded = {env.name: env for env in envs.load_all()}
+        # 1.21.1-neoforge runs the in-client harness, so its level is the
+        # harness's own and the row declares no world (see the uitest tests).
+        self.assertEqual(loaded["1.21.1-fabric"].world.name, "jechworld")
         for name in ("1.21.1-neoforge", "1.21.1-fabric"):
-            self.assertEqual(loaded[name].world.name, "jechworld", name)
             self.assertIsNone(loaded[name].skip, name)
         for name in ("mv-1.19.2-forge", "mv-1.19.2-fabric"):
             self.assertIn("needs world load", loaded[name].skip, name)
@@ -166,11 +183,46 @@ class EnvParsingTest(unittest.TestCase):
         a broken env, not a lenient one. A skipped env is the exception: it is
         never executed, so it needs no stopping rule, and its checks stay
         written down as documentation.
+
+        An env that runs the in-client harness is the second exception, and it is
+        the mirror image of the rule: the harness *is* the in-game runner, it
+        quits the client itself once the selection is done, and a stopping rule
+        would end the session mid-scenario and leave the run without a report at
+        all. Such an env must therefore declare none.
         """
         for env in envs.load_all():
             if env.skip:
                 continue
+            if env.uitest is not None:
+                self.assertIsNone(
+                    env.ready_when,
+                    f"{env.name} runs the in-client harness, which quits the client itself: a "
+                    "ready_when would stop the session mid-scenario and leave no report")
+                continue
             self.assertIsNotNone(env.ready_when, f"{env.name} declares no ready_when")
+
+    def test_the_shipped_harness_row_declares_what_it_runs(self):
+        """``uitest`` is a row's own statement of which scenarios it was measured with.
+
+        The selection names scenarios rather than saying ``all``, for the same
+        reason a row's ``world`` is written down: a row asserts what it was
+        measured with, and a scenario added later cannot silently change that.
+        The row also has to carry the check that reads the harness's report —
+        judged by the log alone it would pass on a client that never ran one.
+        """
+        rows = {env.name: env for env in envs.load_all() if env.uitest is not None}
+        self.assertEqual(list(rows), ["1.21.1-neoforge"],
+                         "a row that runs the in-client harness is a decision, not a default")
+        env = rows["1.21.1-neoforge"]
+        self.assertEqual(env.uitest.selection, "tag:smoke,tag:jei")
+        self.assertNotEqual(env.uitest.selection, "all")
+        # Every term carries its own prefix: the harness's grammar ORs bare terms as *names*, so
+        # "tag:smoke,jei" would select the smoke scenarios and nothing else, silently running two of
+        # the four scenarios this row was measured with.
+        for term in env.uitest.selection.split(","):
+            self.assertTrue(":" in term,
+                            f"{term!r} has no selector prefix, so it can only match a scenario name")
+        self.assertIn("uitest_report", [check.type for check in env.checks])
 
     def test_the_shipped_matrix_declares_a_world_only_where_it_was_measured(self):
         """``world`` is a premise about the marker, not a decoration.
@@ -179,10 +231,12 @@ class EnvParsingTest(unittest.TestCase):
         defers its registration phase to level load and that can take a quick
         play argument (1.20+); the rest assert startup markers and must stay
         without one, so a row cannot silently acquire a level load it was not
-        measured with.
+        measured with. ``1.21.1-neoforge`` left the set when it moved to the
+        in-client harness: its level is the harness's own, and a quick-play join
+        would race the level the scenarios are asserted against.
         """
         measured = {
-            "1.21.1-neoforge", "1.21.1-fabric",
+            "1.21.1-fabric",
             "moderner-1.21.10-neoforge", "moderner-1.21.10-fabric",
             "moderner-26.1.2-neoforge", "moderner-26.1.2-fabric",
             "mv-1.20.1-forge", "mv-1.20.1-fabric",
@@ -291,6 +345,25 @@ class EnvRejectionTest(unittest.TestCase):
         self.reject(support.env_dict(checks=[{"type": "file_exists",
                                               "value": ["config/a.json", "/etc/passwd"]}]),
                     "absolute path")
+
+    def test_uitest_needs_an_object_and_a_selection(self):
+        self.reject(support.env_dict(uitest="all"), "env.uitest must be an object")
+        self.reject(support.env_dict(uitest={"sel": "all"}), "unknown key 'sel'")
+        self.reject(support.env_dict(uitest={}), "missing required key 'selection'")
+        self.reject(support.env_dict(uitest={"selection": "  "}), "must be a non-empty string")
+        self.reject(support.env_dict(uitest={"selection": "a\nb"}),
+                    "one line without control characters")
+
+    def test_uitest_without_a_gradle_block_is_rejected(self):
+        """The selection is a Gradle property: with no gradle block there is nowhere to put it."""
+        self.reject(support.env_dict(uitest={"selection": "all"}),
+                    "env.uitest requires env.gradle")
+
+    def test_uitest_report_path_must_stay_relative(self):
+        self.reject(support.env_dict(checks=[{"type": "uitest_report", "value": "/tmp/report.json"}]),
+                    "absolute path")
+        self.reject(support.env_dict(checks=[{"type": "uitest_report", "value": "   "}]),
+                    "must be a non-empty path")
 
     def test_value_is_rejected_on_value_less_checks(self):
         self.reject(support.env_dict(checks=[{"type": "no_crash_reports", "value": "x"}]),
@@ -437,7 +510,7 @@ class ViaTest(unittest.TestCase):
         loaded = {env.name: env for env in envs.load_all()}
         neoforge = loaded["1.21.1-neoforge"]
         self.assertEqual(neoforge.backend, envs.GRADLE_BACKEND)
-        self.assertEqual(neoforge.gradle.task, ":neoforge:runClient")
+        self.assertEqual(neoforge.gradle.task, ":neoforge:runClientTests")
         self.assertEqual(neoforge.jech.via, "dev-classpath")
         self.assertEqual([mod.via for mod in neoforge.mods], ["dev-classpath"])
 

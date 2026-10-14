@@ -313,14 +313,30 @@ def _execute(env, run_dir, entry, *, started_wall, refresh, log):
     if env.gradle is not None:
         checkout = checkout_dir(env, log=log)
         minecraft_dir = instance.run_game_dir(run_dir)
+        # The in-client UI test selection (when the env asks for the harness): it
+        # travels to the checkout as -PjechTest, which is the only gate on that
+        # wiring, so a run without it loads no harness at all.
+        uitest_selection = env.uitest.selection if env.uitest is not None else None
         entry["gradle"] = {
             "task": env.gradle.task,
             "projectDir": paths.display(checkout),
             "daemonJava": env.gradle.daemon_java,
+            "uitestSelection": uitest_selection,
         }
         log(f"{env.name}: gradle backend: " + " ".join(instance.gradle_command(
             checkout, env.gradle.task, minecraft_dir,
-            world=env.world.name if env.world is not None else None)))
+            world=env.world.name if env.world is not None else None, uitest=uitest_selection)))
+        if uitest_selection is not None:
+            # The env makes no claim about where that output lands: the checkout's
+            # own harness wiring does, and the uitest_report check reads it back
+            # from there. Saying it here is what lets a reader of the report find
+            # the captures without opening the build files.
+            entry["notes"].append(
+                f"uitest: scenarios selected by {uitest_selection!r}; the harness writes "
+                f"{checks_mod.UITEST_REPORT_DEFAULT} and its captures under "
+                f"{checks_mod.UITEST_CAPTURES_DIR}/ inside the game directory, and quits the client "
+                "itself once the selection is done"
+            )
     else:
         info = instance.ensure_instance(env, resolved, pack_result, refresh=refresh, log=log)
         entry["instanceId"] = info.instance_id
@@ -344,6 +360,7 @@ def _execute(env, run_dir, entry, *, started_wall, refresh, log):
     if env.gradle is not None:
         proc = instance.launch_gradle(checkout, env.gradle.task, minecraft_dir,
                                       world=env.world.name if env.world is not None else None,
+                                      uitest=uitest_selection,
                                       java_home=gradle_java_home(env, log=log),
                                       log_path=launcher_log, log=log)
         # The game is a java process under this launcher whose working directory is

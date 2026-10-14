@@ -101,6 +101,9 @@ def cmd_envs(args, log=print):
         if env.world is not None:
             log(f"{'':28} world: {env.world.name} (saves/{env.world.name}, seeded by "
                 "jt seed-world)")
+        if env.uitest is not None:
+            log(f"{'':28} uitest: {env.uitest.selection} (the checkout's in-client scenarios; "
+                "the harness report is the evidence)")
         if env.skip:
             log(f"{'':28} skip: {env.skip}")
         if EXAMPLE_TAG in env.tags:
@@ -233,6 +236,7 @@ def _env_json(env):
         "skip": env.skip,
         "world": ({"name": env.world.name, "savesPath": env.world.saves_path}
                   if env.world is not None else None),
+        "uitest": ({"selection": env.uitest.selection} if env.uitest is not None else None),
         "timeout_sec": env.timeout_sec,
         "jvm": {"max_mem_mb": env.jvm.max_mem_mb, "min_mem_mb": env.jvm.min_mem_mb,
                 "window": list(env.jvm.window)},

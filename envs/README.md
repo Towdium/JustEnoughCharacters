@@ -54,6 +54,7 @@ ignored too. Everything else must be listed below.
 | `world` | no | `{"name": "<folder>"}`, the world the client is launched into, see below |
 | `skip` | no | a reason string: the env is **not executed**, see below |
 | `gradle` | no | `{task, project_dir, daemon_java}` — run the checkout's Gradle run task instead of launching a Prism instance, see below |
+| `uitest` | no | `{selection}` — run the checkout's **in-client UI test harness** with that scenario selection, and judge the run by the harness's own report, see below |
 | `timeout_sec` | no | watchdog budget, default 600; the whole run is killed and the run fails with exit code 3 |
 | `jvm` | no | `{max_mem_mb, min_mem_mb, args, window}`; defaults 3072 / 1024 / `[]` / `[1280, 720]` |
 
@@ -74,7 +75,9 @@ Six rows use it today: `1.21.1-{neoforge,fabric}` and
 `:neoforge-unobfuscated:runClient` and `:fabric-unobfuscated:runClient` in the
 `moderner` checkout). Their `daemon_java` is `21` for the 1.21.1 pair (Gradle
 8.13) and `null` for the moderner rows (Gradle 9.5 runs on the machine's default
-JDK).
+JDK). One of the six does not run `runClient`: `1.21.1-neoforge` runs
+`:neoforge:runClientTests`, the checkout's UI test harness run (see `uitest`
+below).
 
 | key | required | meaning |
 | --- | --- | --- |
@@ -109,6 +112,55 @@ test *is* the run's own source set.
 | `forge` | `<mc>-<forge version>` | `1.20.1-47.0.35`, `1.12.2-14.23.5.2864` |
 | `fabric` | the **fabric-loader** version (not the fabric-api version) | `0.16.14`, `0.19.2` |
 | `quilt` | the quilt-loader version | |
+
+### `uitest` — running the checkout's in-client UI test harness
+
+```json
+"uitest": { "selection": "tag:smoke,tag:jei" }
+```
+
+An env with a `uitest` block runs the checkout's own **in-client UI test
+harness**: a dev-only mod that drives the real client through scripted scenarios
+(keyboard and chat input, JEI's own search bar) and writes its own verdict. The
+selection is handed to Gradle as `-PjechTest=<selection>`, the only gate on that
+wiring, so the env's `gradle.task` must be the harness's own run task
+(`:neoforge:runClientTests` in the 1.21.1 checkout), which honours `-PjechRunDir`
+exactly as `runClient` does.
+
+What changes for such a row:
+
+* **The client ends itself.** The harness quits the game once the selection is
+  done, so the row declares **no `ready_when`**: a stopping rule would end the
+  session mid-scenario and leave the run without a report at all. This is the one
+  exception to "every executed env declares a stopping rule", and
+  `selftest/test_envs.py` checks both halves of it.
+* **The level is the harness's own.** The harness runner creates and pins its own
+  flat level and deletes the stale ones it owns, so the row declares **no
+  `world`** either: a quick-play join would race the level the scenarios are
+  asserted against. (The harness run ignores `-PjechQuickPlayWorld` for the same
+  reason — see the checkout's `gradle/jech-uitest.gradle`.)
+* **The evidence is the report.** The harness writes `report.json`,
+  `report.txt`, `junit.xml` and `screenshots/` into `<game dir>/uitest` before it
+  quits, and the run is judged by that report through the `uitest_report` check.
+  The log checks stay as well: they say the mod loaded, the report says the
+  scenarios ran.
+* **A failing scenario is red twice over.** The harness exits non-zero when a
+  scenario failed, which fails the Gradle build through the checkout's own
+  `verifyJechUiTest`, and `uitest_report` fails on the report. The captures to
+  look at are under `<game dir>/uitest/screenshots/<scenario>/`.
+
+| key | required | meaning |
+| --- | --- | --- |
+| `selection` | yes | the harness's scenario selection, passed to Gradle verbatim: `all`, a scenario name, `a,b` (terms are OR-ed), `tag:<tag>`, `group:<group>`, `mod:<mod>`, `regex:<pattern>` — the harness's own `ScenarioSelection` grammar. **Every term carries its own prefix**, because a bare term is a *name* match: `tag:smoke,tag:jei`, never `tag:smoke,jei` (which would silently run the smoke scenarios alone) |
+
+The selection names the scenarios the row was measured with instead of saying
+`all`, for the same reason a row's `world` is written down: a row asserts what it
+was measured with, and a scenario added later cannot silently change that.
+`1.21.1-neoforge` is the only row that runs the harness today, with
+`tag:smoke,tag:jei` (four scenarios: `smoke` and `json-smoke` by tag, and the two
+JEI ones by tag). The scenarios themselves — and the step vocabulary a scenario
+is written in — are documented in the checkout, next to the scenarios
+(`neoforge/src/uitest/resources/uitest/scenarios/README.md`).
 
 ### `jech` — the mod under test
 
@@ -152,6 +204,7 @@ Check types:
 | `file_exists` | ✔ relative path(s) | every path exists **under the instance's `minecraft/` directory** (e.g. `config/jecharacters.json`) |
 | `no_crash_reports` | — | no new file appeared in `minecraft/crash-reports/` during the run |
 | `exit_code_zero` | — | the game ended healthy: the runner deliberately stopped it once it was ready, or the game itself exited 0 (SKIP when Prism handed off to an already-running instance *and* nothing ended it deliberately) |
+| `uitest_report` | optional relative path | the in-client UI test harness reported `PASS` in `uitest/report.json` (or the named path) with no scenario failed or errored. The report is written by the harness itself before it quits the client, so a missing, unreadable or unknown-schema report **FAILs**: "the scenarios ran" is what the check is here to establish, and an unevaluated verdict is not a pass. See `uitest` above |
 
 Three rules keep the checks honest:
 
@@ -160,6 +213,9 @@ Three rules keep the checks honest:
   SKIPs when no instance directory was located. The runner always adds three
   `internal:` checks (`session-started`, `watchdog`, `game-exit`) that FAIL in
   exactly those cases, so a run with missing evidence fails on a named check.
+  `uitest_report` is the deliberate exception to the SKIP half: it only SKIPs when
+  no instance directory was located at all, and otherwise FAILs on a report it
+  cannot read, because a missing report *is* the failure it names.
 * Only **INFO-level** markers are assertable. A production instance logs at INFO
   by default, so DEBUG-level lines (for example the transformer "hit" lines) are
   not in `latest.log` and must not be used in a check until the log4j level is
@@ -176,7 +232,9 @@ Three rules keep the checks honest:
   at log line 105, `Sending Runtime` at 155, JECh's marker at 141), whereas a
   run that stays at the title screen shows only the startup `Sending
   ConfigManager` and never the marker — JEI 15 (1.20.1), 19 (1.21.1), 26
-  (1.21.10/26.1.2) all behave this way.
+  (1.21.10/26.1.2) all behave this way. A row that runs the in-client harness
+  gets that level without declaring `world`: the harness's runner stands up its
+  own flat level (`1.21.1-neoforge` does, see `uitest` above).
 
 ### `skip` — an env that is deliberately not executed
 
@@ -236,21 +294,27 @@ were tried and rejected are recorded here so nobody re-treads them:
   Prism already does, and a patch file has to be kept in sync per loader. Not
   used.
 
-Which rows declare it, as measured on 2026-10-14: `1.21.1-neoforge`,
-`1.21.1-fabric`, the four `moderner` rows and the two `mv-1.20.1` rows — all ten
-run to `stopReason: goal-reached` on a real join (`vfyjxf_ joined the game`,
-then JECh's `Registering JEI pinyin search storage` a second later). The
-`mv-1.16.5` and `mv-1.18.2` rows deliberately keep no world: their markers are
-emitted at startup (and the 1.16.5/1.18.2 jars carry no JEI plugin at all), so a
-world would only add a level load to what they assert. `mv-1.19.2` cannot join
-one — see the `skip` section above.
+Which rows declare it, as measured on 2026-10-14: `1.21.1-fabric`, the four
+`moderner` rows and the two `mv-1.20.1` rows — all seven run to
+`stopReason: goal-reached` on a real join (`vfyjxf_ joined the game`, then
+JECh's `Registering JEI pinyin search storage` a second later).
+`1.21.1-neoforge` left the list when it moved to the in-client harness
+(2026-10-14): the level it is asserted against is the one the harness's own
+runner creates, so the row declares no `world` (see `uitest` above) — the marker
+still arrives, because the level does. The `mv-1.16.5` and `mv-1.18.2` rows
+deliberately keep no world: their markers are emitted at startup (and the
+1.16.5/1.18.2 jars carry no JEI plugin at all), so a world would only add a level
+load to what they assert. `mv-1.19.2` cannot join one — see the `skip` section
+above.
 
 A `gradle` env carries the same world a different way: the harness hands it over
 as `-PjechQuickPlayWorld=<name>` and the checkout's own run configuration appends
 `--quickPlaySingleplayer <name>` to the client's arguments — no Prism option is
-involved, and the game directory is the run's own `runs/<id>/game`. The six
-gradle rows (`1.21.1` ×2 and `moderner` ×4) join that way; the seed is staged into
-`saves/<name>/` there exactly as it is for a Prism instance.
+involved, and the game directory is the run's own `runs/<id>/game`. The five
+gradle rows that declare a world (`1.21.1-fabric` and `moderner` ×4) join that
+way; the seed is staged into `saves/<name>/` there exactly as it is for a Prism
+instance. `1.21.1-neoforge`'s `runClientTests` run deliberately does not honour
+the property: the harness's runner does its own level management.
 
 One caveat that cost a full watchdog on the way (recorded so the next person
 reads it as designed, not as a bug): a run whose client dies *before* the ready
@@ -325,9 +389,10 @@ therefore renders a minimal preset into the pack (`overrides/options.txt`, see
 
 ```
 onboardAccessibility:true
+lang:zh_cn
 ```
 
-One key, and only that one:
+Two keys, and only those:
 
 * `onboardAccessibility:true` marks the accessibility onboarding as finished.
   The client shows that screen while the value is false, which is also the state
@@ -335,14 +400,45 @@ One key, and only that one:
   see the Minecraft Wiki's *Title Screen* and *options.txt* pages, and Mojang's
   own reproduction steps on MC-310326, which open the screen by deleting
   `options.txt`.)
+* `lang:zh_cn` starts the client in Simplified Chinese. That is a fixture, not a
+  taste in speech: JECh is a *pinyin* search mod, a pinyin query only has
+  anything to search once the items carry Chinese names (`block.minecraft.stone`
+  is `石头`, which `shitou` reaches; in `en_us` it is `Stone`, which no pinyin
+  can), and the in-client harness asserts exactly that. A version that spells the
+  language code differently (`1.12.2` uses `zh_CN`) falls back to `en_us` with a
+  warning instead of failing to load.
+
+**A `key_*` line must never be preset, and this is not a style rule.** The preset
+carries no `version:` line, so the client's `Options.dataFix` reads it as
+data-version 0 and runs the *legacy* fixer chain, in which
+`OptionsKeyLwjgl3Fix.makeRule` does `Integer.parseInt` on the value of every
+`key_*` entry (it exists to convert LWJGL2's numeric key ids). A modern binding
+that carries a modifier is written `key.keyboard.f:CONTROL`, which is not a
+number, so the fixer throws, `Options.load()` catches it, and **every** option
+(including `lang`) stays at its default — measured 2026-10-14:
+
+```
+[Render thread/ERROR] [net.minecraft.client.Options/]: Failed to load options
+java.lang.NumberFormatException: For input string: "key.keyboard.f:CONTROL"
+    at net.minecraft.util.datafix.fixes.OptionsKeyLwjgl3Fix.lambda$makeRule$1(OptionsKeyLwjgl3Fix.java:147)
+```
+
+Pinning JEI's search-bar focus key was tried and removed for that reason, and
+nothing was lost: a fresh instance has no override, so the binding the harness
+scenario presses is JEI's own registered default (`key.keyboard.f` + `CONTROL`).
+A `version:<current data version>` line first in the file makes the legacy chain
+skip entirely and the same file loads cleanly (verified both ways), but that
+number is per Minecraft version and has no cheap authoritative source here —
+that is the point at which to add one, if a run ever has to survive a *rebound*
+key.
 
 Deliberately **not** preset, with the reason: `skipMultiplayerWarning` (the
 warning is for joining a *server*; these runs join single-player),
 `tutorialStep` (tutorial hints are toasts, not screens, and gate nothing), and
-everything cosmetic — volume, resolution, render distance, GUI scale — because a
-preference written down here would silently become part of what a run measures.
-A key an older client does not know is ignored when it loads the file, so one
-preset serves every version line.
+everything else cosmetic — volume, resolution, render distance, GUI scale —
+because a preference written down here would silently become part of what a run
+measures. A key an older client does not know is ignored when it loads the file,
+so one preset serves every version line.
 
 Verified on a freshly materialized 1.21.1 instance: with the preset the client
 lands on the title screen, without it the onboarding screen comes first.
@@ -415,10 +511,16 @@ rule.
   the game to exit on its own or for the watchdog. No shipped env omits it: a
   modded client that reaches the title screen never exits on its own, so an env
   without a stopping rule can only end in a watchdog kill (exit 3) — i.e. it is
-  a broken env, not a lenient one. Every env file in `envs/` declares
+  a broken env, not a lenient one. Every other env file in `envs/` declares
   `Sound engine started`, which the client prints in 1.12.2 through 26.1.2 alike
   (verified against each client jar), and which lands *before* the world join so
   a failed join still becomes a clean `ready-timeout`.
+* **The one row that omits it, and must.** An env with a `uitest` block runs the
+  checkout's in-client harness, whose own runner quits the client when the
+  selection is done. A stopping rule there would end the session mid-scenario and
+  leave the run with no report — so such a row declares no `ready_when`, and the
+  absence is the correct shape rather than a broken env (`1.21.1-neoforge`; see
+  `uitest` above and the assertion in `selftest/test_envs.py`).
 
 ## Pins
 
@@ -525,19 +627,23 @@ and says so in the report.
 | `1.12.2-forge-hei` | 1.12.2 / forge 1.12.2-14.23.5.2864 | 8 | `1.12.0` (srg jar) | had-enough-items 4.34.0 |
 | `1.12.2-forge-jei-legacy` | 1.12.2 / forge 1.12.2-14.23.5.2864 | 8 | `1.12.0` (srg jar) | jei 4.16.1.301 |
 
-Every row also stages the preset `options.txt`. The ten envs that are *launched
-into a world*, and the two that are *skipped*, are called out below and in the
-table above:
+Every row also stages the preset `options.txt`. The seven envs that are
+*launched into a world*, the row that loads its own, and the two that are
+*skipped*, are called out below and in the table above:
 
 | env | runs? | world | why |
 | --- | --- | --- | --- |
-| `1.21.1-neoforge`, `1.21.1-fabric` | yes | `world: {name: jechworld}` | the JEI plugin marker needs a loaded level |
+| `1.21.1-neoforge` | yes | none — `uitest` | the row runs the checkout's in-client harness, which stands up and pins its own flat level, and is judged by the harness's own report |
+| `1.21.1-fabric` | yes | `world: {name: jechworld}` | the JEI plugin marker needs a loaded level |
 | `moderner` ×4, `mv-1.20.1` ×2 | yes | `world: {name: jechworld}` | same marker, same level-load phase (measured 2026-10-14) |
 | `mv-1.19.2-forge`, `mv-1.19.2-fabric` | **no** — `skip` | none | same marker, but quick play needs 1.20+ (re-measured 2026-10-14) |
 | `mv-1.16.5` ×2, `mv-1.18.2` ×2, `1.12.2` ×2 | yes | none | markers are emitted during startup |
 
-Every env also declares `ready_when: Sound engine started`; without it a client
-that reaches the title screen runs until the watchdog (see "Omitting it").
+Every env but `1.21.1-neoforge` also declares
+`ready_when: Sound engine started`; without it a client that reaches the title
+screen runs until the watchdog (see "Omitting it"). The harness row omits it on
+purpose: its own runner quits the client, so a stopping rule would end the run
+mid-scenario (see `uitest`).
 
 The `mv-1.19.2` rows are the one family with no path to their marker: JEI 11.x's
 `registerAdvancedSearch` (the phase that logs JECh's storage marker) runs at
@@ -594,14 +700,18 @@ has a JEI plugin and can be asserted on its registration marker.
   `log_not_contains "Can't create config file!"` and
   `file_exists config/jecharacters.json`.
 
-  All ten rows of this family declare `world` except the two `mv-1.19.2` rows,
+  All ten rows of this family load a level, except the two `mv-1.19.2` rows,
   which carry `skip` (no quick play before 1.20; re-measured 2026-10-14, see the
-  `skip` section). The other eight were measured against a real run on
-  2026-10-14 — `1.21.1` ×2, `moderner` ×4, `mv-1.20.1` ×2 all stop at
-  `goal-reached` with their marker present a second after `joined the game`. So
+  `skip` section). Seven of the other eight declare `world` (the quick-play
+  rows); `1.21.1-neoforge` gets its level from the in-client harness instead (see
+  `uitest`). All eight were measured against a real run on 2026-10-14 —
+  `1.21.1` ×2, `moderner` ×4, `mv-1.20.1` ×2 all reach a level with their marker
+  present a second after `joined the game`. So
   the level-load claim holds for JEI 15 (1.20.1), JEI 19 (1.21.1), JEI 26
   (1.21.10) and JEI 29 (26.1.2): each of them defers `registerAdvancedSearch`
-  until a level exists.
+  until a level exists. `1.21.1-neoforge` adds `uitest_report` to this set: the
+  row's own scenarios are the evidence, and the log checks stay as the "the mod
+  loaded" half.
 * **B — no JEI plugin** (mv-1.16.5 ×2, mv-1.18.2 ×2): the failure markers only —
   `log_not_contains "Could not find targets.json. JechTransformer will not be loaded."`,
   `no_crash_reports`, `exit_code_zero`. These rows have no world: their markers
@@ -663,20 +773,25 @@ has a JEI plugin and can be asserted on its registration marker.
 2. Read the checkout's `gradle.properties` and copy the loader / api / jei
    versions from there instead of typing a remembered version.
 3. Check which family the new line belongs to (`unzip -l <jar> | grep JechJeiPlugin`).
-4. Decide whether a marker needs a loaded level. If it does, add
-   `"world": {"name": "jechworld"}` and pick a `ready_when` line the client
-   prints **whether or not** the join succeeds (see "When is the game ready?").
-   `jt run` builds the seed itself; `jt seed-world <name>` builds it ahead of time.
-5. Give the env a `ready_when` line, from a real run's `latest.log` (a first,
-   exploratory `jt run` may end at the watchdog — that log is still the evidence
-   to read). An env without one can only end in a watchdog kill, because nothing
-   in a modded client makes it quit at the title screen.
+4. Decide what shape the row is, before writing any check: a **Prism row** that
+   stops at the menu, a **quick-play row** that is launched into a world, or a
+   **harness row** that runs the checkout's own in-client scenarios (`uitest`).
+   The three shapes differ in exactly which of `ready_when` / `world` / `uitest`
+   the row carries, and the shipped-matrix assertions in
+   `selftest/test_envs.py` exist to catch a row that picked the wrong one.
+5. For a Prism or quick-play row, give it a `ready_when` line from a real run's
+   `latest.log` (a first, exploratory `jt run` may end at the watchdog — that log
+   is still the evidence to read), and add `"world": {"name": "jechworld"}` when
+   a marker needs a loaded level, picking a line the client prints **whether or
+   not** the join succeeds (see "When is the game ready?"). `jt run` builds the
+   seed itself; `jt seed-world <name>` builds it ahead of time. A harness row
+   takes neither: it declares `uitest` and nothing about stopping.
 6. If the marker is unreachable for a version-line reason, do not soften the
    check: keep the check as written, add `"skip": "<the missing capability>"`,
    and say so here. That is different from a check whose *premise* is wrong for
    the row — a marker only one loader's API can emit, say (see the legacy-JEI
    row under "Check families"): fix the check, keep what the row does prove, and
    record the evidence here.
-7. `jt seed-world <name>` (when step 4 applied), then `jt envs` (does it load?),
+7. `jt seed-world <name>` (when step 5 applied), then `jt envs` (does it load?),
    then `jt resolve <name>` (does the description pin to exactly one file?),
    then `jt run <name>`.

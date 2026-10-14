@@ -2,10 +2,17 @@
 
 Six declared types — ``log_contains``, ``log_not_contains``, ``log_regex``,
 ``file_exists``, ``no_crash_reports``, ``exit_code_zero`` — plus three
-``internal:`` checks the runner always adds. The internal ones exist so a run
-whose *evidence* is missing (no game session, watchdog timeout) fails on a named
-check instead of passing vacuously, which is the fail-closed rule the CloudLib
-harness states for a missing report.
+``internal:`` checks the runner always adds, plus ``uitest_report`` for an env
+that runs the checkout's in-client UI test harness. The internal ones exist so a
+run whose *evidence* is missing (no game session, watchdog timeout) fails on a
+named check instead of passing vacuously, which is the fail-closed rule the
+CloudLib harness states for a missing report.
+
+``uitest_report`` is the same rule applied to the harness's own report: the
+harness writes ``report.json`` itself (before it quits the client), so the file's
+absence means the run never reached the runner, and a report that is there is
+believed over the log. A missing, unreadable or unparseable report is a FAIL —
+never a SKIP.
 
 Statuses:
 
@@ -19,6 +26,7 @@ A run is ``PASS`` only when no check FAILed.
 
 from __future__ import annotations
 
+import json
 import re
 from pathlib import Path
 
@@ -35,6 +43,22 @@ SKIP = "SKIP"
 STOP_GOAL_REACHED = "goal-reached"
 STOP_READY_TIMEOUT = "ready-timeout"
 DELIBERATE_STOP_REASONS = (STOP_GOAL_REACHED, STOP_READY_TIMEOUT)
+
+# Where the checkout's in-client UI test harness writes its output inside the
+# game directory when Gradle is given -PjechTest (see the checkout's
+# gradle/jech-uitest.gradle: the harness's own output directory follows
+# -PjechRunDir into <game dir>/uitest). The report is the harness's verdict; the
+# captures sit beside it, one directory per scenario.
+UITEST_REPORT_DIR = "uitest"
+UITEST_REPORT_DEFAULT = f"{UITEST_REPORT_DIR}/report.json"
+UITEST_CAPTURES_DIR = f"{UITEST_REPORT_DIR}/screenshots"
+# The report's own version. A report that says a version this check does not know
+# is refused rather than read loosely: the fields below would still be there, but
+# nobody would have agreed on what they mean.
+UITEST_REPORT_SCHEMA = 1
+UITEST_PASS = "PASS"
+# How many non-PASS scenarios the failure detail names before summarizing the rest.
+UITEST_FAILURE_DETAIL_LIMIT = 3
 
 
 class CheckContext:
@@ -89,6 +113,8 @@ def evaluate_one(spec, ctx):
             return _no_crash_reports(spec, ctx)
         if spec.type == "exit_code_zero":
             return _exit_code_zero(spec, ctx)
+        if spec.type == "uitest_report":
+            return _uitest_report(spec, ctx)
     except re.error as exc:
         raise ConfigError(f"check {spec.name!r} has an invalid regex: {exc}")
     raise ConfigError(f"check {spec.name!r} has unknown type {spec.type!r}")
@@ -252,3 +278,90 @@ def _exit_code_zero(spec, ctx):
                       f"exit code 0 (source={ctx.exit_code_source})")
     return result(spec.name, spec.type, FAIL,
                   f"exit code {ctx.exit_code} (source={ctx.exit_code_source})")
+
+
+def _uitest_report(spec, ctx):
+    """The in-client UI test harness's own verdict, read from its report.
+
+    ``value`` is the report path relative to the instance's minecraft directory;
+    without one the harness's default output location is used. The check is a
+    FAIL whenever no verdict can be read — a missing file, an unreadable one, a
+    report this version does not know, a report without totals — because "the
+    scenarios ran and passed" is exactly what it is here to establish, and an
+    unevaluated verdict is not a pass.
+
+    The captures the harness wrote are named by directory and count rather than
+    copied: they are already in the run directory, which the run's own report and
+    the caller's archive keep.
+    """
+    relative = spec.value or UITEST_REPORT_DEFAULT
+    if ctx.minecraft_dir is None:
+        return result(spec.name, spec.type, SKIP, "no instance directory was located to inspect")
+    path = ctx.minecraft_dir / relative
+    if not path.is_file():
+        return result(spec.name, spec.type, FAIL,
+                      f"no UI test report at {relative}: the harness run never reached its runner "
+                      "(a client that crashed, was killed, or never loaded the harness)")
+    try:
+        data = json.loads(path.read_text(encoding="utf-8", errors="replace"))
+    except (OSError, ValueError) as exc:
+        return result(spec.name, spec.type, FAIL,
+                      f"{relative} could not be read as JSON: {exc.__class__.__name__}: {exc}")
+    if not isinstance(data, dict):
+        return result(spec.name, spec.type, FAIL,
+                      f"{relative} holds a {type(data).__name__}, not the harness's report object")
+    if data.get("schema") != UITEST_REPORT_SCHEMA:
+        return result(spec.name, spec.type, FAIL,
+                      f"{relative} is report schema {data.get('schema')!r}, and this check reads "
+                      f"schema {UITEST_REPORT_SCHEMA}: the harness's report format changed and the "
+                      "check has to be re-read against it")
+    totals = data.get("totals")
+    if not isinstance(totals, dict):
+        return result(spec.name, spec.type, FAIL, f"{relative} carries no totals block")
+    failed = totals.get("failed")
+    errored = totals.get("errored")
+    # ``isinstance(True, int)`` is True in Python, and a counter that is a JSON
+    # boolean is a report nobody understands, not a zero.
+    if any(isinstance(value, bool) or not isinstance(value, int) for value in (failed, errored)):
+        return result(spec.name, spec.type, FAIL,
+                      f"{relative} totals carry no integer failed/errored counters")
+    summary = _uitest_summary(totals)
+    status = data.get("status")
+    if failed or errored:
+        return result(spec.name, spec.type, FAIL,
+                      f"the harness reported {status!r} with {errored} errored and {failed} failed "
+                      f"scenario(s): {summary}; {_uitest_failures(data)}")
+    if status != UITEST_PASS:
+        return result(spec.name, spec.type, FAIL,
+                      f"the harness reported {status!r}: {summary}; {_uitest_failures(data)}")
+    return result(spec.name, spec.type, PASS, f"harness {status}: {summary}")
+
+
+def _uitest_summary(totals):
+    """The one-line tally the harness's own gradle verification prints."""
+    checks = totals.get("checks")
+    checks_failed = totals.get("checksFailed")
+    passed_checks = (checks - checks_failed
+                     if isinstance(checks, int) and isinstance(checks_failed, int) else "?")
+    return (f"{totals.get('passed')}/{totals.get('scenarios')} scenarios, "
+            f"{passed_checks}/{checks} checks, {totals.get('captures')} captures in "
+            f"{UITEST_CAPTURES_DIR}/")
+
+
+def _uitest_failures(data, limit=UITEST_FAILURE_DETAIL_LIMIT):
+    """Name the scenarios that are not PASS, so the failure detail is actionable."""
+    scenarios = data.get("scenarios")
+    if not isinstance(scenarios, list):
+        return "the report names no scenarios"
+    bad = [item for item in scenarios
+           if isinstance(item, dict) and item.get("status") != UITEST_PASS]
+    if not bad:
+        return "no scenario is non-PASS"
+    named = []
+    for item in bad[:limit]:
+        message = item.get("message")
+        named.append(f"{item.get('name')}={item.get('status')}"
+                     + (f" ({message})" if message else ""))
+    if len(bad) > limit:
+        named.append(f"+{len(bad) - limit} more")
+    return "non-PASS scenarios: " + ", ".join(named)

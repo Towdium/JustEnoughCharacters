@@ -75,13 +75,18 @@ IMPORT_TIMEOUT_SEC = 1800
 IMPORT_GRACE_SEC = 2.0
 
 # The Gradle backend's contract with the checkout's build files: the wrapper it
-# runs, and the two project properties the checkout's run configuration reads to
-# point the client at the harness's game directory and at a world to join. They
-# are properties (not environment variables) so a plain `./gradlew runClient`
-# without them keeps the checkout's own default behaviour.
+# runs, and the project properties the checkout's run configuration reads to
+# point the client at the harness's game directory, at a world to join, and at
+# the in-client UI test harness. They are properties (not environment variables)
+# so a plain `./gradlew runClient` without them keeps the checkout's own default
+# behaviour.
 GRADLE_WRAPPER = "gradlew"
 GRADLE_RUN_DIR_PROPERTY = "jechRunDir"
 GRADLE_QUICK_PLAY_PROPERTY = "jechQuickPlayWorld"
+# ``-PjechTest=<selection>`` is what switches the checkout's UI test harness on
+# and picks the scenarios to run; it is the *only* gate on that wiring, so a run
+# without it never loads the harness mod at all.
+GRADLE_UITEST_PROPERTY = "jechTest"
 # How a Gradle-launched client is identified in the process table: the client's
 # *working directory* is the game directory the run was given (both loaders launch
 # it there), and that is the only per-run fact available. The client's own argv
@@ -1008,27 +1013,30 @@ def launch(instance_id, *, root=None, log_path, extra_args=(), world=None, log=p
     return proc
 
 
-def gradle_command(checkout, task, game_dir, *, world=None, wrapper=GRADLE_WRAPPER):
+def gradle_command(checkout, task, game_dir, *, world=None, uitest=None, wrapper=GRADLE_WRAPPER):
     """The ``./gradlew`` argv that runs one env's client inside its checkout.
 
     ``--no-daemon``: a resident Gradle daemon would keep a several-hundred-megabyte
     JVM alive between runs, which this machine's memory budget does not want.
 
-    The game directory and the world are handed over as **project properties**,
-    not as game arguments: the checkout's own run configuration is what turns them
-    into ``gameDirectory``/``--quickPlaySingleplayer`` for whichever loader the
-    module uses. That is also why the property names live in the checkout's build
-    files — see the ``gradle`` backend section of README.md.
+    The game directory, the world and the UI test selection are handed over as
+    **project properties**, not as game arguments: the checkout's own run
+    configuration is what turns them into ``gameDirectory``/``--quickPlaySingleplayer``/
+    ``-Djech.uitest.run`` for whichever loader the module uses. That is also why the
+    property names live in the checkout's build files — see the ``gradle`` backend
+    section of README.md.
     """
     command = [str(Path(checkout) / wrapper), task, "--no-daemon",
                f"-P{GRADLE_RUN_DIR_PROPERTY}={game_dir}"]
     if world:
         command.append(f"-P{GRADLE_QUICK_PLAY_PROPERTY}={world}")
+    if uitest:
+        command.append(f"-P{GRADLE_UITEST_PROPERTY}={uitest}")
     return command
 
 
-def launch_gradle(checkout, task, game_dir, *, world=None, java_home=None, log_path, extra_args=(),
-                  log=print):
+def launch_gradle(checkout, task, game_dir, *, world=None, uitest=None, java_home=None, log_path,
+                  extra_args=(), log=print):
     """Start the checkout's Gradle run task in the background; returns the Popen.
 
     The client's JDK is *not* chosen here — the checkout's own toolchain decides
@@ -1039,7 +1047,7 @@ def launch_gradle(checkout, task, game_dir, *, world=None, java_home=None, log_p
     writes under the game directory, which the caller follows separately.
     """
     checkout = Path(checkout)
-    command = gradle_command(checkout, task, game_dir, world=world)
+    command = gradle_command(checkout, task, game_dir, world=world, uitest=uitest)
     command.extend(extra_args)
     Path(log_path).parent.mkdir(parents=True, exist_ok=True)
     env = dict(os.environ)

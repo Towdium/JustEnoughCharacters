@@ -26,7 +26,7 @@ python3 jt resolve tag:fabric --exclude tag:112
 python3 jt resolve --list <env>       # show the candidate files a description would match
 python3 jt resolve --no-download <env># pin only
 
-python3 jt seed-world 1.21.1-neoforge # build (or reuse) the world an env is launched into
+python3 jt seed-world 1.21.1-fabric   # build (or reuse) the world an env is launched into
 
 python3 jt run all --exclude tag:experimental    # build, isolate, launch, judge
 python3 jt run 1.12.2-forge-jei-legacy
@@ -160,7 +160,10 @@ with the task and the checkout).
 * **The world** travels the same way, as `-PjechQuickPlayWorld`; the checkout adds
   `--quickPlaySingleplayer <world>` to the client's program arguments. There is no
   Prism `--world` to lean on here, and the world must already be staged in the
-  game directory (isolation does that from the pack's overrides).
+  game directory (isolation does that from the pack's overrides). The one row that
+  runs a checkout's *UI test harness* (`1.21.1-neoforge`) passes it too, and the
+  harness run ignores it on purpose: that harness's own runner creates and pins
+  the level its scenarios are asserted against.
 * **Mods: `via`.** Each artifact (the mod under test and each `mods[]` entry) may
   carry `"via"`, which decides whether its jar is staged into the game
   directory's `mods/`:
@@ -233,6 +236,46 @@ with the task and the checkout).
   The failure is recognisable from the report's `exitCodeKind` (`check`, source
   `launcher`, exit code 1 with no session) plus the `EARLYDISPLAY` line in the
   game log — this is why the harness records the log next to every report.
+
+## The in-client UI test harness (`uitest`)
+
+An env may declare an **`uitest`** block, which runs the checkout's own in-client
+UI test harness — a dev-only mod that drives the real client through scripted
+scenarios and writes its own verdict — and judges the run by that verdict instead
+of by the log alone. It is the strongest thing a row can assert about a *client*:
+the scenarios type into JECh's search path and assert on what the engine actually
+matched, with screenshots as the evidence to look at.
+
+```json
+"uitest": { "selection": "tag:smoke,tag:jei" }
+```
+
+* **The block is the switch, and Gradle is where it lands.** The selection travels
+  to the checkout as the project property `-PjechTest=<selection>` (the only gate
+  on that wiring: without it the checkout loads no harness mod at all), so the
+  env's `gradle.task` has to be the harness's own run task — `:neoforge:runClientTests`
+  in the 1.21.1 checkout, which honours `-PjechRunDir` exactly as `runClient` does.
+  `uitest` without `gradle` is refused by the schema: there would be no run to pass
+  it to. Every term of the selection carries its own prefix (`tag:smoke,tag:jei`),
+  because a bare term is a scenario-*name* match.
+* **The client ends itself**, so the row declares **no `ready_when`**: the harness's
+  runner quits the game when the selection is done, and a stopping rule would end
+  the session mid-scenario and leave no report. It declares **no `world`** either,
+  for the reason above. Both absences are the correct shape for such a row and are
+  asserted in `selftest/test_envs.py`.
+* **The report is the evidence.** The harness writes `report.json`, `report.txt`,
+  `junit.xml` and `screenshots/<scenario>/` into `<game dir>/uitest` before it
+  quits; the `uitest_report` check reads the report and FAILs on anything that is
+  not a `PASS` with zero failed and errored scenarios — including a report that is
+  missing, unreadable, or of a schema this check does not know. The log checks
+  stay as well: they say the mod loaded.
+* **A failing scenario is red twice over.** The harness exits non-zero when a
+  scenario failed, so the checkout's own `verifyJechUiTest` fails the Gradle build,
+  and `uitest_report` fails on the report, naming the scenario that failed.
+
+`envs/README.md` has the block's schema and the row that uses it; the scenario
+vocabulary is documented where the scenarios live, in the checkout
+(`neoforge/src/uitest/resources/uitest/scenarios/README.md`).
 
 ## States
 
@@ -418,11 +461,15 @@ window has to be able to appear. Bootstrap checklist, in order:
   version, a seed is ~3.4 MB, and both are cached, so a job pays for them once if
   the cache is the runner's cache directory. `jt seed-world --exclude tag:skip`
   builds every seed the matrix needs before the game jobs start.
-* The `1.21.1` rows reach their JEI marker **only with the world loaded**, which
-  is why they declare `world` — and they are two of the six rows that launch
-  through the checkout's Gradle task rather than Prism (the other four are the
-  `moderner` rows, moved there on 2026-10-14); their world travels as
-  `-PjechQuickPlayWorld`. The `mv-1.19.2` rows cannot: quick
+* The `1.21.1` rows reach their JEI marker **only with the world loaded**.
+  `1.21.1-fabric` declares `world` and is one of the five rows that launch
+  through the checkout's Gradle task rather than Prism while still joining one
+  (the other four are the `moderner` rows, moved there on 2026-10-14); their
+  world travels as `-PjechQuickPlayWorld`. `1.21.1-neoforge` declares no world
+  and no `ready_when`: it runs the checkout's in-client UI test harness, whose
+  own runner creates the level the scenarios are asserted against and quits the
+  client when they are done (see "The in-client UI test harness" above). The
+  `mv-1.19.2` rows cannot join one: quick
   play needs
   1.20+, so they carry `skip` and a CI selection must decide explicitly whether to
   exclude them (`--exclude tag:skip`) or accept exit code 1 with the skips named.
@@ -432,8 +479,9 @@ window has to be able to appear. Bootstrap checklist, in order:
   1.19.2 client reaches the title screen and nothing else. See
   [envs/README.md](envs/README.md) for the run.) The `moderner` ×4 and
   `mv-1.20.1` ×2 rows are also launched into a world and were measured the same
-  way: ten envs in all stop at `goal-reached` on a real join, and only the two
-  `mv-1.19.2` rows are skipped.
+  way: seven envs in all stop at `goal-reached` on a real join, only the two
+  `mv-1.19.2` rows are skipped, and the harness row loads its own level rather
+  than joining one.
 * **Known limitation:** a production instance logs at INFO, so DEBUG-level lines
   are not in `latest.log`. The modern line's transformer hit line is exactly such
   a line (`Transformed <class> with <Transformer>`, logged at DEBUG by the

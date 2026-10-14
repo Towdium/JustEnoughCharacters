@@ -140,6 +140,25 @@ class OverridesTest(unittest.TestCase):
         self.assertEqual(staged.read_text(encoding="utf-8"), options.render())
         self.assertIn("onboardAccessibility:true", options.render())
 
+    def test_the_preset_carries_no_key_line(self):
+        """A ``key_*`` line in a version-less preset makes the client discard the whole file.
+
+        ``Options.dataFix`` reads a preset without a ``version:`` line as data-version 0 and runs
+        the legacy chain, where ``OptionsKeyLwjgl3Fix`` parses every ``key_*`` value as an LWJGL2
+        key id (an integer). A modern binding with a modifier is ``key.keyboard.f:CONTROL``, so the
+        parse throws, ``Options.load()`` catches it, and every option — ``lang`` included — stays
+        at its default. Measured 2026-10-14; the JEI focus key it was pinning is JEI's own
+        registered default anyway.
+        """
+        keys = options.keys()
+        self.assertEqual(keys, ["onboardAccessibility", "lang"])
+        for key in keys:
+            self.assertFalse(key.startswith("key_"), key)
+        text = options.render()
+        self.assertNotIn("key.keyboard.", text)
+        for line in text.splitlines():
+            self.assertEqual(line.count(":"), 1, f"{line!r} must be one key:value pair")
+
     def test_an_env_without_a_world_stages_no_saves_tree(self):
         result = self.build(support.mk_env())
         self.assertIsNone(result.world)
