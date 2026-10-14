@@ -1,5 +1,5 @@
 {
-  "_comment": "multiple-version line, MC 1.16.5 fabric, smoke env: no target mod, only fabric-api, to isolate JECh loading. This variant has no JEI integration at all. Launched through the checkout's own Gradle run task (gradle backend): architectury-loom's `:1.16.5:fabric:runClient` registers the module's own sources as the mod under test and carries fabric-api through `modApi`, so both ride that run's classpath (via=dev-classpath) and no jar is staged into mods/. The wrapper is Gradle 8.1.1, which cannot run on the machine's default JDK (JBR 25), so daemon_java is 17; the client itself is the module's own Java 8 toolchain.",
+  "_comment": "multiple-version line, MC 1.16.5 fabric, smoke env: no target mod, only fabric-api, to isolate JECh loading. This variant has no JEI integration at all. Launched through the checkout's own Gradle run task (gradle launch): architectury-loom's `:1.16.5:fabric:runClient` registers the module's own sources as the mod under test and carries fabric-api through `modApi`, so both ride that run's classpath (via=dev-classpath) and no jar is staged into mods/. The wrapper is Gradle 8.1.1, which cannot run on the machine's default JDK (JBR 25), so daemon_java is 17; the client itself is the module's own Java 8 toolchain.",
   "name": "mv-1.16.5-fabric",
   "tags": [
     "mv",
@@ -62,13 +62,5 @@
   "ready_when": {
     "value": "Sound engine started"
   },
-  "timeout_sec": 600,
-  "jvm": {
-    "max_mem_mb": 3072,
-    "min_mem_mb": 1024,
-    "window": [
-      1280,
-      720
-    ]
-  }
+  "timeout_sec": 600
 }

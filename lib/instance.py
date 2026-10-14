@@ -1,19 +1,6 @@
-"""Game directory isolation and the two launch backends.
+"""The game directory, its isolation, and the launch layer.
 
-The Prism half follows the measured Prism CLI behaviour recorded in the
-``prism-pack-lifecycle`` skill:
-
-* ``-I`` must receive a **local** file; handing Prism a url makes it open dialogs
-  and hang or abort with no one to click them.
-* ``-d <root>`` isolates the whole data root, which is why jt can keep its
-  Prism instances under ``<JT_HOME>`` and never touch the user's own launcher.
-* a new instance id is found by diffing the instances directory before and after
-  the import (``name=`` in ``instance.cfg`` is only a fallback).
-* ``launch`` is zero-interaction and reuses the logged-in account of that root.
-* ``latest.log`` may belong to a previous session, so a session is only accepted
-  when the file is newer than the run's start timestamp.
-
-The gradle half launches through the checkout's own run task
+A run's client is started by the checkout's own Gradle run task
 (``./gradlew <task> --no-daemon -PjechRunDir=<gameDir>``): the game directory is
 handed to the build, the client boots inside it, and ``latest.log`` is read from
 ``<gameDir>/logs``. Gradle passes the client's own arguments through an
@@ -23,12 +10,18 @@ client process is identified by its **working directory** instead (``lsof -a -p
 ``GradleGameTracker`` does — search once per second until the client appears,
 then only re-check liveness.
 
+Isolation lives here too, because the game directory is an input the harness
+*owns* rather than one it inherits: every run rebuilds it from the pack (``mods/``
+re-synced, ``config/`` archived then emptied, ``saves/`` and ``logs/`` emptied,
+the pack's non-mod overrides re-staged), so no state a previous run left behind
+can influence a verdict.
+
 Machine-specific tool locations live here and nowhere else. The one hard-coded
 absolute path is ``/usr/libexec/java_home``, the macOS JDK lookup helper,
 overridable through ``$JT_JAVA_HOME_CMD``; ``lsof`` (needed to name the client
-process on the gradle path) is resolved from ``$JT_LSOF`` and then ``$PATH``.
-Both are platform tool paths, not project paths, and they are the only way to
-honour the env's ``java.version`` and to identify the client on this machine.
+process) is resolved from ``$JT_LSOF`` and then ``$PATH``. Both are platform tool
+paths, not project paths, and they are the only way to honour the env's
+``java.version`` and to identify the client on this machine.
 """
 
 from __future__ import annotations
@@ -43,10 +36,7 @@ from pathlib import Path
 
 from . import paths
 from .errors import ConfigError, JtError, ToolMissingError
-from .pack import modset_hash as _modset_hash
-from .util import atomic_write_json, atomic_write_text, load_json, now_iso, sanitize_name
 
-PRISM_LAUNCHER_ENV = "JT_PRISM_LAUNCHER"
 JAVA_HOME_CMD_ENV = "JT_JAVA_HOME_CMD"
 JAVA_HOME_ENV_TEMPLATE = "JT_JAVA_{version}_HOME"
 # The one absolute path in this codebase: macOS's JDK lookup helper.
@@ -66,15 +56,9 @@ def java_version_queries(version):
         yield f"1.{version}"
 
 
-INSTANCE_CFG = "instance.cfg"
-PACK_JSON = "mmc-pack.json"
-GAME_DIR_CANDIDATES = ("minecraft", ".minecraft")
 LOG_NAME = "latest.log"
-STATE_VERSION = 1
-IMPORT_TIMEOUT_SEC = 1800
-IMPORT_GRACE_SEC = 2.0
 
-# The Gradle backend's contract with the checkout's build files: the wrapper it
+# The launch layer's contract with the checkout's build files: the wrapper it
 # runs, and the project properties the checkout's run configuration reads to
 # point the client at the harness's game directory, at a world to join, and at
 # the in-client UI test harness. They are properties (not environment variables)
@@ -87,7 +71,7 @@ GRADLE_QUICK_PLAY_PROPERTY = "jechQuickPlayWorld"
 # and picks the scenarios to run; it is the *only* gate on that wiring, so a run
 # without it never loads the harness mod at all.
 GRADLE_UITEST_PROPERTY = "jechTest"
-# How a Gradle-launched client is identified in the process table: the client's
+# How the Gradle-launched client is identified in the process table: the client's
 # *working directory* is the game directory the run was given (both loaders launch
 # it there), and that is the only per-run fact available. The client's own argv
 # cannot carry one — ModDevGradle passes every JVM and program argument through
@@ -97,44 +81,8 @@ GRADLE_UITEST_PROPERTY = "jechTest"
 # exited" and abandon a run that had not launched anything yet.
 LSOF_ENV = "JT_LSOF"
 MIN_GRADLE_GAME_SEARCH_SEC = 1.0
-
-
-# The Prism/MultiMC component uid that carries each loader, and whether the
-# component version is the bare loader version or the ``<mc>-<loader>`` string
-# (the same split the mrpack dependency table in envs.py uses).
-LOADER_COMPONENT_UIDS = {
-    "forge": "net.minecraftforge",
-    "neoforge": "net.neoforged",
-    "fabric": "net.fabricmc.fabric-loader",
-    "quilt": "org.quiltmc.quilt-loader",
-}
-LOADER_COMPONENT_NAMES = {
-    "forge": "Forge",
-    "neoforge": "NeoForge",
-    "fabric": "Fabric Loader",
-    "quilt": "Quilt Loader",
-}
-PACK_FORMAT_VERSION = 1
-
-LOGGED_OFF_HINT = (
-    "Prism must already have a Minecraft account configured in this data root "
-    "(jt never touches credentials); a launcher log tail is kept with the run"
-)
-
-
-class InstanceInfo:
-    def __init__(self, *, instance_id, root, reused, imported, modset_hash, pack_hash, cfg=None):
-        self.instance_id = instance_id
-        self.root = Path(root)
-        self.reused = bool(reused)
-        self.imported = bool(imported)
-        self.modset_hash = modset_hash
-        self.pack_hash = pack_hash
-        self.cfg = cfg or {}
-
-    def __repr__(self):
-        return (f"InstanceInfo({self.instance_id!r}, reused={self.reused}, "
-                f"imported={self.imported})")
+# How long a SIGTERMmed process tree is given to go away before it is SIGKILLed.
+TERMINATION_GRACE_SEC = 6.0
 
 
 class IsolationReport:
@@ -176,63 +124,8 @@ class IsolationReport:
 # ---------------------------------------------------------------------------
 
 
-def prism_launcher():
-    """The Prism CLI executable: ``$JT_PRISM_LAUNCHER`` first, then ``$PATH``."""
-    configured = os.environ.get(PRISM_LAUNCHER_ENV)
-    if configured:
-        candidate = Path(os.path.expanduser(configured))
-        if not candidate.is_file():
-            raise ToolMissingError(
-                f"{PRISM_LAUNCHER_ENV} points at {configured!r}, which is not an executable file"
-            )
-        return str(candidate)
-    found = shutil.which("prismlauncher")
-    if found:
-        return found
-    raise ToolMissingError(
-        "prismlauncher was not found on PATH. Install Prism Launcher, or set "
-        f"{PRISM_LAUNCHER_ENV} to its command-line executable — on macOS that binary lives "
-        "inside the application bundle, under Contents/MacOS/prismlauncher."
-    )
-
-
-def instances_dir(root=None):
-    return paths.instances_dir(root)
-
-
-def instance_dir(instance_id, root=None):
-    return instances_dir(root) / instance_id
-
-
-def game_dir(instance_id, root=None):
-    """The instance's game directory: modern Prism uses ``minecraft``."""
-    base = instance_dir(instance_id, root)
-    for name in GAME_DIR_CANDIDATES:
-        candidate = base / name
-        if candidate.is_dir():
-            return candidate
-    return base / GAME_DIR_CANDIDATES[0]
-
-
-def instance_cfg_path(instance_id, root=None):
-    return instance_dir(instance_id, root) / INSTANCE_CFG
-
-
-def latest_log_path(instance_id, root=None):
-    return game_dir(instance_id, root) / "logs" / LOG_NAME
-
-
-def log_path_in(minecraft_dir):
-    """``<game dir>/logs/latest.log`` for a game directory the caller owns.
-
-    The Prism backend asks :func:`latest_log_path` (it has an instance id); the
-    Gradle backend only has a directory, so both end up reading the same file.
-    """
-    return Path(minecraft_dir) / "logs" / LOG_NAME
-
-
 def run_game_dir(run_dir):
-    """The game directory a Gradle-backed run gets: ``<runs>/<id>/game``.
+    """The game directory a run gets: ``<runs>/<id>/game``.
 
     Under the run's own directory on purpose: the game directory is an input the
     harness owns and rewrites on every run (mods, config, saves, options.txt), and
@@ -242,105 +135,9 @@ def run_game_dir(run_dir):
     return Path(run_dir) / "game"
 
 
-def list_instances(root=None):
-    """``{instance id: directory}`` for every instance in this data root."""
-    directory = instances_dir(root)
-    found = {}
-    if not directory.is_dir():
-        return found
-    for entry in sorted(directory.iterdir()):
-        if entry.is_dir() and not entry.name.startswith(".") and (entry / INSTANCE_CFG).is_file():
-            found[entry.name] = entry
-    return found
-
-
-# ---------------------------------------------------------------------------
-# instance.cfg
-# ---------------------------------------------------------------------------
-
-
-def read_cfg(instance_id, root=None):
-    path = instance_cfg_path(instance_id, root)
-    if not path.is_file():
-        return ""
-    return path.read_text(encoding="utf-8", errors="replace")
-
-
-def parse_cfg(text):
-    """Prism's ``instance.cfg`` is a flat key=value file; values are raw."""
-    values = {}
-    for line in text.splitlines():
-        stripped = line.strip()
-        if not stripped or stripped.startswith("#") or "=" not in stripped:
-            continue
-        key, _, value = stripped.partition("=")
-        values[key.strip()] = value
-    return values
-
-
-def set_cfg_values(text, values):
-    """Rewrite ``key=value`` lines, appending the ones that are absent.
-
-    Prism reads everything after ``=`` verbatim (``JvmArgs`` is split by the
-    launcher's own argument splitter), so values are written unquoted and any
-    surrounding quotes the file already had are dropped.
-    """
-    lines = text.splitlines()
-    remaining = dict(values)
-    out = []
-    for line in lines:
-        stripped = line.strip()
-        if stripped and not stripped.startswith("#") and "=" in stripped:
-            key = stripped.partition("=")[0].strip()
-            if key in remaining:
-                out.append(f"{key}={remaining.pop(key)}")
-                continue
-        out.append(line)
-    had_trailing_newline = text.endswith("\n") or not text
-    for key, value in remaining.items():
-        out.append(f"{key}={value}")
-    result = "\n".join(entry for entry in out if entry is not None)
-    if had_trailing_newline or result:
-        result += "\n"
-    return result
-
-
-def cfg_values_for(env, *, java_path):
-    width, height = env.jvm.window
-    return {
-        "JavaPath": str(java_path),
-        "OverrideJavaLocation": "true",
-        "JvmArgs": env.jvm.jvm_args(),
-        "OverrideJavaArgs": "true",
-        "MinMemAlloc": str(env.jvm.min_mem_mb),
-        "MaxMemAlloc": str(env.jvm.max_mem_mb),
-        "OverrideMemory": "true",
-        "MinecraftWinWidth": str(width),
-        "MinecraftWinHeight": str(height),
-        "OverrideWindow": "true",
-        "LaunchMaximized": "false",
-    }
-
-
-def configure_instance(instance_id, env, *, root=None, log=None, java_home=None):
-    """Apply the env's Java, memory and window settings to the instance."""
-    home = Path(java_home) if java_home else java_home_for(env.java_version)
-    java_path = home / "bin" / "java"
-    if not java_path.is_file():
-        raise ConfigError(
-            f"java {env.java_version}: {paths.display(java_path)} does not exist "
-            f"(resolved via {'$' + JAVA_HOME_CMD_ENV} or the platform JDK lookup)"
-        )
-    path = instance_cfg_path(instance_id, root)
-    original = path.read_text(encoding="utf-8", errors="replace") if path.is_file() else ""
-    values = cfg_values_for(env, java_path=java_path)
-    updated = set_cfg_values(original, values)
-    atomic_write_text(path, updated)
-    if log:
-        log(f"instance {instance_id}: java={paths.display(java_path)} "
-            f"mem={values['MinMemAlloc']}-{values['MaxMemAlloc']}MB "
-            f"window={values['MinecraftWinWidth']}x{values['MinecraftWinHeight']}")
-    return dict(values)
+def log_path_in(minecraft_dir):
+    """``<game dir>/logs/latest.log`` for a game directory the caller owns."""
+    return Path(minecraft_dir) / "logs" / LOG_NAME
 
 
 # ---------------------------------------------------------------------------
@@ -429,184 +226,6 @@ def read_java_major(home):
 
 
 # ---------------------------------------------------------------------------
-# state.json
-# ---------------------------------------------------------------------------
-
-
-def read_state():
-    path = paths.state_path()
-    if not path.is_file():
-        return {"version": STATE_VERSION, "envs": {}}
-    try:
-        state = load_json(path, what="state.json")
-    except JtError:
-        # A corrupt state file costs one re-import, never a failed run.
-        return {"version": STATE_VERSION, "envs": {}, "warning": f"state.json was unreadable"}
-    if not isinstance(state, dict) or not isinstance(state.get("envs"), dict):
-        return {"version": STATE_VERSION, "envs": {}}
-    state["version"] = STATE_VERSION
-    return state
-
-
-def write_state(state):
-    atomic_write_json(paths.state_path(), state)
-    return paths.state_path()
-
-
-def modset_hash(env, resolved):
-    return _modset_hash(env, resolved)
-
-
-def instance_id_for(env, digest):
-    """The deterministic Prism instance id for one env and one modset.
-
-    The id is the env name plus the modset digest, so the same (env, modset)
-    always maps to the same instance directory and a changed modset maps to a
-    different one. That is what makes the import idempotent: a run interrupted
-    mid-import leaves a directory whose name the next run can recognise and
-    clean before re-importing, and a stale instance can never be silently
-    reused for a different mod set.
-    """
-    return sanitize_name(f"{env.name}-{digest[:12]}")
-
-
-def ensure_instance(env, resolved, pack_result, *, root=None, refresh=False, log=print):
-    """Reuse the env's instance when its modset is unchanged, else import anew."""
-    root = Path(root) if root else paths.prism_root()
-    root.mkdir(parents=True, exist_ok=True)
-    state = read_state()
-    entry = (state.get("envs") or {}).get(env.name) or {}
-    digest = modset_hash(env, resolved)
-    desired_id = instance_id_for(env, digest)
-    if not refresh and entry.get("instance_id") == desired_id and entry.get("modset_hash") == digest:
-        existing = instance_dir(desired_id, root)
-        if (existing / INSTANCE_CFG).is_file():
-            # Re-apply the env's java/memory/window values even on reuse: the env
-            # file is the authority for those, and it may have changed without
-            # changing the modset (which is what keys the reuse).
-            cfg = configure_instance(desired_id, env, root=root, log=log)
-            log(f"instance {desired_id}: reused (modset {digest[:12]} unchanged)")
-            return InstanceInfo(instance_id=desired_id, root=root, reused=True,
-                                imported=False, modset_hash=digest,
-                                pack_hash=pack_result.pack_hash, cfg=cfg)
-        log(f"instance {desired_id}: recorded but missing on disk, re-creating")
-    elif entry.get("instance_id"):
-        log(f"instance {entry['instance_id']}: modset changed "
-            f"({str(entry.get('modset_hash'))[:12]} -> {digest[:12]}) or naming changed, "
-            f"importing a fresh instance {desired_id}")
-
-    # A directory at the target id that state.json does not point at is debris
-    # from an instance that was never recorded (an interrupted creation). Prism
-    # would then refuse the id, so the debris is removed here, in python — never
-    # with a shell rm that may be denied.
-    leftover = instance_dir(desired_id, root)
-    if leftover.exists() and entry.get("instance_id") != desired_id:
-        log(f"instance {desired_id}: leftover directory not recorded in state.json; "
-            "removing it before re-creating the instance")
-        shutil.rmtree(leftover, ignore_errors=True)
-
-    instance_id = materialize_instance(env, desired_id, root=root, log=log)
-    cfg = cfg_values_for(env, java_path=java_home_for(env.java_version) / "bin" / "java")
-    state.setdefault("envs", {})[env.name] = {
-        "instance_id": instance_id,
-        "modset_hash": digest,
-        "pack_hash": pack_result.pack_hash,
-        "mc": env.mc,
-        "loader": {"type": env.loader.type, "version": env.loader.version},
-        "java": env.java_version,
-        "updated_at": now_iso(),
-    }
-    write_state(state)
-    log(f"state: {paths.display(paths.state_path())} maps {env.name} -> {instance_id}")
-    return InstanceInfo(instance_id=instance_id, root=root, reused=False, imported=True,
-                        modset_hash=digest, pack_hash=pack_result.pack_hash, cfg=cfg)
-
-
-def component_version(env, uid):
-    """The version string Prism's metadata expects for one component.
-
-    The two loaders that ship an ``<mc>-<loader>`` string (legacy Forge) differ
-    from the mrpack dependency spelling: the pack index wants
-    ``1.12.2-14.23.5.2864``, while ``net.minecraftforge``'s component is
-    ``14.23.5.2864`` and a prefixed one 404s against Prism's metadata.
-    """
-    version = env.loader.version
-    if uid == "net.minecraftforge":
-        prefix = f"{env.mc}-"
-        if version.startswith(prefix):
-            version = version[len(prefix):]
-    return version
-
-
-def pack_json(env):
-    """The ``mmc-pack.json`` body for one env: Minecraft plus its loader.
-
-    Prism resolves the rest of the chain (LWJGL, assets, natives) from these two
-    components, so a run needs no pack import at all. The ``cached*`` keys are
-    what Prism itself writes and what its version listing reads without a
-    download; omitting them leaves the instance nameless in the launcher.
-    """
-    try:
-        uid = LOADER_COMPONENT_UIDS[env.loader.type]
-    except KeyError:
-        raise ConfigError(
-            f"loader {env.loader.type!r} has no Prism component uid "
-            f"(known: {', '.join(sorted(LOADER_COMPONENT_UIDS))})"
-        )
-    version = component_version(env, uid)
-    return {
-        "formatVersion": PACK_FORMAT_VERSION,
-        "components": [
-            {"uid": "net.minecraft", "version": env.mc,
-             "cachedName": "Minecraft", "cachedVersion": env.mc, "important": True},
-            {"uid": uid, "version": version,
-             "cachedName": LOADER_COMPONENT_NAMES[env.loader.type],
-             "cachedVersion": version,
-             "cachedRequires": [{"uid": "net.minecraft", "equals": env.mc}]},
-        ],
-    }
-
-
-def materialize_instance(env, instance_id, *, root=None, java_home=None, log=print):
-    """Create the instance directory directly, then return its id.
-
-    jt used to hand a local ``.mrpack`` to ``prismlauncher -I`` and diff the
-    instances directory. On Prism 11 that path goes through
-    ``MainWindow::addInstance()`` and opens the modal New Instance dialog, and
-    the CLI keeps the main window open afterwards instead of exiting — a
-    headless run can never complete it. Writing the two files Prism reads
-    (``instance.cfg`` and ``mmc-pack.json``) is the same thing the import does
-    without its UI: Prism's own launch task resolves and downloads whatever the
-    version chain still needs. Mods are staged by :func:`isolate`, not here.
-    """
-    root = Path(root) if root else paths.prism_root()
-    root.mkdir(parents=True, exist_ok=True)
-    directory = instance_dir(instance_id, root)
-    if directory.exists():
-        # Callers clear debris first; anything still here would be overwritten.
-        raise ConfigError(f"instance {instance_id}: {paths.display(directory)} already exists")
-    minecraft = directory / GAME_DIR_CANDIDATES[0]
-    (minecraft / "mods").mkdir(parents=True, exist_ok=True)
-
-    home = Path(java_home) if java_home else java_home_for(env.java_version)
-    java = home / "bin" / "java"
-    if not java.is_file():
-        raise ConfigError(
-            f"java {env.java_version}: {paths.display(java)} does not exist "
-            f"(resolved via {'$' + JAVA_HOME_CMD_ENV} or the platform JDK lookup)"
-        )
-    values = {"ConfigVersion": "1.3", "InstanceType": "OneSix", "iconKey": "default",
-              "name": instance_id, "AutomaticJava": "false"}
-    values.update(cfg_values_for(env, java_path=java))
-    text = "[General]\n" + "\n".join(f"{key}={value}" for key, value in values.items()) + "\n"
-    atomic_write_text(directory / INSTANCE_CFG, text)
-    atomic_write_json(directory / PACK_JSON, pack_json(env))
-    log(f"instance {instance_id}: materialized (mc {env.mc}, {env.loader.type} "
-        f"{env.loader.version}, java {paths.display(home)})")
-    return instance_id
-
-
-# ---------------------------------------------------------------------------
 # isolation
 # ---------------------------------------------------------------------------
 
@@ -645,24 +264,22 @@ def archive_dir(source, dest):
     return count
 
 
-def isolate(instance_id, resolved, run_dir, *, root=None, pack_result=None, game_dir_path=None,
-            log=print):
-    """Make the instance match the pack exactly, discarding every previous run.
+def isolate(label, resolved, run_dir, *, game_dir_path, pack_result=None, log=print):
+    """Make the game directory match the pack exactly, discarding every previous run.
 
     Every run re-syncs ``mods/`` from the pack (delete-then-stage), archives then
     empties ``config/``, empties ``saves/`` and ``logs/``, and re-stages the pack's
     non-mod overrides — the ``options.txt`` preset and the env's world seed — into
     the game directory. Nothing here depends on the previous run's state, so a
-    stale instance can never influence a verdict: a world a previous run played in
+    stale directory can never influence a verdict: a world a previous run played in
     is replaced by the seed, and an ``options.txt`` the game rewrote is replaced by
     the preset.
 
-    ``game_dir_path`` overrides where that directory is. The Prism backend leaves
-    it out (the instance id decides it); the Gradle backend has no instance and
-    passes the directory the run was given.
+    ``label`` is only the name the log lines carry (the env's run label);
+    ``game_dir_path`` is the directory the run was given.
     """
     run_dir = Path(run_dir)
-    mc = Path(game_dir_path) if game_dir_path is not None else game_dir(instance_id, root)
+    mc = Path(game_dir_path)
     notes = []
 
     # Only the artifacts that travel as files: an artifact the checkout's Gradle
@@ -705,9 +322,9 @@ def isolate(instance_id, resolved, run_dir, *, root=None, pack_result=None, game
         config_archive=config_archive, saves_cleared=saves_cleared, logs_cleared=logs_cleared,
         overrides_staged=overrides_staged, notes=notes,
     )
-    log(f"isolation [{instance_id}]: {report.summary()}")
+    log(f"isolation [{label}]: {report.summary()}")
     for note in notes:
-        log(f"isolation [{instance_id}]: note: {note}")
+        log(f"isolation [{label}]: note: {note}")
     return report
 
 
@@ -765,32 +382,6 @@ def process_table():
             continue
         table[pid] = (ppid, parts[2] if len(parts) > 2 else "")
     return table
-
-
-def game_pids(instance_id, *, root=None, exclude=()):
-    """Pids of the game JVM for this instance.
-
-    Matched on the instance's own directory appearing in the command line, not on
-    a name pattern: ``pgrep -f`` also matches the searching process, which is
-    exactly the trap the pack-lifecycle skill warns about. The *game directory*
-    is the wrong key: Prism hands the JVM ``-Djava.library.path=<instance>/natives``
-    and ``--gameDir`` only for some loaders, so a match on ``<instance>/minecraft``
-    finds nothing and the harness reads a running game as "never started". Both
-    the instance directory and its game directory are therefore accepted.
-    """
-    keys = {str(instance_dir(instance_id, root))}
-    game = str(game_dir(instance_id, root))
-    if game not in keys:
-        keys.add(game)
-    excluded = {int(pid) for pid in exclude} | {os.getpid()}
-    pids = []
-    for pid, (_ppid, command) in process_table().items():
-        if pid in excluded or not any(key in command for key in keys):
-            continue
-        lowered = command.casefold()
-        if "java" in lowered or "prism" in lowered:
-            pids.append(pid)
-    return sorted(pids)
 
 
 def lsof_command():
@@ -851,12 +442,10 @@ def pid_alive(pid):
 def gradle_game_pids(launch_pid, game_dir, *, command=None):
     """Pids of the game JVM a Gradle run task started, matched on its working directory.
 
-    :func:`game_pids` matches the *instance directory* in a process's command line;
-    a Gradle run has no such argument to match (see the module comments). What it
-    does have is the client's working directory, which both loaders set to the game
-    directory the run was given — so the game is "a java process under this
-    launcher whose cwd is this run's game directory", the same *kind* of evidence
-    the Prism backend uses (a path only this run has).
+    A Gradle run has no argument in the process table that names this run: the game
+    is "a java process under this launcher whose cwd is this run's game directory",
+    which both loaders set — so the identity is a path only this run has, never a
+    name.
 
     A name heuristic was tried first and was wrong in a way that mattered: "any
     java descendant that is not Gradle" also matched the short-lived toolchain
@@ -897,8 +486,7 @@ class GradleGameTracker:
     The search costs an ``lsof`` per java candidate per poll, so it runs until the
     client is found (with a floor between attempts) and never again: after that the
     already-known pids are re-checked with signal 0. ``pids()`` is what the watch
-    loop calls, so its answer has the same meaning as ``instance.game_pids`` on the
-    Prism side.
+    loop calls.
     """
 
     def __init__(self, launch_pid, game_dir, *, command=None,
@@ -942,7 +530,7 @@ def descendants(pids, table=None):
     return wanted
 
 
-def kill_process_tree(pids, *, log=print, grace=IMPORT_GRACE_SEC * 3):
+def kill_process_tree(pids, *, log=print, grace=TERMINATION_GRACE_SEC):
     """SIGTERM the given pids and their descendants, then SIGKILL the survivors."""
     table = process_table()
     targets = descendants(pids, table)
@@ -985,34 +573,6 @@ def _signal(pid, signum):
 # ---------------------------------------------------------------------------
 
 
-def launch(instance_id, *, root=None, log_path, extra_args=(), world=None, log=print):
-    """Start the instance in the background; returns the launcher Popen.
-
-    ``world`` selects Prism's own *join world on launch* option (``-w/--world``),
-    which is what makes the client load a world instead of stopping at the title
-    screen. It is a first-class Prism option, not a game-argument passthrough:
-    Prism 11 builds the version-appropriate game argument for it itself (it knows
-    ``--quickPlaySingleplayer``), whereas a bare ``-- <args>`` is parsed by Qt as
-    "everything after this is a positional url" and turns the trailing arguments
-    into resource *imports*, which is not what a launch wants.
-    """
-    root = Path(root) if root else paths.prism_root()
-    exe = prism_launcher()
-    command = [exe, "-d", str(root), "--launch", instance_id]
-    if world:
-        command.extend(["--world", world])
-    command.extend(extra_args)
-    Path(log_path).parent.mkdir(parents=True, exist_ok=True)
-    handle = open(log_path, "ab", buffering=0)
-    kwargs = {}
-    if os.name == "posix":
-        kwargs["start_new_session"] = True
-    proc = subprocess.Popen(command, stdin=subprocess.DEVNULL, stdout=handle, stderr=subprocess.STDOUT,
-                            **kwargs)
-    log(f"launch: {' '.join(command)} (pid {proc.pid}, log {paths.display(log_path)})")
-    return proc
-
-
 def gradle_command(checkout, task, game_dir, *, world=None, uitest=None, wrapper=GRADLE_WRAPPER):
     """The ``./gradlew`` argv that runs one env's client inside its checkout.
 
@@ -1023,8 +583,8 @@ def gradle_command(checkout, task, game_dir, *, world=None, uitest=None, wrapper
     **project properties**, not as game arguments: the checkout's own run
     configuration is what turns them into ``gameDirectory``/``--quickPlaySingleplayer``/
     ``-Djech.uitest.run`` for whichever loader the module uses. That is also why the
-    property names live in the checkout's build files — see the ``gradle`` backend
-    section of README.md.
+    property names live in the checkout's build files — see the ``gradle`` section
+    of README.md.
     """
     command = [str(Path(checkout) / wrapper), task, "--no-daemon",
                f"-P{GRADLE_RUN_DIR_PROPERTY}={game_dir}"]
@@ -1077,10 +637,9 @@ class LogFollower:
     """Incremental reader for ``latest.log``.
 
     The file may still be the previous session's; a session is only accepted once
-    its mtime proves it was (re)written after the run started, which is the trap
-    the pack-lifecycle skill records. Reads are incremental so a long run does not
-    re-read its own log, and the whole capture is kept for the checks and for
-    evidence next to the report.
+    its mtime proves it was (re)written after the run started. Reads are
+    incremental so a long run does not re-read its own log, and the whole capture
+    is kept for the checks and for evidence next to the report.
     """
 
     def __init__(self, log_path, started_at, *, poll=0.5):

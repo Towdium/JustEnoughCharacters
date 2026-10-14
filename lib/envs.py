@@ -19,23 +19,19 @@ from .util import atomic_write_text, dump_json_text, load_json
 LOADER_TYPES = ("forge", "neoforge", "fabric", "quilt")
 MOD_SOURCES = ("curseforge", "modrinth")
 JECH_SOURCES = ("local-build", "curseforge", "modrinth")
-# Where an artifact's jar ends up. ``game-dir`` copies it into the instance's
-# ``mods/`` (what a production instance needs); ``dev-classpath`` stages nothing
-# because the checkout's own Gradle run already carries it — either as the mod
-# under test (the source set the run config registers) or as a declared
-# dependency (``localRuntime`` / ``modImplementation``), and a second copy of the
-# same mod id in ``mods/`` is a double load, not a second opinion.
+# Where an artifact's jar ends up. ``game-dir`` copies it into the game
+# directory's ``mods/`` (what a non-dev launch needs); ``dev-classpath``
+# stages nothing because the checkout's own Gradle run already carries it —
+# either as the mod under test (the source set the run config registers) or as a
+# declared dependency (``localRuntime`` / ``modImplementation``), and a second
+# copy of the same mod id in ``mods/`` is a double load, not a second opinion.
 MOD_VIA = ("game-dir", "dev-classpath")
 DEFAULT_VIA = "game-dir"
-# Which launch layer an env asks for: the Prism instance the harness builds, or a
-# Gradle run task inside the checkout under test (``env.gradle``).
-PRISM_BACKEND = "prism"
-GRADLE_BACKEND = "gradle"
 CHECK_TYPES = ("log_contains", "log_not_contains", "log_regex", "no_crash_reports", "exit_code_zero",
                "file_exists", "uitest_report")
 CHECK_VALUE_REQUIRED = ("log_contains", "log_not_contains", "log_regex", "file_exists")
 
-# Checks whose value is a path inside the instance's minecraft directory, and
+# Checks whose value is a path inside the run's game directory, and
 # therefore must stay relative: an absolute value would silently escape it.
 # ``uitest_report``'s is optional and its default lives in checks.py; the rest
 # require one.
@@ -55,9 +51,6 @@ MRPACK_DEPENDENCY_KEYS = {
 }
 
 DEFAULT_TIMEOUT_SEC = 600
-DEFAULT_MAX_MEM_MB = 3072
-DEFAULT_MIN_MEM_MB = 1024
-DEFAULT_WINDOW = (1280, 720)
 
 
 class LoaderSpec:
@@ -69,25 +62,6 @@ class LoaderSpec:
         return f"LoaderSpec({self.type!r}, {self.version!r})"
 
 
-class JvmSpec:
-    def __init__(self, max_mem_mb, min_mem_mb, args, window):
-        self.max_mem_mb = max_mem_mb
-        self.min_mem_mb = min_mem_mb
-        self.args = args
-        self.window = window
-
-    def jvm_args(self):
-        """Only the *extra* JVM arguments.
-
-        Heap size is carried by Prism's own ``MinMemAlloc``/``MaxMemAlloc`` keys,
-        never by ``-Xmx``/``-Xms`` in ``JvmArgs``: Prism treats those two in
-        ``JvmArgs`` as a manual override and pops a modal warning dialog on every
-        launch, which no headless run can dismiss. So ``jvm_args`` returns just
-        the env's ``args`` (usually empty) and memory travels in its own keys.
-        """
-        return " ".join(self.args)
-
-
 class ModSpec:
     def __init__(self, name, source, slug, describe, pin, raw, via=DEFAULT_VIA):
         self.name = name
@@ -95,7 +69,7 @@ class ModSpec:
         self.slug = slug
         self.describe = describe
         self.pin = pin
-        # ``game-dir`` (default) stages the jar into the instance's mods/;
+        # ``game-dir`` (default) stages the jar into the game directory's mods/;
         # ``dev-classpath`` records it but stages nothing, because the checkout's
         # Gradle run already provides it.
         self.via = via
@@ -107,14 +81,14 @@ class ModSpec:
 
 
 class GradleSpec:
-    """The optional ``env.gradle`` block: launch through a Gradle run task.
+    """The ``env.gradle`` block: launch through a Gradle run task.
 
     An env that declares this block is executed by running a Gradle task inside
-    the JECh checkout under test (``./gradlew <task>``) instead of by launching a
-    Prism instance. The checkout's own run configuration owns the client's JDK
-    (its toolchain) and its runtime classpath; the harness owns the game
-    directory, the isolation around it and the judging. An env without the block
-    keeps the Prism backend, untouched.
+    the JECh checkout under test (``./gradlew <task>``). The checkout's own run
+    configuration owns the client's JDK (its toolchain) and its runtime
+    classpath; the harness owns the game directory, the isolation around it and
+    the judging. The block is **required** for every env that is not declared
+    ``skip``: it is the only launch layer (see :func:`parse_env`).
 
     * ``task`` — the Gradle task to run, spelled from the build root
       (``:neoforge:runClient``), never a bare ``runClient``: the build root is the
@@ -169,10 +143,10 @@ class UiTestSpec:
 class ReadyWhen:
     """The optional log line that marks the game as *ready* for this env.
 
-    A production instance has no in-game runner, so nothing makes the game quit
+    A client launched by a checkout's run task has no in-game runner, so nothing makes it quit
     on its own. Declaring ``ready_when`` gives the runner a stopping rule: once
     that line (together with every ``log_contains`` marker) has appeared in
-    ``latest.log``, the runner ends the instance's process tree itself and
+    ``latest.log``, the runner ends the game's process tree itself and
     judges the run, instead of waiting for a natural exit or the watchdog.
     """
 
@@ -199,7 +173,7 @@ class WorldSpec:
 
     @property
     def saves_path(self):
-        """Where the world sits inside the instance's ``minecraft`` directory."""
+        """Where the world sits inside the run's game directory."""
         return f"saves/{self.name}"
 
     def __repr__(self):
@@ -248,7 +222,7 @@ class Env:
     """One parsed, validated env file."""
 
     def __init__(self, *, name, tags, mc, loader, java_version, jech, mods, checks,
-                 timeout_sec, jvm, path, raw, ready_when=None, skip=None, world=None,
+                 timeout_sec, path, raw, ready_when=None, skip=None, world=None,
                  gradle=None, uitest=None):
         self.name = name
         # An env that declares ``skip`` also carries the ``skip`` tag, so a
@@ -263,12 +237,12 @@ class Env:
         self.mods = mods
         self.checks = checks
         self.timeout_sec = timeout_sec
-        self.jvm = jvm
         self.ready_when = ready_when
         self.skip = skip
         self.world = world
-        # ``None`` means the Prism backend; a :class:`GradleSpec` switches the
-        # launch layer to a Gradle run task inside the checkout.
+        # Every env that is not declared ``skip`` must name a Gradle run task in
+        # the checkout under test: that is the only launch layer there is (see
+        # :class:`GradleSpec`).
         self.gradle = gradle
         # ``None`` means "judge this run by the log alone"; a :class:`UiTestSpec`
         # makes the checkout's in-client UI test harness run too, and its report
@@ -283,11 +257,6 @@ class Env:
     @property
     def mod_label(self):
         return f"{self.mc}/{self.loader.type}"
-
-    @property
-    def backend(self):
-        """``"gradle"`` when the env runs a checkout's Gradle run task, else ``"prism"``."""
-        return GRADLE_BACKEND if self.gradle is not None else PRISM_BACKEND
 
     def write(self):
         """Persist the (possibly pin-updated) raw dict back to the env file."""
@@ -318,7 +287,7 @@ def parse_env(data, path="<dict>"):
         raise EnvSchemaError(f"{path}: env must be a json object, got {type(data).__name__}")
 
     _reject_unknown(data, {"name", "tags", "mc", "loader", "java", "jech", "mods", "checks",
-                           "timeout_sec", "jvm", "ready_when", "skip", "world", "gradle", "uitest"},
+                           "timeout_sec", "ready_when", "skip", "world", "gradle", "uitest"},
                     "env", problems)
 
     name = _string(data, "name", "env", problems, required=True)
@@ -335,7 +304,6 @@ def parse_env(data, path="<dict>"):
     mods = _parse_mods(data.get("mods"), problems)
     checks = _parse_checks(data.get("checks"), problems)
     timeout_sec = _parse_timeout(data.get("timeout_sec"), problems)
-    jvm = _parse_jvm(data.get("jvm"), problems)
     ready_when = _parse_ready_when(data.get("ready_when"), problems)
     skip = _parse_skip(data.get("skip"), problems)
     world = _parse_world(data.get("world"), problems)
@@ -345,13 +313,24 @@ def parse_env(data, path="<dict>"):
     gradle = _parse_gradle(data.get("gradle"), problems,
                            default_project=(jech.project if jech is not None else None))
     uitest = _parse_uitest(data.get("uitest"), problems)
+    # The launch layer. There is exactly one — the checkout's own Gradle run task
+    # — because the Prism instance backend was removed on 2026-10-14 (see
+    # envs/README.md). An env that names no run task cannot be executed, and that
+    # is a configuration error rather than a run that quietly launches nothing;
+    # the only other honest state is a declared ``skip``, which says why.
+    if gradle is None and skip is None:
+        problems.append(
+            "env.gradle is required: the Prism instance launcher was removed on 2026-10-14, so the "
+            "checkout's own Gradle run task is the only launch layer. Declare "
+            '{"task": ":<module>:runClient", "daemon_java": <n>} (see envs/README.md), or declare '
+            "skip with the reason the row cannot run"
+        )
     # The selection is handed to Gradle as a project property, so there has to be
-    # a Gradle run to hand it to; the Prism backend has nowhere to pass it and
-    # would silently run the client with no harness at all.
+    # a Gradle run to hand it to.
     if uitest is not None and gradle is None:
         problems.append(
             "env.uitest requires env.gradle: the scenario selection travels to the checkout as the "
-            "-PjechTest project property, which only the gradle backend can pass"
+            "-PjechTest project property, which only the gradle launch can pass"
         )
 
     if problems:
@@ -360,7 +339,7 @@ def parse_env(data, path="<dict>"):
         )
 
     return Env(name=name, tags=tags, mc=mc, loader=loader, java_version=java_version, jech=jech,
-               mods=mods, checks=checks, timeout_sec=timeout_sec, jvm=jvm, path=path, raw=data,
+               mods=mods, checks=checks, timeout_sec=timeout_sec, path=path, raw=data,
                ready_when=ready_when, skip=skip, world=world, gradle=gradle, uitest=uitest)
 
 
@@ -468,26 +447,6 @@ def _parse_java(data, problems):
     return version
 
 
-def _parse_jvm(data, problems):
-    data = data if data is not None else {}
-    if not isinstance(data, dict):
-        problems.append("env.jvm must be an object {max_mem_mb, min_mem_mb, args, window}")
-        return JvmSpec(DEFAULT_MAX_MEM_MB, DEFAULT_MIN_MEM_MB, [], DEFAULT_WINDOW)
-    _reject_unknown(data, {"max_mem_mb", "min_mem_mb", "args", "window"}, "env.jvm", problems)
-    max_mem = _int(data, "max_mem_mb", "env.jvm", problems, required=False, minimum=512)
-    min_mem = _int(data, "min_mem_mb", "env.jvm", problems, required=False, minimum=256)
-    args = _string_list(data, "args", "env.jvm", problems, required=False)
-    window = DEFAULT_WINDOW
-    if "window" in data and data["window"] is not None:
-        raw = data["window"]
-        if (not isinstance(raw, list) or len(raw) != 2
-                or any(isinstance(v, bool) or not isinstance(v, int) or v < 320 for v in raw)):
-            problems.append("env.jvm.window must be [width, height] with integers >= 320")
-        else:
-            window = (raw[0], raw[1])
-    return JvmSpec(max_mem or DEFAULT_MAX_MEM_MB, min_mem or min(min_mem or DEFAULT_MIN_MEM_MB, max_mem or DEFAULT_MAX_MEM_MB), args, window)
-
-
 def _parse_timeout(data, problems):
     if data is None:
         return DEFAULT_TIMEOUT_SEC
@@ -537,7 +496,7 @@ def _parse_world(data, problems):
     if not _WORLD_NAME_RE.match(name) or name in (".", ".."):
         problems.append(
             f"env.world.name {name!r} must be a plain folder name (no path separators, "
-            "not '.' or '..'): it becomes saves/<name> inside the instance"
+            "not '.' or '..'): it becomes saves/<name> inside the game directory"
         )
         return None
     return WorldSpec(name)
@@ -742,7 +701,7 @@ def _parse_checks(data, problems):
                             if Path(v).is_absolute()]
                 if absolute:
                     problems.append(
-                        f"{context}.value must be relative to the instance's minecraft directory, "
+                        f"{context}.value must be relative to the run's game directory, "
                         f"got an absolute path: {absolute[0]!r}"
                     )
                     value = None
@@ -753,12 +712,12 @@ def _parse_checks(data, problems):
             if value is not None:
                 if not isinstance(value, str) or not value.strip():
                     problems.append(f"{context}.value must be a non-empty path relative to the "
-                                    f"instance's minecraft directory for {type_} (or omitted, to use "
+                                    f"game directory for {type_} (or omitted, to use "
                                     "the default location)")
                     value = None
                 elif Path(value.strip()).is_absolute():
                     problems.append(
-                        f"{context}.value must be relative to the instance's minecraft directory, "
+                        f"{context}.value must be relative to the run's game directory, "
                         f"got an absolute path: {value!r}"
                     )
                     value = None

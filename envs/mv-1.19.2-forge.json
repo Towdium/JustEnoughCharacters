@@ -1,5 +1,5 @@
 {
-  "_comment": "multiple-version line, MC 1.19.2 forge, declared `skip`. The row's marker is JEI's registration pass: JEI 11.x logs it while a level loads, and no non-interactive way to load a level exists before 1.20 (`--quickPlaySingleplayer` arrived in 1.20), so on either backend a 1.19.2 client reaches the title screen and nothing else. `skip` names exactly what is missing and the checks stay as written, so removing it is a follow-up that needs a 1.19.2-era way to load a level (see envs/README.md). The row is also not launched through the checkout's Gradle task, because the multiple-version Forge modules cannot carry the mod under test in a dev run (measured 2026-10-14 — see `Forge rows and the gradle backend` in envs/README.md); its fabric sibling is a menu-level gradle row instead, which claims no marker at all.",
+  "_comment": "multiple-version line, MC 1.19.2 forge, declared `skip`. The row's marker is JEI's registration pass: JEI 11.x logs it while a level loads, and no non-interactive way to load a level exists before 1.20 (`--quickPlaySingleplayer` arrived in 1.20), so a 1.19.2 client reaches the title screen and nothing else. `skip` names exactly what is missing and the checks stay as written, so removing it is a follow-up that needs a 1.19.2-era way to load a level (see envs/README.md). The row is also not launched through the checkout's Gradle task: the multiple-version Forge modules cannot carry the mod under test in a dev run (measured 2026-10-14 — see `Forge rows and the gradle launch` in envs/README.md), and the Prism instance launcher the row was probed on was removed on 2026-10-14 — so the row has no launch path at all, and the skip covers that too; its fabric sibling is a menu-level gradle row instead, which claims no marker at all.",
   "name": "mv-1.19.2-forge",
   "tags": [
     "mv",
@@ -61,13 +61,5 @@
   "ready_when": {
     "value": "Sound engine started"
   },
-  "timeout_sec": 600,
-  "jvm": {
-    "max_mem_mb": 3072,
-    "min_mem_mb": 1024,
-    "window": [
-      1280,
-      720
-    ]
-  }
+  "timeout_sec": 600
 }

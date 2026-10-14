@@ -17,6 +17,7 @@ ignored too. Everything else must be listed below.
   "mc": "1.21.1",
   "loader": { "type": "neoforge", "version": "21.1.215" },
   "java": { "version": 21 },
+  "gradle": { "task": ":neoforge:runClientTests", "daemon_java": 21 },
   "jech": {
     "source": "local-build",
     "project": "1.21.1",
@@ -33,8 +34,7 @@ ignored too. Everything else must be listed below.
   ],
   "ready_when": { "value": "Sound engine started" },
   "world": { "name": "jechworld" },
-  "timeout_sec": 600,
-  "jvm": { "max_mem_mb": 3072, "min_mem_mb": 1024, "window": [1280, 720] }
+  "timeout_sec": 600
 }
 ```
 
@@ -42,7 +42,7 @@ ignored too. Everything else must be listed below.
 
 | key | required | meaning |
 | --- | --- | --- |
-| `name` | yes | env id, `[A-Za-z0-9._-]+`; also the run-id prefix and the Prism instance id |
+| `name` | yes | env id, `[A-Za-z0-9._-]+`; also the run-id prefix |
 | `tags` | no | list of strings; what `tag:<t>` selections match |
 | `mc` | yes | Minecraft version (`1.21.1`), used for every resolution query |
 | `loader` | yes | `{type, version}`, see below |
@@ -53,21 +53,22 @@ ignored too. Everything else must be listed below.
 | `ready_when` | no | `{"value": "<log line>"}`, the line that marks the game as up, see below |
 | `world` | no | `{"name": "<folder>"}`, the world the client is launched into, see below |
 | `skip` | no | a reason string: the env is **not executed**, see below |
-| `gradle` | no | `{task, project_dir, daemon_java}` — run the checkout's Gradle run task instead of launching a Prism instance, see below |
+| `gradle` | **yes, unless `skip`** | `{task, project_dir, daemon_java}` — the checkout's Gradle run task that launches the client, see below |
 | `uitest` | no | `{selection}` — run the checkout's **in-client UI test harness** with that scenario selection, and judge the run by the harness's own report, see below |
 | `timeout_sec` | no | watchdog budget, default 600; the whole run is killed and the run fails with exit code 3 |
-| `jvm` | no | `{max_mem_mb, min_mem_mb, args, window}`; defaults 3072 / 1024 / `[]` / `[1280, 720]` |
 
-### `gradle` — launching through the checkout instead of Prism
+### `gradle` — the launch layer
 
 An env with a `gradle` block is executed by running a Gradle task in the checkout
 under test (`./gradlew <task> --no-daemon -PjechRunDir=<game dir>`, plus
-`-PjechQuickPlayWorld=<world>` when the env declares a world) instead of by
-launching a Prism instance. Everything else — resolution, the world seed, the
-pack, isolation, the watchdog, `ready_when`, the checks — is unchanged, and the
-report records which backend ran (`runBackend`, and a `gradle` object with the
-task and checkout). See [README.md](../README.md), "The `gradle` backend",
-for the full contract between the harness and a checkout.
+`-PjechQuickPlayWorld=<world>` when the env declares a world). This is the **only**
+launch layer: the Prism instance launcher was removed on 2026-10-14, so an env
+that is not declared `skip` and names no run task is a schema error (see the
+`skip` section) rather than a run that quietly launches nothing. Resolution, the
+world seed, the pack, isolation, the watchdog, `ready_when` and the checks are all
+independent of it, and the report records the run task and checkout it used
+(`gradle.task`, `gradle.projectDir`). See [README.md](../README.md), "The `gradle`
+backend", for the full contract between the harness and a checkout.
 
 Ten rows use it today: six in the modern checkouts, four in the older line.
 
@@ -121,7 +122,7 @@ Ten rows use it today: six in the modern checkouts, four in the older line.
 
 | key | values | meaning |
 | --- | --- | --- |
-| `via` | `game-dir` (default) / `dev-classpath` | where the artifact's jar goes. `game-dir` copies it into the game directory's `mods/` — what a production instance needs. `dev-classpath` stages nothing: the checkout's own run provides it (the module's sources registered as the mod, or a declared `localRuntime` / `modImplementation` dependency). It is still resolved, pinned and reported; staging it as well would load the same mod id twice |
+| `via` | `game-dir` (default) / `dev-classpath` | where the artifact's jar goes. `game-dir` copies it into the game directory's `mods/` — what a launch needs when the checkout does not already carry the mod. `dev-classpath` stages nothing: the checkout's own run provides it (the module's sources registered as the mod, or a declared `localRuntime` / `modImplementation` dependency). It is still resolved, pinned and reported; staging it as well would load the same mod id twice |
 
 A `via` that contradicts what the checkout actually provides is not detectable
 from the env file — the ten gradle rows are the written record of the choice (see
@@ -149,16 +150,19 @@ pinned api cannot be a Gradle mod dependency at all (see that row's note).
 | `fabric` | the **fabric-loader** version (not the fabric-api version) | `0.16.14`, `0.19.2` |
 | `quilt` | the quilt-loader version | |
 
-### Forge rows and the gradle backend
+### Forge rows and the gradle launch
 
-The four `multiple-version` forge rows are the only rows *inside* a migrated
-version line that stayed on Prism — the fabric half of the same checkout runs on
-the gradle backend. That split is measured, not assumed: on 2026-10-14 the four
-modules were wired the same way the fabric ones were (property guards in the
-client run, `targets.json` through `processResources`, JEI as a dev-only mod
-dependency, `daemon_java: 17`) and each module was then run bare, with no harness
-property, to separate "the checkout cannot be dev-run" from "the harness wires it
-wrongly". Two independent blockers came out, and neither is in the harness:
+The four `multiple-version` forge rows are the rows that have **no launch path**.
+They were the only rows still launched by Prism — the fabric half of the same
+checkout runs the checkout's own Gradle task — and the Prism instance launcher was
+removed on 2026-10-14, which leaves all four with nothing to launch them. The
+measurement below is why they cannot simply move to the checkout's task; it was
+taken on 2026-10-14, while the launcher still existed, by wiring the four modules
+the same way the fabric ones were (property guards in the client run,
+`targets.json` through `processResources`, JEI as a dev-only mod dependency,
+`daemon_java: 17`) and then running each module bare, with no harness property, to
+separate "the checkout cannot be dev-run" from "the harness wires it wrongly". Two
+independent blockers came out, and neither is in the harness:
 
 * **1.18.2 / 1.19.2 / 1.20.1 — a JPMS split package.** The dev run dies before
   Minecraft starts:
@@ -187,8 +191,9 @@ wrongly". Two independent blockers came out, and neither is in the harness:
   This is not the harness's doing. A plain `./gradlew :1.20.1:forge:runClient`
   with no `-PjechRunDir` and no world fails identically (measured 2026-10-14: the
   control run in `Data/jech-compat/mv-gradle-4env-20261014/`), and the same holds
-  for 1.18.2 with a different module hash. The rows therefore stay on Prism,
-  where they are green.
+  for 1.18.2 with a different module hash. The rows therefore had no working
+  launch of their own: they stayed on the launcher, where they were green, until
+  that launcher was removed.
 
 * **1.16.5 — the checkout's own dev artifact is broken.** No module layer here
   (1.16.5 is pre-JPMS), so the client boots and renders the overlay, then dies in
@@ -210,13 +215,18 @@ wrongly". Two independent blockers came out, and neither is in the harness:
   under the check families below.
 
   **The published jar is unaffected**: it is built by
-  `transformProductionForge`/`remapJar` and is what the Prism row stages, and the
-  row is green (measured 2026-10-14). What is broken is only a development run.
+  `transformProductionForge`/`remapJar` and is what the instance row staged, and
+  that row was green (measured 2026-10-14) before the launcher was removed. What
+  is broken is only a development run.
 
 Both blockers belong to the checkout, so the probe's module edits were reverted
 (the checkout is as upstream has it, plus the `forge_version` bump) and the rows
-run on Prism. The recipe is recorded here so a future pass can re-apply it in one
-step once the split package is dealt with:
+were left on the launcher until it was removed. The three rows that still had a
+working launch path then declared `skip` — `mv-1.16.5-forge`, `mv-1.18.2-forge`
+and `mv-1.20.1-forge`; `mv-1.19.2-forge` already carried one — and their checks
+stay written down. The recipe below is recorded so a future pass can re-apply it
+in one step; what removing those four `skip`s needs is the split package (or the
+broken dev artifact) dealt with *and* a launch layer for the row:
 
 * in each module's client run, guard the two properties this way — loom joins
   `runDir` onto the module directory with `new File(projectDir, runDir)`, so an
@@ -258,13 +268,13 @@ step once the split package is dealt with:
   on the machine's default JDK. The client's own JDK still comes from the module's
   toolchain (8 for 1.16.5, 17 for the rest).
 
-### The 1.12.2 rows and the gradle backend
+### The 1.12.2 rows and the gradle launch
 
 Both `1.12.2-*` rows are **declared `skip`** (2026-10-14): on this machine a
-1.12.2 client cannot be dev-run at all, and the instance backend that used to
-carry them is retired. Measured end to end with the checkout's own task and no
-harness property in play (`Data/jech-compat/112-gradle-20261014/`, `1.12.0`
-checkout, Gradle 9.3.1, client toolchain 8):
+1.12.2 client cannot be dev-run at all, and the instance launcher that used to
+carry them was removed the same day. Measured end to end with the checkout's own
+task and no harness property in play (`Data/jech-compat/112-gradle-20261014/`,
+`1.12.0` checkout, Gradle 9.3.1, client toolchain 8):
 
 * **The bare run does not even resolve.** `./gradlew runClient` in `1.12.0` dies
   in `:runtimeClasspath`: Forge's maven mirror serves
@@ -455,22 +465,22 @@ Check types:
 | `log_contains` | ✔ pattern(s) | the marker(s) appear somewhere in `latest.log` |
 | `log_not_contains` | ✔ pattern(s) | none of the markers appears in `latest.log` |
 | `log_regex` | ✔ regex(es) | `re.search` matches each pattern (multiline) |
-| `file_exists` | ✔ relative path(s) | every path exists **under the instance's `minecraft/` directory** (e.g. `config/jecharacters.json`) |
-| `no_crash_reports` | — | no new file appeared in `minecraft/crash-reports/` during the run |
-| `exit_code_zero` | — | the game ended healthy: the runner deliberately stopped it once it was ready, or the game itself exited 0 (SKIP when Prism handed off to an already-running instance *and* nothing ended it deliberately) |
+| `file_exists` | ✔ relative path(s) | every path exists **under the run's game directory** (e.g. `config/jecharacters.json`) |
+| `no_crash_reports` | — | no new file appeared in `crash-reports/` during the run |
+| `exit_code_zero` | — | the game ended healthy: the runner deliberately stopped it once it was ready, or the game itself exited 0 (SKIP when the launcher exited while the client kept running, so the client's own exit code is unobservable from here) |
 | `uitest_report` | optional relative path | the in-client UI test harness reported `PASS` in `uitest/report.json` (or the named path) with no scenario failed or errored. The report is written by the harness itself before it quits the client, so a missing, unreadable or unknown-schema report **FAILs**: "the scenarios ran" is what the check is here to establish, and an unevaluated verdict is not a pass. See `uitest` above |
 
 Three rules keep the checks honest:
 
 * A check whose precondition is missing **SKIPs** — it is never rendered as a
   pass. `log_*` checks SKIP when no new game session log appeared; `file_exists`
-  SKIPs when no instance directory was located. The runner always adds three
+  SKIPs when no game directory was located. The runner always adds three
   `internal:` checks (`session-started`, `watchdog`, `game-exit`) that FAIL in
   exactly those cases, so a run with missing evidence fails on a named check.
   `uitest_report` is the deliberate exception to the SKIP half: it only SKIPs when
-  no instance directory was located at all, and otherwise FAILs on a report it
+  no game directory was located at all, and otherwise FAILs on a report it
   cannot read, because a missing report *is* the failure it names.
-* Only **INFO-level** markers are assertable. A production instance logs at INFO
+* Only **INFO-level** markers are assertable. A production client logs at INFO
   by default, so DEBUG-level lines (for example the transformer "hit" lines) are
   not in `latest.log` and must not be used in a check until the log4j level is
   raised by the harness.
@@ -508,20 +518,31 @@ pins and downloads it, `jt seed-world` still maintains its world cache, and the
 env keeps its `checks` as the written-down statement of what it would assert
 (the reason string is what points at the missing capability).
 
-Three rows carry `skip` today: `mv-1.19.2-forge`, below, and the two `1.12.2-*`
-rows, whose reason is a launch-layer one (the checkout's Gradle dev run cannot
-boot a 1.12.2 client on this arm64 machine, and the instance backend that
-substituted arm64 natives for it is retired — "The 1.12.2 rows and the gradle
-backend"). The `mv-1.19.2-forge` skip was re-measured on
-2026-10-14 rather than inherited: `mv-1.19.2-forge` was run with a real seed
+Six rows carry `skip` today, and each reason is a launch-layer one:
+
+* the four `multiple-version` *forge* rows have **no launch layer at all**: they
+  were the last rows on the instance launcher, removed on 2026-10-14, and that
+  checkout's Forge dev runs cannot host the mod under test either ("Forge rows and
+  the gradle launch");
+* the two `1.12.2-*` rows cannot be dev-run on this machine: the checkout's Gradle
+  dev run cannot boot a 1.12.2 client on this arm64 machine, and the instance
+  backend that substituted arm64 natives for it is retired ("The 1.12.2 rows and
+  the gradle launch");
+* `mv-1.19.2-forge` is the one whose *marker* is unreachable rather than whose
+  launch is gone: its row needs a loaded level and quick play only exists from
+  1.20 on.
+
+The `mv-1.19.2-forge` skip was re-measured on
+2026-10-14 rather than inherited: the row was run on the then-live
+instance launcher, with a real seed
 staged (`saves/jechworld`, 14 files) and launched as
 `prismlauncher --launch … --world jechworld`. The client reached
 `Sound engine started` and sat at the title screen for three minutes — no
 `Loading level`, no `Preparing spawn area`, no `joined the game` anywhere in
 `latest.log` — so no level was ever loaded and the marker could not appear.
-That is Prism behaving as designed, not a harness failure: Prism only appends
+That was the launcher behaving as designed, not a harness failure: it only appends
 the quick-play game argument when the version profile carries the
-`feature:is_quick_play_singleplayer` trait, and Prism's own metadata has that
+`feature:is_quick_play_singleplayer` trait, and its metadata has that
 trait from 1.20 on (`net.minecraft/1.19.2.json` `+traits`:
 `["XR:Initial","FirstThreadOnMacOS"]`; `1.20.1`/`1.21.1` add both quick-play
 traits), while a world target has no fallback argument (the server case falls
@@ -529,8 +550,8 @@ back to `--server`/`--port`; a world does not). The env was restored to `skip`
 with its checks intact after the probe.
 
 Its fabric sibling sits in the same position — MC 1.19.2 offers no
-non-interactive way to load a level on either backend — but it does not skip,
-because on the gradle backend it does not have to claim a level at all.
+non-interactive way to load a level at all — but it does not skip,
+because it does not have to claim a level at all.
 `mv-1.19.2-fabric` is a **menu-level smoke row**: it declares no `world` and no
 storage-marker check, and asserts what a client that stops at the title screen
 can show (the transformer loaded, the config was written, no crash report). Its
@@ -543,47 +564,52 @@ env comment carries the same reasoning, and both halves are asserted in
 "world": { "name": "jechworld" }
 ```
 
-An env with `world` is launched with Prism's own *join world on launch* option —
-`prismlauncher -d <root> --launch <instance> --world <name>` — and the seed for
-that world is staged as `saves/<name>/` inside the instance on every run.
-`--world` is a **first-class Prism option**, not a game-argument passthrough:
-Prism knows which game argument each Minecraft version wants
-(`--quickPlaySingleplayer` for 1.20+) and builds it itself. The two paths that
-were tried and rejected are recorded here so nobody re-treads them:
+An env with `world` is launched into that world by its own checkout: the harness
+hands the name over as the project property `-PjechQuickPlayWorld=<name>`, and
+the checkout's client run appends `--quickPlaySingleplayer <name>` to the
+client's program arguments. The seed for that world is staged as
+`saves/<name>/` inside the run's game directory on every run.
+
+While the instance launcher existed (until 2026-10-14) the world travelled as its
+own *join world on launch* option,
+`prismlauncher -d <root> --launch <instance> --world <name>` — a first-class
+option, not a game-argument passthrough, because the launcher knew which game
+argument each Minecraft version wants (`--quickPlaySingleplayer` for 1.20+) and
+built it itself. Two launcher-side paths were tried and rejected, recorded here
+so nobody re-treads them:
 
 * `prismlauncher --launch <id> -- --quickPlaySingleplayer <world>`: Qt parses
-  everything after `--` as a **positional url**, so the trailing arguments become
+  everything after `--` as a **positional url**, so the trailing arguments became
   *resource imports* to the launcher, not game arguments. Measurement: with
-  `-- --quickPlaySingleplayer jechworld` the launcher opens and stays open, no
-  world is joined.
+  `-- --quickPlaySingleplayer jechworld` the launcher opened and stayed open, no
+  world was joined.
 * A per-instance `.minecraft/patches/*.json` version patch appending to
-  `arguments.game`: workable in principle, but it only ever duplicates what
-  Prism already does, and a patch file has to be kept in sync per loader. Not
+  `arguments.game`: workable in principle, but it only ever duplicated what the
+  launcher already did, and a patch file has to be kept in sync per loader. Not
   used.
 
 Which rows declare it, as measured on 2026-10-14: `1.21.1-fabric`, the four
-`moderner` rows and the two `mv-1.20.1` rows — all seven run to
+`moderner` rows and `mv-1.20.1-fabric` — six of the seven rows that carry a
+`world` block, the seventh being the `skip`ped `mv-1.20.1-forge` — all run to
 `stopReason: goal-reached` on a real join (`vfyjxf_ joined the game`, then
 JECh's `Registering JEI pinyin search storage` a second later).
 `1.21.1-neoforge` left the list when it moved to the in-client harness
 (2026-10-14): the level it is asserted against is the one the harness's own
 runner creates, so the row declares no `world` (see `uitest` above) — the marker
 still arrives, because the level does. The `mv-1.16.5` and `mv-1.18.2` rows
-deliberately keep no world: their markers are emitted at startup (and the
+keep no world either — of their four files only the two fabric halves run, since
+both forge halves are `skip`ped: their markers are emitted at startup (and the
 1.16.5/1.18.2 jars carry no JEI plugin at all), so a world would only add a level
 load to what they assert. `mv-1.19.2-forge` cannot join one — see the `skip`
 section above — while `mv-1.19.2-fabric` is the same MC version but a gradle row
 that claims no marker, so it is a menu-level row by design: no world, no marker.
 
-A `gradle` env carries the same world a different way: the harness hands it over
-as `-PjechQuickPlayWorld=<name>` and the checkout's own run configuration appends
-`--quickPlaySingleplayer <name>` to the client's arguments — no Prism option is
-involved, and the game directory is the run's own `runs/<id>/game`. The six
-gradle rows that declare a world (`1.21.1-fabric`, `moderner` ×4 and
-`mv-1.20.1-fabric`) join that
-way; the seed is staged into `saves/<name>/` there exactly as it is for a Prism
-instance. `1.21.1-neoforge`'s `runClientTests` run deliberately does not honour
-the property: the harness's runner does its own level management.
+Every one of those six rows carries its world that same way — the harness hands it
+over as `-PjechQuickPlayWorld=<name>` and the checkout's own run configuration
+appends `--quickPlaySingleplayer <name>` to the client's arguments — and the game
+directory is the run's own `runs/<id>/game`, with the seed staged into
+`saves/<name>/` there. `1.21.1-neoforge`'s `runClientTests` run deliberately does
+not honour the property: the harness's runner does its own level management.
 
 One caveat that cost a full watchdog on the way (recorded so the next person
 reads it as designed, not as a bug): a run whose client dies *before* the ready
@@ -637,24 +663,25 @@ byte equality across machines; the manifest describes the tree that is actually
 cached.
 
 `jt run` builds a seed when the cache is missing, verifies it when it is there,
-and re-stages it into the instance on every run (a world a previous run played
-in is replaced, never merged).
+and re-stages it into the run's game directory on every run (a world a previous
+run played in is replaced, never merged).
 
 ## Launching without a world
 
 An env without `world` stops at the title screen. The preset `options.txt`
 (below) is still staged, so the client reaches the menu; that is the right shape
-for envs whose markers are emitted during startup (the 1.12.2 rows, the 1.16.5 /
-1.18.2 rows).
+for envs whose markers are emitted during startup (the three `mv-*-fabric` rows
+of 1.16.5/1.18.2/1.19.2; the 1.12.2 rows would be too, but they are `skip`ped,
+and so are the 1.16.5/1.18.2 forge halves).
 
 ## The preset `options.txt`
 
-A freshly materialized instance has no `options.txt`, and a client with no
+A fresh game directory has no `options.txt`, and a client with no
 `options.txt` shows the **"Welcome to Minecraft!" accessibility onboarding
 screen before the title screen** — a modal page with a Continue button that
 nothing in a headless run can press, so the run never reaches the menu. `jt`
 therefore renders a minimal preset into the pack (`overrides/options.txt`, see
-`lib/options.py`) and stages it into the instance on every run:
+`lib/options.py`) and stages it into the game directory on every run:
 
 ```
 onboardAccessibility:true
@@ -693,8 +720,9 @@ java.lang.NumberFormatException: For input string: "key.keyboard.f:CONTROL"
 ```
 
 Pinning JEI's search-bar focus key was tried and removed for that reason, and
-nothing was lost: a fresh instance has no override, so the binding the harness
-scenario presses is JEI's own registered default (`key.keyboard.f` + `CONTROL`).
+nothing was lost: a fresh game directory has no override, so the binding the
+harness scenario presses is JEI's own registered default
+(`key.keyboard.f` + `CONTROL`).
 A `version:<current data version>` line first in the file makes the legacy chain
 skip entirely and the same file loads cleanly (verified both ways), but that
 number is per Minecraft version and has no cheap authoritative source here —
@@ -709,12 +737,14 @@ because a preference written down here would silently become part of what a run
 measures. A key an older client does not know is ignored when it loads the file,
 so one preset serves every version line.
 
-Verified on a freshly materialized 1.21.1 instance: with the preset the client
+Verified on a freshly materialized 1.21.1 game directory (measured 2026-10-14,
+while the instance launcher still existed): with the preset the client
 lands on the title screen, without it the onboarding screen comes first.
 
 ## When is the game ready? (`ready_when`)
 
-A production instance has no in-game runner: nothing in the game makes it quit,
+A client launched by a checkout's run task has no in-game runner: nothing in the
+game makes it quit,
 so without a stopping rule a `jt run` can only end by the game being closed by
 hand or by the watchdog (exit code 3). `ready_when` gives the run a stopping
 rule.
@@ -725,7 +755,7 @@ rule.
 
 * **The rule.** The run is *ready* once the `ready_when` line is in
   `latest.log` **and** every `log_contains` value of the env is in it too. At
-  that moment the runner ends the instance's process tree itself and judges the
+  that moment the runner ends the session's process tree itself and judges the
   run; the report records `stopReason: "goal-reached"` and `readyReached: true`.
 * **What the report tells you when it did not hold.** `readyReached` is the whole
   rule, so a `false` on its own does not say which half was missing. The report
@@ -771,13 +801,14 @@ rule.
   itself, `exit_code_zero` PASSes whatever code the killed process reported (the
   code is an artefact of the harness). A natural exit 0 also passes; a natural
   exit before the ready line, or a non-zero one, FAILs.
-* **A launcher that exits at once.** Prism's CLI hands a launch off to a Prism
-  process that already owns the data root (a local socket), and then exits 0 in
-  under a second with the game starting milliseconds later. The runner does not
-  read that as "no session": it keeps watching for `HANDOFF_GRACE_SEC` (120s)
-  for a session or a game process, and records the situation in the notes,
-  naming the other launcher's pid when there is one. A genuinely failed launch
-  still ends as a missing session after that grace.
+* **A launcher that exits before its client.** A Gradle invocation is not
+  necessarily the client's parent: it can hand the client to another process and
+  exit while the game keeps running. The runner does not read that as "no
+  session" — the client is identified by its working directory, so the session is
+  tracked as usual and the launcher's own exit code is recorded as unobservable
+  (`exit_code_source: detached`), which makes `exit_code_zero` SKIP instead of
+  FAIL. A genuinely failed launch still ends as a missing session: a launcher
+  that exits with no game process behind it is reported as exactly that.
 * **Omitting it.** Without `ready_when` the run behaves as before: it waits for
   the game to exit on its own or for the watchdog. No shipped env omits it: a
   modded client that reaches the title screen never exits on its own, so an env
@@ -887,30 +918,31 @@ and says so in the report.
 | `moderner-26.1.2-fabric` | 26.1.2 / fabric 0.19.2 | 25 | `moderner` (fabric-unobfuscated) | jei 29.16.0.46, fabric-api 0.146.1+26.1.2 |
 | `1.21.1-neoforge` | 1.21.1 / neoforge 21.1.215 | 21 | `1.21.1` | jei 19.37.0.362 |
 | `1.21.1-fabric` | 1.21.1 / fabric 0.16.14 | 21 | `1.21.1` | jei 19.37.0.362, fabric-api 0.116.1+1.21.1 |
-| `mv-1.20.1-forge` | 1.20.1 / forge 1.20.1-47.0.35 | 17 | `multiple-version` | jei 15.48.0.179 |
+| `mv-1.20.1-forge` | 1.20.1 / forge 1.20.1-47.0.35 | 17 | `multiple-version` | jei 15.48.0.179 — **skipped**, see below |
 | `mv-1.20.1-fabric` | 1.20.1 / fabric 0.16.14 (see below) | 17 | `multiple-version` (gradle) | jei 15.48.0.179, fabric-api (see below) |
 | `mv-1.19.2-forge` | 1.19.2 / forge 1.19.2-43.2.3 | 17 | `multiple-version` | jei 11.30.3.1056 — **skipped**, see below |
 | `mv-1.19.2-fabric` | 1.19.2 / fabric 0.16.14 (see below) | 17 | `multiple-version` (gradle) | jei 11.30.3.1056, fabric-api 0.77.0+1.19.2 |
-| `mv-1.18.2-forge` | 1.18.2 / forge 1.18.2-40.2.1 | 17 | `multiple-version` | jei 10.2.1.1005 |
+| `mv-1.18.2-forge` | 1.18.2 / forge 1.18.2-40.2.1 | 17 | `multiple-version` | jei 10.2.1.1005 — **skipped**, see below |
 | `mv-1.18.2-fabric` | 1.18.2 / fabric 0.14.9 | 17 | `multiple-version` (gradle) | jei 10.2.1.1005, fabric-api 0.67.0+1.18.2 |
-| `mv-1.16.5-forge` | 1.16.5 / forge 1.16.5-36.2.42 | 8 | `multiple-version` | jei 7.8.0.1009 (pinned by file id) |
+| `mv-1.16.5-forge` | 1.16.5 / forge 1.16.5-36.2.42 | 8 | `multiple-version` | jei 7.8.0.1009 (pinned by file id) — **skipped**, see below |
 | `mv-1.16.5-fabric` | 1.16.5 / fabric 0.14.9 | 8 | `multiple-version` (gradle) | fabric-api 0.42.0+1.16 (smoke) |
 | `1.12.2-forge-hei` | 1.12.2 / forge 1.12.2-14.23.5.2864 | 8 | `1.12.0` (srg jar) | had-enough-items 4.34.0 — **skipped**, see below |
 | `1.12.2-forge-jei-legacy` | 1.12.2 / forge 1.12.2-14.23.5.2864 | 8 | `1.12.0` (srg jar) | jei 4.16.1.301 — **skipped**, see below |
 
-Every row also stages the preset `options.txt`. The seven envs that are
-*launched into a world*, the row that loads its own, the row that claims no level
-at all, and the ones that are *skipped*, are called out below and in the table
+Every row also stages the preset `options.txt`. The six envs that are
+*launched into a world*, the row that loads its own, the rows that claim no level
+at all, and the six that are *skipped*, are called out below and in the table
 above:
 
 | env | runs? | world | why |
 | --- | --- | --- | --- |
 | `1.21.1-neoforge` | yes | none — `uitest` | the row runs the checkout's in-client harness, which stands up and pins its own flat level, and is judged by the harness's own report |
 | `1.21.1-fabric` | yes | `world: {name: jechworld}` | the JEI plugin marker needs a loaded level |
-| `moderner` ×4, `mv-1.20.1` ×2 | yes | `world: {name: jechworld}` | same marker, same level-load phase (measured 2026-10-14) |
-| `mv-1.19.2-forge` | **no** — `skip` | none | same marker, but quick play needs 1.20+ (re-measured 2026-10-14) |
-| `mv-1.19.2-fabric` | yes | none | the menu-level smoke row: no marker to reach, so no level (gradle backend) |
-| `mv-1.16.5` ×2, `mv-1.18.2` ×2 | yes | none | markers are emitted during startup |
+| `moderner` ×4, `mv-1.20.1-fabric` | yes | `world: {name: jechworld}` | same marker, same level-load phase (measured 2026-10-14) |
+| `mv-1.19.2-fabric`, `mv-1.16.5-fabric`, `mv-1.18.2-fabric` | yes | none | the menu-level rows: no marker claimed at all, or one emitted at startup |
+| `mv-1.20.1-forge` | **no** — `skip` | `world: {name: jechworld}` | its checkout's Forge dev run cannot host the mod under test and the instance launcher is gone (2026-10-14) |
+| `mv-1.18.2-forge`, `mv-1.16.5-forge` | **no** — `skip` | none | same reason: no launch layer, and the checkout's Forge dev run cannot host the mod (2026-10-14) |
+| `mv-1.19.2-forge` | **no** — `skip` | none | the marker needs a loaded level, but quick play needs 1.20+ (re-measured 2026-10-14) |
 | `1.12.2` ×2 | **no** — `skip` | none | markers are emitted during startup, but no launch path boots a 1.12.2 client on this machine (2026-10-14) |
 
 Every env but `1.21.1-neoforge` also declares
@@ -925,15 +957,16 @@ level load, and the only non-interactive way to load a level —
 `--quickPlaySingleplayer` — does not exist before 1.20. That was re-measured on
 2026-10-14 rather than assumed: with a seed staged and `--world jechworld` on the
 command line, the 1.19.2 client reached the title screen and never loaded a
-level, because Prism only passes the quick-play argument to versions whose
-profile carries the `feature:is_quick_play_singleplayer` trait (Prism's
-`net.minecraft/1.19.2.json` has no such trait; 1.20.1 does). So the env stays in
+level, because the then-live launcher only passed the quick-play argument to
+versions whose
+profile carries the `feature:is_quick_play_singleplayer` trait (its
+`net.minecraft/1.19.2.json` had no such trait; 1.20.1 does). So the env stays in
 the matrix with its checks written down, and `skip` names exactly what is
 missing. Removing the `skip` is a follow-up that needs one of: a 1.19.2-era way
 to join a world from the command line, or an in-game runner (a test mod that
 loads a world and quits). Neither is in place; a weaker assertion is not an
 option. `mv-1.19.2-fabric` faces the same missing capability but is not in this
-position: as a gradle row it claims no marker, so there is nothing it can fail to
+position: it claims no marker, so there is nothing it can fail to
 reach and nothing to skip (see the `skip` section above).
 
 The version strings above are not invented: they mirror each checkout's
@@ -1007,19 +1040,21 @@ has a JEI plugin and can be asserted on its registration marker.
   `file_exists config/jecharacters.json`.
 
   Nine of the ten rows carry that set. The exception is `mv-1.19.2-fabric`, the
-  menu-level gradle row: its jar is in this family (it has
+  menu-level row: its jar is in this family (it has
   `JechJeiPlugin.class`) but the row claims nothing of the storage marker, so it
   keeps the two config checks and the failure/exit checks only (see the `skip`
   section above).
 
-  Those nine rows load a level when they run, except `mv-1.19.2-forge`, which
-  carries `skip` (no quick play before 1.20; re-measured 2026-10-14). Seven
-  declare `world` — the quick-play rows, `mv-1.20.1-fabric` among them on the
-  gradle backend; `1.21.1-neoforge` gets its level from the in-client harness
-  instead (see `uitest`). All seven were measured against a real run —
-  `1.21.1` ×2, `moderner` ×4, `mv-1.20.1` ×2 (the mv-1.20.1 pair on 2026-10-14,
-  and its fabric half again in the gradle-backend migration) all reach a level
-  with their marker present a second after `joined the game`. So
+  Those nine rows load a level when they run, except the two that carry `skip` —
+  `mv-1.19.2-forge`, whose marker needs a level the row cannot reach, and
+  `mv-1.20.1-forge`, whose launch layer is gone (re-measured 2026-10-14). Seven
+  env files declare `world` — the quick-play rows — and six of them run;
+  `1.21.1-neoforge` gets its level from the in-client harness
+  instead (see `uitest`). Those six plus `1.21.1-neoforge` were all measured
+  against a real run —
+  `1.21.1` ×2, `moderner` ×4 and `mv-1.20.1-fabric` all reach a level
+  with their marker present a second after `joined the game` (re-measured
+  2026-10-14). So
   the level-load claim holds for JEI 15 (1.20.1), JEI 19 (1.21.1), JEI 26
   (1.21.10) and JEI 29 (26.1.2): each of them defers `registerAdvancedSearch`
   until a level exists. `1.21.1-neoforge` adds `uitest_report` to this set: the
@@ -1051,11 +1086,14 @@ has a JEI plugin and can be asserted on its registration marker.
   changed, and it still stages the **production** jar into `mods/`, because the
   checkout's Forge dev run cannot host that jar (see "Forge rows and the gradle
   backend"). The first attempt at this verification never ran: the two runs
-  recorded on 2026-10-14 08:13/08:16 died in Prism's `AuthFlow` (`令牌刷新失败`),
+  recorded on 2026-10-14 08:13/08:16 died in the launcher's `AuthFlow`
+  (`令牌刷新失败`),
   which is why this section still described the pre-fix state until the
-  2026-10-14 afternoon run above. The other three rows of this family are green;
-  `mv-1.16.5-fabric` has no Forge at all, and neither 1.18.2 jar declares any
-  dependency block.
+  2026-10-14 afternoon run above. The rest of this family is green where it runs
+  — `mv-1.16.5-fabric` and `mv-1.18.2-fabric` today, `mv-1.16.5-forge` on the
+  launcher before it was removed (both forge rows are now `skip`ped, see "Forge
+  rows and the gradle launch"); `mv-1.16.5-fabric` has no Forge at all, and
+  neither 1.18.2 jar declares any dependency block.
 * **C — 1.12.2** (both rows):
   `log_contains "Transforming class mezz/jei/ingredients/IngredientFilter for JEI integration."`,
   `log_not_contains "Invalid config syntax:"`,
@@ -1092,8 +1130,8 @@ has a JEI plugin and can be asserted on its registration marker.
   Both rows are declared `skip` (2026-10-14). The checks above stay as the
   written record of what each row verifies; what stops them is one layer below,
   the launch: no path on this machine boots a 1.12.2 client any more. The
-  measurement, and what a future pass would have to give the Gradle backend, are
-  in "The 1.12.2 rows and the gradle backend" above.
+  measurement, and what a future pass would have to give the Gradle launch, are
+  in "The 1.12.2 rows and the gradle launch" above.
 
 ## Adding an env
 
@@ -1101,19 +1139,24 @@ has a JEI plugin and can be asserted on its registration marker.
 2. Read the checkout's `gradle.properties` and copy the loader / api / jei
    versions from there instead of typing a remembered version.
 3. Check which family the new line belongs to (`unzip -l <jar> | grep JechJeiPlugin`).
-4. Decide what shape the row is, before writing any check: a **Prism row** that
-   stops at the menu, a **quick-play row** that is launched into a world, or a
-   **harness row** that runs the checkout's own in-client scenarios (`uitest`).
+4. Decide what shape the row is, before writing any check: a **menu-level row**
+   that stops at the title screen, a **quick-play row** that is launched into a
+   world, or a **harness row** that runs the checkout's own in-client scenarios
+   (`uitest`).
    The three shapes differ in exactly which of `ready_when` / `world` / `uitest`
    the row carries, and the shipped-matrix assertions in
    `selftest/test_envs.py` exist to catch a row that picked the wrong one.
-5. For a Prism or quick-play row, give it a `ready_when` line from a real run's
+5. Give it a `gradle` block (`{"task": ":<module>:runClient", "daemon_java": <n>}`)
+   — without one the row cannot be executed at all — and, for a menu-level or
+   quick-play row, a
+   `ready_when` line from a real run's
    `latest.log` (a first, exploratory `jt run` may end at the watchdog — that log
-   is still the evidence to read), and add `"world": {"name": "jechworld"}` when
+   is still the evidence to read). Add `"world": {"name": "jechworld"}` when
    a marker needs a loaded level, picking a line the client prints **whether or
    not** the join succeeds (see "When is the game ready?"). `jt run` builds the
    seed itself; `jt seed-world <name>` builds it ahead of time. A harness row
-   takes neither: it declares `uitest` and nothing about stopping.
+   takes neither `ready_when` nor `world`: it declares `uitest` and nothing about
+   stopping.
 6. If the marker is unreachable for a version-line reason, do not soften the
    check: keep the check as written, add `"skip": "<the missing capability>"`,
    and say so here. That is different from a check whose *premise* is wrong for

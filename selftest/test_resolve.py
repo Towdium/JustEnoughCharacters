@@ -97,7 +97,7 @@ class LocalBuildTest(unittest.TestCase):
                                    "path": "build/libs/*.jar", "expectModId": "jecharacters"})
         self.assertEqual(resolve.search_roots(env, self.tmp), [self.tmp / "moderner", self.tmp])
         no_project = support.mk_env(jech={"source": "local-build", "path": "build/libs/*.jar",
-                                         "expectModId": "jecharacters"})
+                                         "expectModId": "jecharacters"}, gradle={"task": ":neoforge:runClient", "project_dir": "1.21.1"})
         self.assertIsNone(no_project.jech.project)
         self.assertEqual(resolve.search_roots(no_project, self.tmp), [])
 
@@ -152,7 +152,7 @@ class LocalBuildTest(unittest.TestCase):
                          other / "build" / "libs" / "jecharacters-1.21.1-forge-4.6.8.jar")
         # without the project key both checkouts match, so the glob is ambiguous
         no_choice = support.mk_env(jech={"source": "local-build", "path": "build/libs/*.jar",
-                                        "expectModId": "jecharacters"})
+                                        "expectModId": "jecharacters"}, gradle={"task": ":neoforge:runClient", "project_dir": "1.21.1"})
         with self.assertRaises(DependencyError) as caught:
             resolve.local_build_jar(no_choice)
         self.assertIn("ambiguous", str(caught.exception))
@@ -234,6 +234,8 @@ class PinningTest(unittest.TestCase):
 
     def test_a_remote_jech_is_pinned_like_a_mod(self):
         data = support.env_dict(mods=[])
+        # the checkout is named by gradle.project_dir when jech has no project
+        data["gradle"]["project_dir"] = "1.21.1"
         data["jech"] = {"source": "modrinth", "slug": "jecharacters",
                         "describe": {"version": "4.6.8"}, "pin": None}
         self.path.write_text(json.dumps(data), encoding="utf-8")

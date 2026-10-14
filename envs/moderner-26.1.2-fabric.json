@@ -1,5 +1,5 @@
 {
-  "_comment": "moderner line, MC 26.1.2, fabric (fabric-unobfuscated module). fabric-api version is fabric_api_version in moderner/fabric-unobfuscated/gradle.properties; that variant's fabric.mod.json depends on fabric-api explicitly. Launched through the checkout's own Gradle run task (gradle backend); the wrapper is Gradle 9.5, which runs on the machine default JDK, so daemon_java is null, while the client's JDK 25 comes from the module's own toolchain. jech, jei and fabric-api are all via=dev-classpath: the module registers its own sources as the mod, runtimeOnly puts jei-26.1.2-fabric:29.16.0.46 on the run's classpath (the version this env pins — jei_unobfuscated_version) and implementation puts fabric-api:0.146.1+26.1.2 there. Nothing is staged into mods/.",
+  "_comment": "moderner line, MC 26.1.2, fabric (fabric-unobfuscated module). fabric-api version is fabric_api_version in moderner/fabric-unobfuscated/gradle.properties; that variant's fabric.mod.json depends on fabric-api explicitly. Launched through the checkout's own Gradle run task (gradle launch); the wrapper is Gradle 9.5, which runs on the machine default JDK, so daemon_java is null, while the client's JDK 25 comes from the module's own toolchain. jech, jei and fabric-api are all via=dev-classpath: the module registers its own sources as the mod, runtimeOnly puts jei-26.1.2-fabric:29.16.0.46 on the run's classpath (the version this env pins — jei_unobfuscated_version) and implementation puts fabric-api:0.146.1+26.1.2 there. Nothing is staged into mods/.",
   "name": "moderner-26.1.2-fabric",
   "tags": [
     "moderner",
@@ -96,13 +96,5 @@
   "world": {
     "name": "jechworld"
   },
-  "timeout_sec": 600,
-  "jvm": {
-    "max_mem_mb": 3072,
-    "min_mem_mb": 1024,
-    "window": [
-      1280,
-      720
-    ]
-  }
+  "timeout_sec": 600
 }

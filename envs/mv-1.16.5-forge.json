@@ -1,5 +1,5 @@
 {
-  "_comment": "multiple-version line, MC 1.16.5 forge, smoke env. Launched through Prism, which stages the built jar into mods/. It is not launched through the checkout's Gradle run task: the multiple-version Forge modules cannot carry the mod under test in a dev run (measured 2026-10-14 — see `Forge rows and the gradle backend` in envs/README.md for the evidence). The loader is 36.2.42 rather than the 36.2.39 the checkout originally pinned: the built jar's own mods.toml declares `forge [36.2.41,)`, so on 36.2.39 FML refused the mod and wrote a crash report (that red was the finding, measured 2026-10-14), and 1.16.5/gradle.properties now pins forge_version=36.2.42, so the requirement is satisfied — on that loader the row ran to goal-reached with every check green (2026-10-14). The jei row is pinned by file id below to exercise the pin-is-used-directly path; 1.16.5 ships no JEI plugin class, so there is no plugin log marker to assert and the checks stay on the failure markers.",
+  "_comment": "multiple-version line, MC 1.16.5 forge, smoke env. Declared `skip` on 2026-10-14: the row's only launch path was the Prism instance launcher, which staged the production jar into mods/ because the multiple-version Forge modules cannot carry the mod under test in a dev run (measured 2026-10-14 — see `Forge rows and the gradle launch` in envs/README.md for the evidence), and that launcher was removed the same day, leaving the row with no launch path at all. The checks stay as written. History, kept because the fix still stands: the loader is 36.2.42 rather than the 36.2.39 the checkout originally pinned — the built jar's own mods.toml declares `forge [36.2.41,)`, so on 36.2.39 FML refused the mod and wrote a crash report (that red was the finding, measured 2026-10-14); 1.16.5/gradle.properties now pins forge_version=36.2.42, the requirement is satisfied, and on that loader the row ran to goal-reached with every check green (re-verified 2026-10-14). The jei row is pinned by file id below to exercise the pin-is-used-directly path; 1.16.5 ships no JEI plugin class, so there is no plugin log marker to assert and the checks stay on the failure markers.",
   "name": "mv-1.16.5-forge",
   "tags": [
     "mv",
@@ -14,6 +14,7 @@
   "java": {
     "version": 8
   },
+  "skip": "the Prism instance launcher that staged the production jar is removed, and the checkout's Forge dev run cannot host it (broken merged dev artifact: BlockMath calls the SRG name); see envs/README.md",
   "jech": {
     "source": "local-build",
     "project": "multiple-version",
@@ -55,13 +56,5 @@
   "ready_when": {
     "value": "Sound engine started"
   },
-  "timeout_sec": 600,
-  "jvm": {
-    "max_mem_mb": 3072,
-    "min_mem_mb": 1024,
-    "window": [
-      1280,
-      720
-    ]
-  }
+  "timeout_sec": 600
 }

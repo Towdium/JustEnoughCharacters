@@ -1,5 +1,5 @@
 {
-  "_comment": "moderner line, MC 1.21.10. Loader/jei versions mirror moderner/gradle.properties. Launched through the checkout's own Gradle run task (gradle backend); the wrapper is Gradle 9.5, which runs on the machine default JDK (JBR 25), so daemon_java is null. jech and jei both carry via=dev-classpath: the run's classpath already provides them -- the neoforge module registers sourceSets.main as the mod (the source of the jar under test) and build.gradle puts mezz.jei:jei-1.21.10-neoforge:26.3.0.31 in localRuntime, the very version this env pins (jei_version) -- so copying either jar into mods/ would load that mod id twice.",
+  "_comment": "moderner line, MC 1.21.10. Loader/jei versions mirror moderner/gradle.properties. Launched through the checkout's own Gradle run task (gradle launch); the wrapper is Gradle 9.5, which runs on the machine default JDK (JBR 25), so daemon_java is null. jech and jei both carry via=dev-classpath: the run's classpath already provides them -- the neoforge module registers sourceSets.main as the mod (the source of the jar under test) and build.gradle puts mezz.jei:jei-1.21.10-neoforge:26.3.0.31 in localRuntime, the very version this env pins (jei_version) -- so copying either jar into mods/ would load that mod id twice.",
   "name": "moderner-1.21.10-neoforge",
   "tags": [
     "moderner",
@@ -69,13 +69,5 @@
   "world": {
     "name": "jechworld"
   },
-  "timeout_sec": 600,
-  "jvm": {
-    "max_mem_mb": 3072,
-    "min_mem_mb": 1024,
-    "window": [
-      1280,
-      720
-    ]
-  }
+  "timeout_sec": 600
 }

@@ -96,11 +96,11 @@ class DeclaredCheckTest(unittest.TestCase):
                                                                 exit_code_source="unknown"))["status"],
             checks.FAIL)
 
-    def test_exit_code_is_skipped_when_the_launcher_handed_off(self):
+    def test_exit_code_is_skipped_when_the_launcher_detached(self):
         result = checks.evaluate_one(spec("exit_code_zero"),
-                                     session(exit_code=0, exit_code_source="handoff"))
+                                     session(exit_code=0, exit_code_source="detached"))
         self.assertEqual(result["status"], checks.SKIP)
-        self.assertIn("handoff", result["detail"])
+        self.assertIn("detached", result["detail"])
 
     def test_a_deliberate_stop_passes_whatever_the_exit_code_says(self):
         """Once ready, the runner ends the game itself — the code is an artefact."""
@@ -111,9 +111,9 @@ class DeclaredCheckTest(unittest.TestCase):
                 self.assertEqual(result["status"], checks.PASS)
                 self.assertIn(reason, result["detail"])
 
-    def test_a_deliberate_stop_still_passes_on_top_of_a_handoff(self):
+    def test_a_deliberate_stop_still_passes_on_top_of_a_detached_launcher(self):
         result = checks.evaluate_one(spec("exit_code_zero"), session(
-            exit_code=None, exit_code_source="handoff", stop_reason=checks.STOP_GOAL_REACHED))
+            exit_code=None, exit_code_source="detached", stop_reason=checks.STOP_GOAL_REACHED))
         self.assertEqual(result["status"], checks.PASS)
 
     def test_a_natural_exit_before_the_ready_marker_fails(self):
@@ -211,11 +211,11 @@ class FileExistsTest(unittest.TestCase):
                                      self.ctx(minecraft_dir=self.minecraft / "nested"))
         self.assertEqual(result["status"], checks.FAIL)
 
-    def test_without_an_instance_directory_it_skips(self):
+    def test_without_a_game_directory_it_skips(self):
         result = checks.evaluate_one(spec("file_exists", "config/jecharacters.json"),
                                      self.ctx(minecraft_dir=None))
         self.assertEqual(result["status"], checks.SKIP)
-        self.assertIn("instance directory", result["detail"])
+        self.assertIn("game directory", result["detail"])
 
     def test_it_is_evaluated_even_when_no_session_started(self):
         """The filesystem is evidence in its own right: fail-closed, never a silent skip."""
@@ -324,10 +324,10 @@ class UiTestReportTest(unittest.TestCase):
                                      self.ctx(minecraft_dir=self.minecraft / "nested"))
         self.assertEqual(result["status"], checks.FAIL)
 
-    def test_without_an_instance_directory_it_skips(self):
+    def test_without_a_game_directory_it_skips(self):
         result = checks.evaluate_one(spec("uitest_report"), self.ctx(minecraft_dir=None))
         self.assertEqual(result["status"], checks.SKIP)
-        self.assertIn("instance directory", result["detail"])
+        self.assertIn("game directory", result["detail"])
 
     def test_it_is_evaluated_even_when_no_session_started(self):
         """A crashed client is exactly the case this check exists for."""

@@ -1,5 +1,5 @@
 {
-  "_comment": "multiple-version line, MC 1.18.2 fabric; fabric-api version from 1.18.2/gradle.properties. Launched through the checkout's own Gradle run task (gradle backend): architectury-loom's `:1.18.2:fabric:runClient` registers the module's own sources as the mod under test and carries fabric-api (0.67.0+1.18.2, the version this module compiles against) through `modApi`, so both ride the run's classpath (via=dev-classpath); JEI is `compileOnly` in `1.18.2/build.gradle`, so it has no place on that classpath and its jar is the one jar staged into mods/. daemon_java is 17 because the wrapper is Gradle 8.1.1, which cannot run on the machine's default JDK (JBR 25).",
+  "_comment": "multiple-version line, MC 1.18.2 fabric; fabric-api version from 1.18.2/gradle.properties. Launched through the checkout's own Gradle run task (gradle launch): architectury-loom's `:1.18.2:fabric:runClient` registers the module's own sources as the mod under test and carries fabric-api (0.67.0+1.18.2, the version this module compiles against) through `modApi`, so both ride the run's classpath (via=dev-classpath); JEI is `compileOnly` in `1.18.2/build.gradle`, so it has no place on that classpath and its jar is the one jar staged into mods/. daemon_java is 17 because the wrapper is Gradle 8.1.1, which cannot run on the machine's default JDK (JBR 25).",
   "name": "mv-1.18.2-fabric",
   "tags": [
     "mv",
@@ -77,13 +77,5 @@
   "ready_when": {
     "value": "Sound engine started"
   },
-  "timeout_sec": 600,
-  "jvm": {
-    "max_mem_mb": 3072,
-    "min_mem_mb": 1024,
-    "window": [
-      1280,
-      720
-    ]
-  }
+  "timeout_sec": 600
 }

@@ -1,4 +1,4 @@
-"""Prism instance handling: cfg editing, java lookup, reuse, isolation."""
+"""The game directory, its isolation, the java lookup and the launch layer."""
 
 from __future__ import annotations
 
@@ -13,61 +13,6 @@ from lib import instance, pack, paths
 from lib.errors import ConfigError
 
 from . import support
-
-
-class CfgTest(unittest.TestCase):
-    ORIGINAL = (
-        "InstanceType=OneSix\n"
-        "iconKey=default\n"
-        "name=1.21.1-neoforge\n"
-        "JvmArgs=-Xmx512m\n"
-        "OverrideJavaArgs=false\n"
-        "# a comment\n"
-    )
-
-    def test_existing_keys_are_replaced_and_missing_ones_appended(self):
-        updated = instance.set_cfg_values(self.ORIGINAL, {"JvmArgs": "-Xmx3072m", "JavaPath": "java-home/bin/java"})
-        self.assertIn("JvmArgs=-Xmx3072m\n", updated)
-        self.assertNotIn("-Xmx512m", updated)
-        self.assertIn("JavaPath=java-home/bin/java\n", updated)
-        self.assertIn("name=1.21.1-neoforge\n", updated)  # untouched keys survive
-        self.assertIn("# a comment\n", updated)
-        self.assertTrue(updated.endswith("\n"))
-
-    def test_existing_quotes_are_dropped(self):
-        updated = instance.set_cfg_values('JvmArgs="-Xmx2048m"\n', {"JvmArgs": "-Xms1024m -Xmx2048m"})
-        self.assertEqual(updated, "JvmArgs=-Xms1024m -Xmx2048m\n")
-
-    def test_no_duplicate_keys_are_created(self):
-        updated = instance.set_cfg_values(self.ORIGINAL, {"JvmArgs": "-Xmx1m"})
-        self.assertEqual(updated.count("JvmArgs="), 1)
-
-    def test_parsing_reads_raw_values(self):
-        parsed = instance.parse_cfg(self.ORIGINAL)
-        self.assertEqual(parsed["name"], "1.21.1-neoforge")
-        self.assertEqual(parsed["OverrideJavaArgs"], "false")
-        self.assertNotIn("#", parsed)
-
-    def test_cfg_values_for_an_env(self):
-        env = support.mk_env(jvm={"max_mem_mb": 3072, "min_mem_mb": 1024, "window": [1280, 720]})
-        values = instance.cfg_values_for(env, java_path="/jdk/bin/java")
-        self.assertEqual(values["MaxMemAlloc"], "3072")
-        self.assertEqual(values["MinMemAlloc"], "1024")
-        self.assertEqual(values["JavaPath"], "/jdk/bin/java")
-        self.assertEqual(values["OverrideJavaLocation"], "true")
-        self.assertEqual(values["OverrideJavaArgs"], "true")
-        self.assertEqual(values["OverrideWindow"], "true")
-        self.assertEqual(values["OverrideMemory"], "true")
-        # heap is not repeated in JvmArgs: Prism warns modally when -Xmx/-Xms appear there
-        self.assertEqual(values["JvmArgs"], "")
-        self.assertNotIn("-Xmx", values["JvmArgs"])
-        self.assertEqual((values["MinecraftWinWidth"], values["MinecraftWinHeight"]), ("1280", "720"))
-
-    def test_extra_jvm_args_reach_jvmargs(self):
-        env = support.mk_env(jvm={"max_mem_mb": 3072, "args": ["-Dfoo=bar"]})
-        values = instance.cfg_values_for(env, java_path="/jdk/bin/java")
-        self.assertEqual(values["JvmArgs"], "-Dfoo=bar")
-        self.assertEqual(values["MaxMemAlloc"], "3072")
 
 
 class JavaLookupTest(unittest.TestCase):
@@ -114,222 +59,6 @@ class JavaLookupTest(unittest.TestCase):
         self.assertIn("JT_JAVA_21_HOME", str(caught.exception))
 
 
-class ReuseTest(unittest.TestCase):
-    def setUp(self):
-        self._home = support.temp_home()
-        self.home = self._home.__enter__()
-        self.addCleanup(self._home.__exit__, None, None, None)
-        self._tmp = tempfile.TemporaryDirectory()
-        self.addCleanup(self._tmp.cleanup)
-        self.tmp = paths.Path(self._tmp.name)
-
-    def make_pack(self, env, resolved):
-        return pack.PackResult(
-            pack_dir=self.tmp / "pack", index_path=self.tmp / "pack" / "modrinth.json",
-            mrpack_path=self.tmp / "unit.mrpack", pack_hash="deadbeef",
-            mod_filenames=["jei.jar"], version_id=env.name, dependencies={},
-        )
-
-    @staticmethod
-    def fake_materialize():
-        """A stand-in for :func:`instance.materialize_instance` (no JDK needed)."""
-        counter = {"n": 0}
-
-        def run(_env, instance_id, *, root=None, log=print, **kwargs):
-            counter["n"] += 1
-            support.instance_dir_with(paths.prism_root(), instance_id)
-            return instance_id
-
-        run.calls = counter
-        return run
-
-    def test_first_run_creates_and_later_runs_reuse(self):
-        env = support.mk_env()
-        jar = support.write_jar(self.tmp / "jei.jar", mod_id="jei")
-        resolved = support.resolved_env(env, [support.artifact("jei", jar)])
-        packs = self.make_pack(env, resolved)
-        fake_materialize = self.fake_materialize()
-
-        with mock.patch.object(instance, "materialize_instance", side_effect=fake_materialize), \
-                mock.patch.object(instance, "configure_instance", return_value={}) as configure:
-            first = instance.ensure_instance(env, resolved, packs, log=lambda *_: None)
-            self.assertTrue(first.imported)
-            self.assertFalse(first.reused)
-            second = instance.ensure_instance(env, resolved, packs, log=lambda *_: None)
-            self.assertTrue(second.reused)
-            self.assertEqual(second.instance_id, first.instance_id)
-
-        self.assertEqual(fake_materialize.calls["n"], 1)
-        # creation writes instance.cfg itself; the reuse path re-applies it, because
-        # the env file is the authority for java/memory/window and may change
-        # without the modset (which is what keys the instance) changing.
-        self.assertEqual(configure.call_count, 1)
-        self.assertEqual(first.instance_id, instance.instance_id_for(env, first.modset_hash))
-        state = json.loads(paths.state_path().read_text(encoding="utf-8"))
-        self.assertEqual(state["envs"][env.name]["instance_id"], first.instance_id)
-        self.assertEqual(state["envs"][env.name]["modset_hash"], first.modset_hash)
-
-    def test_a_changed_modset_materialises_a_fresh_instance(self):
-        env = support.mk_env()
-        jar_a = support.write_jar(self.tmp / "a" / "jei.jar", mod_id="jei")
-        jar_b = support.write_jar(self.tmp / "b" / "jei.jar", mod_id="jei", payload="changed\n")
-        fake_materialize = self.fake_materialize()
-
-        with mock.patch.object(instance, "materialize_instance", side_effect=fake_materialize), \
-                mock.patch.object(instance, "configure_instance", return_value={}):
-            first = instance.ensure_instance(env, support.resolved_env(env, [support.artifact("jei", jar_a)]),
-                                             self.make_pack(env, None), log=lambda *_: None)
-            second = instance.ensure_instance(env, support.resolved_env(env, [support.artifact("jei", jar_b)]),
-                                              self.make_pack(env, None), log=lambda *_: None)
-        self.assertNotEqual(first.instance_id, second.instance_id)
-        self.assertEqual(fake_materialize.calls["n"], 2)
-        self.assertFalse(second.reused)
-
-    def test_the_instance_id_is_deterministic_for_env_and_modset(self):
-        env = support.mk_env()
-        jar = support.write_jar(self.tmp / "jei.jar", mod_id="jei")
-        resolved = support.resolved_env(env, [support.artifact("jei", jar)])
-        digest = pack.modset_hash(env, resolved)
-        self.assertEqual(instance.instance_id_for(env, digest), instance.instance_id_for(env, digest))
-        self.assertTrue(instance.instance_id_for(env, digest).startswith(env.name + "-"))
-        self.assertIn(digest[:12], instance.instance_id_for(env, digest))
-        other = support.mk_env(name="other-env")
-        self.assertNotEqual(instance.instance_id_for(env, digest), instance.instance_id_for(other, digest))
-
-    def test_a_leftover_directory_is_cleared_before_the_new_instance(self):
-        """A directory state.json does not point at is debris, not a reusable instance."""
-        env = support.mk_env()
-        jar = support.write_jar(self.tmp / "jei.jar", mod_id="jei")
-        resolved = support.resolved_env(env, [support.artifact("jei", jar)])
-        desired = instance.instance_id_for(env, pack.modset_hash(env, resolved))
-        leftover = support.instance_dir_with(paths.prism_root(), desired)
-        (leftover / "minecraft" / "mods").mkdir(parents=True, exist_ok=True)
-        (leftover / "minecraft" / "mods" / "stale.jar").write_text("old", encoding="utf-8")
-        self.assertTrue(leftover.exists())
-
-        seen = {}
-
-        def fake_materialize(_env, instance_id, *, root=None, log=print, **kwargs):
-            seen["leftover_still_there"] = leftover.exists()
-            support.instance_dir_with(paths.prism_root(), instance_id)
-            return instance_id
-
-        with mock.patch.object(instance, "materialize_instance", side_effect=fake_materialize), \
-                mock.patch.object(instance, "configure_instance", return_value={}):
-            info = instance.ensure_instance(env, resolved, self.make_pack(env, resolved),
-                                            log=lambda *_: None)
-        self.assertFalse(seen["leftover_still_there"], "the debris must be removed first")
-        self.assertTrue(info.imported)
-        self.assertEqual(info.instance_id, desired)
-        self.assertFalse((leftover / "minecraft" / "mods" / "stale.jar").exists())
-
-    def test_a_recorded_instance_missing_on_disk_is_recreated(self):
-        env = support.mk_env()
-        jar = support.write_jar(self.tmp / "jei.jar", mod_id="jei")
-        resolved = support.resolved_env(env, [support.artifact("jei", jar)])
-        digest = pack.modset_hash(env, resolved)
-        desired = instance.instance_id_for(env, digest)
-        instance.write_state({"version": 1, "envs": {env.name: {
-            "instance_id": desired, "modset_hash": digest}}})
-        with mock.patch.object(instance, "materialize_instance",
-                               side_effect=self.fake_materialize()) as create_mock, \
-                mock.patch.object(instance, "configure_instance", return_value={}):
-            info = instance.ensure_instance(env, resolved, self.make_pack(env, resolved), log=lambda *_: None)
-        self.assertTrue(info.imported)
-        self.assertEqual(info.instance_id, desired)
-        self.assertEqual(create_mock.call_count, 1)
-
-
-class MaterializeTest(unittest.TestCase):
-    """The instance is written directly; Prism is only asked to launch it."""
-
-    def setUp(self):
-        self._home = support.temp_home()
-        self.home = self._home.__enter__()
-        self.addCleanup(self._home.__exit__, None, None, None)
-        self._tmp = tempfile.TemporaryDirectory()
-        self.addCleanup(self._tmp.cleanup)
-        self.root = paths.Path(self._tmp.name) / "prism"
-        self.jdk = paths.Path(self._tmp.name) / "jdk-21"
-        (self.jdk / "bin").mkdir(parents=True)
-        (self.jdk / "bin" / "java").write_text("#!/bin/sh\n", encoding="utf-8")
-
-    def materialize(self, **overrides):
-        env = support.mk_env(**overrides)
-        instance_id = instance.instance_id_for(env, "deadbeefcafe")
-        instance.materialize_instance(env, instance_id, root=self.root, java_home=self.jdk,
-                                      log=lambda *_: None)
-        return env, instance.instance_dir(instance_id, self.root)
-
-    def test_it_writes_the_two_files_prism_reads(self):
-        _env, directory = self.materialize()
-        self.assertTrue((directory / "instance.cfg").is_file())
-        self.assertTrue((directory / "mmc-pack.json").is_file())
-        self.assertTrue((directory / "minecraft" / "mods").is_dir())
-
-    def test_the_cfg_carries_the_envs_java_memory_and_window(self):
-        _env, directory = self.materialize(jvm={"max_mem_mb": 2048, "min_mem_mb": 512,
-                                                "window": [1024, 768]})
-        cfg = instance.parse_cfg((directory / "instance.cfg").read_text(encoding="utf-8"))
-        self.assertEqual(cfg["InstanceType"], "OneSix")
-        self.assertEqual(cfg["MaxMemAlloc"], "2048")
-        self.assertEqual(cfg["MinMemAlloc"], "512")
-        self.assertEqual(cfg["OverrideJavaLocation"], "true")
-        self.assertEqual(cfg["OverrideJavaArgs"], "true")
-        self.assertEqual(cfg["OverrideWindow"], "true")
-        self.assertEqual(cfg["JavaPath"], str(self.jdk / "bin" / "java"))
-        self.assertEqual((cfg["MinecraftWinWidth"], cfg["MinecraftWinHeight"]), ("1024", "768"))
-        self.assertEqual(cfg["name"], instance.instance_id_for(_env, "deadbeefcafe"))
-
-    def test_the_pack_names_the_minecraft_and_loader_components(self):
-        env, directory = self.materialize()
-        packed = json.loads((directory / "mmc-pack.json").read_text(encoding="utf-8"))
-        self.assertEqual(packed["formatVersion"], 1)
-        by_uid = {c["uid"]: c for c in packed["components"]}
-        self.assertEqual(by_uid["net.minecraft"]["version"], env.mc)
-        self.assertEqual(by_uid["net.neoforged"]["version"], env.loader.version)
-        self.assertTrue(by_uid["net.minecraft"]["important"])
-        for component in packed["components"]:
-            self.assertIn("cachedName", component)
-            self.assertIn("cachedVersion", component)
-
-    def test_every_loader_type_maps_to_a_component_uid(self):
-        expected = {"neoforge": "net.neoforged", "forge": "net.minecraftforge",
-                    "fabric": "net.fabricmc.fabric-loader", "quilt": "org.quiltmc.quilt-loader"}
-        self.assertEqual(instance.LOADER_COMPONENT_UIDS, expected)
-        for loader, uid in expected.items():
-            env = support.mk_env(loader={"type": loader, "version": "1.2.3"})
-            packed = instance.pack_json(env)
-            self.assertIn(uid, [c["uid"] for c in packed["components"]], loader)
-
-    def test_legacy_forge_component_drops_the_minecraft_prefix(self):
-        """The mrpack dependency keeps ``1.12.2-...``; the component is bare, or it 404s."""
-        env = support.mk_env(mc="1.12.2", loader={"type": "forge", "version": "1.12.2-14.23.5.2864"},
-                             java={"version": 8})
-        components = {c["uid"]: c["version"] for c in instance.pack_json(env)["components"]}
-        self.assertEqual(components["net.minecraftforge"], "14.23.5.2864")
-        # the mrpack dependency string is untouched: it needs the prefix
-        self.assertEqual(pack.dependencies_for(env)["forge"], "1.12.2-14.23.5.2864")
-
-    def test_a_forge_version_without_the_prefix_is_left_alone(self):
-        env = support.mk_env(mc="1.20.1", loader={"type": "forge", "version": "47.0.35"})
-        packed = {c["uid"]: c["version"] for c in instance.pack_json(env)["components"]}
-        self.assertEqual(packed["net.minecraftforge"], "47.0.35")
-
-    def test_a_missing_jdk_is_an_error_not_a_launch_failure(self):
-        env = support.mk_env()
-        with self.assertRaises(ConfigError):
-            instance.materialize_instance(env, "unit", root=self.root,
-                                          java_home=self.root / "no-such-jdk", log=lambda *_: None)
-
-    def test_an_existing_directory_is_refused(self):
-        env, directory = self.materialize()
-        self.assertTrue(directory.is_dir())
-        with self.assertRaises(ConfigError):
-            instance.materialize_instance(env, directory.name, root=self.root,
-                                          java_home=self.jdk, log=lambda *_: None)
-
-
 class JavaQueryTest(unittest.TestCase):
     def test_java8_is_asked_for_as_1_8_too(self):
         """macOS java_home matches the release string, so Java 8 answers to '1.8'."""
@@ -373,10 +102,8 @@ class IsolationTest(unittest.TestCase):
         self._tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self._tmp.cleanup)
         self.tmp = paths.Path(self._tmp.name)
-        self.root = self.tmp / "prism"
-        self.instance_id = "unit-instance"
-        self.directory = support.instance_dir_with(self.root, self.instance_id)
-        self.minecraft = self.directory / "minecraft"
+        self.run_dir = self.tmp / "runs" / "unit"
+        self.minecraft = instance.run_game_dir(self.run_dir)
         (self.minecraft / "mods").mkdir(parents=True)
         (self.minecraft / "config").mkdir(parents=True)
         (self.minecraft / "saves").mkdir(parents=True)
@@ -386,21 +113,22 @@ class IsolationTest(unittest.TestCase):
         (self.minecraft / "config" / "jecharacters.toml").write_text("pinyin=true\n", encoding="utf-8")
         (self.minecraft / "saves" / "world").mkdir()
         (self.minecraft / "logs" / "latest.log").write_text("previous session\n", encoding="utf-8")
-        self.run_dir = self.tmp / "runs" / "unit"
         self.jar = support.write_jar(self.tmp / "jei.jar", mod_id="jei")
         self.resolved = support.resolved_env(support.mk_env(), [support.artifact("jei", self.jar)])
 
+    def isolate(self, resolved=None, **kwargs):
+        return instance.isolate("unit-env", resolved or self.resolved, self.run_dir,
+                                game_dir_path=self.minecraft, log=lambda *_: None, **kwargs)
+
     def test_mods_are_resynced_from_scratch(self):
-        report = instance.isolate(self.instance_id, self.resolved, self.run_dir,
-                                  root=self.root, log=lambda *_: None)
+        report = self.isolate()
         present = sorted(p.name for p in (self.minecraft / "mods").iterdir())
         self.assertEqual(present, ["jei.jar"])
         self.assertEqual(report.removed, 2)
         self.assertEqual(report.staged, ["jei.jar"])
 
     def test_config_is_archived_then_emptied(self):
-        report = instance.isolate(self.instance_id, self.resolved, self.run_dir,
-                                  root=self.root, log=lambda *_: None)
+        report = self.isolate()
         self.assertEqual(report.config_archived, 1)
         self.assertEqual(list((self.minecraft / "config").iterdir()), [])
         archived = self.run_dir / "pre-run-config" / "jecharacters.toml"
@@ -408,14 +136,12 @@ class IsolationTest(unittest.TestCase):
         self.assertEqual(archived.read_text(encoding="utf-8"), "pinyin=true\n")
 
     def test_saves_and_logs_are_emptied(self):
-        instance.isolate(self.instance_id, self.resolved, self.run_dir, root=self.root,
-                         log=lambda *_: None)
+        self.isolate()
         self.assertEqual(list((self.minecraft / "saves").iterdir()), [])
         self.assertEqual(list((self.minecraft / "logs").iterdir()), [])
 
     def test_the_isolation_report_serialises(self):
-        report = instance.isolate(self.instance_id, self.resolved, self.run_dir, root=self.root,
-                                  log=lambda *_: None)
+        report = self.isolate()
         payload = report.to_json()
         self.assertEqual(payload["modsStaged"], ["jei.jar"])
         self.assertEqual(payload["savesCleared"], 1)
@@ -432,24 +158,22 @@ class IsolationTest(unittest.TestCase):
         artifact.via = "dev-classpath"
         resolved = support.resolved_env(support.mk_env(),
                                         [support.artifact("jei", self.jar), artifact])
-        report = instance.isolate(self.instance_id, resolved, self.run_dir, root=self.root,
-                                  log=lambda *_: None)
+        report = self.isolate(resolved)
         self.assertEqual(report.staged, ["jei.jar"])
         present = sorted(p.name for p in (self.minecraft / "mods").iterdir())
         self.assertEqual(present, ["jei.jar"], "the dev-classpath jar must not land in mods/")
         self.assertTrue(any("dev-classpath" in note for note in report.notes), report.notes)
 
-    def test_an_explicit_game_directory_overrides_the_instance_one(self):
-        """The gradle backend has no instance; it hands over the directory directly."""
-        game = self.tmp / "runs" / "unit" / "game"
-        (game / "config").mkdir(parents=True)
-        report = instance.isolate("unused", self.resolved, self.run_dir, root=self.root,
-                                  game_dir_path=game, log=lambda *_: None)
-        self.assertEqual(report.mods_dir, game / "mods")
-        self.assertEqual(sorted(p.name for p in (game / "mods").iterdir()), ["jei.jar"])
-        self.assertEqual(sorted(p.name for p in (self.minecraft / "mods").iterdir()),
-                         ["readme.txt", "stale.jar"],
-                         "the instance's own game directory must stay untouched")
+    def test_isolation_touches_only_the_game_directory_it_was_given(self):
+        """One game directory per run: another run's directory stays untouched."""
+        other = instance.run_game_dir(self.tmp / "runs" / "other")
+        (other / "mods").mkdir(parents=True)
+        (other / "mods" / "stale.jar").write_text("old", encoding="utf-8")
+        report = self.isolate()
+        self.assertEqual(report.mods_dir, self.minecraft / "mods")
+        self.assertEqual(sorted(p.name for p in (self.minecraft / "mods").iterdir()), ["jei.jar"])
+        self.assertEqual(sorted(p.name for p in (other / "mods").iterdir()), ["stale.jar"],
+                         "another run's game directory must stay untouched")
 
 
 class OverrideStagingTest(unittest.TestCase):
@@ -459,13 +183,10 @@ class OverrideStagingTest(unittest.TestCase):
         self._tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self._tmp.cleanup)
         self.tmp = paths.Path(self._tmp.name)
-        self.root = self.tmp / "prism"
-        self.instance_id = "unit-instance"
-        self.directory = support.instance_dir_with(self.root, self.instance_id)
-        self.minecraft = self.directory / "minecraft"
+        self.run_dir = self.tmp / "runs" / "unit"
+        self.minecraft = instance.run_game_dir(self.run_dir)
         for name in ("mods", "config", "saves", "logs"):
             (self.minecraft / name).mkdir(parents=True, exist_ok=True)
-        self.run_dir = self.tmp / "runs" / "unit"
         self.jar = support.write_jar(self.tmp / "jei.jar", mod_id="jei")
         self.resolved = support.resolved_env(support.mk_env(), [support.artifact("jei", self.jar)])
 
@@ -489,8 +210,9 @@ class OverrideStagingTest(unittest.TestCase):
         )
 
     def isolate(self, pack_result):
-        return instance.isolate(self.instance_id, self.resolved, self.run_dir,
-                                root=self.root, pack_result=pack_result, log=lambda *_: None)
+        return instance.isolate("unit-env", self.resolved, self.run_dir,
+                                game_dir_path=self.minecraft, pack_result=pack_result,
+                                log=lambda *_: None)
 
     def test_the_options_preset_and_the_world_land_in_the_game_directory(self):
         report = self.isolate(self.pack_result())
@@ -526,52 +248,14 @@ class OverrideStagingTest(unittest.TestCase):
             self.isolate(result)
 
     def test_isolation_without_a_pack_result_behaviour_is_unchanged(self):
-        report = instance.isolate(self.instance_id, self.resolved, self.run_dir, root=self.root,
-                                  log=lambda *_: None)
+        report = instance.isolate("unit-env", self.resolved, self.run_dir,
+                                  game_dir_path=self.minecraft, log=lambda *_: None)
         self.assertEqual(report.overrides_staged, [])
         self.assertFalse((self.minecraft / "options.txt").exists())
 
 
-class LaunchCommandTest(unittest.TestCase):
-    """The launch line is where the world actually gets joined."""
-
-    def setUp(self):
-        self._tmp = tempfile.TemporaryDirectory()
-        self.addCleanup(self._tmp.cleanup)
-        self.tmp = paths.Path(self._tmp.name)
-
-    def command(self, **kwargs):
-        captured = {}
-
-        def fake_popen(command, **popen_kwargs):
-            captured["command"] = list(command)
-            return mock.Mock(pid=4242)
-
-        with mock.patch.object(instance, "prism_launcher", return_value="prismlauncher"), \
-                mock.patch.object(instance.subprocess, "Popen", side_effect=fake_popen):
-            instance.launch("unit-instance", root=self.tmp / "prism",
-                            log_path=self.tmp / "launcher.log", log=lambda *_: None, **kwargs)
-        return captured["command"]
-
-    def test_a_world_is_joined_through_prisms_own_world_option(self):
-        command = self.command(world="jechworld")
-        self.assertEqual(command, ["prismlauncher", "-d", str(self.tmp / "prism"),
-                                   "--launch", "unit-instance", "--world", "jechworld"])
-
-    def test_without_a_world_no_world_option_is_passed(self):
-        command = self.command()
-        self.assertEqual(command, ["prismlauncher", "-d", str(self.tmp / "prism"),
-                                   "--launch", "unit-instance"])
-        self.assertNotIn("--world", command)
-        self.assertNotIn("--", command, "a bare -- is not a game-argument passthrough")
-
-    def test_extra_arguments_still_come_last(self):
-        command = self.command(world="jechworld", extra_args=["--alive"])
-        self.assertEqual(command[-3:], ["--world", "jechworld", "--alive"])
-
-
 class GradleLaunchTest(unittest.TestCase):
-    """The Gradle backend's command line, game directory and log location."""
+    """The launch layer's command line, game directory and log location."""
 
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
@@ -759,34 +443,6 @@ class ProcessHelpersTest(unittest.TestCase):
             path = paths.Path(tmp) / "saves"
             self.assertEqual(instance.clear_dir(path), 0)
             self.assertTrue(path.is_dir())
-
-    def test_list_instances_ignores_directories_without_instance_cfg(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            root = paths.Path(tmp)
-            support.instance_dir_with(root, "real")
-            (root / "instances" / "not-an-instance").mkdir(parents=True)
-            (root / "instances" / ".hidden").mkdir(parents=True)
-            self.assertEqual(sorted(instance.list_instances(root)), ["real"])
-
-    def test_game_pids_matches_the_instance_directory_not_the_game_directory(self):
-        """Prism's JVM carries the instance dir (natives/library path), not ``.../minecraft``."""
-        with tempfile.TemporaryDirectory() as tmp:
-            root = paths.Path(tmp)
-            support.instance_dir_with(root, "unit-instance", cfg=False)
-            game = root / "instances" / "unit-instance" / "minecraft"
-            table = {
-                100: (1, f'/usr/bin/java -Djava.library.path={root}/instances/unit-instance/natives '
-                         f'-cp {root}/libraries/minecraft.jar org.prismlauncher.EntryPoint'),
-                101: (1, f'/usr/bin/java --gameDir {game} net.minecraft.client.main.Main'),
-                102: (1, f'/usr/bin/java -jar {root}/instances/other-instance/minecraft/x.jar Main'),
-                103: (1, f'/bin/sh -c tail -f {root}/instances/unit-instance/minecraft/logs/latest.log'),
-            }
-            with mock.patch.object(instance, "process_table", return_value=table):
-                found = instance.game_pids("unit-instance", root=root)
-        self.assertIn(100, found, "the natives/library path names the instance directory")
-        self.assertIn(101, found, "a --gameDir command line is also a match")
-        self.assertNotIn(102, found, "another instance must not match")
-        self.assertNotIn(103, found, "a non-java process must not match")
 
     def test_is_new_session_rejects_the_previous_session_log(self):
         with tempfile.TemporaryDirectory() as tmp:

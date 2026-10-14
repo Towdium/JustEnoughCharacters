@@ -1,5 +1,5 @@
 {
-  "_comment": "multiple-version line, MC 1.20.1 fabric. Launched through the checkout's own Gradle run task (gradle backend): architectury-loom's `:1.20.1:fabric:runClient` registers the module's own sources as the mod under test, so JECh rides the run's classpath (via=dev-classpath); JEI is `compileOnly` in `1.20.1/build.gradle` and fabric-api cannot even be a mod dependency of that module (see below), so both are jars staged into mods/. daemon_java is 17 because the wrapper is Gradle 8.1.1, which cannot run on the machine's default JDK (JBR 25). Upstream's two fabric properties are corrected in the checkout: fabric_api_version=0.76.0+1.19.4 is a 1.19.4 build, and no such file exists for 1.20.1 on CurseForge or Modrinth, while fabric_loader_version=0.14.11 cannot load the set at all (the pinned jei 15.48.0.179 requires fabricloader >=0.16.3). The loader is therefore 0.16.14, the version the 1.21.1 fabric row already runs, and the api property is a *compile* api rather than the run's api, for a third reason: jei 15.48.0.179 also requires fabric-api >=0.92.2+1.20.1, and every MC 1.20.1 fabric-api from 0.91.1 on is built by loom >= 1.5, which stamps `Fabric-Loom-Mixin-Remap-Type` into the jar manifest — the checkout's architectury-loom 1.1 refuses to configure any project that resolves such a jar ('does not support the mixin remap type value'). So the module keeps `modCompileOnly` on the newest 1.20.1 api loom 1.1 can read (0.91.0+1.20.1, which is all its two `fabric-command-api-v2` imports need) and the run loads the pinned 0.92.12+1.20.1 from mods/, where fabric-loader's dev-mode remapper (loom passes -Dfabric.remapClasspathFile) turns it from intermediary into the run's named namespace exactly as it does for JEI. This row keeps its world: JEI 15 defers `registerAdvancedSearch` (the phase that logs JECh's storage marker) to level load, so the marker check needs a level, and 1.20.1 accepts `--quickPlaySingleplayer`.",
+  "_comment": "multiple-version line, MC 1.20.1 fabric. Launched through the checkout's own Gradle run task (gradle launch): architectury-loom's `:1.20.1:fabric:runClient` registers the module's own sources as the mod under test, so JECh rides the run's classpath (via=dev-classpath); JEI is `compileOnly` in `1.20.1/build.gradle` and fabric-api cannot even be a mod dependency of that module (see below), so both are jars staged into mods/. daemon_java is 17 because the wrapper is Gradle 8.1.1, which cannot run on the machine's default JDK (JBR 25). Upstream's two fabric properties are corrected in the checkout: fabric_api_version=0.76.0+1.19.4 is a 1.19.4 build, and no such file exists for 1.20.1 on CurseForge or Modrinth, while fabric_loader_version=0.14.11 cannot load the set at all (the pinned jei 15.48.0.179 requires fabricloader >=0.16.3). The loader is therefore 0.16.14, the version the 1.21.1 fabric row already runs, and the api property is a *compile* api rather than the run's api, for a third reason: jei 15.48.0.179 also requires fabric-api >=0.92.2+1.20.1, and every MC 1.20.1 fabric-api from 0.91.1 on is built by loom >= 1.5, which stamps `Fabric-Loom-Mixin-Remap-Type` into the jar manifest — the checkout's architectury-loom 1.1 refuses to configure any project that resolves such a jar ('does not support the mixin remap type value'). So the module keeps `modCompileOnly` on the newest 1.20.1 api loom 1.1 can read (0.91.0+1.20.1, which is all its two `fabric-command-api-v2` imports need) and the run loads the pinned 0.92.12+1.20.1 from mods/, where fabric-loader's dev-mode remapper (loom passes -Dfabric.remapClasspathFile) turns it from intermediary into the run's named namespace exactly as it does for JEI. This row keeps its world: JEI 15 defers `registerAdvancedSearch` (the phase that logs JECh's storage marker) to level load, so the marker check needs a level, and 1.20.1 accepts `--quickPlaySingleplayer`.",
   "name": "mv-1.20.1-fabric",
   "tags": [
     "mv",
@@ -98,13 +98,5 @@
   "world": {
     "name": "jechworld"
   },
-  "timeout_sec": 600,
-  "jvm": {
-    "max_mem_mb": 3072,
-    "min_mem_mb": 1024,
-    "window": [
-      1280,
-      720
-    ]
-  }
+  "timeout_sec": 600
 }

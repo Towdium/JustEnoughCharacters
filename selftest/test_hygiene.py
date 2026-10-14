@@ -211,11 +211,13 @@ class PathsTest(unittest.TestCase):
     def test_the_data_skeleton_is_created_on_demand(self):
         with support.temp_home() as home:
             for path in (paths.cache_dir(), paths.http_cache_dir(), paths.mods_cache_dir(),
-                         paths.prism_root()):
+                         paths.worlds_cache_dir()):
                 self.assertFalse(path.exists())
             paths.ensure_data_dirs()
-            for rel in ("cache/http", "cache/mods", "prism", "runs"):
+            for rel in ("cache/http", "cache/mods", "cache/worlds", "runs"):
                 self.assertTrue((home / rel).is_dir(), rel)
+            self.assertFalse((home / "prism").exists(),
+                             "no launcher data root is created any more")
 
     def test_envs_dir_is_inside_the_harness(self):
         self.assertEqual(paths.envs_dir(), paths.repo_root() / "envs")

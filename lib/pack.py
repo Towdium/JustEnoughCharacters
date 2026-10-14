@@ -4,13 +4,13 @@ The pack is deliberately dumb: ``files`` is empty and *every* mod jar — the
 downloaded ones and the JECh artifact under test — rides in ``overrides/mods/``.
 Two reasons:
 
-* import needs no CDN download and no CurseForge key, so a run works offline from
-  the cache and cannot be re-resolved to something else halfway through;
-* ``overrides`` is copied into the instance verbatim, which is what lets the
+* nothing is ever re-resolved out of a CDN halfway through: the jar set is exactly
+  what the cache already verified, so a run works offline from the cache;
+* ``overrides`` is copied into the game directory verbatim, which is what lets the
   isolation step rebuild ``mods/`` from one authoritative source.
 
-The same authoritative-input rule covers the two things an instance needs beyond
-its mods:
+The same authoritative-input rule covers the two things a game directory needs
+beyond its mods:
 
 * ``overrides/options.txt`` — the minimal preset that keeps the accessibility
   onboarding screen out of the startup path (see ``lib.options``);
@@ -83,9 +83,8 @@ def dependencies_for(env):
 def build_index(env, resolved, version_id=None):
     """The ``modrinth.index.json`` body. ``files`` stays empty on purpose.
 
-    ``name`` doubles as the instance name Prism gives the imported instance, so
-    a caller that needs a deterministic instance id passes it as ``version_id``
-    (see ``instance.instance_id_for``); without one the env name is used.
+    ``name`` labels the pack, so a caller that wants a different label than the
+    env name passes it as ``version_id``.
     """
     label = version_id or env.name
     return {
@@ -103,7 +102,7 @@ def modset_hash(env, resolved):
     """A stable fingerprint of everything that decides what the game loads.
 
     Timestamps and run ids are excluded on purpose: the hash answers "is this the
-    same mod set as last time", which is what licenses reusing an instance.
+    same mod set as last time", which is what the report's ``packHash`` records.
     """
     mods = sorted(
         ({"name": a.name, "filename": a.filename, "sha1": a.sha1 or "", "size": a.size}
@@ -114,7 +113,6 @@ def modset_hash(env, resolved):
         "mc": env.mc,
         "loader": {"type": env.loader.type, "version": env.loader.version},
         "java": env.java_version,
-        "jvm": {"min": env.jvm.min_mem_mb, "max": env.jvm.max_mem_mb},
         "mods": mods,
     })
 

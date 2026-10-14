@@ -49,7 +49,7 @@ class DependencyError(ConfigError):
 
 
 class ToolMissingError(ConfigError):
-    """An external program we must call (prismlauncher, /usr/libexec/java_home) is absent."""
+    """An external program we must call (lsof, /usr/libexec/java_home) is absent."""
 
 
 class SecretMissingError(ConfigError):

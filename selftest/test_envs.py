@@ -39,26 +39,23 @@ class EnvParsingTest(unittest.TestCase):
             self.assertIn(check_type, text)
 
     def test_defaults_are_applied(self):
-        env = support.mk_env(jvm=None, timeout_sec=None)
+        env = support.mk_env(timeout_sec=None)
         self.assertEqual(env.timeout_sec, envs.DEFAULT_TIMEOUT_SEC)
-        self.assertEqual(env.jvm.max_mem_mb, envs.DEFAULT_MAX_MEM_MB)
-        self.assertEqual(env.jvm.min_mem_mb, envs.DEFAULT_MIN_MEM_MB)
-        self.assertEqual(env.jvm.window, (1280, 720))
+        self.assertEqual(env.gradle.task, ":neoforge:runClient")
+        self.assertEqual(env.gradle.daemon_java, 21)
 
-    def test_jvm_window_overrides(self):
-        env = support.mk_env(jvm={"max_mem_mb": 2048, "min_mem_mb": 512, "window": [1024, 768]})
-        self.assertEqual(env.jvm.window, (1024, 768))
-        self.assertEqual(env.jvm.max_mem_mb, 2048)
-        self.assertEqual(env.jvm.min_mem_mb, 512)
+    def test_every_runnable_env_declares_the_one_launch_layer(self):
+        """An env that is not skipped and names no run task is a configuration error.
 
-    def test_jvm_args_carry_only_the_extra_arguments_not_the_heap(self):
-        """Heap lives in Prism's memory keys; -Xmx/-Xms there trigger a modal warning."""
-        env = support.mk_env(jvm={"max_mem_mb": 2048, "min_mem_mb": 512,
-                                  "args": ["-Dfoo=bar"]})
-        self.assertEqual(env.jvm.jvm_args(), "-Dfoo=bar")
-        self.assertNotIn("-Xmx", env.jvm.jvm_args())
-        self.assertNotIn("-Xms", env.jvm.jvm_args())
-        self.assertEqual(support.mk_env().jvm.jvm_args(), "")
+        The Prism instance launcher was removed (2026-10-14), so the checkout's own
+        Gradle run task is the only way an env can be executed at all; a row
+        without it cannot run, and saying so is better than launching nothing.
+        """
+        with self.assertRaises(EnvSchemaError) as caught:
+            support.mk_env(gradle=None)
+        message = str(caught.exception)
+        self.assertIn("env.gradle is required", message)
+        self.assertIn("skip", message)
 
     def test_comment_keys_are_allowed(self):
         data = support.env_dict()
@@ -173,29 +170,38 @@ class EnvParsingTest(unittest.TestCase):
         # to load a level exists before 1.20, so the row carries `skip` and its
         # checks stay written down as documentation. A skip is still a
         # first-class result (see the runner tests); these envs simply have one.
-        # The row is also not a gradle row: the multiple-version forge modules
-        # cannot carry the mod under test in a dev run (measured 2026-10-14).
-        # The two `1.12.2-*` rows joined it on the same day for a different
+        # The two `1.12.2-*` rows joined it on 2026-10-14 for a different
         # reason: their client cannot boot in the `1.12.0` checkout's Gradle dev
         # run on this arm64 machine (LWJGL 2's macOS natives are x86_64/i386-only
         # while the only JDK 8 here is arm64), and the instance launcher whose
         # arm64 natives substitution used to carry them is retired — measured, see
-        # envs/README.md, "The 1.12.2 rows and the gradle backend".
-        self.assertEqual(sorted(env.name for env in loaded.values() if env.skip),
-                         ["1.12.2-forge-hei", "1.12.2-forge-jei-legacy", "mv-1.19.2-forge"])
+        # envs/README.md, "The 1.12.2 rows and the gradle launch".
+        # The four `multiple-version` forge rows were the only rows still launched
+        # by the instance launcher; with it removed (2026-10-14) they have no
+        # launch path at all — their checkout's Forge dev run cannot host the mod
+        # under test (a JPMS split package on 1.18.2/1.19.2/1.20.1, a
+        # self-contradicting merged dev jar on 1.16.5) — so three of them joined
+        # the skip list the same day, exactly as their checks stay written down.
+        self.assertEqual(
+            sorted(env.name for env in loaded.values() if env.skip),
+            ["1.12.2-forge-hei", "1.12.2-forge-jei-legacy", "mv-1.16.5-forge",
+             "mv-1.18.2-forge", "mv-1.19.2-forge", "mv-1.20.1-forge"])
         skipped = loaded["mv-1.19.2-forge"]
         self.assertIsNone(skipped.world, "a world is what the row is missing")
         self.assertIn("jei-storage-registered", [check.name for check in skipped.checks],
                       "the skip names the one capability the row is missing")
         self.assertIsNone(loaded["mv-1.19.2-fabric"].skip)
         self.assertIsNone(loaded["mv-1.19.2-fabric"].world)
-        # A skipped 1.12.2 row keeps everything but the launch: its checks are the
+        # A skipped row keeps everything but the launch: its checks are the
         # written record of what the row verifies, and it is skipped by the
         # *launch* layer, not by weakening an assertion.
         for name, marker in (("1.12.2-forge-jei-legacy", "legacy-tree-transformed"),
-                             ("1.12.2-forge-hei", "jei-index-registered")):
+                             ("1.12.2-forge-hei", "jei-index-registered"),
+                             ("mv-1.16.5-forge", "no-transformer-failure"),
+                             ("mv-1.18.2-forge", "no-transformer-failure"),
+                             ("mv-1.20.1-forge", "jei-storage-registered")):
             row = loaded[name]
-            self.assertIsNone(row.gradle, f"{name} has no working gradle wiring")
+            self.assertIsNone(row.gradle, f"{name} has no working run task to declare")
             self.assertIn(marker, [check.name for check in row.checks], name)
 
     def test_every_shipped_env_declares_a_stopping_rule(self):
@@ -380,8 +386,9 @@ class EnvRejectionTest(unittest.TestCase):
                     "one line without control characters")
 
     def test_uitest_without_a_gradle_block_is_rejected(self):
-        """The selection is a Gradle property: with no gradle block there is nowhere to put it."""
-        self.reject(support.env_dict(uitest={"selection": "all"}),
+        """The selection is a Gradle property: with no run task there is nowhere to put it."""
+        self.reject(support.env_dict(gradle=None, skip="waiting on a launch path",
+                                     uitest={"selection": "all"}),
                     "env.uitest requires env.gradle")
 
     def test_uitest_report_path_must_stay_relative(self):
@@ -437,7 +444,7 @@ class EnvRejectionTest(unittest.TestCase):
 
 
 class GradleBlockTest(unittest.TestCase):
-    """``env.gradle`` selects the launch layer; its absence keeps Prism."""
+    """``env.gradle`` names the launch layer, and every runnable env needs one."""
 
     def reject(self, data, *needles):
         with self.assertRaises(EnvSchemaError) as caught:
@@ -447,15 +454,18 @@ class GradleBlockTest(unittest.TestCase):
             self.assertIn(needle, message, f"expected {needle!r} in:\n{message}")
         return message
 
-    def test_an_env_without_the_block_is_the_prism_backend(self):
-        env = support.mk_env()
+    def test_a_skipped_env_needs_no_run_task(self):
+        """A row that is never executed needs no launch layer — only a reason."""
+        env = support.mk_env(gradle=None, skip="no launch path yet; see envs/README.md")
         self.assertIsNone(env.gradle)
-        self.assertEqual(env.backend, envs.PRISM_BACKEND)
 
-    def test_the_block_switches_the_backend_and_keeps_its_fields(self):
+    def test_a_runnable_env_without_the_block_is_a_config_error(self):
+        message = self.reject(support.env_dict(gradle=None), "env.gradle is required")
+        self.assertIn("skip", message, "the error must name the other honest state")
+
+    def test_the_block_names_the_task_the_checkout_and_the_gradle_jdk(self):
         env = support.mk_env(gradle={"task": ":neoforge:runClient", "project_dir": "1.21.1",
                                      "daemon_java": 21})
-        self.assertEqual(env.backend, envs.GRADLE_BACKEND)
         self.assertEqual(env.gradle.task, ":neoforge:runClient")
         self.assertEqual(env.gradle.project_dir, "1.21.1")
         self.assertEqual(env.gradle.daemon_java, 21)
@@ -534,31 +544,32 @@ class ViaTest(unittest.TestCase):
         """
         loaded = {env.name: env for env in envs.load_all()}
         neoforge = loaded["1.21.1-neoforge"]
-        self.assertEqual(neoforge.backend, envs.GRADLE_BACKEND)
         self.assertEqual(neoforge.gradle.task, ":neoforge:runClientTests")
         self.assertEqual(neoforge.jech.via, "dev-classpath")
         self.assertEqual([mod.via for mod in neoforge.mods], ["dev-classpath"])
 
         fabric = loaded["1.21.1-fabric"]
-        self.assertEqual(fabric.backend, envs.GRADLE_BACKEND)
         self.assertEqual(fabric.gradle.task, ":fabric:runClient")
         self.assertEqual(fabric.jech.via, "dev-classpath")
         self.assertEqual({mod.name: mod.via for mod in fabric.mods},
                          {"jei": "game-dir", "fabric-api": "dev-classpath"})
 
-    def test_the_other_shipped_envs_keep_the_prism_backend(self):
+    def test_every_shipped_row_is_gradle_or_skipped(self):
+        """The matrix has exactly two states: a run task, or a declared skip.
+
+        There is no third launch layer any more (the Prism instance launcher was
+        removed on 2026-10-14), so a row that declares neither would be an env that
+        cannot run and does not say why. Ten rows declare a run task — the 1.21.1
+        pair, the four moderner rows and the four multiple-version *fabric* rows —
+        and the other six declare `skip`: the four multiple-version *forge* rows,
+        which the checkout's Forge dev run cannot host (a JPMS split package on
+        1.18.2/1.19.2/1.20.1, a self-contradicting merged dev jar on 1.16.5 — see
+        envs/README.md, "Forge rows and the gradle launch"), and the two 1.12.2
+        rows, whose client cannot boot at all on this arm64 machine. The rows that
+        do declare a run task are named here rather than counted, so a row that
+        silently loses its task cannot pass this test.
+        """
         loaded = {env.name: env for env in envs.load_all()}
-        # Every row that declares a ``gradle`` block: the 1.21.1 pair, the four
-        # moderner rows (2026-10-14) and the four multiple-version fabric rows
-        # (same day). Every other row still *selects* the instance backend — today
-        # the four multiple-version forge rows and the two 1.12.2 rows, the latter
-        # now carrying `skip` (see the skip test above), so nothing but the backend
-        # label is left of the 1.12.2 pair. The
-        # backend is a per-(line, loader) decision, not a per-line one: the
-        # multiple-version pair is split inside the line on purpose, because a
-        # probe of that checkout's Forge dev runs (2026-10-14) ended in a JPMS
-        # split package on 1.18.2/1.19.2/1.20.1 and a broken dev artifact on
-        # 1.16.5 — see envs/README.md, "Forge rows and the gradle backend".
         gradle_rows = {
             "1.21.1-neoforge", "1.21.1-fabric",
             "moderner-1.21.10-neoforge", "moderner-1.21.10-fabric",
@@ -567,14 +578,15 @@ class ViaTest(unittest.TestCase):
             "mv-1.19.2-fabric", "mv-1.20.1-fabric",
         }
         self.assertFalse(gradle_rows - set(loaded), "a named gradle row does not exist")
-        prism_envs = [env for name, env in loaded.items() if name not in gradle_rows]
-        self.assertTrue(prism_envs)
-        for env in prism_envs:
-            self.assertIsNone(env.gradle, env.name)
-            self.assertEqual(env.backend, envs.PRISM_BACKEND, env.name)
-            self.assertEqual(env.jech.via, envs.DEFAULT_VIA, env.name)
-            for mod in env.mods:
-                self.assertEqual(mod.via, envs.DEFAULT_VIA, f"{env.name}/{mod.name}")
+        for env in loaded.values():
+            if env.name in gradle_rows:
+                self.assertIsNotNone(env.gradle, env.name)
+                self.assertIsNone(env.skip, env.name)
+            else:
+                self.assertIsNotNone(env.skip,
+                                     f"{env.name} has neither a run task nor a skip reason")
+        self.assertEqual([name for name, env in loaded.items() if env.gradle is not None],
+                         sorted(gradle_rows))
 
     def test_the_shipped_mv_fabric_rows_stage_only_what_the_checkout_lacks(self):
         """The four multiple-version fabric rows are the same contract, written down.
@@ -601,7 +613,6 @@ class ViaTest(unittest.TestCase):
         }
         for name, vias in expected.items():
             env = loaded[name]
-            self.assertEqual(env.backend, envs.GRADLE_BACKEND, name)
             self.assertEqual(env.gradle.task, f":{env.mc}:fabric:runClient", name)
             self.assertEqual(env.gradle.project_dir, "multiple-version", name)
             self.assertEqual(env.gradle.daemon_java, 17,
@@ -633,7 +644,6 @@ class ViaTest(unittest.TestCase):
         }
         for name, task in expected.items():
             env = loaded[name]
-            self.assertEqual(env.backend, envs.GRADLE_BACKEND, name)
             self.assertEqual(env.gradle.task, task, name)
             self.assertEqual(env.gradle.project_dir, "moderner", name)
             self.assertIsNone(env.gradle.daemon_java, f"{name}: Gradle 9.5 runs on the default JDK")

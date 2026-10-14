@@ -23,7 +23,7 @@ EXAMPLE_TAG = "example"
 def build_parser():
     parser = argparse.ArgumentParser(
         prog="jt",
-        description="JECh compatibility test harness: pin mods, build a pack, run it in Prism, judge the log.",
+        description="JECh compatibility test harness: pin mods, build a pack, run the checkout, judge the log.",
     )
     parser.add_argument("--version", action="version", version=f"jt {__version__}")
     sub = parser.add_subparsers(dest="command", required=True, metavar="command")
@@ -83,7 +83,6 @@ def cmd_envs(args, log=print):
         return 0
     log(f"JT_HOME      {paths.display(paths.jt_home())}")
     log(f"envs dir     {paths.display(paths.envs_dir())}")
-    log(f"prism root   {paths.display(paths.prism_root())}")
     log("")
     log(f"{'env':28} {'mc/loader':28} {'java':>4} {'mods':>5} {'checks':>6}  tags")
     for env in loaded:
@@ -95,7 +94,7 @@ def cmd_envs(args, log=print):
             f"{len(env.checks):>6}  {','.join(env.tags) or '-'}")
         log(f"{'':28} jech: {env.jech.source} ({jech_state})  file: {paths.display(env.path)}")
         if env.gradle is not None:
-            log(f"{'':28} backend: gradle {env.gradle.task} in "
+            log(f"{'':28} gradle: {env.gradle.task} in "
                 f"{env.gradle.project_dir} (daemon_java "
                 f"{env.gradle.daemon_java if env.gradle.daemon_java else 'ambient'})")
         if env.world is not None:
@@ -221,7 +220,6 @@ def _env_json(env):
         "mc": env.mc,
         "loader": {"type": env.loader.type, "version": env.loader.version},
         "java": {"version": env.java_version},
-        "backend": env.backend,
         "gradle": ({"task": env.gradle.task, "projectDir": env.gradle.project_dir,
                     "daemonJava": env.gradle.daemon_java} if env.gradle is not None else None),
         "jech": {"source": env.jech.source, "pinned": env.jech.pinned,
@@ -238,8 +236,6 @@ def _env_json(env):
                   if env.world is not None else None),
         "uitest": ({"selection": env.uitest.selection} if env.uitest is not None else None),
         "timeout_sec": env.timeout_sec,
-        "jvm": {"max_mem_mb": env.jvm.max_mem_mb, "min_mem_mb": env.jvm.min_mem_mb,
-                "window": list(env.jvm.window)},
         "file": paths.display(env.path),
     }
 

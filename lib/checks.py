@@ -70,8 +70,8 @@ class CheckContext:
                  stop_reason=None, ready_reached=True):
         self.log_text = log_text or ""
         self.log_path = log_path
-        # The instance's minecraft directory: the root every file_exists value is
-        # relative to. None when no instance was located at all.
+        # The run's game directory: the root every file_exists value is relative
+        # to. None when no game directory was known at all.
         self.minecraft_dir = Path(minecraft_dir) if minecraft_dir else None
         self.session_started = bool(session_started)
         self.exit_code = exit_code
@@ -136,7 +136,7 @@ def internal_checks(ctx):
     )
     if not ctx.game_started:
         exited = result(INTERNAL_PREFIX + "game-exit", "internal", FAIL,
-                        "the game process never appeared in the instance's process table")
+                        "the game process never appeared in the process table")
     elif ctx.timed_out:
         exited = result(INTERNAL_PREFIX + "game-exit", "internal", FAIL,
                         "the game was still running when the watchdog killed it")
@@ -220,23 +220,23 @@ def _log_regex(spec, ctx):
 
 
 def _file_exists(spec, ctx):
-    """A path (or list of paths) that must exist under the instance's minecraft dir.
+    """A path (or list of paths) that must exist under the run's game directory.
 
     This is the check for "the run produced this file" — a generated config, a
-    written marker — where the log alone cannot prove it. The instance directory
-    is the precondition: without one there is nothing to look in, and the check
-    SKIPs instead of pretending.
+    written marker — where the log alone cannot prove it. That game directory
+    (``runs/<id>/game``) is the precondition: without one there is nothing to look
+    in, and the check SKIPs instead of pretending.
     """
     wanted = _values(spec)
     if ctx.minecraft_dir is None:
-        return result(spec.name, spec.type, SKIP, "no instance directory was located to inspect")
+        return result(spec.name, spec.type, SKIP, "no game directory was located to inspect")
     missing = [value for value in wanted if not (ctx.minecraft_dir / value).exists()]
     if missing:
         return result(spec.name, spec.type, FAIL,
-                      "missing under the instance's minecraft directory: "
+                      "missing under the run's game directory: "
                       + "; ".join(repr(m) for m in missing))
     return result(spec.name, spec.type, PASS,
-                  f"found {len(wanted)} file(s) under the instance's minecraft directory")
+                  f"found {len(wanted)} file(s) under the run's game directory")
 
 
 def _no_crash_reports(spec, ctx):
@@ -252,19 +252,20 @@ def _no_crash_reports(spec, ctx):
 def _exit_code_zero(spec, ctx):
     """The game ended — was that a healthy end?
 
-    A production instance quits only when something ends it, so three outcomes
-    count as healthy: the runner ended the session on purpose once the env was
-    ready (``stop_reason``), or the game itself exited 0 as part of a normal
-    shutdown. A natural exit *before* the ready marker appeared, a non-zero exit,
-    or an unobservable one all fail — the watchdog stays a separate exit code 3.
+    A client launched by a checkout's run task quits only when something ends it,
+    so three outcomes count as healthy: the runner ended the session on purpose
+    once the env was ready (``stop_reason``), or the game itself exited 0 as part
+    of a normal shutdown. A natural exit *before* the ready marker appeared, a
+    non-zero exit, or an unobservable one all fail — the watchdog stays a separate
+    exit code 3.
     """
     if ctx.stop_reason in DELIBERATE_STOP_REASONS:
         return result(spec.name, spec.type, PASS,
                       f"the runner ended the session on purpose (stop_reason={ctx.stop_reason})")
-    if ctx.exit_code_source == "handoff":
+    if ctx.exit_code_source == "detached":
         return result(spec.name, spec.type, SKIP,
-                      "launcher handoff: the launcher handed off to a running Prism instance, so the "
-                      "game's own exit code is not observable from the CLI")
+                      "detached launcher: the launcher exited while the game kept running, so the "
+                      "game's own exit code is not observable from here")
     if ctx.exit_code is None:
         return result(spec.name, spec.type, FAIL, "the process exit code could not be determined")
     if not ctx.game_exited:
@@ -283,7 +284,7 @@ def _exit_code_zero(spec, ctx):
 def _uitest_report(spec, ctx):
     """The in-client UI test harness's own verdict, read from its report.
 
-    ``value`` is the report path relative to the instance's minecraft directory;
+    ``value`` is the report path relative to the run's game directory;
     without one the harness's default output location is used. The check is a
     FAIL whenever no verdict can be read — a missing file, an unreadable one, a
     report this version does not know, a report without totals — because "the
@@ -296,7 +297,7 @@ def _uitest_report(spec, ctx):
     """
     relative = spec.value or UITEST_REPORT_DEFAULT
     if ctx.minecraft_dir is None:
-        return result(spec.name, spec.type, SKIP, "no instance directory was located to inspect")
+        return result(spec.name, spec.type, SKIP, "no game directory was located to inspect")
     path = ctx.minecraft_dir / relative
     if not path.is_file():
         return result(spec.name, spec.type, FAIL,

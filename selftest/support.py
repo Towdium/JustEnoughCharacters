@@ -36,6 +36,7 @@ def env_dict(**overrides):
         "mc": "1.21.1",
         "loader": {"type": "neoforge", "version": "21.1.215"},
         "java": {"version": 21},
+        "gradle": {"task": ":neoforge:runClient", "daemon_java": 21},
         "jech": {
             "source": "local-build",
             "project": "1.21.1",
@@ -48,7 +49,6 @@ def env_dict(**overrides):
         ],
         "checks": [{"type": "log_contains", "value": "jecharacters", "name": "jech-loaded"}],
         "timeout_sec": 600,
-        "jvm": {"max_mem_mb": 3072},
     }
     for key, value in overrides.items():
         if value is None:
@@ -95,18 +95,6 @@ def artifact(name, path, *, role="mod", source="curseforge", pin=None, sha1=None
 
 def resolved_env(env, artifacts):
     return resolve.ResolvedEnv(env, list(artifacts))
-
-
-def instance_dir_with(root, instance_id, *, cfg=True):
-    """A fake Prism instance directory."""
-    directory = Path(root) / "instances" / instance_id
-    (directory / "minecraft").mkdir(parents=True, exist_ok=True)
-    if cfg:
-        (directory / "instance.cfg").write_text(
-            "InstanceType=OneSix\nname=%s\nJavaPath=old-java\nJvmArgs=-Xmx512m\n" % instance_id,
-            encoding="utf-8",
-        )
-    return directory
 
 
 def seed_info(root, *, name="jechworld", mc="1.21.1", payload=b"level data", digest=None):

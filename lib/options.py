@@ -1,17 +1,16 @@
-"""The minimal ``options.txt`` an instance is started with, and why each key is there.
+"""The minimal ``options.txt`` a run's game directory is started with, and why each key is there.
 
-A freshly materialized Prism instance has no ``options.txt``, and a client with
+A freshly created game directory has no ``options.txt``, and a client with
 no ``options.txt`` shows the **"Welcome to Minecraft!" accessibility onboarding
 screen before the title screen** — a modal page with a "Continue" button that
 nothing in a headless run can press. The run then never reaches the menu, let
 alone a world. Presetting the file removes that page from the startup path; it is
-written into the pack's ``overrides/`` and staged into the instance on every run
-(``lib.instance.isolate``), so a stale instance can neither mask a broken preset
-nor keep one that has drifted.
+written into the pack's ``overrides/`` and staged into the game directory on every
+run (``lib.instance.isolate``), so a previous run's copy can neither mask a broken
+preset nor keep one that has drifted.
 
 The preset is deliberately tiny — only keys that *unblock* automation, never a
-preference such as volume, render distance or window size (those stay vanilla and
-the env's own ``jvm.window``):
+preference such as volume, render distance or window size (those stay vanilla):
 
 * ``onboardAccessibility:true`` — marks the accessibility onboarding as done, so
   the onboarding screen is not shown. (Field ``Options.onboardAccessibility``;

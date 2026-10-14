@@ -1,5 +1,5 @@
 {
-  "_comment": "multiple-version line, MC 1.18.2 forge, smoke env. Launched through Prism, which stages the built jar into mods/; it is not launched through the checkout's Gradle run task, because the multiple-version Forge modules cannot carry the mod under test in a dev run (measured 2026-10-14 — see `Forge rows and the gradle backend` in envs/README.md for the reasons and their evidence: a JPMS split package on 1.18.2/1.19.2/1.20.1, a broken dev artifact on 1.16.5). This line has no JEI plugin class, so there is no plugin log marker to assert and the checks stay on the failure markers; it has no world either, because they are all startup markers.",
+  "_comment": "multiple-version line, MC 1.18.2 forge, smoke env. Declared `skip` on 2026-10-14: the row's only launch path was the Prism instance launcher (it staged the built jar into mods/), and that launcher was removed the same day. The checkout cannot host the row instead: its Forge dev run dies before Minecraft starts on a JPMS split package — two modules put classes in `me.towdium.jecharacters` (measured 2026-10-14; the control run and the exact `ResolutionException` are in envs/README.md, `Forge rows and the gradle launch`). This line has no JEI plugin class, so there is no plugin log marker to assert and the checks stay on the failure markers; it has no world either, because they are all startup markers. The checks stay as written.",
   "name": "mv-1.18.2-forge",
   "tags": [
     "mv",
@@ -14,6 +14,7 @@
   "java": {
     "version": 17
   },
+  "skip": "the Prism instance launcher is removed, and the checkout's Forge dev run dies before Minecraft starts on a JPMS split package (two modules export me.towdium.jecharacters); see envs/README.md",
   "jech": {
     "source": "local-build",
     "project": "multiple-version",
@@ -55,13 +56,5 @@
   "ready_when": {
     "value": "Sound engine started"
   },
-  "timeout_sec": 600,
-  "jvm": {
-    "max_mem_mb": 3072,
-    "min_mem_mb": 1024,
-    "window": [
-      1280,
-      720
-    ]
-  }
+  "timeout_sec": 600
 }

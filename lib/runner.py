@@ -8,16 +8,15 @@ The sequence per env, all of it fail-closed:
 
 1. resolve (auto-pin anything still unresolved) and download into the cache;
 2. render the ``.mrpack`` into ``runs/<id>/pack`` (files list empty, all jars in
-   ``overrides/mods``);
-3. reuse the env's Prism instance when its modset hash is unchanged, else import;
-4. isolate: re-sync ``mods/``, archive then clear ``config/``, clear ``saves/`` and
-   ``logs/``;
-5. launch with ``prismlauncher -d <root> --launch <id>`` in the background, then
-   follow ``<instance>/minecraft/logs/latest.log`` — only accepting a file that is
-   newer than the run start, since ``latest.log`` can still be the previous
-   session's;
-6. a watchdog on ``timeout_sec`` kills the process tree and yields exit code 3;
-7. evaluate the env's checks plus the always-present ``internal:`` checks, and
+   ``overrides/mods``) — the run's written-down input set;
+3. isolate the run's game directory (``runs/<id>/game``): re-sync ``mods/``,
+   archive then clear ``config/``, clear ``saves/`` and ``logs/``;
+4. launch with ``./gradlew <task> --no-daemon -PjechRunDir=<game dir>`` in the
+   background, then follow ``<game dir>/logs/latest.log`` — only accepting a file
+   that is newer than the run start, since ``latest.log`` can still be the
+   previous session's;
+5. a watchdog on ``timeout_sec`` kills the process tree and yields exit code 3;
+6. evaluate the env's checks plus the always-present ``internal:`` checks, and
    write report.json / report.txt / junit.xml.
 
 Exit codes: 0 pass, 1 a check failed, 2 a configuration or infrastructure error,
@@ -26,7 +25,6 @@ Exit codes: 0 pass, 1 a check failed, 2 a configuration or infrastructure error,
 
 from __future__ import annotations
 
-import os
 import time
 from pathlib import Path
 
@@ -38,7 +36,6 @@ from .select import Selection
 from .util import atomic_write_json, atomic_write_text, now_iso, now_stamp, sanitize_name
 
 POLL_SEC = 0.5
-STARTUP_GRACE_SEC = 180
 LAUNCHER_EXIT_GRACE_SEC = 60
 # How long the run keeps waiting, after the ``ready_when`` line has appeared,
 # for the env's ``log_contains`` markers to show up too. In a healthy run they
@@ -58,14 +55,6 @@ READY_GRACE_SEC = 120
 # log lines written with it land before the evidence is read. It costs
 # SETTLE_GRACE_SEC per run and is skipped when the game has already exited.
 SETTLE_GRACE_SEC = 3
-# When the launcher CLI exits without a sign of a game, it usually handed the
-# launch off to a Prism process that already owns this data root (Prism's CLI
-# talks to the running instance over a local socket), and that process launches
-# the game a moment later. Breaking out the instant the CLI's exit code lands
-# would report "no session" for a game that is starting right now, so the run
-# gives the handoff this much time to produce a session or a game process. It
-# only ever costs this long on a path that is already a failure.
-HANDOFF_GRACE_SEC = 120
 CONFIG_ERROR = "configError"
 
 
@@ -158,9 +147,6 @@ def run_env(env, *, refresh=False, log=print, selection_label=None):
         "skipReason": env.skip,
         "world": ({"name": env.world.name, "savesPath": env.world.saves_path}
                   if env.world is not None else None),
-        "instanceId": None,
-        "instanceReused": False,
-        "instanceImported": False,
         "packHash": None,
         "dependencies": {},
         "mods": [],
@@ -287,96 +273,81 @@ def _execute(env, run_dir, entry, *, started_wall, refresh, log):
     entry["notes"].append(
         "options: preset options.txt stages " + ", ".join(options.keys()) + " (see lib/options.py)"
     )
+    ready_values, markers = readiness_rule(env)
 
-    # The same (env, modset) always maps to the same instance id; naming the pack
-    # after it makes the import deterministic, so a retry reuses one instance
-    # instead of accumulating suffixed ones.
-    digest = instance.modset_hash(env, resolved)
-    instance_label = instance.instance_id_for(env, digest)
-    pack_result = pack_mod.build_pack(env, resolved, run_dir, version_id=instance_label,
-                                      seed=seed, log=log)
+    # The pack is the run's written-down input set: what isolation stages into the
+    # game directory from, and what the report keeps next to the evidence.
+    pack_result = pack_mod.build_pack(env, resolved, run_dir, seed=seed, log=log)
     entry["mrpack"] = paths.display(pack_result.mrpack_path)
     entry["packHash"] = pack_result.pack_hash
     entry["dependencies"] = pack_result.dependencies
     log(f"{env.name}: pack {paths.display(pack_result.mrpack_path)} "
         f"({len(pack_result.mod_filenames)} jar(s) in overrides/mods, files list empty, "
-        f"overrides {', '.join(pack_result.extra_overrides)}, instance {instance_label})")
+        f"overrides {', '.join(pack_result.extra_overrides)})")
 
-    # The launch layer. A ``gradle`` block in the env replaces Prism with a Gradle
-    # run task inside the checkout under test; everything above (resolve, seed,
-    # pack) and everything below (isolation, watching, judging) is the same, so
-    # the two backends differ in exactly the three facts below: which directory
-    # the game gets, which process is the launcher, and where its log lands.
-    ready_values, markers = readiness_rule(env)
-    pids_fn = None
-    owners_fn = None
-    if env.gradle is not None:
-        checkout = checkout_dir(env, log=log)
-        minecraft_dir = instance.run_game_dir(run_dir)
-        # The in-client UI test selection (when the env asks for the harness): it
-        # travels to the checkout as -PjechTest, which is the only gate on that
-        # wiring, so a run without it loads no harness at all.
-        uitest_selection = env.uitest.selection if env.uitest is not None else None
-        entry["gradle"] = {
-            "task": env.gradle.task,
-            "projectDir": paths.display(checkout),
-            "daemonJava": env.gradle.daemon_java,
-            "uitestSelection": uitest_selection,
-        }
-        log(f"{env.name}: gradle backend: " + " ".join(instance.gradle_command(
-            checkout, env.gradle.task, minecraft_dir,
-            world=env.world.name if env.world is not None else None, uitest=uitest_selection)))
-        if uitest_selection is not None:
-            # The env makes no claim about where that output lands: the checkout's
-            # own harness wiring does, and the uitest_report check reads it back
-            # from there. Saying it here is what lets a reader of the report find
-            # the captures without opening the build files.
-            entry["notes"].append(
-                f"uitest: scenarios selected by {uitest_selection!r}; the harness writes "
-                f"{checks_mod.UITEST_REPORT_DEFAULT} and its captures under "
-                f"{checks_mod.UITEST_CAPTURES_DIR}/ inside the game directory, and quits the client "
-                "itself once the selection is done"
-            )
-    else:
-        info = instance.ensure_instance(env, resolved, pack_result, refresh=refresh, log=log)
-        entry["instanceId"] = info.instance_id
-        entry["instanceReused"] = info.reused
-        entry["instanceImported"] = info.imported
-        minecraft_dir = instance.game_dir(info.instance_id)
+    # The launch layer: the checkout's own Gradle run task. Everything above
+    # (resolve, seed, pack) and everything below (isolation, watching, judging) is
+    # independent of it: isolation owns the game directory, the runner watches the
+    # process tree below the wrapper it started, and the log lands under that game
+    # directory.
+    if env.gradle is None:
+        # Unreachable through the schema, which refuses an env that is neither
+        # skipped nor given a run task (see envs.parse_env). Kept fail-closed so a
+        # programmatically built env cannot silently launch nothing.
+        raise ConfigError(
+            f"{env.name}: no gradle run task (env.gradle); the Prism instance launcher was removed "
+            "on 2026-10-14, so there is no launch layer for this env"
+        )
+    checkout = checkout_dir(env, log=log)
+    minecraft_dir = instance.run_game_dir(run_dir)
+    # The in-client UI test selection (when the env asks for the harness): it
+    # travels to the checkout as -PjechTest, which is the only gate on that
+    # wiring, so a run without it loads no harness at all.
+    uitest_selection = env.uitest.selection if env.uitest is not None else None
+    entry["gradle"] = {
+        "task": env.gradle.task,
+        "projectDir": paths.display(checkout),
+        "daemonJava": env.gradle.daemon_java,
+        "uitestSelection": uitest_selection,
+    }
+    log(f"{env.name}: gradle run: " + " ".join(instance.gradle_command(
+        checkout, env.gradle.task, minecraft_dir,
+        world=env.world.name if env.world is not None else None, uitest=uitest_selection)))
+    if uitest_selection is not None:
+        # The env makes no claim about where that output lands: the checkout's
+        # own harness wiring does, and the uitest_report check reads it back
+        # from there. Saying it here is what lets a reader of the report find
+        # the captures without opening the build files.
+        entry["notes"].append(
+            f"uitest: scenarios selected by {uitest_selection!r}; the harness writes "
+            f"{checks_mod.UITEST_REPORT_DEFAULT} and its captures under "
+            f"{checks_mod.UITEST_CAPTURES_DIR}/ inside the game directory, and quits the client "
+            "itself once the selection is done"
+        )
 
-    entry["runBackend"] = env.backend
-    isolation = instance.isolate(entry["instanceId"] or instance_label, resolved, run_dir,
-                                 pack_result=pack_result, game_dir_path=minecraft_dir, log=log)
+    isolation = instance.isolate(env.name, resolved, run_dir, game_dir_path=minecraft_dir,
+                                 pack_result=pack_result, log=log)
     entry["isolation"] = isolation.to_json()
     entry["notes"].extend(isolation.notes)
 
     log_path = instance.log_path_in(minecraft_dir)
-    launcher_log = run_dir / ("gradle.log" if env.gradle is not None else "launcher.log")
+    launcher_log = run_dir / "gradle.log"
     entry["log"] = paths.display(log_path)
     entry["launcherLog"] = paths.display(launcher_log)
 
     crash_before = crash_report_snapshot(minecraft_dir)
-    owned_launcher = env.gradle is not None
-    if env.gradle is not None:
-        proc = instance.launch_gradle(checkout, env.gradle.task, minecraft_dir,
-                                      world=env.world.name if env.world is not None else None,
-                                      uitest=uitest_selection,
-                                      java_home=gradle_java_home(env, log=log),
-                                      log_path=launcher_log, log=log)
-        # The game is a java process under this launcher whose working directory is
-        # this run's game directory, and there is no Prism process to hand a launch
-        # off to, so both matchers are replaced. The tracker searches until it has
-        # found the client and re-checks it by signal afterwards (see the class).
-        tracker = instance.GradleGameTracker(proc.pid, minecraft_dir)
-        pids_fn = tracker.pids
-        owners_fn = lambda: []
-    else:
-        proc = instance.launch(entry["instanceId"], log_path=launcher_log,
-                               world=env.world.name if env.world is not None else None, log=log)
+    proc = instance.launch_gradle(checkout, env.gradle.task, minecraft_dir,
+                                  world=env.world.name if env.world is not None else None,
+                                  uitest=uitest_selection,
+                                  java_home=gradle_java_home(env, log=log),
+                                  log_path=launcher_log, log=log)
+    # The game is a java process under this launcher whose working directory is
+    # this run's game directory. The tracker searches until it has found the client
+    # and re-checks it by signal afterwards (see the class).
+    tracker = instance.GradleGameTracker(proc.pid, minecraft_dir)
     follower = instance.LogFollower(log_path, started_wall, poll=POLL_SEC)
-    watch = _watch(env, entry["instanceId"], proc, follower, started_wall, log=log,
-                   ready_values=ready_values, markers=markers, pids_fn=pids_fn,
-                   owners_fn=owners_fn, owned_launcher=owned_launcher)
+    watch = _watch(env, proc, follower, started_wall, log=log,
+                   ready_values=ready_values, markers=markers, pids_fn=tracker.pids)
 
     entry["timedOut"] = watch["timed_out"]
     entry["watchdog"] = watch["timed_out"]
@@ -506,13 +477,12 @@ def all_markers_seen(log_text, markers):
     return all(value in log_text for value in markers)
 
 
-def _watch(env, instance_id, proc, follower, started_wall, *, log, ready_values=(), markers=(),
-           pids_fn=None, owners_fn=None, owned_launcher=False):
+def _watch(env, proc, follower, started_wall, *, log, pids_fn, ready_values=(), markers=()):
     """Track the game until it is ready, it exits, the launcher gives up, or the watchdog fires.
 
     When the env declares ``ready_when`` the run gets a stopping rule: the moment
     the ready line and every ``log_contains`` marker are in the log, the runner
-    ends the instance's process tree itself (``stop_reason=goal-reached``) and
+    ends the game's process tree itself (``stop_reason=goal-reached``) and
     moves on to judging. That stop is delayed by ``SETTLE_GRACE_SEC`` so a client
     that writes the evidence the checks read *just* after the ready line (a
     mod-loading crash report, say) is not killed before it does. If the ready
@@ -520,22 +490,14 @@ def _watch(env, instance_id, proc, follower, started_wall, *, log, ready_values=
     ``READY_GRACE_SEC`` and then stopped too (``stop_reason=ready-timeout``), so a
     broken assertion surfaces as a FAIL instead of an unbounded hang.
 
-    ``pids_fn`` and ``owners_fn`` are how a launch layer says "these are the
-    game's processes" and "these are the other processes that own this launch":
-    the Prism backend matches on the instance directory (and looks for a Prism
-    process that may have received a handoff), the Gradle backend on the process
-    tree below the wrapper it started (and has nothing to hand off to).
-
-    ``owned_launcher`` says the launcher process is this run's own — a Gradle
-    invocation, which must not survive a run that never got a session. A Prism CLI
-    is not in that category: one that outlives the game may still be draining and
-    ending it would turn its exit code into a signal, so it is deliberately left
-    to exit on its own.
+    ``pids_fn`` is how the launch layer says "these are the game's processes": the
+    Gradle launch matches the process tree below the wrapper it started, by each
+    candidate's working directory. The launcher itself is always this run's own —
+    a Gradle invocation, which must not survive a run that never got a session —
+    so its process tree is ended here rather than left behind.
     """
     if pids_fn is None:
-        pids_fn = lambda: instance.game_pids(instance_id, exclude=(proc.pid,))
-    if owners_fn is None:
-        owners_fn = _other_launchers
+        raise ConfigError("_watch needs a pids_fn: the way to name this run's game processes")
     deadline = started_wall + env.timeout_sec
     session_started = False
     game_started = False
@@ -544,8 +506,6 @@ def _watch(env, instance_id, proc, follower, started_wall, *, log, ready_values=
     stop_reason = None
     ready_seen_at = None
     goal_reached_at = None
-    handoff_deadline = None
-    handoff_noted = False
     notes = []
     pids = []
 
@@ -559,8 +519,8 @@ def _watch(env, instance_id, proc, follower, started_wall, *, log, ready_values=
         if pids:
             game_started = True
             if proc.poll() is not None:
-                # the CLI (or a Prism instance it handed over to) is not the
-                # game's parent: the game's own exit code is unobservable then
+                # the wrapper is not necessarily the game's parent (Gradle may hand
+                # the client to another process): its exit code is unobservable then
                 launcher_died_early = True
         if session_started and ready_values:
             if ready_seen_at is None and ready_line_seen(follower.text, ready_values):
@@ -583,27 +543,13 @@ def _watch(env, instance_id, proc, follower, started_wall, *, log, ready_values=
         if game_started and not pids:
             break
         if not game_started and proc.poll() is not None:
-            # The launcher is gone and no game showed up yet: either it handed the
-            # launch off to another Prism process that owns this data root (which
-            # starts the game a moment later), or the launch genuinely failed.
-            # Wait out the bounded grace so the first case is not reported as a
-            # missing session, then decide.
-            if handoff_deadline is None:
-                handoff_deadline = now + HANDOFF_GRACE_SEC
-            if not handoff_noted:
-                handoff_noted = True
-                owners = owners_fn()
-                if owners:
-                    note = (f"the launcher CLI exited (code {proc.poll()}) while another Prism "
-                            f"process owns this data root (pid(s) {', '.join(owners)}); the launch "
-                            "was handed off to it")
-                else:
-                    note = (f"the launcher CLI exited (code {proc.poll()}) with no game process; "
-                            f"waiting up to {HANDOFF_GRACE_SEC}s in case the launch appears late")
-                log(f"{env.name}: {note}")
-                notes.append(note)
-            if time.time() >= deadline or time.time() >= handoff_deadline:
-                break
+            # The launcher is gone and no game showed up: the launch failed. The
+            # run is over — there is nothing left that could still start it.
+            note = (f"the launcher exited (code {proc.poll()}) with no game process; "
+                    "no game session was started")
+            log(f"{env.name}: {note}")
+            notes.append(note)
+            break
         if time.time() >= deadline:
             timed_out = True
             break
@@ -613,24 +559,25 @@ def _watch(env, instance_id, proc, follower, started_wall, *, log, ready_values=
     was_running = bool(pids)
     if stop_reason or timed_out or was_running:
         instance.kill_process_tree(sorted(set(pids) | {proc.pid}), log=log)
-    elif owned_launcher and proc.poll() is None and not session_started:
+    elif proc.poll() is None and not session_started:
         # The run gave up on a launcher that is still alive and never produced a
         # session: everything it will ever start is still to come, so the tree it
         # owns is ended here rather than left behind (a Gradle daemon keeps its
         # JVMs, and the client it launches with them).
         instance.kill_process_tree([proc.pid], log=log)
-    exit_code = _reap(proc, log=log, timeout=LAUNCHER_EXIT_GRACE_SEC,
-                      leave_alone=not owned_launcher)
-    if exit_code is None and owned_launcher:
-        # An owned launcher is never left behind: whatever it is still doing, this
-        # run is over and a Gradle daemon plus a client it keeps alive is exactly
-        # the memory this machine does not have.
+    exit_code = _reap(proc, log=log, timeout=LAUNCHER_EXIT_GRACE_SEC)
+    if exit_code is None:
+        # The launcher is never left behind: whatever it is still doing, this run
+        # is over and a Gradle daemon plus a client it keeps alive is exactly the
+        # memory this machine does not have.
         instance.kill_process_tree([proc.pid], log=log)
         log(f"{env.name}: the gradle launcher outlived its grace period; its process tree was ended")
     if stop_reason:
         source = "runner"
     elif launcher_died_early:
-        source = "handoff"
+        # The wrapper exited while the game kept running: the game is not its
+        # child any more, so its own exit code cannot be observed from here.
+        source = "detached"
     elif exit_code is not None:
         source = "launcher"
     else:
@@ -663,26 +610,12 @@ def _watch(env, instance_id, proc, follower, started_wall, *, log, ready_values=
     }
 
 
-def _other_launchers():
-    """Pids of Prism processes (other than this one) that own jt's data root."""
-    root = str(paths.prism_root())
-    owners = []
-    for pid, (_ppid, command) in instance.process_table().items():
-        if pid == os.getpid() or "prismlauncher" not in command:
-            continue
-        if root in command:
-            owners.append(str(pid))
-    return sorted(owners)
-
-
-def _reap(proc, *, log, timeout, leave_alone=True):
+def _reap(proc, *, log, timeout):
     if proc.poll() is not None:
         return proc.returncode
     try:
         return proc.wait(timeout=timeout)
     except Exception:
-        if leave_alone:
-            log("launcher process did not exit within the grace period; leaving it alone")
         return None
 
 

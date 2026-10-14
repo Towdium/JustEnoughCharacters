@@ -10,7 +10,7 @@ The seed is built the boring, version-exact way: the **vanilla dedicated server*
 of the env's own Minecraft version generates a small superflat world, which is
 then cached under ``<JT_HOME>/cache/worlds/<mc>-<name>``:
 
-* ``world/``    the world tree exactly as the instance's ``saves/<name>`` needs it
+* ``world/``    the world tree exactly as the game directory's ``saves/<name>`` needs it
 * ``manifest.json``  per-file sha256 + size, a content digest over them, and where
   the seed came from (server version, jar sha1, url)
 

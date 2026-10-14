@@ -365,10 +365,13 @@ class SeedWorldCliTest(unittest.TestCase):
         # declares the storage marker it cannot reach and names what is missing
         # instead of pretending to run; the two 1.12.2 rows are skipped by their
         # launch layer (the checkout's dev run cannot boot MC 1.12.2 on this
-        # arm64 machine — see envs/README.md), so `jt envs --json` reports all
-        # three as skipped.
-        self.assertEqual(sorted(name for name, item in listed.items() if item["skip"]),
-                         ["1.12.2-forge-hei", "1.12.2-forge-jei-legacy", "mv-1.19.2-forge"])
+        # arm64 machine — see envs/README.md), and the four multiple-version forge
+        # rows lost their only launch path when the instance launcher was removed
+        # (2026-10-14), so `jt envs --json` reports six skipped rows.
+        self.assertEqual(
+            sorted(name for name, item in listed.items() if item["skip"]),
+            ["1.12.2-forge-hei", "1.12.2-forge-jei-legacy", "mv-1.16.5-forge",
+             "mv-1.18.2-forge", "mv-1.19.2-forge", "mv-1.20.1-forge"])
         self.assertIn("quickPlay needs 1.20+", listed["mv-1.19.2-forge"]["skip"])
         self.assertIn("arm64", listed["1.12.2-forge-jei-legacy"]["skip"])
         self.assertIn("arm64", listed["1.12.2-forge-hei"]["skip"])

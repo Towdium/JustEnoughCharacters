@@ -18,9 +18,7 @@ The root holds::
       cache/mods/    downloaded mod jars, content addressed by filename + hash
       cache/servers/ downloaded vanilla server jars, one per Minecraft version
       cache/worlds/  generated world seeds: <mc>-<name>/world plus a manifest
-      prism/         the Prism Launcher data root (instances/, prismlauncher.cfg, ...)
       runs/          one directory per run: report.json, report.txt, junit.xml, pack/, logs
-      state.json     env -> instance mapping plus the modset hash that justified reuse
       secrets.env    machine-local secrets (only CF_API_KEY), never committed
 
 Everything outside ``JT_HOME`` is derived from the location of this package:
@@ -111,20 +109,8 @@ def worlds_cache_dir() -> Path:
     return cache_dir() / "worlds"
 
 
-def prism_root() -> Path:
-    return jt_home() / "prism"
-
-
-def instances_dir(root=None) -> Path:
-    return (Path(root) if root is not None else prism_root()) / "instances"
-
-
 def runs_dir() -> Path:
     return jt_home() / "runs"
-
-
-def state_path() -> Path:
-    return jt_home() / "state.json"
 
 
 def envs_dir() -> Path:
@@ -135,7 +121,7 @@ def ensure_data_dirs() -> list:
     """Create the data skeleton on demand; returns the directories it ensured."""
     made = []
     for path in (cache_dir(), http_cache_dir(), mods_cache_dir(), servers_cache_dir(),
-                 worlds_cache_dir(), prism_root(), runs_dir()):
+                 worlds_cache_dir(), runs_dir()):
         if not path.exists():
             path.mkdir(parents=True, exist_ok=True)
             made.append(path)

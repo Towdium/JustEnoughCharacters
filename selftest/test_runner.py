@@ -46,7 +46,6 @@ class SkippedEnvTest(unittest.TestCase):
         self.assertEqual(entry["status"], checks.SKIP)
         self.assertEqual(entry["exitCodeKind"], "skip")
         self.assertEqual(entry["skipReason"], self.env.skip)
-        self.assertIsNone(entry["instanceId"], "nothing may be materialized for a skipped env")
         self.assertEqual(entry["mods"], [])
         self.assertTrue(any("SKIP unit-env" in line for line in logs), logs)
         run_dir = sorted(paths.runs_dir().iterdir())[0]
@@ -63,10 +62,12 @@ class SkippedEnvTest(unittest.TestCase):
         self.assertIn("were NOT executed", text)
         self.assertEqual(report.verify_run(run_dir, log=lambda *_: None), 1)
 
-    def test_no_instance_directory_or_prism_root_is_created(self):
+    def test_a_skipped_env_launches_nothing_and_leaves_no_instance_state(self):
         runner.run_env(self.env, log=lambda *_: None)
-        self.assertFalse((self.home / "prism" / "instances").exists())
-        self.assertFalse((self.home / "state.json").exists())
+        self.assertFalse((self.home / "prism").exists(),
+                         "there is no instance data root any more")
+        self.assertFalse((self.home / "state.json").exists(),
+                         "nothing is mapped to an instance any more")
 
     def test_a_selection_of_only_skipped_envs_is_red(self):
         other = support.mk_env(name="other-env", skip="same reason")
@@ -261,7 +262,7 @@ class WatchLoopTest(unittest.TestCase):
         self.addCleanup(self._home.__exit__, None, None, None)
 
     def watch(self, text, *, ready, markers, grace=0.05, timeout_sec=600, settle=0.05,
-              follower=None, started_wall=None, pids=(999,)):
+              follower=None, started_wall=None, pids=(999,), pids_fn=None):
         env = support.mk_env(
             ready_when={"value": ready[0]} if ready else None,
             checks=[{"type": "log_contains", "value": m} for m in markers] or
@@ -278,14 +279,14 @@ class WatchLoopTest(unittest.TestCase):
             return list(pids)
 
         follower = follower if follower is not None else _FakeFollower(text)
-        with mock.patch.object(instance, "game_pids", return_value=list(pids)), \
-                mock.patch.object(instance, "kill_process_tree", side_effect=fake_kill), \
+        seen = pids_fn if pids_fn is not None else (lambda: list(pids))
+        with mock.patch.object(instance, "kill_process_tree", side_effect=fake_kill), \
                 mock.patch.object(runner, "POLL_SEC", 0.01), \
                 mock.patch.object(runner, "SETTLE_GRACE_SEC", settle), \
                 mock.patch.object(runner, "READY_GRACE_SEC", grace):
-            result = runner._watch(env, "unit", _FakeProc(code=0), follower,
+            result = runner._watch(env, _FakeProc(code=0), follower,
                                    started_wall if started_wall is not None else time.time(),
-                                   log=lambda *_: None,
+                                   log=lambda *_: None, pids_fn=seen,
                                    ready_values=ready_values, markers=marker_values)
         return result, killed
 
@@ -320,8 +321,14 @@ class WatchLoopTest(unittest.TestCase):
     def test_a_game_that_is_already_gone_does_not_wait_the_settle(self):
         """Nothing more can arrive from a dead process, so the settle is skipped."""
         follower = _StagedFollower(["booting\nREADY\n"])
+        seen = {"n": 0}
+
+        def pids_fn():
+            seen["n"] += 1
+            return [999] if seen["n"] == 1 else []
+
         watch, _killed = self.watch("", ready=["READY"], markers=[], settle=30,
-                                    follower=follower, pids=())
+                                    follower=follower, pids_fn=pids_fn)
         self.assertEqual(watch["stop_reason"], checks.STOP_GOAL_REACHED)
         self.assertEqual(follower.polls, 2, "a gone game stops the run on its first poll")
 
@@ -366,11 +373,10 @@ class WatchLoopTest(unittest.TestCase):
             calls["n"] += 1
             return [999] if calls["n"] == 1 else []
 
-        with mock.patch.object(instance, "game_pids", side_effect=fake_pids), \
-                mock.patch.object(instance, "kill_process_tree") as kill, \
+        with mock.patch.object(instance, "kill_process_tree") as kill, \
                 mock.patch.object(runner, "POLL_SEC", 0.01):
-            watch = runner._watch(env, "unit", _FakeProc(code=0), _FakeFollower("booting\n"),
-                                  time.time(), log=lambda *_: None,
+            watch = runner._watch(env, _FakeProc(code=0), _FakeFollower("booting\n"),
+                                  time.time(), log=lambda *_: None, pids_fn=fake_pids,
                                   ready_values=ready_values, markers=markers)
         self.assertIsNone(watch["stop_reason"])
         self.assertTrue(watch["ready_reached"], "no ready_when means no readiness gate")
@@ -405,14 +411,14 @@ class _NoSessionFollower:
         return ""
 
 
-class OwnedLauncherTest(unittest.TestCase):
-    """A Gradle launcher this run started must not outlive a run that gave up.
+class LauncherExitTest(unittest.TestCase):
+    """The launcher is this run's own Gradle invocation, and it is never left behind.
 
-    The break below is the shape the false-positive matcher produced: the runner
-    believes it saw the game (a pid appears), then reads the next sample as "the
-    game exited" and stops — while the launcher it started is still alive and has
-    not launched anything yet. For a Prism CLI that state is left alone (one that
-    outlives the game may still be draining); for a Gradle invocation it is not.
+    A launcher that exits without producing a game is a failed launch, not a
+    handoff: nothing else can start that client, so the run gives up at once
+    instead of waiting out a grace for a launch that is never coming. A launcher
+    that is still alive when the run gives up is ended here — a Gradle daemon plus
+    the client it keeps alive is exactly the memory this machine does not have.
     """
 
     def setUp(self):
@@ -421,10 +427,9 @@ class OwnedLauncherTest(unittest.TestCase):
         self.addCleanup(self._home.__exit__, None, None, None)
         self.env = support.mk_env(ready_when={"value": "READY"},
                                   checks=[{"type": "log_contains", "value": "MARKER"}])
-        self.env.timeout_sec = 5
         self.ready_values, self.markers = runner.readiness_rule(self.env)
 
-    def watch(self, *, owned, pids_sequence):
+    def watch(self, *, proc, pids_sequence, timeout_sec=5):
         calls = {"n": 0}
 
         def pids_fn():
@@ -432,97 +437,40 @@ class OwnedLauncherTest(unittest.TestCase):
             calls["n"] += 1
             return list(pids_sequence[index])
 
+        self.env.timeout_sec = timeout_sec
         killed = []
         with mock.patch.object(instance, "kill_process_tree",
                                side_effect=lambda pids, **kw: killed.append(list(pids))), \
                 mock.patch.object(runner, "POLL_SEC", 0.01):
-            watch = runner._watch(self.env, "unit", _AliveProc(), _NoSessionFollower(),
-                                  time.time(), log=lambda *_: None, ready_values=self.ready_values,
-                                  markers=self.markers, pids_fn=pids_fn, owners_fn=lambda: [],
-                                  owned_launcher=owned)
+            watch = runner._watch(self.env, proc, _NoSessionFollower(), time.time(),
+                                  log=lambda *_: None, pids_fn=pids_fn,
+                                  ready_values=self.ready_values, markers=self.markers)
         return watch, killed
 
-    def test_an_owned_launcher_is_ended_when_the_run_gives_up_without_a_session(self):
-        watch, killed = self.watch(owned=True, pids_sequence=[[999], [], []])
-        self.assertIsNone(watch["stop_reason"])
-        self.assertTrue(watch["game_started"], "the pid that appeared was taken for a game")
+    def test_a_launcher_that_exits_without_a_game_gives_up_at_once(self):
+        watch, killed = self.watch(proc=_FakeProc(code=1), pids_sequence=[[]])
+        self.assertFalse(watch["game_started"])
+        self.assertFalse(watch["timed_out"], "a failed launch is not a watchdog timeout")
+        self.assertEqual(watch["exit_code"], 1)
+        self.assertEqual(watch["exit_code_source"], "launcher")
+        self.assertTrue(any("no game process" in note for note in watch["notes"]), watch["notes"])
+        self.assertFalse(any("waiting up to" in note for note in watch["notes"]),
+                         "there is nothing to hand a launch off to any more")
+        self.assertEqual(killed, [], "the launcher already exited")
+
+    def test_a_launcher_that_outlives_the_run_is_ended(self):
+        watch, killed = self.watch(proc=_AliveProc(), pids_sequence=[[]], timeout_sec=0.05)
+        self.assertFalse(watch["game_started"])
+        self.assertTrue(watch["timed_out"])
         self.assertEqual(killed, [[4242]], "the launcher must not be left running")
 
-    def test_a_prism_launcher_is_left_alone_in_the_same_state(self):
-        watch, killed = self.watch(owned=False, pids_sequence=[[999], [], []])
+    def test_a_launcher_that_exits_while_the_game_keeps_running_is_detached(self):
+        """The game is not the wrapper's child any more, so its code is unobservable."""
+        watch, _killed = self.watch(proc=_FakeProc(code=0), pids_sequence=[[999], [], []])
+        self.assertTrue(watch["game_started"])
         self.assertIsNone(watch["stop_reason"])
-        self.assertEqual(killed, [], "a Prism CLI that outlived the game exits on its own")
-
-
-class HandoffTest(unittest.TestCase):
-    """A launcher CLI that exits at once may have handed the launch to another Prism."""
-
-    def setUp(self):
-        self._home = support.temp_home()
-        self.home = self._home.__enter__()
-        self.addCleanup(self._home.__exit__, None, None, None)
-        self.env = support.mk_env(ready_when={"value": "READY"},
-                                  checks=[{"type": "log_contains", "value": "MARKER"}])
-        self.ready_values, self.markers = runner.readiness_rule(self.env)
-
-    def watch(self, *, pids_sequence, launcher_exit=0, grace=0.2, owners=()):
-        calls = {"n": 0}
-
-        def fake_pids(*args, **kwargs):
-            index = min(calls["n"], len(pids_sequence) - 1)
-            calls["n"] += 1
-            return pids_sequence[index]
-
-        kills = []
-        # The log deliberately never carries the ready line, so the loop cannot
-        # stop on readiness and the handoff path is the only way out.
-        with mock.patch.object(instance, "game_pids", side_effect=fake_pids), \
-                mock.patch.object(instance, "kill_process_tree",
-                                  side_effect=lambda pids, **kw: kills.append(list(pids))), \
-                mock.patch.object(runner, "_other_launchers", return_value=list(owners)), \
-                mock.patch.object(runner, "POLL_SEC", 0.01), \
-                mock.patch.object(runner, "HANDOFF_GRACE_SEC", grace):
-            watch = runner._watch(self.env, "unit", _FakeProc(code=launcher_exit),
-                                  _FakeFollower("booting\n"), time.time(),
-                                  log=lambda *_: None, ready_values=self.ready_values,
-                                  markers=self.markers)
-        return watch, kills
-
-    def test_a_late_game_is_still_seen_instead_of_reported_as_a_missing_session(self):
-        # the CLI is gone at once; the game only shows up a moment later, exactly
-        # what a handoff to a running Prism process looks like.
-        watch, _kills = self.watch(pids_sequence=[[], [], [], [999], []], owners=["4242"])
-        self.assertTrue(watch["game_started"], "the handoff's game must not be missed")
-        self.assertEqual(watch["exit_code_source"], "handoff")
-        self.assertIsNone(watch["stop_reason"], "no readiness rule, so nothing stops it early")
-        self.assertTrue(any("handed off" in note for note in watch["notes"]), watch["notes"])
+        self.assertEqual(watch["exit_code_source"], "detached")
         self.assertTrue(watch["game_exited"])
-
-    def test_the_note_says_nothing_was_found_when_there_is_no_other_launcher(self):
-        watch, _kills = self.watch(pids_sequence=[[], []], owners=())
-        self.assertFalse(watch["game_started"])
-        self.assertTrue(any("waiting up to" in note for note in watch["notes"]), watch["notes"])
-        self.assertFalse(any("handed off" in note for note in watch["notes"]))
-
-    def test_the_grace_is_bounded(self):
-        watch, _kills = self.watch(pids_sequence=[[]], grace=0.05)
-        self.assertFalse(watch["game_started"])
-        self.assertFalse(watch["timed_out"], "a missing launch is not a watchdog timeout")
-
-    def test_a_failing_launch_still_fails_the_session_check(self):
-        watch, _kills = self.watch(pids_sequence=[[]], launcher_exit=1, grace=0.05)
-        self.assertFalse(watch["game_started"])
-        self.assertFalse(watch["timed_out"])
-        self.assertEqual(watch["exit_code"], 1)
-
-    def test_other_launchers_are_matched_on_the_data_root(self):
-        table = {
-            10: (1, f"/opt/homebrew/bin/prismlauncher -d {paths.prism_root()} --launch x"),
-            11: (1, "/Applications/Prism Launcher.app/Contents/MacOS/prismlauncher"),
-            12: (1, "/usr/bin/java -jar someone-elses-launcher.jar"),
-        }
-        with mock.patch.object(instance, "process_table", return_value=table):
-            self.assertEqual(runner._other_launchers(), ["10"])
 
 
 if __name__ == "__main__":

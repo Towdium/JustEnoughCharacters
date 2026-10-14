@@ -168,8 +168,7 @@ def render_text(report):
             f"java {entry.get('java', '?')})"
         )
         lines.append(
-            f"    instance={entry.get('instanceId') or '(none)'} "
-            f"reused={bool(entry.get('instanceReused'))} packHash={str(entry.get('packHash'))[:16]} "
+            f"    packHash={str(entry.get('packHash'))[:16]} "
             f"exitCode={entry.get('exitCode')} ({entry.get('exitCodeSource')}) "
             f"timedOut={bool(entry.get('timedOut'))} stopReason={entry.get('stopReason') or '-'}"
         )
@@ -235,7 +234,7 @@ def render_junit(report):
             f'time="{(entry.get("durationMs") or 0) / 1000.0:.3f}">',
             "    <properties>",
         ]
-        for key in ("mc", "instanceId", "packHash", "log"):
+        for key in ("mc", "packHash", "log"):
             value = entry.get(key)
             if value:
                 lines.append(f'      <property name={quoteattr(str(key))} value={quoteattr(str(value))} />')
