@@ -254,9 +254,11 @@ class EnvParsingTest(unittest.TestCase):
         search. The HEI row runs the smoke scenarios, which is what it was
         measured with.
 
-        The two 1.21.1 rows are the standalone backend's rows (since 2026-10-15):
-        their ``uitest`` block names the harness build it runs, so the row
-        carries its own launch layer and declares no ``gradle`` block at all.
+        The two 1.21.1 rows are the standalone backend's first rows (since
+        2026-10-15), and the two ``moderner-1.21.10`` rows joined them the same
+        day when their checkout copies moved out: their ``uitest`` block names
+        the harness build it runs, so the row carries its own launch layer and
+        declares no ``gradle`` block at all.
         """
         expected = {
             "1.12.2-forge-hei": "tag:smoke",
@@ -269,6 +271,8 @@ class EnvParsingTest(unittest.TestCase):
         standalone = {
             "1.21.1-neoforge": "uitest/1.21.1-neoforge",
             "1.21.1-fabric": "uitest/1.21.1-fabric",
+            "moderner-1.21.10-neoforge": "uitest/moderner-1.21.10-neoforge",
+            "moderner-1.21.10-fabric": "uitest/moderner-1.21.10-fabric",
         }
         rows = {env.name: env for env in envs.load_all() if env.uitest is not None}
         self.assertEqual(sorted(rows), sorted(expected),
@@ -647,10 +651,11 @@ class ViaTest(unittest.TestCase):
 
         There is no other launch layer (the Prism instance launcher was removed on
         2026-10-14), so a row that declares none of the three would be an env that
-        cannot run and does not say why. Ten rows declare a run task — the four
-        moderner rows, the four multiple-version *fabric* rows, and the two 1.12.2
-        rows — the 1.21.1 pair moved to the standalone backend on 2026-10-15
-        (their ``uitest`` block names ``uitest/1.21.1-{neoforge,fabric}``, an
+        cannot run and does not say why. Eight rows declare a run task — the two
+        remaining moderner rows, the four multiple-version *fabric* rows, and the
+        two 1.12.2 rows — the 1.21.1 pair moved to the standalone backend on
+        2026-10-15 and the ``moderner-1.21.10`` pair followed the same day
+        (their ``uitest`` block names ``uitest/<line>``, an
         independent Gradle build in this repository that carries its own run
         task), and the other four multiple-version *forge* rows declare `skip`
         (the checkout's Forge dev run cannot host the mod: a JPMS split package on
@@ -662,7 +667,6 @@ class ViaTest(unittest.TestCase):
         loaded = {env.name: env for env in envs.load_all()}
         gradle_rows = {
             "1.12.2-forge-hei", "1.12.2-forge-jei-legacy",
-            "moderner-1.21.10-neoforge", "moderner-1.21.10-fabric",
             "moderner-26.1.2-neoforge", "moderner-26.1.2-fabric",
             "mv-1.16.5-fabric", "mv-1.18.2-fabric",
             "mv-1.19.2-fabric", "mv-1.20.1-fabric",
@@ -670,6 +674,8 @@ class ViaTest(unittest.TestCase):
         standalone_rows = {
             "1.21.1-neoforge": "uitest/1.21.1-neoforge",
             "1.21.1-fabric": "uitest/1.21.1-fabric",
+            "moderner-1.21.10-neoforge": "uitest/moderner-1.21.10-neoforge",
+            "moderner-1.21.10-fabric": "uitest/moderner-1.21.10-fabric",
         }
         self.assertFalse(gradle_rows - set(loaded), "a named gradle row does not exist")
         for env in loaded.values():
@@ -723,25 +729,25 @@ class ViaTest(unittest.TestCase):
     def test_the_moderner_rows_ride_the_classpath_too(self):
         """The four moderner rows are the same contract, in the modern line.
 
-        Each of that line's four modules already puts the env's own dependencies on
-        the run's classpath: the neoforge pair declares JEI through ``localRuntime``
-        at exactly the version the env pins (``jei_version`` for 1.21.10,
-        ``jei_unobfuscated_version`` for 26.1.2), ``fabric-legacy`` through
-        ``modRuntimeOnly`` and ``modImplementation`` fabric-api, and
-        ``fabric-unobfuscated`` through ``runtimeOnly`` JEI and ``implementation``
-        fabric-api. JECh's own sources are the module the run registers, so nothing
-        is staged into ``mods/`` — a second copy of a mod id the run already carries
-        is a double load, not a second opinion. Their Gradle 9.5 wrappers run on the
-        machine's default JDK, so they declare no ``daemon_java``.
+        The two 26.1.2 rows still run their checkout's own module, which already
+        puts the env's own dependencies on the run's classpath: the neoforge pair
+        declares JEI through ``localRuntime`` at exactly the version the env pins
+        (``jei_unobfuscated_version`` for 26.1.2), ``fabric-unobfuscated`` through
+        ``runtimeOnly`` JEI and ``implementation`` fabric-api. JECh's own sources
+        are the module the run registers, so nothing is staged into ``mods/`` — a
+        second copy of a mod id the run already carries is a double load, not a
+        second opinion. Their Gradle 9.5 wrappers run on the machine's default
+        JDK, so they declare no ``daemon_java``.
 
-        ``moderner-1.21.10-neoforge`` names the harness's own run task rather than
-        the plain client run, because only that run loads the harness mod
-        (``:neoforge:runClientTests``, as ``1.21.1-neoforge`` does).
+        The two 1.21.10 rows moved to the standalone backend (2026-10-15, the
+        same day the 1.21.1 pair did), so they no longer carry a ``gradle``
+        block; the dev-classpath contract is unchanged on them — the harness
+        build loads every jar itself (the neoforge build rides both jars on its
+        run's legacy classpath; the fabric build stages them into ``mods/`` and
+        takes fabric-api as its own dependency at the pinned version).
         """
         loaded = {env.name: env for env in envs.load_all()}
         expected = {
-            "moderner-1.21.10-neoforge": ":neoforge:runClientTests",
-            "moderner-1.21.10-fabric": ":fabric-legacy:runClient",
             "moderner-26.1.2-neoforge": ":neoforge-unobfuscated:runClient",
             "moderner-26.1.2-fabric": ":fabric-unobfuscated:runClient",
         }
@@ -750,6 +756,9 @@ class ViaTest(unittest.TestCase):
             self.assertEqual(env.gradle.task, task, name)
             self.assertEqual(env.gradle.project_dir, "moderner", name)
             self.assertIsNone(env.gradle.daemon_java, f"{name}: Gradle 9.5 runs on the default JDK")
+        for name in ("moderner-1.21.10-neoforge", "moderner-1.21.10-fabric",
+                     "moderner-26.1.2-neoforge", "moderner-26.1.2-fabric"):
+            env = loaded[name]
             self.assertEqual(env.jech.via, "dev-classpath", name)
             for mod in env.mods:
                 self.assertEqual(mod.via, "dev-classpath", f"{name}/{mod.name}")
@@ -827,6 +836,11 @@ class CheckoutWiringTest(unittest.TestCase):
         harness's ``jechRunDir``/``jechQuickPlayWorld``, and the fabric pair had no
         run configuration at all before — its wiring only adds the two properties
         to loom's default client run.
+
+        Only the rows that still name a run task drive this walk: the two
+        1.21.10 rows moved to the standalone backend (2026-10-15) and no longer
+        carry one, but their modules' wiring is still this contract for a manual
+        run until W3 removes the embedded harness.
         """
         from lib import instance
         loaded = {env.name: env for env in envs.load_all()}
@@ -834,6 +848,8 @@ class CheckoutWiringTest(unittest.TestCase):
         for name in ("moderner-1.21.10-neoforge", "moderner-1.21.10-fabric",
                      "moderner-26.1.2-neoforge", "moderner-26.1.2-fabric"):
             env = loaded[name]
+            if env.gradle is None:
+                continue
             module = env.gradle.task.lstrip(":").split(":")[0]
             path = self.module_gradle(env.gradle.project_dir, module)
             if not path.is_file():
