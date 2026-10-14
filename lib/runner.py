@@ -271,7 +271,12 @@ def _execute(env, run_dir, entry, *, started_wall, refresh, log):
             f"{seed.source.get('server', '?')})"
         )
     entry["notes"].append(
-        "options: preset options.txt stages " + ", ".join(options.keys()) + " (see lib/options.py)"
+        # The values, not just the keys: the language code is per Minecraft version
+        # (1.12.2 spells Simplified Chinese `zh_CN`), so the number in the report is
+        # what tells a reader which fixture the run was started with.
+        "options: preset options.txt stages "
+        + ", ".join(f"{key}={value}" for key, value, _why in options.explain(env.mc))
+        + " (see lib/options.py)"
     )
     ready_values, markers = readiness_rule(env)
 
@@ -308,11 +313,13 @@ def _execute(env, run_dir, entry, *, started_wall, refresh, log):
         "task": env.gradle.task,
         "projectDir": paths.display(checkout),
         "daemonJava": env.gradle.daemon_java,
+        "args": list(env.gradle.args),
         "uitestSelection": uitest_selection,
     }
     log(f"{env.name}: gradle run: " + " ".join(instance.gradle_command(
         checkout, env.gradle.task, minecraft_dir,
-        world=env.world.name if env.world is not None else None, uitest=uitest_selection)))
+        world=env.world.name if env.world is not None else None, uitest=uitest_selection)
+        + list(env.gradle.args)))
     if uitest_selection is not None:
         # The env makes no claim about where that output lands: the checkout's
         # own harness wiring does, and the uitest_report check reads it back
@@ -340,7 +347,7 @@ def _execute(env, run_dir, entry, *, started_wall, refresh, log):
                                   world=env.world.name if env.world is not None else None,
                                   uitest=uitest_selection,
                                   java_home=gradle_java_home(env, log=log),
-                                  log_path=launcher_log, log=log)
+                                  log_path=launcher_log, extra_args=env.gradle.args, log=log)
     # The game is a java process under this launcher whose working directory is
     # this run's game directory. The tracker searches until it has found the client
     # and re-checks it by signal afterwards (see the class).

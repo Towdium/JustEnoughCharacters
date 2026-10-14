@@ -280,9 +280,11 @@ matched, with screenshots as the evidence to look at.
   scenario failed, so the checkout's own `verifyJechUiTest` fails the Gradle build,
   and `uitest_report` fails on the report, naming the scenario that failed.
 
-`envs/README.md` has the block's schema and the rows that use it (the three
+`envs/README.md` has the block's schema and the rows that use it (the five
 harness rows); the scenario vocabulary is documented where the scenarios live, in
-the checkout (`neoforge/src/uitest/resources/uitest/scenarios/README.md`).
+the checkout (`neoforge/src/uitest/resources/uitest/scenarios/README.md` and the
+KB's `03-uitest-harness.md` / `04-match-recording.md` for the 1.12.2 checkout's
+copy of it).
 
 ## States
 
@@ -411,12 +413,14 @@ What the three client-running workflows (`1.21.1`, `moderner`,
   injected as a real environment variable and never written to disk.
 * Upload `<JT_HOME>/runs` as an artifact, always.
 
-The `1.12.0` branch is the exception that proves the shape: both its rows are
-`skip`, so its workflow launches nothing and instead runs the part of the matrix
-that can still fail — `jt selftest` (the harness's own offline suite) and
-`jt envs` (every env file must load, and the table carries each row's skip
-reason). It keeps a JDK and a Gradle setup on purpose, so re-enabling a 1.12.2 row
-stays a change to the run steps only.
+The `1.12.0` branch is the shape that proved the rest of it: while both its rows
+were `skip`, its workflow launched nothing and ran the part of the matrix that can
+still fail — `jt selftest` (the harness's own offline suite) and `jt envs` (every
+env file must load, and the table carries each row's skip reason). Both rows run
+now, so that branch's dispatched selection is the ordinary one, and it needs a
+Java 8 JDK on the runner (the client's JDK, which the envs ask for; the Gradle JDK
+those rows leave ambient). The workflow file itself lives on that branch, outside
+this workspace, and was not touched here.
 
 Two things to know before dispatching:
 
@@ -453,11 +457,13 @@ Two things to know before dispatching:
   (`--exclude tag:skip`) or accept exit code 1 with the skip named. Its fabric
   sibling runs the same MC version and needs no world of its own: it is a
   menu-level smoke row that claims no marker (see
-  [envs/README.md](envs/README.md)). The two `1.12.2-*` rows are skipped rather
-  than launched at all — their checkout's dev run cannot boot a 1.12.2 client on
-  this machine (see "Env matrix" below and [envs/README.md](envs/README.md), "The
-  1.12.2 rows and the gradle launch") — and the harness row loads its own level
-  rather than joining one.
+  [envs/README.md](envs/README.md)). The two `1.12.2-*` rows are **harness rows
+  too**, not skipped ones: their checkout boots a 1.12.2 client on this machine
+  once it has its conditional arm64 LWJGL 2 natives repository, and the harness
+  runs there against the checkout's own remapped JEI-line dev mod (see "Env
+  matrix" below and [envs/README.md](envs/README.md), "The 1.12.2 rows and the
+  gradle launch"). Like the other harness rows they therefore load their own
+  level rather than joining one.
 * **Known limitation:** a production client logs at INFO, so DEBUG-level lines
   are not in `latest.log`. The modern line's transformer hit line is exactly such
   a line (`Transformed <class> with <Transformer>`, logged at DEBUG by the
@@ -482,11 +488,11 @@ Two things to know before dispatching:
 
 ## Env matrix
 
-16 envs: every (version line, loader) pair, all tagged `smoke`. Ten of them — the
-`1.21.1` pair, the four `moderner` rows and the four `multiple-version` *fabric*
-rows — run through a checkout's Gradle run task. The other six — the four
-`multiple-version` *forge* rows and the two `1.12.2` rows — are declared `skip`,
-so they are never executed (the `skip` section below says why). The
+16 envs: every (version line, loader) pair, all tagged `smoke`. Twelve of them —
+the `1.21.1` pair, the four `moderner` rows, the four `multiple-version` *fabric*
+rows and the two `1.12.2` rows — run through a checkout's Gradle run task. The
+other four — the `multiple-version` *forge* rows — are declared `skip`, so they
+are never executed (the `skip` section below says why). The
 `experimental` rows have
 doubtful upstream version pins, `legacy` marks the 1.12.2 JEI row, and any env
 that declares `skip` is also tagged `skip`. Per-env loader/java/target versions,
@@ -531,12 +537,20 @@ failure — each names a capability that is gone, not a JECh regression:
   join before 1.20; re-measured 2026-10-14), so a selection without
   `--exclude tag:skip` exits 1 with the skip named. Its fabric sibling no longer
   skips: it is a menu-level row with no marker to reach.
-* `1.12.2-forge-jei-legacy` and `1.12.2-forge-hei` — declared `skip` on the same
-  day: the `1.12.0` checkout's Gradle dev run cannot boot a 1.12.2 client on this
-  arm64 machine (LWJGL 2's macOS natives are x86_64/i386-only and there is no
-  arm64 substitute on the dev-run path), and the instance launcher that used to
-  substitute arm64 natives for it is retired. Measured, with the no-mod control,
-  the native crash and the launcher's own natives set:
+* `1.12.2-forge-jei-legacy` and `1.12.2-forge-hei` — declared `skip` on
+  2026-10-14 and **revived the same day**. The skip's reason was the launch: the
+  `1.12.0` checkout's Gradle dev run could not boot a 1.12.2 client on this arm64
+  machine (LWJGL 2's macOS natives are x86_64/i386-only, and the instance
+  launcher that used to substitute arm64 natives for it is retired). The checkout
+  now carries that substitution itself — a conditional (macOS + `os.arch ==
+  aarch64`) natives repository — and both rows run the in-client harness on it.
+  Two further dev-run blockers were cleared on the way, and neither changed a
+  check: JECh's coremod NPE on a command-line mod container (the harness finds
+  its JSON scenarios by classpath scan instead) and the dev run's SRG-named
+  access transformers, which is why the JEI-line dev mod is staged **by the
+  checkout** with the rules remapped (`-PdevMod=jei|hei`) rather than by `jt`.
+  Measured, with the no-mod control, the native crash, the launcher's own natives
+  set and the `IllegalAccessError` a raw staged jar produces:
   [envs/README.md](envs/README.md), "The 1.12.2 rows and the gradle launch".
 
 `mv-1.16.5-forge` was the second such row before that, and its redness was the

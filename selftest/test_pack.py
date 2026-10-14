@@ -137,8 +137,31 @@ class OverridesTest(unittest.TestCase):
         self.assertEqual(result.extra_overrides, ["options.txt"])
         self.assertIn("overrides/options.txt", pack.listed_overrides(result.mrpack_path))
         staged = result.overrides_dir() / "options.txt"
-        self.assertEqual(staged.read_text(encoding="utf-8"), options.render())
+        self.assertEqual(staged.read_text(encoding="utf-8"), options.render("1.21.1"))
         self.assertIn("onboardAccessibility:true", options.render())
+        # The language code is per Minecraft version, and a row's own run must carry
+        # its version's spelling: 1.12.2 renamed nothing, so it is `zh_CN` there and
+        # `zh_cn` from 1.13 on (see lib/options.py). This is the value the client
+        # stores verbatim and the one that decides whether item names are Chinese.
+        self.assertEqual(options.language_code("1.12.2"), "zh_CN")
+        self.assertEqual(options.language_code("1.21.1"), "zh_cn")
+        self.assertEqual(options.language_code(None), "zh_cn")
+        self.assertIn("lang:zh_CN", options.render("1.12.2"))
+        self.assertIn("lang:zh_cn", options.render("1.21.1"))
+
+    def test_the_112_preset_carries_the_version_s_language_code(self):
+        """The staged file, not just the renderer, spells 1.12.2's language code.
+
+        The harness's pinyin scenarios assert on Chinese item names, and a wrong
+        case silently leaves the client in ``en_us`` — see the ``lang`` bullet in
+        ``lib/options.py`` for the two vanilla call sites that make the case
+        load-bearing.
+        """
+        env = support.mk_env(mc="1.12.2")
+        result = self.build(env)
+        staged = (result.overrides_dir() / "options.txt").read_text(encoding="utf-8")
+        self.assertIn("lang:zh_CN\n", staged)
+        self.assertNotIn("zh_cn", staged)
 
     def test_the_preset_carries_no_key_line(self):
         """A ``key_*`` line in a version-less preset makes the client discard the whole file.

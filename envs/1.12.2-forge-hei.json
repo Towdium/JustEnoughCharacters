@@ -1,5 +1,5 @@
 {
-  "_comment": "1.12.2 line against Had Enough Items (the JEI fork). The srg classifier is required: the build directory also holds the non-srg jar, and only the srg one is a 1.12.2 runtime jar. With HEI the legacy GeneralizedSuffixTree constructor patch is not applied (that is the legacy-JEI path only), so that check is absent here. Declared `skip` on 2026-10-14: the 1.12.2 client cannot boot in this checkout's Gradle dev run on this arm64 machine (LWJGL 2's macOS natives are x86_64/i386-only, the only JDK 8 here is arm64), and the instance launcher whose arm64 natives substitution made the row green is retired — measured, with the probe log and the native architectures, in envs/README.md `The 1.12.2 rows and the gradle launch`. The checks stay as written.",
+  "_comment": "1.12.2 line against Had Enough Items (the JEI fork), launched through the checkout's own Gradle run task (gradle launch) and through the harness's own run task (1.12.0/gradle/jech-uitest.gradle, task runClientTests): env.uitest selects the scenarios, so the client drives them itself and writes report.json, its captures and junit.xml into <game dir>/uitest before quitting, which is why the row declares no ready_when and no world -- jt's ready_when is a stopping rule for a client that would otherwise run forever, and the level the assertions are made against is the harness's own throwaway superflat creative world. Its selection is the smoke scenarios only (tag:smoke), unlike the legacy-JEI row: HEI answers through the IAdvancedSearchRegistry path (JechJeiPlugin.JechSearchIndex), not through the legacy suffix-tree replacement the JEI scenarios are written against, so this row claims what it was measured with rather than running scenarios it does not exercise. Both artifacts ride the classpath rather than being staged into mods/: JECh because the harness run registers the checkout's sourceSets.main as the mod, and the JEI-line mod because a 1.12.2 JEI/HEI jar's access transformer is written in SRG member names, which never match the MCP-named members a dev client has -- measured on the jt-driven legacy-JEI row, where jt's own staging of the raw jar ended the run in JEI's init with `IllegalAccessError: tried to access method net.minecraft.client.renderer.texture.TextureMap.initMissingImage()V from class mezz.jei.gui.textures.JeiTextureMap`. The checkout stages that jar itself, with the rules remapped (gradle/jech-uitest.gradle, stageUiTestDevMod), and -PdevMod=hei in env.gradle.args is what picks which JEI-line mod it stages. The srg classifier is required: the build directory also holds the non-srg jar, and only the srg one is a 1.12.2 runtime jar. With HEI the legacy GeneralizedSuffixTree constructor patch is not applied (that is the legacy-JEI path only), so that check is absent here. Declared `skip` from 2026-10-14 until the same day's revival: the 1.12.2 client could not be dev-run on this arm64 machine at all (LWJGL 2's macOS natives are i386/x86_64-only while every JDK here is arm64, and the instance launcher whose arm64 natives substitution used to carry the row was retired), and once the checkout's conditional arm64 natives repository made the client boot, two further blockers stood in the dev run -- JECh's own coremod NPE on getSource() and that same access-transformer mismatch. The narrative and the earlier measurements are in envs/README.md, 'The 1.12.2 rows and the gradle launch'.",
   "name": "1.12.2-forge-hei",
   "tags": [
     "112",
@@ -14,18 +14,30 @@
   "java": {
     "version": 8
   },
-  "skip": "MC 1.12.2's client cannot boot in the checkout's Gradle dev run on this arm64 machine (LWJGL 2 mac natives are x86_64-only) and the instance launcher that substituted arm64 natives is retired; see envs/README.md",
+  "gradle": {
+    "task": "runClientTests",
+    "project_dir": "1.12.0",
+    "daemon_java": null,
+    "args": [
+      "-PdevMod=hei"
+    ]
+  },
+  "uitest": {
+    "selection": "tag:smoke"
+  },
   "jech": {
     "source": "local-build",
     "project": "1.12.0",
     "path": "build/libs/jecharacters-1.12.0-*-srg.jar",
-    "expectModId": "jecharacters"
+    "expectModId": "jecharacters",
+    "via": "dev-classpath"
   },
   "mods": [
     {
       "name": "had-enough-items",
       "source": "curseforge",
       "slug": "had-enough-items",
+      "via": "dev-classpath",
       "describe": {
         "version": "4.34.0"
       },
@@ -60,6 +72,10 @@
       "name": "config-generated"
     },
     {
+      "type": "uitest_report",
+      "name": "uitest-report"
+    },
+    {
       "type": "no_crash_reports",
       "name": "no-crash-reports"
     },
@@ -68,8 +84,6 @@
       "name": "exit-code"
     }
   ],
-  "ready_when": {
-    "value": "Sound engine started"
-  },
+  "world": null,
   "timeout_sec": 600
 }

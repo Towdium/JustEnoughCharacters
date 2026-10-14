@@ -183,9 +183,10 @@ def stage_overrides(env, pack_dir, *, seed=None, log=print):
     staged = []
 
     options_path = overrides_dir / options.FILENAME
-    atomic_write_text(options_path, options.render())
+    atomic_write_text(options_path, options.render(env.mc))
     staged.append(options.FILENAME)
-    log(f"pack: overrides/{options.FILENAME} preset ({', '.join(options.keys())})")
+    log(f"pack: overrides/{options.FILENAME} preset "
+        f"({', '.join(f'{key}={value}' for key, value, _why in options.explain(env.mc))})")
 
     if env.world is None:
         return staged

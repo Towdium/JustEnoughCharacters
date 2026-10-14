@@ -100,16 +100,23 @@ class GradleSpec:
       JAVA_HOME), for a wrapper whose Gradle cannot run on the machine default;
       ``None`` keeps the ambient JAVA_HOME. It is not the client's JDK: that
       comes from the checkout's toolchain.
+    * ``args`` — extra ``-P``/``-D`` arguments handed to the Gradle command line
+      verbatim, for a checkout property the harness owns but the runner cannot
+      spell by name. The only user today is the ``1.12.0`` checkout's
+      ``-PdevMod=jei|hei``, which picks the JEI-line mod the checkout stages: a
+      per-row choice the env file is the only place to name. Kept a list of plain
+      strings, so nothing here interprets them.
     """
 
-    def __init__(self, task, project_dir, daemon_java=None):
+    def __init__(self, task, project_dir, daemon_java=None, args=()):
         self.task = task
         self.project_dir = project_dir
         self.daemon_java = daemon_java
+        self.args = tuple(args)
 
     def __repr__(self):
         return (f"GradleSpec({self.task!r}, project_dir={self.project_dir!r}, "
-                f"daemon_java={self.daemon_java!r})")
+                f"daemon_java={self.daemon_java!r}, args={list(self.args)!r})")
 
 
 class UiTestSpec:
@@ -519,9 +526,9 @@ def _parse_gradle(data, problems, *, default_project=None):
         return None
     if not isinstance(data, dict):
         problems.append('env.gradle must be an object {"task": ..., "project_dir": ..., '
-                        '"daemon_java": ...}')
+                        '"daemon_java": ..., "args": [...]}')
         return None
-    _reject_unknown(data, {"task", "project_dir", "daemon_java"}, "env.gradle", problems)
+    _reject_unknown(data, {"task", "project_dir", "daemon_java", "args"}, "env.gradle", problems)
     task = _string(data, "task", "env.gradle", problems, required=True)
     project_dir = _string(data, "project_dir", "env.gradle", problems, required=False)
     if project_dir is None and "project_dir" not in data:
@@ -538,8 +545,9 @@ def _parse_gradle(data, problems, *, default_project=None):
     daemon_java = None
     if data.get("daemon_java") is not None:
         daemon_java = _int(data, "daemon_java", "env.gradle", problems, required=False, minimum=8)
+    args = _string_list(data, "args", "env.gradle", problems, required=False)
     if task and project_dir:
-        return GradleSpec(task, project_dir, daemon_java)
+        return GradleSpec(task, project_dir, daemon_java, args)
     return None
 
 
