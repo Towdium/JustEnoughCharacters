@@ -166,12 +166,20 @@ class EnvParsingTest(unittest.TestCase):
         # 1.21.1-neoforge runs the in-client harness, so its level is the
         # harness's own and the row declares no world (see the uitest tests).
         self.assertEqual(loaded["1.21.1-fabric"].world.name, "jechworld")
-        for name in ("1.21.1-neoforge", "1.21.1-fabric"):
+        for name in ("1.21.1-neoforge", "1.21.1-fabric", "mv-1.20.1-fabric"):
             self.assertIsNone(loaded[name].skip, name)
-        for name in ("mv-1.19.2-forge", "mv-1.19.2-fabric"):
-            self.assertIn("needs world load", loaded[name].skip, name)
-            self.assertIsNone(loaded[name].world, name)
-            self.assertTrue(loaded[name].checks, "a skipped env keeps its checks as documentation")
+        # mv-1.19.2-forge is the one row left that cannot reach its marker: JEI
+        # 11.x's `registerAdvancedSearch` runs at level load and there is no
+        # non-interactive way to load a level before 1.20. Its fabric sibling is
+        # in the same no-quick-play position but no longer skips: it moved to the
+        # gradle backend as a *menu-level* smoke row, so it declares no world and
+        # claims nothing of the storage marker.
+        self.assertIn("needs world load", loaded["mv-1.19.2-forge"].skip)
+        self.assertIsNone(loaded["mv-1.19.2-forge"].world)
+        self.assertTrue(loaded["mv-1.19.2-forge"].checks,
+                        "a skipped env keeps its checks as documentation")
+        self.assertIsNone(loaded["mv-1.19.2-fabric"].skip)
+        self.assertIsNone(loaded["mv-1.19.2-fabric"].world)
 
     def test_every_shipped_env_declares_a_stopping_rule(self):
         """No env that is actually executed may be left without ``ready_when``.
@@ -523,12 +531,21 @@ class ViaTest(unittest.TestCase):
 
     def test_the_other_shipped_envs_keep_the_prism_backend(self):
         loaded = {env.name: env for env in envs.load_all()}
-        # Every row that declares a ``gradle`` block: the 1.21.1 pair plus the four
-        # moderner rows (migrated to the gradle backend 2026-10-14). Everything
-        # else still launches through Prism.
-        gradle_row_prefixes = ("1.21.1-", "moderner-")
-        prism_envs = [env for name, env in loaded.items()
-                      if not name.startswith(gradle_row_prefixes)]
+        # Every row that declares a ``gradle`` block: the 1.21.1 pair, the four
+        # moderner rows (2026-10-14) and the four multiple-version *fabric* rows
+        # (2026-10-14, the second migration). Everything else still launches
+        # through Prism. The backend is a per-(line, loader) decision, not a
+        # per-line one: the eight multiple-version rows split four fabric on
+        # Gradle and four forge on Prism, and the 1.16.5 pair sits on opposite
+        # backends.
+        gradle_rows = {
+            "1.21.1-neoforge", "1.21.1-fabric",
+            "moderner-1.21.10-neoforge", "moderner-1.21.10-fabric",
+            "moderner-26.1.2-neoforge", "moderner-26.1.2-fabric",
+            "mv-1.16.5-fabric", "mv-1.18.2-fabric", "mv-1.19.2-fabric", "mv-1.20.1-fabric",
+        }
+        self.assertFalse(gradle_rows - set(loaded), "a named gradle row does not exist")
+        prism_envs = [env for name, env in loaded.items() if name not in gradle_rows]
         self.assertTrue(prism_envs)
         for env in prism_envs:
             self.assertIsNone(env.gradle, env.name)
@@ -536,6 +553,40 @@ class ViaTest(unittest.TestCase):
             self.assertEqual(env.jech.via, envs.DEFAULT_VIA, env.name)
             for mod in env.mods:
                 self.assertEqual(mod.via, envs.DEFAULT_VIA, f"{env.name}/{mod.name}")
+
+    def test_the_shipped_mv_fabric_rows_stage_only_what_the_checkout_lacks(self):
+        """The four multiple-version fabric rows are the same contract, written down.
+
+        All four run ``:<mc>:fabric:runClient`` in the ``multiple-version``
+        checkout, whose fabric modules register their own sources as the mod under
+        test — so JECh is always ``dev-classpath``. JEI is ``compileOnly`` in the
+        version-level build files, so it is staged (except in the 1.16.5 smoke row,
+        which carries no JEI at all), and fabric-api rides the checkout's classpath
+        as a ``modApi``/``modCompileOnly`` dependency — except in 1.20.1, whose
+        module deliberately takes it ``modCompileOnly`` (the checkout's loom 1.1
+        cannot read a MC 1.20.1 fabric-api from 0.91.1 on) and so stages the run's
+        api jar instead. See that row's env comment.
+        """
+        loaded = {env.name: env for env in envs.load_all()}
+        expected = {
+            "mv-1.16.5-fabric": {"jech": "dev-classpath", "fabric-api": "dev-classpath"},
+            "mv-1.18.2-fabric": {"jech": "dev-classpath", "jei": "game-dir",
+                                 "fabric-api": "dev-classpath"},
+            "mv-1.19.2-fabric": {"jech": "dev-classpath", "jei": "game-dir",
+                                 "fabric-api": "dev-classpath"},
+            "mv-1.20.1-fabric": {"jech": "dev-classpath", "jei": "game-dir",
+                                 "fabric-api": "game-dir"},
+        }
+        for name, vias in expected.items():
+            env = loaded[name]
+            self.assertEqual(env.backend, envs.GRADLE_BACKEND, name)
+            self.assertEqual(env.gradle.task, f":{env.mc}:fabric:runClient", name)
+            self.assertEqual(env.gradle.project_dir, "multiple-version", name)
+            self.assertEqual(env.gradle.daemon_java, 17,
+                             f"{name}: the wrapper is Gradle 8.1.1, not the ambient JDK")
+            got = {"jech": env.jech.via}
+            got.update({mod.name: mod.via for mod in env.mods})
+            self.assertEqual(got, vias, name)
 
     def test_the_moderner_rows_ride_the_classpath_too(self):
         """The four moderner rows are the same contract, in the modern line.
@@ -600,6 +651,33 @@ class CheckoutWiringTest(unittest.TestCase):
                 self.assertIn(needle, text, f"{name}: {path} does not read {needle!r}")
             # The wiring must be conditional: a dev run with neither property must
             # keep the checkout's own defaults.
+            self.assertIn("isPresent()", text, f"{name}: the wiring is not property-guarded")
+        self.assertTrue(checked, "no checkout found; the wiring contract was not verified")
+
+    def test_the_multiple_version_fabric_modules_read_the_harness_properties(self):
+        """The same contract inside the ``multiple-version`` checkout.
+
+        Its four fabric modules each carry the wiring, so every one of them reads
+        both properties and only adds them when they are present: a plain
+        ``./gradlew :1.16.5:fabric:runClient`` keeps the module's own run directory
+        and joins nothing. The module directory comes from the task's own path, not
+        from the version-level build file, which holds no run configuration.
+        """
+        from lib import instance, resolve
+        loaded = {env.name: env for env in envs.load_all()}
+        checked = []
+        for name in ("mv-1.16.5-fabric", "mv-1.18.2-fabric",
+                     "mv-1.19.2-fabric", "mv-1.20.1-fabric"):
+            env = loaded[name]
+            module = "/".join(env.gradle.task.lstrip(":").split(":")[:-1])
+            path = resolve.jech_base_root() / env.gradle.project_dir / module / "build.gradle"
+            if not path.is_file():
+                continue
+            text = path.read_text(encoding="utf-8")
+            checked.append(name)
+            for needle in (instance.GRADLE_RUN_DIR_PROPERTY,
+                           instance.GRADLE_QUICK_PLAY_PROPERTY):
+                self.assertIn(needle, text, f"{name}: {path} does not read {needle!r}")
             self.assertIn("isPresent()", text, f"{name}: the wiring is not property-guarded")
         self.assertTrue(checked, "no checkout found; the wiring contract was not verified")
 

@@ -1,5 +1,5 @@
 {
-  "_comment": "multiple-version line, MC 1.18.2 fabric; fabric-api version from 1.18.2/gradle.properties.",
+  "_comment": "multiple-version line, MC 1.18.2 fabric; fabric-api version from 1.18.2/gradle.properties. Launched through the checkout's own Gradle run task (gradle backend): architectury-loom's `:1.18.2:fabric:runClient` registers the module's own sources as the mod under test and carries fabric-api (0.67.0+1.18.2, the version this module compiles against) through `modApi`, so both ride the run's classpath (via=dev-classpath); JEI is `compileOnly` in `1.18.2/build.gradle`, so it has no place on that classpath and its jar is the one jar staged into mods/. daemon_java is 17 because the wrapper is Gradle 8.1.1, which cannot run on the machine's default JDK (JBR 25).",
   "name": "mv-1.18.2-fabric",
   "tags": [
     "mv",
@@ -14,11 +14,17 @@
   "java": {
     "version": 17
   },
+  "gradle": {
+    "task": ":1.18.2:fabric:runClient",
+    "project_dir": "multiple-version",
+    "daemon_java": 17
+  },
   "jech": {
     "source": "local-build",
     "project": "multiple-version",
     "path": "1.18.2/fabric/build/libs/jecharacters-1.18.2-fabric-4.6.12.jar",
-    "expectModId": "jecharacters"
+    "expectModId": "jecharacters",
+    "via": "dev-classpath"
   },
   "mods": [
     {
@@ -40,6 +46,7 @@
       "name": "fabric-api",
       "source": "curseforge",
       "slug": "fabric-api",
+      "via": "dev-classpath",
       "describe": {
         "version": "0.67.0+1.18.2"
       },

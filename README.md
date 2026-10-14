@@ -224,6 +224,19 @@ with the task and the checkout).
   `me/towdium/jecharacters/targets.json`, and JECh logged "Could not find
   targets.json. JechTransformer will not be loaded." (the neoforge module gets the
   same file from `coremod-neoforge`, which the run's classpath already carries).
+
+  The four `multiple-version` *fabric* rows (moved here on 2026-10-14) follow the
+  same rule per artifact: JECh is `dev-classpath` in all four (the run *is* the
+  module's source set), JEI is `game-dir` in the three rows that carry it (it is
+  `compileOnly` in the version-level build files), and fabric-api is
+  `dev-classpath` in 1.16.5, 1.18.2 and 1.19.2 (their fabric modules declare it
+  `modApi`) but `game-dir` in `mv-1.20.1-fabric`, whose pinned api jar cannot be a
+  Gradle mod dependency at all — the checkout's loom 1.1 rejects every MC 1.20.1
+  fabric-api from 0.91.1 on, so that module holds the api `modCompileOnly` and the
+  harness stages the real one. Their `daemon_java` is `17` (Gradle 8.1.1), and the
+  1.16.5 module also declares two loader libraries on its dev runtime classpath;
+  both live in its build file, and the root `build.gradle` adds the PinIn every
+  impl module needs. See [envs/README.md](envs/README.md) for the per-row record.
 * A run whose launcher is this run's own (a Gradle invocation) is always cleaned
   up: if it never produces a session, or outlives its exit grace, its process
   tree is ended. A Prism CLI in that state is still left alone — one that outlives
@@ -462,25 +475,29 @@ window has to be able to appear. Bootstrap checklist, in order:
   the cache is the runner's cache directory. `jt seed-world --exclude tag:skip`
   builds every seed the matrix needs before the game jobs start.
 * The `1.21.1` rows reach their JEI marker **only with the world loaded**.
-  `1.21.1-fabric` declares `world` and is one of the five rows that launch
+  `1.21.1-fabric` declares `world` and is one of the six rows that launch
   through the checkout's Gradle task rather than Prism while still joining one
-  (the other four are the `moderner` rows, moved there on 2026-10-14); their
-  world travels as `-PjechQuickPlayWorld`. `1.21.1-neoforge` declares no world
-  and no `ready_when`: it runs the checkout's in-client UI test harness, whose
-  own runner creates the level the scenarios are asserted against and quits the
-  client when they are done (see "The in-client UI test harness" above). The
-  `mv-1.19.2` rows cannot join one: quick
+  (the other five are the `moderner` rows, moved there on 2026-10-14, and
+  `mv-1.20.1-fabric`, moved there with its three siblings on the same day);
+  their world travels as `-PjechQuickPlayWorld`. `1.21.1-neoforge` declares no
+  world and no `ready_when`: it runs the checkout's in-client UI test harness,
+  whose own runner creates the level the scenarios are asserted against and quits
+  the client when they are done (see "The in-client UI test harness" above).
+  `mv-1.19.2-forge` cannot join one: quick
   play needs
-  1.20+, so they carry `skip` and a CI selection must decide explicitly whether to
-  exclude them (`--exclude tag:skip`) or accept exit code 1 with the skips named.
+  1.20+, so it carries `skip` and a CI selection must decide explicitly whether to
+  exclude it (`--exclude tag:skip`) or accept exit code 1 with the skip named.
   (Re-measured 2026-10-14: Prism only passes the quick-play game argument to
   versions whose profile carries `feature:is_quick_play_singleplayer`, which its
   metadata has from 1.20 on, and a world target has no fallback argument — the
   1.19.2 client reaches the title screen and nothing else. See
-  [envs/README.md](envs/README.md) for the run.) The `moderner` ×4 and
+  [envs/README.md](envs/README.md) for the run.) Its fabric sibling runs the same
+  MC version and needs no world of its own: on the gradle backend it is a
+  menu-level smoke row that claims no marker (see
+  [envs/README.md](envs/README.md)). The `moderner` ×4 and
   `mv-1.20.1` ×2 rows are also launched into a world and were measured the same
-  way: seven envs in all stop at `goal-reached` on a real join, only the two
-  `mv-1.19.2` rows are skipped, and the harness row loads its own level rather
+  way: seven envs in all stop at `goal-reached` on a real join, only
+  `mv-1.19.2-forge` is skipped, and the harness row loads its own level rather
   than joining one.
 * **Known limitation:** a production instance logs at INFO, so DEBUG-level lines
   are not in `latest.log`. The modern line's transformer hit line is exactly such
@@ -495,17 +512,19 @@ window has to be able to appear. Bootstrap checklist, in order:
   harness now generates a world seed with the vanilla server (`jt seed-world`),
   stages it as `saves/jechworld`, and launches the instance through Prism's
   `--world` option, so the whole "JEI plugin present" family is assertable: all
-  eight runnable rows of that family pass on a real run
-  (`stopReason: goal-reached`), the two `mv-1.19.2` rows excepted (they carry
-  `skip`). See
+  eight rows of that family that claim the marker pass on a real run
+  (`stopReason: goal-reached`), `mv-1.19.2-forge` excepted (it carries
+  `skip`), while `mv-1.19.2-fabric`, the menu-level gradle row, claims no marker
+  at all. See
   [envs/README.md](envs/README.md) for the rejected launch paths and the seed
   recipe.
 
 ## Env matrix
 
-16 envs: every (version line, loader) pair, all tagged `smoke`. Six of them — the
-`1.21.1` pair and the four `moderner` rows — launch through the checkout's Gradle
-backend rather than Prism; the other ten use Prism. The `experimental` rows have
+16 envs: every (version line, loader) pair, all tagged `smoke`. Ten of them — the
+`1.21.1` pair, the four `moderner` rows and the four `multiple-version` *fabric*
+rows — launch through the checkout's Gradle backend rather than Prism; the other
+six use Prism. The `experimental` rows have
 doubtful upstream version pins, `legacy` marks the 1.12.2 JEI row, and any env
 that declares `skip` is also tagged `skip`. Per-env loader/java/target versions,
 the check families and the resolution rules are in
@@ -517,7 +536,7 @@ the check families and the resolution rules are in
 | `moderner` | 26.1.2 | `26.1.2.59-beta` | `0.19.2` | — |
 | `1211` | 1.21.1 | `21.1.215` | `0.16.14` | — |
 | `mv` | 1.20.1 | — | `0.16.14` (see envs README) | `47.0.35` |
-| `mv` | 1.19.2 | — | `0.14.11` | `43.2.3` |
+| `mv` | 1.19.2 | — | `0.16.14` (see envs README) | `43.2.3` |
 | `mv` | 1.18.2 | — | `0.14.9` | `40.2.1` |
 | `mv` | 1.16.5 | — | `0.14.9` | `36.2.39` |
 | `112` | 1.12.2 | — | — | `14.23.5.2864` (HEI and legacy JEI) |
@@ -528,9 +547,10 @@ python3 jt resolve all --exclude tag:experimental && python3 jt run all --exclud
 
 Two rows are expected to keep the matrix red, and neither is a harness failure:
 
-* `mv-1.19.2-forge` / `mv-1.19.2-fabric` — declared `skip` (no quick-play world
+* `mv-1.19.2-forge` — declared `skip` (no quick-play world
   join before 1.20; re-measured 2026-10-14), so a selection without
-  `--exclude tag:skip` exits 1 with the skip named.
+  `--exclude tag:skip` exits 1 with the skip named. Its fabric sibling no longer
+  skips: as a gradle row it is a menu-level smoke row with no marker to reach.
 * `mv-1.16.5-forge` — FAILs on `no-crash-reports`: the built jar declares
   `forge [36.2.41,)` in its own `mods.toml` while its checkout pins
   `forge_version=36.2.39`, so FML refuses to load the mod and dumps a crash

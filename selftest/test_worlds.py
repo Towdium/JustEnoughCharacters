@@ -357,7 +357,12 @@ class SeedWorldCliTest(unittest.TestCase):
         self.assertIsNone(listed["1.21.1-neoforge"]["world"])
         self.assertEqual(listed["1.21.1-neoforge"]["uitest"], {"selection": "tag:smoke,tag:jei"})
         self.assertIsNone(listed["1.21.1-fabric"]["uitest"])
-        self.assertIn("quickPlay", listed["mv-1.19.2-fabric"]["skip"])
+        # mv-1.19.2-forge is the one row left that skips (no quick play before
+        # 1.20); its fabric sibling moved to the gradle backend as a menu-level
+        # smoke row, so it declares neither a skip nor a world.
+        self.assertIn("quickPlay", listed["mv-1.19.2-forge"]["skip"])
+        self.assertIsNone(listed["mv-1.19.2-forge"]["world"])
+        self.assertIsNone(listed["mv-1.19.2-fabric"]["skip"])
         self.assertIsNone(listed["mv-1.19.2-fabric"]["world"])
 
 

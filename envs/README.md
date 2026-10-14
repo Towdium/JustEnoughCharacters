@@ -69,15 +69,47 @@ report records which backend ran (`runBackend`, and a `gradle` object with the
 task and checkout). See [README.md](../README.md), "The `gradle` backend",
 for the full contract between the harness and a checkout.
 
-Six rows use it today: `1.21.1-{neoforge,fabric}` and
-`moderner-{1.21.10,26.1.2}-{neoforge,fabric}` (the four moderner rows since
-2026-10-14, running `:neoforge:runClient`, `:fabric-legacy:runClient`,
-`:neoforge-unobfuscated:runClient` and `:fabric-unobfuscated:runClient` in the
-`moderner` checkout). Their `daemon_java` is `21` for the 1.21.1 pair (Gradle
-8.13) and `null` for the moderner rows (Gradle 9.5 runs on the machine's default
-JDK). One of the six does not run `runClient`: `1.21.1-neoforge` runs
-`:neoforge:runClientTests`, the checkout's UI test harness run (see `uitest`
-below).
+Ten rows use it today: six in the modern checkouts, four in the older line.
+
+* `1.21.1-{neoforge,fabric}` and `moderner-{1.21.10,26.1.2}-{neoforge,fabric}`
+  (the four moderner rows since 2026-10-14, running `:neoforge:runClient`,
+  `:fabric-legacy:runClient`, `:neoforge-unobfuscated:runClient` and
+  `:fabric-unobfuscated:runClient` in the `moderner` checkout). Their
+  `daemon_java` is `21` for the 1.21.1 pair (Gradle 8.13) and `null` for the
+  moderner rows (Gradle 9.5 runs on the machine's default JDK). One of these six
+  does not run `runClient`: `1.21.1-neoforge` runs `:neoforge:runClientTests`,
+  the checkout's UI test harness run (see `uitest` below).
+* the four `multiple-version` fabric rows, migrated 2026-10-14:
+  `mv-1.16.5-fabric`, `mv-1.18.2-fabric`, `mv-1.19.2-fabric` and
+  `mv-1.20.1-fabric`, running `:<mc>:fabric:runClient` in that checkout. Their
+  `daemon_java` is `17`: the wrapper is Gradle 8.1.1, which cannot run on the
+  machine's default JDK. The four modules already carried the harness wiring
+  (`-PjechRunDir` / `-PjechQuickPlayWorld` into loom's default client run); what
+  the migration had to close lives in the checkout, and is written into the
+  module's own build files rather than into an env:
+
+  * **PinIn on the dev runtime classpath.** Every impl module takes
+    `:common-main` with `compileOnly`, so that module's `api PinIn` reaches the
+    compile classpath and the shadow configurations but never `runClient`, which
+    died in `JechConfig.<clinit>` with
+    `NoClassDefFoundError: me/towdium/pinin/Keyboard` on 1.18.2 and 1.19.2. The
+    root `build.gradle` now adds `runtimeOnly PinIn` to every impl module (both
+    loaders, `transitive = false`); `shadowJar` reads only `shadowCommon`, so no
+    shipped jar changes.
+  * **`mv-1.16.5-fabric`'s loader libraries.** Loom injects a
+    fabric-loader-0.10.5-era set for MC 1.16.5 while `modImplementation
+    fabric-loader` puts 0.14.9 on the run classpath, so
+    `1.16.5/fabric/build.gradle` also declares `access-widener` 2.1.0 and
+    `sponge-mixin` 0.11.4+mixin.0.8.5 as `runtimeOnly`. The lines carry the
+    measurement (`KnotClient` died with `NoClassDefFoundError` on
+    `net.fabricmc.accesswidener.AccessWidener` before any window).
+  * **`mv-1.20.1-fabric`'s fabric-api is `game-dir`, not `dev-classpath`.** Its
+    pinned api cannot be a Gradle mod dependency of that module at all — see the
+    row's note below.
+
+  The four rows' `via` split (JECh `dev-classpath` in all four, JEI `game-dir` in
+  the three that carry it, fabric-api `dev-classpath` except in `mv-1.20.1-fabric`)
+  is recorded in `selftest/test_envs.py`.
 
 | key | required | meaning |
 | --- | --- | --- |
@@ -92,14 +124,18 @@ below).
 | `via` | `game-dir` (default) / `dev-classpath` | where the artifact's jar goes. `game-dir` copies it into the game directory's `mods/` — what a production instance needs. `dev-classpath` stages nothing: the checkout's own run provides it (the module's sources registered as the mod, or a declared `localRuntime` / `modImplementation` dependency). It is still resolved, pinned and reported; staging it as well would load the same mod id twice |
 
 A `via` that contradicts what the checkout actually provides is not detectable
-from the env file — the six gradle rows are the written record of the choice (see
+from the env file — the ten gradle rows are the written record of the choice (see
 the checks in `selftest/test_envs.py`), and a wrong one shows up as a duplicate-mod
 error in the run's log rather than as a silent pass. All four `moderner` rows are
 `dev-classpath` for every artifact, including JECh: each of that line's modules
 already declares its own runtime dependencies for JEI (both NeoForge modules,
 `localRuntime` at exactly the pinned version; `fabric-legacy`, `modRuntimeOnly`;
 `fabric-unobfuscated`, `runtimeOnly`) and for fabric-api, and the module under
-test *is* the run's own source set.
+test *is* the run's own source set. The four `multiple-version` fabric rows take
+JECh `dev-classpath` for the same reason, stage JEI (the version-level build
+files hold it `compileOnly`), and split on fabric-api: `dev-classpath` in the
+three modules that declare it `modApi`, `game-dir` in `mv-1.20.1-fabric`, whose
+pinned api cannot be a Gradle mod dependency at all (see that row's note).
 
 `loader.type` is one of `forge`, `neoforge`, `fabric`, `quilt`.
 
@@ -254,7 +290,7 @@ pins and downloads it, `jt seed-world` still maintains its world cache, and the
 env keeps its `checks` as the written-down statement of what it would assert
 (the reason string is what points at the missing capability).
 
-The two `mv-1.19.2` rows are the only ones left. That skip was re-measured on
+`mv-1.19.2-forge` is the only row left that carries `skip`. That skip was re-measured on
 2026-10-14 rather than inherited: `mv-1.19.2-forge` was run with a real seed
 staged (`saves/jechworld`, 14 files) and launched as
 `prismlauncher --launch … --world jechworld`. The client reached
@@ -269,6 +305,15 @@ trait from 1.20 on (`net.minecraft/1.19.2.json` `+traits`:
 traits), while a world target has no fallback argument (the server case falls
 back to `--server`/`--port`; a world does not). The env was restored to `skip`
 with its checks intact after the probe.
+
+Its fabric sibling sits in the same position — MC 1.19.2 offers no
+non-interactive way to load a level on either backend — but it does not skip,
+because on the gradle backend it does not have to claim a level at all.
+`mv-1.19.2-fabric` is a **menu-level smoke row**: it declares no `world` and no
+storage-marker check, and asserts what a client that stops at the title screen
+can show (the transformer loaded, the config was written, no crash report). Its
+env comment carries the same reasoning, and both halves are asserted in
+`selftest/test_envs.py` and `selftest/test_worlds.py`.
 
 ## Launching into a world (`world`)
 
@@ -304,14 +349,16 @@ runner creates, so the row declares no `world` (see `uitest` above) — the mark
 still arrives, because the level does. The `mv-1.16.5` and `mv-1.18.2` rows
 deliberately keep no world: their markers are emitted at startup (and the
 1.16.5/1.18.2 jars carry no JEI plugin at all), so a world would only add a level
-load to what they assert. `mv-1.19.2` cannot join one — see the `skip` section
-above.
+load to what they assert. `mv-1.19.2-forge` cannot join one — see the `skip`
+section above — while `mv-1.19.2-fabric` is the same MC version but a gradle row
+that claims no marker, so it is a menu-level row by design: no world, no marker.
 
 A `gradle` env carries the same world a different way: the harness hands it over
 as `-PjechQuickPlayWorld=<name>` and the checkout's own run configuration appends
 `--quickPlaySingleplayer <name>` to the client's arguments — no Prism option is
-involved, and the game directory is the run's own `runs/<id>/game`. The five
-gradle rows that declare a world (`1.21.1-fabric` and `moderner` ×4) join that
+involved, and the game directory is the run's own `runs/<id>/game`. The six
+gradle rows that declare a world (`1.21.1-fabric`, `moderner` ×4 and
+`mv-1.20.1-fabric`) join that
 way; the seed is staged into `saves/<name>/` there exactly as it is for a Prism
 instance. `1.21.1-neoforge`'s `runClientTests` run deliberately does not honour
 the property: the harness's runner does its own level management.
@@ -617,26 +664,28 @@ and says so in the report.
 | `1.21.1-neoforge` | 1.21.1 / neoforge 21.1.215 | 21 | `1.21.1` | jei 19.37.0.362 |
 | `1.21.1-fabric` | 1.21.1 / fabric 0.16.14 | 21 | `1.21.1` | jei 19.37.0.362, fabric-api 0.116.1+1.21.1 |
 | `mv-1.20.1-forge` | 1.20.1 / forge 1.20.1-47.0.35 | 17 | `multiple-version` | jei 15.48.0.179 |
-| `mv-1.20.1-fabric` | 1.20.1 / fabric 0.16.14 (see below) | 17 | `multiple-version` | jei 15.48.0.179, fabric-api (see below) |
+| `mv-1.20.1-fabric` | 1.20.1 / fabric 0.16.14 (see below) | 17 | `multiple-version` (gradle) | jei 15.48.0.179, fabric-api (see below) |
 | `mv-1.19.2-forge` | 1.19.2 / forge 1.19.2-43.2.3 | 17 | `multiple-version` | jei 11.30.3.1056 — **skipped**, see below |
-| `mv-1.19.2-fabric` | 1.19.2 / fabric 0.14.11 | 17 | `multiple-version` | jei 11.30.3.1056, fabric-api 0.68.0+1.19.2 — **skipped** |
+| `mv-1.19.2-fabric` | 1.19.2 / fabric 0.16.14 (see below) | 17 | `multiple-version` (gradle) | jei 11.30.3.1056, fabric-api 0.77.0+1.19.2 |
 | `mv-1.18.2-forge` | 1.18.2 / forge 1.18.2-40.2.1 | 17 | `multiple-version` | jei 10.2.1.1005 |
-| `mv-1.18.2-fabric` | 1.18.2 / fabric 0.14.9 | 17 | `multiple-version` | jei 10.2.1.1005, fabric-api 0.67.0+1.18.2 |
+| `mv-1.18.2-fabric` | 1.18.2 / fabric 0.14.9 | 17 | `multiple-version` (gradle) | jei 10.2.1.1005, fabric-api 0.67.0+1.18.2 |
 | `mv-1.16.5-forge` | 1.16.5 / forge 1.16.5-36.2.39 | 8 | `multiple-version` | jei 7.8.0.1009 (pinned by file id) |
-| `mv-1.16.5-fabric` | 1.16.5 / fabric 0.14.9 | 8 | `multiple-version` | fabric-api 0.42.0+1.16 (smoke) |
+| `mv-1.16.5-fabric` | 1.16.5 / fabric 0.14.9 | 8 | `multiple-version` (gradle) | fabric-api 0.42.0+1.16 (smoke) |
 | `1.12.2-forge-hei` | 1.12.2 / forge 1.12.2-14.23.5.2864 | 8 | `1.12.0` (srg jar) | had-enough-items 4.34.0 |
 | `1.12.2-forge-jei-legacy` | 1.12.2 / forge 1.12.2-14.23.5.2864 | 8 | `1.12.0` (srg jar) | jei 4.16.1.301 |
 
 Every row also stages the preset `options.txt`. The seven envs that are
-*launched into a world*, the row that loads its own, and the two that are
-*skipped*, are called out below and in the table above:
+*launched into a world*, the row that loads its own, the row that claims no level
+at all, and the one that is *skipped*, are called out below and in the table
+above:
 
 | env | runs? | world | why |
 | --- | --- | --- | --- |
 | `1.21.1-neoforge` | yes | none — `uitest` | the row runs the checkout's in-client harness, which stands up and pins its own flat level, and is judged by the harness's own report |
 | `1.21.1-fabric` | yes | `world: {name: jechworld}` | the JEI plugin marker needs a loaded level |
 | `moderner` ×4, `mv-1.20.1` ×2 | yes | `world: {name: jechworld}` | same marker, same level-load phase (measured 2026-10-14) |
-| `mv-1.19.2-forge`, `mv-1.19.2-fabric` | **no** — `skip` | none | same marker, but quick play needs 1.20+ (re-measured 2026-10-14) |
+| `mv-1.19.2-forge` | **no** — `skip` | none | same marker, but quick play needs 1.20+ (re-measured 2026-10-14) |
+| `mv-1.19.2-fabric` | yes | none | the menu-level smoke row: no marker to reach, so no level (gradle backend) |
 | `mv-1.16.5` ×2, `mv-1.18.2` ×2, `1.12.2` ×2 | yes | none | markers are emitted during startup |
 
 Every env but `1.21.1-neoforge` also declares
@@ -645,7 +694,7 @@ screen runs until the watchdog (see "Omitting it"). The harness row omits it on
 purpose: its own runner quits the client, so a stopping rule would end the run
 mid-scenario (see `uitest`).
 
-The `mv-1.19.2` rows are the one family with no path to their marker: JEI 11.x's
+`mv-1.19.2-forge` is the row with no path to its marker: JEI 11.x's
 `registerAdvancedSearch` (the phase that logs JECh's storage marker) runs at
 level load, and the only non-interactive way to load a level —
 `--quickPlaySingleplayer` — does not exist before 1.20. That was re-measured on
@@ -653,32 +702,63 @@ level load, and the only non-interactive way to load a level —
 command line, the 1.19.2 client reached the title screen and never loaded a
 level, because Prism only passes the quick-play argument to versions whose
 profile carries the `feature:is_quick_play_singleplayer` trait (Prism's
-`net.minecraft/1.19.2.json` has no such trait; 1.20.1 does). So the envs stay in
-the matrix with their checks written down, and `skip` names exactly what is
+`net.minecraft/1.19.2.json` has no such trait; 1.20.1 does). So the env stays in
+the matrix with its checks written down, and `skip` names exactly what is
 missing. Removing the `skip` is a follow-up that needs one of: a 1.19.2-era way
 to join a world from the command line, or an in-game runner (a test mod that
 loads a world and quits). Neither is in place; a weaker assertion is not an
-option.
+option. `mv-1.19.2-fabric` faces the same missing capability but is not in this
+position: as a gradle row it claims no marker, so there is nothing it can fail to
+reach and nothing to skip (see the `skip` section above).
 
 The version strings above are not invented: they mirror each checkout's
 `gradle.properties` (`neo_version`, `forge_version`, `fabric_loader_version`,
 `fabric_api_version`, `jei_version`, `jei_unobfuscated_version`, `hei_version`).
 
-The `mv-1.20.1-fabric` row corrects two upstream pins rather than pinning them
-as-found, because with them as-found the modset does not load at all:
+The `mv-1.20.1-fabric` row needed three corrections before its dev run would load
+its modset at all — two to upstream's properties, one to how the api reaches the
+run:
 
-* `1.20.1/gradle.properties` says `fabric_api_version=0.76.0+1.19.4`, a 1.19.4
-  build. No such file exists for MC 1.20.1 on either CurseForge or Modrinth, so
-  that row pins the real 1.20.1 line `0.92.12+1.20.1` instead — the newest
-  fabric-api for 1.20.1 — and stays tagged `experimental`.
+* `1.20.1/gradle.properties` as found said `fabric_api_version=0.76.0+1.19.4`, a
+  1.19.4 build. No such file exists for MC 1.20.1 on either CurseForge or
+  Modrinth, so the row pins the real 1.20.1 line `0.92.12+1.20.1` instead — the
+  newest fabric-api for 1.20.1 — and stays tagged `experimental`.
 * the same file's `fabric_loader_version=0.14.11` cannot load that modset: the
-  pinned `jei 15.48.0.179` requires `fabricloader >=0.16.3` and
-  `fabric-api 0.92.12+1.20.1` requires `>=0.16.10`, so Fabric refuses the set
-  with `Incompatible mod set!` before Minecraft starts (measured: the first run
-  of this row FAILed with exactly that line and no game session). The row
-  therefore uses loader `0.16.14`, the version the 1.21.1 fabric row already
-  runs; Prism's `net.fabricmc.fabric-loader` metadata does not bind loader
-  versions to a game version, so this is a one-token change.
+  pinned `jei 15.48.0.179` requires `fabricloader >=0.16.3`, so Fabric refuses
+  the set with `Incompatible mod set!` before Minecraft starts (measured: the
+  first run of this row FAILed with exactly that line and no game session). The
+  checkout therefore uses loader `0.16.14`, the version the 1.21.1 fabric row
+  already runs.
+* that pinned api **cannot be a Gradle mod dependency of the 1.20.1 module at
+  all**, which is why the row stages it (`via: game-dir`) instead of declaring it
+  `dev-classpath`. From 0.91.1 on, every MC 1.20.1 fabric-api is built by loom
+  >= 1.5 and carries `Fabric-Loom-Mixin-Remap-Type` in its manifest; the
+  `multiple-version` checkout's architectury-loom 1.1 refuses that key while
+  configuring the project (`This version of loom does not support the mixin remap
+  type value`). Measured with each token isolated and across 0.91.1 … 0.92.12 —
+  all key-bearing, with `0.91.0+1.20.1` the newest such jar loom 1.1 accepts. The
+  module therefore holds `modCompileOnly` on `0.91.0+1.20.1` (enough for its two
+  `fabric-command-api-v2` imports) and the run gets the real api from `mods/`,
+  where Fabric's dev-mode remapper — loom passes `-Dfabric.remapClasspathFile` —
+  turns the production jar from intermediary into the run's named namespace,
+  exactly as it does for JEI. It has to be >= `0.92.2+1.20.1`: that is the same
+  pinned JEI's own floor for `fabric-api`. Verified in the row's log:
+  `Loading 61 mods` lists `fabric-api 0.92.12+1.20.1` and `fabricloader 0.16.14`.
+
+`mv-1.19.2-fabric` needed the same kind of correction — the pinned JEI is newer
+than the versions upstream's properties name — but entirely in the checkout, and
+with none of that machinery:
+
+* `1.19.2/gradle.properties` as found said `fabric_api_version=0.68.0+1.19.2` and
+  `fabric_loader_version=0.14.11`, while the pinned `jei 11.30.3.1056` requires
+  `fabricloader >=0.15.11` and `fabric-api >=0.77.0+1.19.2` — measured: its dev
+  run refused the set with `Incompatible mod set!`, naming both floors. The
+  checkout now uses loader `0.16.14` (the loader the 1.20.1 and 1.21.1 fabric
+  rows run) and api `0.77.0+1.19.2`, which is also the *last* fabric-api build
+  for MC 1.19.2. That last fact is what keeps this row cheap: the api that
+  satisfies JEI's floor is still readable by the checkout's loom 1.1, so it stays
+  a plain `modApi` dependency on the run's classpath (`dev-classpath`), and the
+  row's log lists `fabric-api 0.77.0+1.19.2` and `fabricloader 0.16.14`.
 
 Separately, and true of every fabric row rather than of this one: the fabric
 variants' `fabric.mod.json` files declare the legacy `"fabric": "*"` dependency
@@ -694,19 +774,27 @@ intuition: a line whose jar contains `me/towdium/jecharacters/JechJeiPlugin.clas
 has a JEI plugin and can be asserted on its registration marker.
 
 * **A — JEI plugin present** (moderner ×4, 1.21.1 ×2, mv-1.20.1 ×2, mv-1.19.2 ×2):
+  the marker set is
   `log_contains "Registering JEI pinyin search storage"`,
   `log_not_contains "Could not find targets.json. JechTransformer will not be loaded."`,
   `no_crash_reports`, `exit_code_zero`; the fabric rows add
   `log_not_contains "Can't create config file!"` and
   `file_exists config/jecharacters.json`.
 
-  All ten rows of this family load a level, except the two `mv-1.19.2` rows,
-  which carry `skip` (no quick play before 1.20; re-measured 2026-10-14, see the
-  `skip` section). Seven of the other eight declare `world` (the quick-play
-  rows); `1.21.1-neoforge` gets its level from the in-client harness instead (see
-  `uitest`). All eight were measured against a real run on 2026-10-14 —
-  `1.21.1` ×2, `moderner` ×4, `mv-1.20.1` ×2 all reach a level with their marker
-  present a second after `joined the game`. So
+  Nine of the ten rows carry that set. The exception is `mv-1.19.2-fabric`, the
+  menu-level gradle row: its jar is in this family (it has
+  `JechJeiPlugin.class`) but the row claims nothing of the storage marker, so it
+  keeps the two config checks and the failure/exit checks only (see the `skip`
+  section above).
+
+  Those nine rows load a level when they run, except `mv-1.19.2-forge`, which
+  carries `skip` (no quick play before 1.20; re-measured 2026-10-14). Seven
+  declare `world` — the quick-play rows, `mv-1.20.1-fabric` among them on the
+  gradle backend; `1.21.1-neoforge` gets its level from the in-client harness
+  instead (see `uitest`). All seven were measured against a real run —
+  `1.21.1` ×2, `moderner` ×4, `mv-1.20.1` ×2 (the mv-1.20.1 pair on 2026-10-14,
+  and its fabric half again in the gradle-backend migration) all reach a level
+  with their marker present a second after `joined the game`. So
   the level-load claim holds for JEI 15 (1.20.1), JEI 19 (1.21.1), JEI 26
   (1.21.10) and JEI 29 (26.1.2): each of them defers `registerAdvancedSearch`
   until a level exists. `1.21.1-neoforge` adds `uitest_report` to this set: the

@@ -1,5 +1,5 @@
 {
-  "_comment": "multiple-version line, MC 1.19.2 fabric; fabric-api version from 1.19.2/gradle.properties.",
+  "_comment": "multiple-version line, MC 1.19.2 fabric; fabric-api and loader versions from 1.19.2/gradle.properties. Launched through the checkout's own Gradle run task (gradle backend): architectury-loom's `:1.19.2:fabric:runClient` registers the module's own sources as the mod under test and carries fabric-api (0.77.0+1.19.2, the version this module compiles against) through `modApi`, so both ride the run's classpath (via=dev-classpath); JEI is `compileOnly` in `1.19.2/build.gradle`, so it has no place on that classpath and its jar is the one jar staged into mods/. daemon_java is 17 because the wrapper is Gradle 8.1.1, which cannot run on the machine's default JDK (JBR 25). Upstream's two fabric pins could not load the pinned JEI and are corrected in the checkout: jei 11.30.3.1056 requires fabricloader >=0.15.11 and fabric-api >=0.77.0+1.19.2, so the loader is 0.16.14 (the version the 1.20.1 and 1.21.1 fabric rows run) and the api is 0.77.0+1.19.2 — also the last fabric-api build for MC 1.19.2, which matters twice: it is the one that satisfies JEI's floor, and it is still readable by this checkout's architectury-loom 1.1 (the newer builds carry a manifest key loom 1.1 refuses; see mv-1.20.1-fabric). This row is a menu-level smoke row: it makes no claim about the JEI storage marker — JEI 11.x emits that marker while a level loads and no non-interactive way to load a level exists before 1.20 (`--quickPlaySingleplayer` was added in 1.20), so the marker is unreachable for any 1.19.2 client that stops at the title screen. What the row does prove is written in `checks`: the transformer loaded, the config was written and no crash report appeared, over a client on which JEI 11.30.3.1056 plus fabric-api 0.77.0+1.19.2 actually loaded.",
   "name": "mv-1.19.2-fabric",
   "tags": [
     "mv",
@@ -9,16 +9,22 @@
   "mc": "1.19.2",
   "loader": {
     "type": "fabric",
-    "version": "0.14.11"
+    "version": "0.16.14"
   },
   "java": {
     "version": 17
+  },
+  "gradle": {
+    "task": ":1.19.2:fabric:runClient",
+    "project_dir": "multiple-version",
+    "daemon_java": 17
   },
   "jech": {
     "source": "local-build",
     "project": "multiple-version",
     "path": "1.19.2/fabric/build/libs/jecharacters-1.19.2-fabric-4.6.12.jar",
-    "expectModId": "jecharacters"
+    "expectModId": "jecharacters",
+    "via": "dev-classpath"
   },
   "mods": [
     {
@@ -40,24 +46,20 @@
       "name": "fabric-api",
       "source": "curseforge",
       "slug": "fabric-api",
+      "via": "dev-classpath",
       "describe": {
-        "version": "0.68.0+1.19.2"
+        "version": "0.77.0+1.19.2"
       },
       "pin": {
-        "fileId": 4123950,
-        "filename": "fabric-api-0.68.0+1.19.2.jar",
-        "downloadUrl": "https://edge.forgecdn.net/files/4123/950/fabric-api-0.68.0%2b1.19.2.jar",
-        "sha1": "bb4d02f261723dd81effd117df9437bfa20dc728",
-        "size": 1820290
+        "fileId": 4902659,
+        "filename": "fabric-api-0.77.0+1.19.2.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/4902/659/fabric-api-0.77.0%2b1.19.2.jar",
+        "sha1": "558cd912d95c9dec513eb87cc813d3a68aa93fa5",
+        "size": 1892953
       }
     }
   ],
   "checks": [
-    {
-      "type": "log_contains",
-      "value": "Registering JEI pinyin search storage",
-      "name": "jei-storage-registered"
-    },
     {
       "type": "log_not_contains",
       "value": "Could not find targets.json. JechTransformer will not be loaded.",
@@ -82,7 +84,9 @@
       "name": "exit-code"
     }
   ],
-  "skip": "JEI registration check needs world load; quickPlay needs 1.20+",
+  "ready_when": {
+    "value": "Sound engine started"
+  },
   "timeout_sec": 600,
   "jvm": {
     "max_mem_mb": 3072,

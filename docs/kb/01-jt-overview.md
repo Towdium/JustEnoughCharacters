@@ -19,7 +19,7 @@
 | `jt seed-world <selection> [--exclude X] [--refresh]` | create/reuse world seeds | envs without `world` are a no-op; a selection with nothing to seed → exit 1 (`lib/__main__.py:112-160`) |
 | `jt run <selection> [--exclude X] [--refresh]` | execute and judge envs | one `runs/<id>` dir per env, strictly serial (`lib/__main__.py:29-76`; `lib/runner.py:1-25`) |
 | `jt verify <run_dir>` | re-judge a written report | fail-closed; `ReportError.exit_code = EXIT_FAIL` (`lib/report.py:280-336`; `lib/errors.py:79-82`) |
-| `jt selftest [--pattern P] [-q]` | offline unit tests | 369 tests, no network; see 07 (`lib/__main__.py:186-199`) |
+| `jt selftest [--pattern P] [-q]` | offline unit tests | 371 tests, no network; see 07 (`lib/__main__.py:186-199`) |
 
 ## Minimal example
 
