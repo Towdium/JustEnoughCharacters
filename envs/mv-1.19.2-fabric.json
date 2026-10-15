@@ -1,5 +1,5 @@
 {
-  "_comment": "multiple-version line, MC 1.19.2 fabric; fabric-api and loader versions from 1.19.2/gradle.properties. Launched through the checkout's own Gradle run task (gradle launch): architectury-loom's `:1.19.2:fabric:runClient` registers the module's own sources as the mod under test and carries fabric-api (0.77.0+1.19.2, the version this module compiles against) through `modApi`, so both ride the run's classpath (via=dev-classpath); JEI is `compileOnly` in `1.19.2/build.gradle`, so it has no place on that classpath and its jar is the one jar staged into mods/. daemon_java is 17 because the wrapper is Gradle 8.1.1, which cannot run on the machine's default JDK (JBR 25). Upstream's two fabric pins could not load the pinned JEI and are corrected in the checkout: jei 11.30.3.1056 requires fabricloader >=0.15.11 and fabric-api >=0.77.0+1.19.2, so the loader is 0.16.14 (the version the 1.20.1 and 1.21.1 fabric rows run) and the api is 0.77.0+1.19.2 — also the last fabric-api build for MC 1.19.2, which matters twice: it is the one that satisfies JEI's floor, and it is still readable by this checkout's architectury-loom 1.1 (the newer builds carry a manifest key loom 1.1 refuses; see mv-1.20.1-fabric). This row is a menu-level smoke row: it makes no claim about the JEI storage marker — JEI 11.x emits that marker while a level loads and no non-interactive way to load a level exists before 1.20 (`--quickPlaySingleplayer` was added in 1.20), so the marker is unreachable for any 1.19.2 client that stops at the title screen. What the row does prove is written in `checks`: the transformer loaded, the config was written and no crash report appeared, over a client on which JEI 11.30.3.1056 plus fabric-api 0.77.0+1.19.2 actually loaded.",
+  "_comment": "multiple-version line, MC 1.19.2 fabric. Runs the standalone in-client UI test harness (uitest/mv-1.19.2-fabric, an independent architectury-loom build in this repository) through the three-stage pipeline config->build->test. The harness build stages the two jars under test into the run's mods/ folder itself (production fabric jars are intermediary-named; fabric-loader's dev-mode remapper brings them into the run's namespace) and takes fabric-api as its own remapped Gradle dependency at exactly the pinned version, so jech, jei and fabric-api all carry via=dev-classpath: there is nothing for jt to stage. The row is a harness row since this move (2026-10-15): it declares no ready_when and no world, because the harness's own runner creates and pins its flat level and quits the client when the selection is done. That is also what promoted the JEI storage marker from unreachable to checked: JEI 11.x emits it while a level loads, and before this move no non-interactive way to load a level existed before 1.20 (--quickPlaySingleplayer is 1.20+), so the row could only assert startup markers; the harness's createFreshLevel reaches the marker without quick-play. daemon_java is 17 because the harness wrapper is Gradle 8.1.1, which cannot run on the machine's default JDK (JBR 25). Upstream's two fabric pins stay corrected the way the checkout corrected them: loader 0.16.14 (the pinned jei 11.30.3.1056 requires fabricloader >=0.15.11) and api 0.77.0+1.19.2 — the last fabric-api build for MC 1.19.2, the one that satisfies JEI's floor and still readable by architectury-loom 1.1.",
   "name": "mv-1.19.2-fabric",
   "tags": [
     "mv",
@@ -14,10 +14,13 @@
   "java": {
     "version": 17
   },
-  "gradle": {
-    "task": ":1.19.2:fabric:runClient",
-    "project_dir": "multiple-version",
-    "daemon_java": 17
+  "uitest": {
+    "selection": "tag:smoke,tag:jei",
+    "project": "uitest/mv-1.19.2-fabric",
+    "options": {
+      "version": "3120",
+      "key_key.jei.focusSearch": "key.keyboard.f"
+    }
   },
   "jech": {
     "source": "local-build",
@@ -31,6 +34,7 @@
       "name": "jei",
       "source": "curseforge",
       "slug": "jei",
+      "via": "dev-classpath",
       "describe": {
         "version": "11.30.3.1056"
       },
@@ -61,6 +65,11 @@
   ],
   "checks": [
     {
+      "type": "log_contains",
+      "value": "Registering JEI pinyin search storage",
+      "name": "jei-storage-registered"
+    },
+    {
       "type": "log_not_contains",
       "value": "Could not find targets.json. JechTransformer will not be loaded.",
       "name": "transformer-loaded"
@@ -76,6 +85,10 @@
       "name": "config-generated"
     },
     {
+      "type": "uitest_report",
+      "name": "uitest-report"
+    },
+    {
       "type": "no_crash_reports",
       "name": "no-crash-reports"
     },
@@ -84,8 +97,6 @@
       "name": "exit-code"
     }
   ],
-  "ready_when": {
-    "value": "Sound engine started"
-  },
+  "world": null,
   "timeout_sec": 600
 }

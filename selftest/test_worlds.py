@@ -355,8 +355,12 @@ class SeedWorldCliTest(unittest.TestCase):
             code, output = self.cli(["envs", "--json"])
         self.assertEqual(code, 0)
         listed = {item["name"]: item for item in json.loads(output)}
-        self.assertIsNone(listed["mv-1.20.1-fabric"]["skip"])
-        self.assertEqual(listed["mv-1.20.1-fabric"]["world"]["savesPath"], "saves/jechworld")
+        # `moderner-26.1.2-fabric` is the current example of a world-declaring,
+        # no-skip row (mv-1.20.1-fabric, the earlier example, joined the
+        # standalone harness rows on 2026-10-15 and dropped its world with the
+        # quick-play launch).
+        self.assertIsNone(listed["moderner-26.1.2-fabric"]["skip"])
+        self.assertEqual(listed["moderner-26.1.2-fabric"]["world"]["savesPath"], "saves/jechworld")
         # Both 1.21.1 rows are harness rows now (the standalone builds since
         # 2026-10-15): neither declares a world, because the level asserted
         # against is the one the in-client runner creates and pins itself, and
