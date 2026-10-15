@@ -259,6 +259,8 @@ class EnvParsingTest(unittest.TestCase):
         day when their checkout copies moved out: their ``uitest`` block names
         the harness build it runs, so the row carries its own launch layer and
         declares no ``gradle`` block at all.
+        The 26.1.2 pair joined them on 2026-10-15, ported to the
+        ``uitest/moderner-26.1.2-{neoforge,fabric}`` builds.
         """
         expected = {
             "1.12.2-forge-hei": "tag:smoke",
@@ -267,12 +269,16 @@ class EnvParsingTest(unittest.TestCase):
             "1.21.1-fabric": "tag:smoke,tag:jei",
             "moderner-1.21.10-fabric": "tag:smoke,tag:jei",
             "moderner-1.21.10-neoforge": "tag:smoke,tag:jei",
+            "moderner-26.1.2-neoforge": "tag:smoke,tag:jei",
+            "moderner-26.1.2-fabric": "tag:smoke,tag:jei",
         }
         standalone = {
             "1.21.1-neoforge": "uitest/1.21.1-neoforge",
             "1.21.1-fabric": "uitest/1.21.1-fabric",
             "moderner-1.21.10-neoforge": "uitest/moderner-1.21.10-neoforge",
             "moderner-1.21.10-fabric": "uitest/moderner-1.21.10-fabric",
+            "moderner-26.1.2-neoforge": "uitest/moderner-26.1.2-neoforge",
+            "moderner-26.1.2-fabric": "uitest/moderner-26.1.2-fabric",
         }
         rows = {env.name: env for env in envs.load_all() if env.uitest is not None}
         self.assertEqual(sorted(rows), sorted(expected),
@@ -308,7 +314,6 @@ class EnvParsingTest(unittest.TestCase):
         quick-play join would race the level the scenarios are asserted against.
         """
         measured = {
-            "moderner-26.1.2-neoforge", "moderner-26.1.2-fabric",
             "mv-1.20.1-forge", "mv-1.20.1-fabric",
         }
         for env in envs.load_all():
@@ -651,10 +656,10 @@ class ViaTest(unittest.TestCase):
 
         There is no other launch layer (the Prism instance launcher was removed on
         2026-10-14), so a row that declares none of the three would be an env that
-        cannot run and does not say why. Eight rows declare a run task — the two
-        remaining moderner rows, the four multiple-version *fabric* rows, and the
-        two 1.12.2 rows — the 1.21.1 pair moved to the standalone backend on
-        2026-10-15 and the ``moderner-1.21.10`` pair followed the same day
+        cannot run and does not say why. Six rows declare a run task — the two
+        1.12.2 rows and the four multiple-version *fabric* rows — while the
+        1.21.1 pair and both moderner pairs (1.21.10, 26.1.2) moved to the
+        standalone backend on 2026-10-15
         (their ``uitest`` block names ``uitest/<line>``, an
         independent Gradle build in this repository that carries its own run
         task), and the other four multiple-version *forge* rows declare `skip`
@@ -667,7 +672,6 @@ class ViaTest(unittest.TestCase):
         loaded = {env.name: env for env in envs.load_all()}
         gradle_rows = {
             "1.12.2-forge-hei", "1.12.2-forge-jei-legacy",
-            "moderner-26.1.2-neoforge", "moderner-26.1.2-fabric",
             "mv-1.16.5-fabric", "mv-1.18.2-fabric",
             "mv-1.19.2-fabric", "mv-1.20.1-fabric",
         }
@@ -676,6 +680,8 @@ class ViaTest(unittest.TestCase):
             "1.21.1-fabric": "uitest/1.21.1-fabric",
             "moderner-1.21.10-neoforge": "uitest/moderner-1.21.10-neoforge",
             "moderner-1.21.10-fabric": "uitest/moderner-1.21.10-fabric",
+            "moderner-26.1.2-neoforge": "uitest/moderner-26.1.2-neoforge",
+            "moderner-26.1.2-fabric": "uitest/moderner-26.1.2-fabric",
         }
         self.assertFalse(gradle_rows - set(loaded), "a named gradle row does not exist")
         for env in loaded.values():
@@ -727,17 +733,13 @@ class ViaTest(unittest.TestCase):
             self.assertEqual(got, vias, name)
 
     def test_the_moderner_rows_ride_the_classpath_too(self):
-        """The four moderner rows are the same contract, in the modern line.
+        """The moderner 1.21.10 rows are the same contract, in the modern line.
 
-        The two 26.1.2 rows still run their checkout's own module, which already
-        puts the env's own dependencies on the run's classpath: the neoforge pair
-        declares JEI through ``localRuntime`` at exactly the version the env pins
-        (``jei_unobfuscated_version`` for 26.1.2), ``fabric-unobfuscated`` through
-        ``runtimeOnly`` JEI and ``implementation`` fabric-api. JECh's own sources
-        are the module the run registers, so nothing is staged into ``mods/`` — a
-        second copy of a mod id the run already carries is a double load, not a
-        second opinion. Their Gradle 9.5 wrappers run on the machine's default
-        JDK, so they declare no ``daemon_java``.
+        The 26.1.2 pair joined the standalone backend the same day
+        (``uitest/moderner-26.1.2-{neoforge,fabric}`` builds), so no moderner
+        row carries a ``gradle`` block anymore: the harness builds load every
+        jar themselves, and the env's pins ride their classpaths at exactly the
+        versions the rows declare.
 
         The two 1.21.10 rows moved to the standalone backend (2026-10-15, the
         same day the 1.21.1 pair did), so they no longer carry a ``gradle``
@@ -747,15 +749,16 @@ class ViaTest(unittest.TestCase):
         takes fabric-api as its own dependency at the pinned version).
         """
         loaded = {env.name: env for env in envs.load_all()}
-        expected = {
-            "moderner-26.1.2-neoforge": ":neoforge-unobfuscated:runClient",
-            "moderner-26.1.2-fabric": ":fabric-unobfuscated:runClient",
+        standalone = {
+            "moderner-1.21.10-neoforge": "uitest/moderner-1.21.10-neoforge",
+            "moderner-1.21.10-fabric": "uitest/moderner-1.21.10-fabric",
+            "moderner-26.1.2-neoforge": "uitest/moderner-26.1.2-neoforge",
+            "moderner-26.1.2-fabric": "uitest/moderner-26.1.2-fabric",
         }
-        for name, task in expected.items():
+        for name, project in standalone.items():
             env = loaded[name]
-            self.assertEqual(env.gradle.task, task, name)
-            self.assertEqual(env.gradle.project_dir, "moderner", name)
-            self.assertIsNone(env.gradle.daemon_java, f"{name}: Gradle 9.5 runs on the default JDK")
+            self.assertIsNone(env.gradle, f"{name} carries its own launch layer")
+            self.assertEqual(env.uitest.project, project, name)
         for name in ("moderner-1.21.10-neoforge", "moderner-1.21.10-fabric",
                      "moderner-26.1.2-neoforge", "moderner-26.1.2-fabric"):
             env = loaded[name]
@@ -827,31 +830,32 @@ class CheckoutWiringTest(unittest.TestCase):
         self.assertTrue(checked, "no checkout found; the wiring contract was not verified")
 
     def test_the_moderner_modules_read_the_harness_properties(self):
-        """The same contract for the four moderner modules.
+        """The same contract for the moderner modules still on the gradle backend.
 
         Two details are specific to that line and are asserted here so a later edit
-        cannot quietly drop them: the neoforge pair *already* had a quick-play
+        cannot quietly drop them: the neoforge module *already* had a quick-play
         property of its own (``quickPlaySingleplayerWorld``) and a fixed
         ``run/client/Dev`` game directory, both of which must survive next to the
         harness's ``jechRunDir``/``jechQuickPlayWorld``, and the fabric pair had no
         run configuration at all before — its wiring only adds the two properties
         to loom's default client run.
 
-        Only the rows that still name a run task drive this walk: the two
-        1.21.10 rows moved to the standalone backend (2026-10-15) and no longer
-        carry one, but their modules' wiring is still this contract for a manual
-        run until W3 removes the embedded harness.
+        All four moderner rows moved to the standalone backend (2026-10-15) and
+        no longer carry a ``gradle`` block, but all four modules' wiring is still
+        this contract for a manual run until W3 removes the embedded harness —
+        so this walk is layout-driven, never derived from an env's ``gradle``
+        block.
         """
         from lib import instance
-        loaded = {env.name: env for env in envs.load_all()}
         checked = []
-        for name in ("moderner-1.21.10-neoforge", "moderner-1.21.10-fabric",
-                     "moderner-26.1.2-neoforge", "moderner-26.1.2-fabric"):
-            env = loaded[name]
-            if env.gradle is None:
-                continue
-            module = env.gradle.task.lstrip(":").split(":")[0]
-            path = self.module_gradle(env.gradle.project_dir, module)
+        modules = {
+            "moderner-1.21.10-neoforge": ("moderner", "neoforge"),
+            "moderner-1.21.10-fabric": ("moderner", "fabric-legacy"),
+            "moderner-26.1.2-neoforge": ("moderner", "neoforge-unobfuscated"),
+            "moderner-26.1.2-fabric": ("moderner", "fabric-unobfuscated"),
+        }
+        for name, (project_dir, module) in modules.items():
+            path = self.module_gradle(project_dir, module)
             if not path.is_file():
                 continue
             text = path.read_text(encoding="utf-8")
@@ -860,7 +864,7 @@ class CheckoutWiringTest(unittest.TestCase):
                            instance.GRADLE_QUICK_PLAY_PROPERTY):
                 self.assertIn(needle, text, f"{name}: {path} does not read {needle!r}")
             self.assertIn("isPresent()", text, f"{name}: the wiring is not property-guarded")
-            if "neoforge" in env.gradle.task:
+            if "neoforge" in module:
                 self.assertIn("quickPlaySingleplayerWorld", text,
                               f"{name}: the checkout's own quick-play property was dropped")
                 self.assertIn("run/client/Dev", text,

@@ -303,13 +303,13 @@ class SeedWorldCliTest(unittest.TestCase):
 
     def test_a_verified_cache_is_reused_and_reported(self):
         with support.temp_home():
-            env = envs.find_env("moderner-26.1.2-fabric")
+            env = envs.find_env("mv-1.20.1-fabric")
             seed = support.write_world_seed(env)
-            code, output = self.cli(["seed-world", "moderner-26.1.2-fabric"])
+            code, output = self.cli(["seed-world", "mv-1.20.1-fabric"])
         self.assertEqual(code, 0)
         self.assertIn("reused", output)
         self.assertIn(seed.digest[:16], output)
-        self.assertIn("vanilla-26.1.2", output)
+        self.assertIn("vanilla-1.20.1", output)
 
     def test_a_selection_where_nothing_needs_a_seed_fails_loudly(self):
         with support.temp_home():
@@ -321,9 +321,9 @@ class SeedWorldCliTest(unittest.TestCase):
 
     def test_a_mixed_selection_seeds_what_needs_it_and_exits_zero(self):
         with support.temp_home():
-            env = envs.find_env("moderner-26.1.2-fabric")
+            env = envs.find_env("mv-1.20.1-fabric")
             seed = support.write_world_seed(env)
-            code, output = self.cli(["seed-world", "1.12.2-forge-hei,moderner-26.1.2-fabric"])
+            code, output = self.cli(["seed-world", "1.12.2-forge-hei,mv-1.20.1-fabric"])
         self.assertEqual(code, 0)
         self.assertIn(seed.digest[:16], output)
         self.assertIn("declares no world", output)

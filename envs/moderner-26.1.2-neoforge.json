@@ -1,5 +1,5 @@
 {
-  "_comment": "moderner line, MC 26.1.2 (unobfuscated). jei version is jei_unobfuscated_version in moderner/gradle.properties. Launched through the checkout's own Gradle run task (gradle launch); the wrapper is Gradle 9.5, which runs on the machine default JDK, so daemon_java is null, while the client's JDK 25 comes from the module's own toolchain. jech and jei both carry via=dev-classpath: neoforge-unobfuscated/build.gradle registers sourceSets.main as the mod and puts mezz.jei:jei-26.1.2-neoforge:29.16.0.46 in localRuntime — the same version this env pins (jei_unobfuscated_version, checked against the run's classpath) — so staging either jar would load that mod id twice.",
+  "_comment": "moderner line, MC 26.1.2 (unobfuscated). jei version is jei_unobfuscated_version in moderner/gradle.properties. Runs the standalone in-client UI test harness (uitest/moderner-26.1.2-neoforge, an independent Gradle build in this repository — the moderner checkout's 1.21.10 engine copy ported to MC 26.1.2) through the three-stage pipeline config->build->test: jt resolves and pins, reuses/builds the JECh jar from the moderner checkout's neoforge-unobfuscated module and compiles the harness build, then launches that build's runClientTests with the jars under test as -PjechJar/-PjeiJar. The client drives its own scenarios and writes report.json before it quits itself, so the row declares no ready_when (stopping this client early would kill it mid-scenario) and no world (the level asserted against is the one the harness's runner creates and pins itself, so the JEI plugin marker still arrives). jech and jei both carry via=dev-classpath: the standalone build loads every jar itself — the JECh jar and the pinned JEI jar ride the run's legacy classpath (localRuntime), FML unpacking the jar's embedded PinIn and coremod — so there is nothing for jt to stage, and a staged copy would double-load.",
   "name": "moderner-26.1.2-neoforge",
   "tags": [
     "moderner",
@@ -15,9 +15,9 @@
   "java": {
     "version": 25
   },
-  "gradle": {
-    "task": ":neoforge-unobfuscated:runClient",
-    "daemon_java": null
+  "uitest": {
+    "selection": "tag:smoke,tag:jei",
+    "project": "uitest/moderner-26.1.2-neoforge"
   },
   "jech": {
     "source": "local-build",
@@ -56,6 +56,10 @@
       "name": "transformer-loaded"
     },
     {
+      "type": "uitest_report",
+      "name": "uitest-report"
+    },
+    {
       "type": "no_crash_reports",
       "name": "no-crash-reports"
     },
@@ -64,11 +68,6 @@
       "name": "exit-code"
     }
   ],
-  "ready_when": {
-    "value": "Sound engine started"
-  },
-  "world": {
-    "name": "jechworld"
-  },
+  "world": null,
   "timeout_sec": 600
 }

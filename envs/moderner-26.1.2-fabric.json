@@ -1,5 +1,5 @@
 {
-  "_comment": "moderner line, MC 26.1.2, fabric (fabric-unobfuscated module). fabric-api version is fabric_api_version in moderner/fabric-unobfuscated/gradle.properties; that variant's fabric.mod.json depends on fabric-api explicitly. Launched through the checkout's own Gradle run task (gradle launch); the wrapper is Gradle 9.5, which runs on the machine default JDK, so daemon_java is null, while the client's JDK 25 comes from the module's own toolchain. jech, jei and fabric-api are all via=dev-classpath: the module registers its own sources as the mod, runtimeOnly puts jei-26.1.2-fabric:29.16.0.46 on the run's classpath (the version this env pins — jei_unobfuscated_version) and implementation puts fabric-api:0.146.1+26.1.2 there. Nothing is staged into mods/.",
+  "_comment": "moderner line, MC 26.1.2, fabric (the moderner checkout's fabric-unobfuscated module builds the jar under test). fabric-api version is fabric_api_version in moderner/fabric-unobfuscated/gradle.properties. Runs the standalone in-client UI test harness (uitest/moderner-26.1.2-fabric, an independent loom build in this repository — the moderner checkout's 1.21.10 fabric-legacy engine copy ported to MC 26.1.2) through the three-stage pipeline config->build->test. MC 26.x ships unobfuscated official jars, so the harness build declares no mappings and stages nothing into mods/: the JECh jar and the pinned JEI jar are Mojang-named and ride the run's plain runtime classpath, fabric-api travels as the build's own Gradle dependency at exactly the pinned version, and the loader unpacks the JECh jar's nested PinIn from the classpath. That is why jech, jei and fabric-api all carry via=dev-classpath with nothing staged. The row declares no ready_when and no world: the harness's own runner creates and pins its flat level and quits the client when the selection is done. uitest.options pins key_key.jei.focusSearch to the plain f key: JEI 29.x registers the bind with a CONTROL_OR_COMMAND modifier, and without the Amecs mod fabric's builder turns that into an unbound (key.keyboard.unknown) mapping, so the scenarios' bare-f focus press would find nothing to press (measured 2026-10-15 in the run's own options.txt dump). The version line is 26.1.2's dataVersion (version.json world_version=4790): with it the legacy options fixer chain stays off and the key_ line loads cleanly (the trap lib/options.py documents; 1.21.1-fabric pins the same pair at 3955).",
   "name": "moderner-26.1.2-fabric",
   "tags": [
     "moderner",
@@ -15,9 +15,13 @@
   "java": {
     "version": 25
   },
-  "gradle": {
-    "task": ":fabric-unobfuscated:runClient",
-    "daemon_java": null
+  "uitest": {
+    "selection": "tag:smoke,tag:jei",
+    "project": "uitest/moderner-26.1.2-fabric",
+    "options": {
+      "version": "4790",
+      "key_key.jei.focusSearch": "key.keyboard.f"
+    }
   },
   "jech": {
     "source": "local-build",
@@ -82,6 +86,10 @@
       "name": "config-generated"
     },
     {
+      "type": "uitest_report",
+      "name": "uitest-report"
+    },
+    {
       "type": "no_crash_reports",
       "name": "no-crash-reports"
     },
@@ -90,11 +98,6 @@
       "name": "exit-code"
     }
   ],
-  "ready_when": {
-    "value": "Sound engine started"
-  },
-  "world": {
-    "name": "jechworld"
-  },
+  "world": null,
   "timeout_sec": 600
 }
