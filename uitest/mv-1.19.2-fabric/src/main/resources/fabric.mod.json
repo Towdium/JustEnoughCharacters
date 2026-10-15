@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "jechtest",
+  "version": "${version}",
+  "name": "JECh UI Test Harness",
+  "description": "Dev-only UI test harness for Just Enough Characters: the scenario engine ported from the CloudLib in-client UI test harness (frame-clock runner, scenario DSL, synthetic/real input seams, screen capture and the JUnit/JSON report). Never shipped.",
+  "authors": [
+    "vfyjxf_"
+  ],
+  "license": "MIT License",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "me.towdium.jecharacters.uitest.UiTest"
+    ],
+    "jechtest:scenarios": [
+      "me.towdium.jecharacters.uitest.SmokeScenario"
+    ]
+  },
+  "mixins": [
+    "jechtest.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.14.6",
+    "minecraft": ">=1.19 <=1.19.2",
+    "jecharacters": "*"
+  }
+}
