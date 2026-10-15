@@ -1,0 +1,17 @@
+{
+  "name": "hei-smoke",
+  "group": "smoke",
+  "tags": ["smoke"],
+  "requiresWorld": true,
+  "timeoutMs": 10000,
+  "steps": [
+    {"do": "log", "text": "hei-smoke: the smallest thing worth running against the JEI line — open the real chat box, type into it, capture the frame, close it"},
+    {"do": "open_chat"},
+    {"do": "wait_until_screen", "screen": "GuiChat"},
+    {"do": "type", "text": "jech hei"},
+    {"do": "screenshot", "label": "chat"},
+    {"do": "key", "key": "escape"},
+    {"do": "wait_until_screen", "screen": null},
+    {"do": "log", "text": "hei-smoke: the chat box was opened by the real bind, typed into and closed"}
+  ]
+}

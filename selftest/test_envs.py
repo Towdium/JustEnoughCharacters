@@ -203,11 +203,14 @@ class EnvParsingTest(unittest.TestCase):
             self.assertIn(marker, [check.name for check in row.checks], name)
         # And the two revived rows keep the markers they were skipped with: the
         # reason for a skip was never the checks, so reviving a row must not lose
-        # one of them.
+        # one of them. They run the standalone harness build since 2026-10-15
+        # (uitest/1.12.2-forge), so they carry their own launch layer.
         for name, marker in (("1.12.2-forge-jei-legacy", "legacy-tree-transformed"),
                              ("1.12.2-forge-hei", "jei-index-registered")):
             row = loaded[name]
-            self.assertIsNotNone(row.gradle, f"{name} declares its run task now")
+            self.assertEqual(row.uitest.project, "uitest/1.12.2-forge",
+                             f"{name} runs the standalone harness build")
+            self.assertIsNone(row.gradle, f"{name} carries its own launch layer")
             self.assertIn(marker, [check.name for check in row.checks], name)
 
     def test_every_shipped_env_declares_a_stopping_rule(self):
@@ -260,7 +263,10 @@ class EnvParsingTest(unittest.TestCase):
         the harness build it runs, so the row carries its own launch layer and
         declares no ``gradle`` block at all.
         The 26.1.2 pair joined them on 2026-10-15, ported to the
-        ``uitest/moderner-26.1.2-{neoforge,fabric}`` builds.
+        ``uitest/moderner-26.1.2-{neoforge,fabric}`` builds, and the 1.12.2 pair
+        joined the same day: the two rows share one build
+        (``uitest/1.12.2-forge``) — the row is picked by the JEI-line jar jt
+        hands over as ``-PjeiJar``.
         """
         expected = {
             "1.12.2-forge-hei": "tag:smoke",
@@ -273,6 +279,8 @@ class EnvParsingTest(unittest.TestCase):
             "moderner-26.1.2-fabric": "tag:smoke,tag:jei",
         }
         standalone = {
+            "1.12.2-forge-hei": "uitest/1.12.2-forge",
+            "1.12.2-forge-jei-legacy": "uitest/1.12.2-forge",
             "1.21.1-neoforge": "uitest/1.21.1-neoforge",
             "1.21.1-fabric": "uitest/1.21.1-fabric",
             "moderner-1.21.10-neoforge": "uitest/moderner-1.21.10-neoforge",
@@ -563,19 +571,32 @@ class GradleBlockTest(unittest.TestCase):
         self.reject(support.env_dict(gradle={"task": "runClient", "args": [3]}),
                     "env.gradle.args must be a list of non-empty strings")
 
-    def test_the_112_rows_pass_the_dev_mod_they_were_measured_with(self):
-        """Every gradle row that names a property says so in ``args``.
+    def test_the_112_rows_name_the_jei_line_mod_they_were_measured_with(self):
+        """The two 1.12.2 rows pick their JEI-line mod by the jar they pin.
 
-        The two 1.12.2 rows are the only rows that need one: which JEI-line mod a
-        run loads is a project property (``-PdevMod``), and the row names the one
-        its JEI checks were measured against instead of leaving it to a default.
+        Since 2026-10-15 both rows run the standalone harness build
+        (``uitest/1.12.2-forge``), so which JEI-line mod a run loads is no longer
+        a checkout property — ``-PdevMod`` is gone. The choice is the pinned jar
+        jt hands over as ``-PjeiJar``, and the build stages whatever jar it is
+        given (its filename is the row). The mod entry's *name* is ``jei`` on
+        both rows — the standalone backend finds its ``-PjeiJar`` target by that
+        name (``uitest_pipeline.JEI_MOD_NAME``) — while the pin beneath it names
+        the actual artifact: legacy JEI on one row, Had Enough Items on the
+        other.
         """
         loaded = {env.name: env for env in envs.load_all()}
-        self.assertEqual(loaded["1.12.2-forge-jei-legacy"].gradle.args, ("-PdevMod=jei",))
-        self.assertEqual(loaded["1.12.2-forge-hei"].gradle.args, ("-PdevMod=hei",))
+        pinned = {
+            "1.12.2-forge-jei-legacy": "jei_1.12.2-4.16.1.301.jar",
+            "1.12.2-forge-hei": "HadEnoughItems_1.12.2-4.34.0.jar",
+        }
+        for name, filename in pinned.items():
+            row = loaded[name]
+            self.assertIsNone(row.gradle, f"{name} passes no checkout properties anymore")
+            self.assertEqual(row.uitest.project, "uitest/1.12.2-forge", name)
+            self.assertEqual([m.name for m in row.mods], ["jei"], name)
+            self.assertEqual(row.mods[0].pin["filename"], filename, name)
         for env in loaded.values():
-            if env.gradle is not None and env.name not in ("1.12.2-forge-jei-legacy",
-                                                           "1.12.2-forge-hei"):
+            if env.gradle is not None:
                 self.assertEqual(env.gradle.args, (),
                                  f"{env.name}: a row that needs no property passes none")
 
@@ -618,24 +639,22 @@ class ViaTest(unittest.TestCase):
             self.assertIn("dev-classpath", message)
 
     def test_the_shipped_gradle_envs_stage_only_what_the_checkout_lacks(self):
-        """The two 1.21.1 rows are the standalone dev-classpath contract, written down.
+        """Four rows are the standalone dev-classpath contract, written down.
 
-        Since 2026-10-15 both rows run the standalone harness builds
-        (``uitest/1.21.1-{neoforge,fabric}``), which load every jar themselves:
-        the neoforge build rides the two jars on the run's legacy classpath
-        (``localRuntime``), the fabric build stages them into the run's
+        Since 2026-10-15 the two 1.21.1 rows and the two 1.12.2 rows run
+        standalone harness builds (``uitest/1.21.1-{neoforge,fabric}``,
+        ``uitest/1.12.2-forge``), which load every jar themselves: the 1.21.1
+        neoforge build rides the two jars on the run's legacy classpath
+        (``localRuntime``), the 1.21.1 fabric build stages them into the run's
         ``mods/`` itself and takes fabric-api as its own Gradle dependency at
-        the pinned version. Nothing is staged by jt — a staged copy would
-        double-load — so every artifact on both rows is ``dev-classpath``.
-
-        The two 1.12.2 rows are the checkout-backend shape with one more reason:
-        JECh is the module the harness run registers ``sourceSets.main`` for, and
-        the JEI-line mod is the jar the harness run stages itself, with its access
-        transformer remapped for the dev run (its published rules are SRG-named
-        and meet MCP-named members, which is an ``IllegalAccessError`` in JEI's
-        own init — measured, see the rows' own comments). So neither artifact is
-        staged by jt, and the row passes ``-PdevMod`` so the checkout stages the
-        one it was measured with.
+        the pinned version, and the 1.12.2 build rides the JECh srg jar on the
+        run task's classpath (FML's ModDiscoverer.findClasspathMods discovers
+        the mod in it) while staging the JEI-line jar into the game directory's
+        ``mods/`` itself, with its access transformer remapped for the dev run
+        (its published rules are SRG-named and meet MCP-named members, which is
+        an ``IllegalAccessError`` in JEI's own init — measured, see the rows'
+        own comments). Nothing is staged by jt on any of the four rows — a
+        staged copy would double-load — so every artifact is ``dev-classpath``.
         """
         loaded = {env.name: env for env in envs.load_all()}
         for name in ("1.21.1-neoforge", "1.21.1-fabric"):
@@ -643,26 +662,25 @@ class ViaTest(unittest.TestCase):
             self.assertEqual(row.jech.via, "dev-classpath", name)
             self.assertTrue(all(mod.via == "dev-classpath" for mod in row.mods), name)
 
-        for name, mod in (("1.12.2-forge-jei-legacy", "jei"), ("1.12.2-forge-hei", "had-enough-items")):
+        for name in ("1.12.2-forge-jei-legacy", "1.12.2-forge-hei"):
             row = loaded[name]
-            self.assertEqual(row.gradle.task, "runClientTests", name)
-            self.assertEqual(row.gradle.project_dir, "1.12.0", name)
-            self.assertIsNone(row.gradle.daemon_java, f"{name}: the wrapper runs on the ambient JDK")
+            self.assertIsNone(row.gradle, f"{name} carries its own launch layer")
+            self.assertEqual(row.uitest.project, "uitest/1.12.2-forge", name)
             self.assertEqual(row.jech.via, "dev-classpath", name)
-            self.assertEqual({m.name: m.via for m in row.mods}, {mod: "dev-classpath"}, name)
+            self.assertEqual({m.name: m.via for m in row.mods}, {"jei": "dev-classpath"}, name)
 
     def test_every_shipped_row_is_gradle_or_skipped(self):
         """The matrix has exactly three states: a run task, a standalone build, or a skip.
 
         There is no other launch layer (the Prism instance launcher was removed on
         2026-10-14), so a row that declares none of the three would be an env that
-        cannot run and does not say why. Six rows declare a run task — the two
-        1.12.2 rows and the four multiple-version *fabric* rows — while the
-        1.21.1 pair and both moderner pairs (1.21.10, 26.1.2) moved to the
-        standalone backend on 2026-10-15
-        (their ``uitest`` block names ``uitest/<line>``, an
-        independent Gradle build in this repository that carries its own run
-        task), and the other four multiple-version *forge* rows declare `skip`
+        cannot run and does not say why. Four rows declare a run task — the four
+        multiple-version *fabric* rows — while the 1.21.1 pair, both moderner
+        pairs (1.21.10, 26.1.2), and the 1.12.2 pair moved to the standalone
+        backend on 2026-10-15 (their ``uitest`` blocks name ``uitest/<line>``,
+        an independent Gradle build in this repository that carries its own run
+        task — the 1.12.2 pair shares ``uitest/1.12.2-forge``), and the other
+        four multiple-version *forge* rows declare `skip`
         (the checkout's Forge dev run cannot host the mod: a JPMS split package on
         1.18.2/1.19.2/1.20.1, a self-contradicting merged dev jar on 1.16.5 — see
         envs/README.md, "Forge rows and the gradle launch"). The rows are named
@@ -671,11 +689,12 @@ class ViaTest(unittest.TestCase):
         """
         loaded = {env.name: env for env in envs.load_all()}
         gradle_rows = {
-            "1.12.2-forge-hei", "1.12.2-forge-jei-legacy",
             "mv-1.16.5-fabric", "mv-1.18.2-fabric",
             "mv-1.19.2-fabric", "mv-1.20.1-fabric",
         }
         standalone_rows = {
+            "1.12.2-forge-hei": "uitest/1.12.2-forge",
+            "1.12.2-forge-jei-legacy": "uitest/1.12.2-forge",
             "1.21.1-neoforge": "uitest/1.21.1-neoforge",
             "1.21.1-fabric": "uitest/1.21.1-fabric",
             "moderner-1.21.10-neoforge": "uitest/moderner-1.21.10-neoforge",

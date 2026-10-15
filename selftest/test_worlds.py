@@ -387,10 +387,15 @@ class SeedWorldCliTest(unittest.TestCase):
             ["mv-1.16.5-forge", "mv-1.18.2-forge", "mv-1.19.2-forge", "mv-1.20.1-forge"])
         self.assertIn("quickPlay needs 1.20+", listed["mv-1.19.2-forge"]["skip"])
         # The revived 1.12.2 rows report the harness selection they run and the
-        # level the harness creates for them, not a world of their own.
+        # level the harness creates for them, not a world of their own. Since
+        # 2026-10-15 they run the shared standalone harness build
+        # (uitest/1.12.2-forge) rather than the checkout's run task.
         self.assertEqual(listed["1.12.2-forge-jei-legacy"]["uitest"],
-                         {"selection": "tag:smoke,tag:jei"})
-        self.assertEqual(listed["1.12.2-forge-hei"]["uitest"], {"selection": "tag:smoke"})
+                         {"selection": "tag:smoke,tag:jei",
+                          "project": "uitest/1.12.2-forge"})
+        self.assertEqual(listed["1.12.2-forge-hei"]["uitest"],
+                         {"selection": "tag:smoke",
+                          "project": "uitest/1.12.2-forge"})
         for name in ("1.12.2-forge-jei-legacy", "1.12.2-forge-hei"):
             self.assertIsNone(listed[name]["skip"])
             self.assertIsNone(listed[name]["world"], "the harness's own level is the world")

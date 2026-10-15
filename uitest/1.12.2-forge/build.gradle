@@ -1,0 +1,551 @@
+// The standalone in-client UI test harness for JECh 1.12.2 / Forge — the
+// ForgeGradle 7 legacy-mode sibling of uitest/1.21.1-{neoforge,fabric}, one
+// independent Gradle build per version line, serving both 1.12.2 rows
+// (legacy JEI and Had Enough Items): the row is picked by the JEI-line jar
+// handed over as -PjeiJar, not by a property of this build.
+//
+// The whole `main` source set is the jechtest mod — engine, @Mod entry point
+// and scenarios together, the 1.12.2 engine copy the 1.12.0 checkout's
+// harness used (its three source sets are flattened into this one; the copy
+// carries no VersionInfo/PinIn/jspecify dependency, so it compiles against
+// the MCP-named Minecraft jar alone).
+//
+// Properties every run understands (the two jars are REQUIRED):
+//   -PjechTest=<selection>      the scenario selection; without it no run wiring
+//                               is active and the client boots as a plain client
+//   -PjechRunDir=<dir>          a game directory outside this project (jt's
+//                               redirect); the report follows the game into
+//                               <game dir>/uitest
+//   -PjechJar=<abs path>        the JECh srg jar under test (REQUIRED)
+//   -PjeiJar=<abs path>         the pinned JEI-line jar (REQUIRED: the legacy
+//                               JEI jar or the Had Enough Items jar — the
+//                               filename is what picks the row)
+//   -PjechTestExclude / -PjechTestGuiScale / -PjechTestInputMode /
+//   -PjechTestWatchdogSec / -PjechTestKeepOpen / -PjechTestHeadless
+//                               the same dials the checkout's harness run had
+
+plugins {
+    id 'java'
+    id 'net.minecraftforge.gradle' version "${gradle_version}"
+}
+
+version = '1.0'
+group = 'me.towdium.jecharacters.uitest'
+base {
+    archivesName = 'jechtest-' + minecraft_version + '-forge'
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(8)
+
+minecraft {
+    mappings channel: 'snapshot', version: mapping_version
+}
+
+// The two jars under test, passed in as absolute paths (jt resolves/builds them
+// and always spells the path, so a stale copy in this tree cannot be tested by
+// accident). Fail-closed at configuration time: a run without them would boot a
+// client with no mod under test and silently prove nothing.
+def jechJarProp = providers.gradleProperty('jechJar')
+def jeiJarProp = providers.gradleProperty('jeiJar')
+def requireJar = { name, prop ->
+    if (!prop.isPresent()) {
+        throw new GradleException(
+            "the ${name} project property is required: this build tests jars it is handed "
+                + "(jt passes it; by hand: -P${name}=/abs/path.jar)"
+        )
+    }
+    def file = new File(prop.get())
+    if (!file.isFile()) {
+        throw new GradleException("the ${name} project property names no file: ${file}")
+    }
+    return file
+}
+def jechJarFile = requireJar('jechJar', jechJarProp)
+def jeiJarFile = requireJar('jeiJar', jeiJarProp)
+
+// --- the run wiring the checkout's gradle/jech-uitest.gradle carried ---
+
+// The output directory is captured as locals: inside a run or task closure the
+// script's own properties are not the closure's delegate, so a script-level name
+// would not resolve there.
+def jechUiTestRunDir = project.findProperty('jechRunDir')?.toString()
+// The game directory the harness run owns. Without -PjechRunDir it is this
+// build's own runs/client-tests, so a harness boot never shares a latest.log or
+// a world with anything else; with it, jt owns the directory.
+def jechUiTestGameDir = jechUiTestRunDir == null
+        ? new File(projectDir, 'runs/client-tests')
+        : new File(jechUiTestRunDir)
+def jechUiTestOutDir = jechUiTestRunDir == null
+        ? jechUiTestGameDir
+        : new File(jechUiTestRunDir, 'uitest')
+def jechUiTestSelection = project.findProperty('jechTest')?.toString()
+def jechUiTestExclude = project.findProperty('jechTestExclude')?.toString() ?: ''
+def jechUiTestGuiScale = project.findProperty('jechTestGuiScale')?.toString()
+def jechUiTestInputMode = project.findProperty('jechTestInputMode')?.toString()
+def jechUiTestWatchdogSec = project.findProperty('jechTestWatchdogSec')?.toString()
+def jechUiTestKeepOpen = project.hasProperty('jechTestKeepOpen')
+def jechUiTestHeadless = project.hasProperty('jechTestHeadless')
+
+// The real input driver warps the OS cursor, which needs a visible, focused
+// window. Rejected at configuration time rather than quietly downgraded to the
+// synthetic driver.
+if (jechUiTestHeadless && jechUiTestInputMode != null && jechUiTestInputMode.equalsIgnoreCase('REAL')) {
+    throw new GradleException(
+        '-PjechTestHeadless cannot be combined with -PjechTestInputMode=REAL: the real input driver '
+            + 'moves the OS cursor and needs a visible, focused window'
+    )
+}
+
+// LWJGL 2 has no arm64 macOS natives, so a 1.12.2 dev run on an Apple Silicon host dies
+// in Minecraft's <clinit> (UnsatisfiedLinkError on liblwjgl.dylib). The instance launcher
+// covered this from its own metadata, pointing the LWJGL 2 libraries at third-party arm64
+// builds (MinecraftMachina/lwjgl, r58Playz/jinput-m1, MinecraftMachina's Objective-C
+// bridge); a Gradle dev run has to do the same. On arm64 macOS only, the arm64 natives
+// jars are served under the exact coordinates ForgeGradle resolves, from a build-local
+// repo declared ahead of the real ones. Every other host resolves what it did before.
+def hostIsArm64Mac = System.getProperty('os.name').startsWith('Mac') &&
+        System.getProperty('os.arch') == 'aarch64'
+def lwjgl2Arm64NativesRepo = layout.buildDirectory.dir('lwjgl2-arm64-natives-repo')
+
+repositories {
+    if (hostIsArm64Mac) {
+        maven {
+            url = lwjgl2Arm64NativesRepo
+            content {
+                includeModule 'org.lwjgl.lwjgl', 'lwjgl-platform'
+                includeModule 'net.java.jinput', 'jinput-platform'
+                includeModule 'ca.weblite', 'java-objc-bridge'
+            }
+        }
+    }
+    // The Forge mirror still serves java-objc-bridge 1.0.0's POM but 404s the natives-osx
+    // classifier jar the 1.12.2 macOS variant selects, while libraries.minecraft.net has
+    // both. Gradle pins a module to the first repository that answers with metadata, so
+    // this group-restricted declaration has to come before the Forge mirror.
+    maven {
+        url = 'https://libraries.minecraft.net/'
+        content { includeGroup 'ca.weblite' }
+    }
+    minecraft.mavenizer(it)
+    maven fg.forgeMaven
+    maven fg.minecraftLibsMaven
+    mavenCentral()
+}
+
+dependencies {
+    // The harness engine compiles against the MCP-named Minecraft jar only: this
+    // line's engine touches Match/JechSearchStorage solely inside the coremod's
+    // ASM strings (Seams.java), so no JECh jar is needed on the compile classpath.
+    implementation minecraft.dependency("net.minecraftforge:forge:${minecraft_version}-${forge_version}")
+    if (hostIsArm64Mac) {
+        // Same substitution the launcher's metadata makes: on osx-arm64 it drops
+        // text2speech 1.10.3 and uses 1.11.3 instead. 1.10.3's Narrator.getNarrator()
+        // lets the x86_64-only jnidispatch UnsatisfiedLinkError escape out of
+        // NarratorChatListener's static init, which kills the client while Minecraft.init
+        // builds the HUD; 1.11.3 logs it and falls back to the dummy narrator, which is
+        // exactly what the instance run did on the same JDK. Gradle's conflict resolution
+        // keeps a single jar of the module (1.11.3), so nothing is loaded twice.
+        implementation 'com.mojang:text2speech:1.11.3'
+    }
+}
+
+// The harness's run. The run is named `client` — the task FG7 derives from it is
+// `runClient`, which is what jt's standalone backend derives for a forge env
+// (uitest_pipeline.run_task_of), and the name also exists natively in the Slime
+// Launcher runs.json, so no run-metadata cloning task is needed here (the
+// checkout needed one for its second, non-native `clientTests` run).
+minecraft {
+    runs {
+        register('client') {
+            workingDir = jechUiTestGameDir
+            // Both coremods are listed explicitly. JechCore lives in the JECh srg
+            // jar on the run's classpath (its manifest names it, and slime-launcher's
+            // FG2Hacks would find it there anyway — the HashSet it dedupes with makes
+            // the explicit spelling and the manifest scan coexist without a double
+            // load); UiTestCore lives in this build's classes. Without both, the run
+            // has either no pinyin transform or no input seam and recorder taps.
+            systemProperty 'fml.coreMods.load',
+                    'me.towdium.jecharacters.core.JechCore,me.towdium.jecharacters.uitest.core.UiTestCore'
+            if (jechUiTestSelection != null) {
+                systemProperty 'jech.uitest.run', jechUiTestSelection
+                systemProperty 'jech.uitest.out', jechUiTestOutDir.absolutePath
+                systemProperty 'jech.uitest.exclude', jechUiTestExclude
+                if (jechUiTestGuiScale != null) systemProperty 'jech.uitest.guiScale', jechUiTestGuiScale
+                if (jechUiTestInputMode != null) systemProperty 'jech.uitest.inputMode', jechUiTestInputMode
+                if (jechUiTestWatchdogSec != null) systemProperty 'jech.uitest.watchdogSec', jechUiTestWatchdogSec
+                if (jechUiTestKeepOpen) systemProperty 'jech.uitest.keepOpen', 'true'
+            }
+            if (jechUiTestHeadless) systemProperty 'jech.uitest.headless', 'true'
+        }
+    }
+}
+
+// The harness mod root and the JECh srg jar ride the *run task's* classpath —
+// appended, never replacing what FG7 composed. On 1.12.2 a mod root has to be a
+// JVM classpath entry: FML's ModDiscoverer.findClasspathMods scans
+// ModClassLoader.getParentSources() -> LaunchClassLoader.getSources(), which
+// launchwrapper seeds from the JVM's `-cp`. FG7's `source_roots` token — what a
+// `mods { }` block feeds — is expanded only by the 1.16.5-era metadata, and the
+// 1.12.2 metadata declares no token that uses it. The run *options'* classpath
+// is the wrong lever for a second reason: SlimeLauncherExec.exec replaces the
+// task classpath whenever it is non-empty, and the task classpath is where the
+// launcher itself sits (slime-launcher-0.2.2.jar, first entry) — setting it
+// cost the run net.minecraftforge.launcher.Main. Appending to the task
+// classpath keeps FG7's own composition and only adds to it.
+//
+// The JECh srg jar travels there rather than into mods/ because that is the
+// measured shape: findClasspathMods takes it as a JAR candidate and discovers
+// the jecharacters mod in it, and FML's dev-run FMLDeobfuscationTransformer
+// maps its SRG member references into this run's MCP names at load time (the
+// same road the JEI srg jar took in the checkout). Its classes stay
+// reobfuscated exactly as built.
+tasks.matching { it.name == 'runClient' }.configureEach { task ->
+    task.dependsOn tasks.named('classes')
+    task.classpath sourceSets.main.output
+    task.classpath files(jechJarFile)
+    task.dependsOn 'stageUiTestDevMod'
+}
+
+// Stages the JEI-line jar under test into the harness game directory's mods/,
+// with its access transformer remapped from SRG to MCP member names.
+//
+// A 1.12.2 JEI-line jar's access transformer is written in SRG member names
+// (`func_110569_e`, ...) because it is applied to the SRG-named production
+// classes. In a dev run the same members are MCP-named, and Forge's
+// AccessTransformer matches member names literally, so every named rule
+// silently misses and the target member stays package-private at runtime —
+// JEI/HEI then die with `IllegalAccessError: ... TextureMap.initMissingImage()V`
+// (measured on the jt-driven legacy-JEI row). ForgeGradle 2.x collected a
+// deobfCompile dependency's ATs and applied them while the classes were still
+// SRG-named; FG7's 1.12.2 dev pipeline has no equivalent (mcmaven's
+// --access-transformer runs on the finished MCP-named artifact, where SRG names
+// no longer match either). So each `META-INF/*_at.cfg` rule's SRG member name is
+// replaced with the MCP name the dev run actually has, taken from the rule's own
+// trailing comment — the published ATs carry it, e.g.
+// `protected ...TextureMap func_110569_e()V # initMissingImage`. Every rule of
+// JEI's and HEI's AT is of that shape and the comments were cross-checked
+// against FML's own srg-mcp.srg; a rule with no usable comment fails the build
+// instead of being left inert. The jar's *classes* need nothing: the dev run's
+// FMLDeobfuscationTransformer maps SRG member references to MCP names at load
+// time.
+//
+// Under -PjechRunDir the game directory belongs to jt, and this task is still
+// the one that stages the JEI-line jar: jt stages the jars an env resolves
+// through its own `mods[].via`, and a 1.12.2 row's JEI-line mod is
+// `via: dev-classpath` precisely because it has to come from here. What changes
+// with -PjechRunDir is only the pre-run cleanup: a bare run reuses one game
+// directory, so a stale jar from the other JEI-line choice must go, while a
+// jt-run directory is per-run and isolation owns mods/ — deleting the rest
+// there would delete what jt staged.
+tasks.register('stageUiTestDevMod') {
+    group = 'verification'
+    description = 'Stages the JEI-line jar under test into the harness game directory, its access transformer remapped from SRG to MCP member names.'
+    def src = jeiJarFile
+    def target = new File(jechUiTestGameDir, 'mods')
+    inputs.file(src)
+    outputs.dir(target)
+    def remap = { String text, String entryName ->
+        def out = new StringBuilder()
+        text.readLines().each { String line ->
+            int hash = line.indexOf('#')
+            if (hash < 0) { out.append(line).append('\n'); return }
+            def body = line.substring(0, hash).trim()
+            def comment = line.substring(hash + 1).trim()
+            def parts = body.split(/\s+/)
+            if (parts.length != 3 || comment.isEmpty()) { out.append(line).append('\n'); return }
+            def member = parts[2]
+            int paren = member.indexOf('(')
+            def srgName = paren < 0 ? member : member.substring(0, paren)
+            def descriptor = paren < 0 ? '' : member.substring(paren)
+            if (!(srgName ==~ /(func|field)_\d+.*/)) { out.append(line).append('\n'); return }
+            def mcpName = comment.split(/\s+/)[0]
+            if (!(mcpName ==~ /[A-Za-z_$][A-Za-z0-9_$]*/) || mcpName.startsWith('func_') || mcpName.startsWith('field_')) {
+                throw new GradleException("no MCP name for ${srgName} in ${entryName} of a dev mod (comment was '${comment}')")
+            }
+            out.append("${parts[0]} ${parts[1]} ${mcpName}${descriptor} # ${comment}").append('\n')
+        }
+        return out.toString()
+    }
+    doLast {
+        def dir = target
+        dir.mkdirs()
+        if (jechUiTestRunDir == null) {
+            // One game directory is reused by every bare run, so a jar from the other
+            // JEI-line choice would still be there and both register the mod id "jei".
+            dir.listFiles()?.findAll { it.isFile() && it.name.toLowerCase(Locale.ROOT).endsWith('.jar') }?.each { it.delete() }
+        }
+        def dst = new File(dir, src.name)
+        new java.util.zip.ZipFile(src).withCloseable { zip ->
+            dst.withOutputStream { fos ->
+                new java.util.zip.ZipOutputStream(fos).withCloseable { zos ->
+                    zip.entries().each { entry ->
+                        def newEntry = new java.util.zip.ZipEntry(entry.name)
+                        if (!entry.isDirectory()) { newEntry.time = entry.time }
+                        zos.putNextEntry(newEntry)
+                        if (!entry.isDirectory()) {
+                            byte[] data = zip.getInputStream(entry).withCloseable { it.bytes }
+                            if (entry.name ==~ /META-INF\/[^\/]*_at\.cfg/) {
+                                data = remap(new String(data, 'UTF-8'), entry.name).getBytes('UTF-8')
+                            }
+                            zos.write(data)
+                        }
+                        zos.closeEntry()
+                    }
+                }
+            }
+        }
+        logger.lifecycle("jechtest-uitest: staged ${src.name} into ${dir}")
+    }
+}
+
+// Fills the build-local arm64 repo declared above. The two classified jars are the arm64
+// builds the launcher's metadata pins (sha1s are that metadata's, so a rotted or swapped
+// download fails loudly); the Objective-C bridge's native library is lifted out of the
+// arm64 build of the same project, since only its dylib is needed and it is fat
+// (x86_64 + arm64). The POMs are minimal equivalents of the upstream ones: pom-packaged
+// for the two natives-only modules, and the bridge's single jna dependency, so the graph
+// on arm64 stays what the repositories produce elsewhere.
+tasks.register('stageLwjgl2Arm64Natives') {
+    def repoDir = lwjgl2Arm64NativesRepo
+    def downloadDir = layout.buildDirectory.dir('lwjgl2-arm64-natives-download')
+    outputs.dir(repoDir)
+    outputs.dir(downloadDir)
+    onlyIf { hostIsArm64Mac }
+    doLast {
+        def repo = repoDir.get().asFile
+        def download = { String url, File dest, String sha1 ->
+            if (!dest.exists()) {
+                dest.parentFile.mkdirs()
+                (1..3).find { attempt ->
+                    try {
+                        dest.withOutputStream { out ->
+                            new URL(url).openStream().withCloseable { it.transferTo(out) }
+                        }
+                        return true
+                    } catch (Exception e) {
+                        dest.delete()
+                        if (attempt == 3) throw new GradleException("could not download ${url}", e)
+                        sleep(2000 * attempt)
+                        return false
+                    }
+                }
+            }
+            if (sha1 != null) {
+                def actual = java.security.MessageDigest.getInstance('SHA-1')
+                        .digest(dest.bytes).encodeHex().toString()
+                if (actual != sha1) {
+                    throw new GradleException("sha1 mismatch for ${dest.name}: ${actual}, expected ${sha1}")
+                }
+            }
+            return dest
+        }
+        def serve = { String path, String content ->
+            def file = new File(repo, path)
+            if (!file.exists()) {
+                file.parentFile.mkdirs()
+                file.text = content
+            }
+            return file
+        }
+        def pom = { String group, String artifact, String version, String packaging, String dependencies = '' ->
+            return """<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>${group}</groupId>
+  <artifactId>${artifact}</artifactId>
+  <version>${version}</version>
+  <packaging>${packaging}</packaging>
+${dependencies}</project>
+"""
+        }
+
+        def lwjglVersion = '2.9.2-nightly-20140822'
+        def lwjglPath = "org/lwjgl/lwjgl/lwjgl-platform/${lwjglVersion}/lwjgl-platform-${lwjglVersion}"
+        serve("${lwjglPath}.pom", pom('org.lwjgl.lwjgl', 'lwjgl-platform', lwjglVersion, 'pom'))
+        download('https://github.com/MinecraftMachina/lwjgl/releases/download/2.9.4-20150209-mmachina.2/lwjgl-platform-2.9.4-nightly-20150209-natives-osx.jar',
+                new File(repo, "${lwjglPath}-natives-osx.jar"),
+                'eff546c0b319d6ffc7a835652124c18089c67f36')
+        // The declaration above is exclusive for this module, so the other platforms'
+        // classifiers have to be served here too — the runtime classpath resolves all of
+        // them (the launcher writes the full natives metadata). Same jars, same source.
+        download('https://libraries.minecraft.net/org/lwjgl/lwjgl/lwjgl-platform/2.9.2-nightly-20140822/lwjgl-platform-2.9.2-nightly-20140822-natives-linux.jar',
+                new File(repo, "${lwjglPath}-natives-linux.jar"),
+                'd898a33b5d0a6ef3fed3a4ead506566dce6720a5')
+        download('https://libraries.minecraft.net/org/lwjgl/lwjgl/lwjgl-platform/2.9.2-nightly-20140822/lwjgl-platform-2.9.2-nightly-20140822-natives-windows.jar',
+                new File(repo, "${lwjglPath}-natives-windows.jar"),
+                '78b2a55ce4dc29c6b3ec4df8ca165eba05f9b341')
+
+        def jinputVersion = '2.0.5'
+        def jinputPath = "net/java/jinput/jinput-platform/${jinputVersion}/jinput-platform-${jinputVersion}"
+        serve("${jinputPath}.pom", pom('net.java.jinput', 'jinput-platform', jinputVersion, 'pom'))
+        download('https://github.com/r58Playz/jinput-m1/raw/main/plugins/OSX/bin/jinput-platform-2.0.5.jar',
+                new File(repo, "${jinputPath}-natives-osx.jar"),
+                '5189eb40db3087fb11ca063b68fa4f4c20b199dd')
+        download('https://libraries.minecraft.net/net/java/jinput/jinput-platform/2.0.5/jinput-platform-2.0.5-natives-linux.jar',
+                new File(repo, "${jinputPath}-natives-linux.jar"),
+                '7ff832a6eb9ab6a767f1ade2b548092d0fa64795')
+        download('https://libraries.minecraft.net/net/java/jinput/jinput-platform/2.0.5/jinput-platform-2.0.5-natives-windows.jar',
+                new File(repo, "${jinputPath}-natives-windows.jar"),
+                '385ee093e01f587f30ee1c8a2ee7d408fd732e16')
+
+        def objcVersion = '1.0.0'
+        def objcPath = "ca/weblite/java-objc-bridge/${objcVersion}/java-objc-bridge-${objcVersion}"
+        serve("${objcPath}.pom", pom('ca.weblite', 'java-objc-bridge', objcVersion, 'jar', """  <dependencies>
+    <dependency>
+      <groupId>net.java.dev.jna</groupId>
+      <artifactId>jna</artifactId>
+      <version>4.1.0</version>
+    </dependency>
+  </dependencies>
+"""))
+        download('https://libraries.minecraft.net/ca/weblite/java-objc-bridge/1.0.0/java-objc-bridge-1.0.0.jar',
+                new File(repo, "${objcPath}.jar"),
+                '6ef160c3133a78de015830860197602ca1c855d3')
+        def objcNatives = new File(repo, "${objcPath}-natives-osx.jar")
+        if (!objcNatives.exists()) {
+            def source = download('https://github.com/MinecraftMachina/Java-Objective-C-Bridge/releases/download/1.1.0-mmachina.1/java-objc-bridge-1.1.jar',
+                    new File(downloadDir.get().asFile, 'java-objc-bridge-1.1.0-mmachina.1.jar'),
+                    '369a83621e3c65496348491e533cb97fe5f2f37d')
+            objcNatives.parentFile.mkdirs()
+            new java.util.zip.ZipFile(source).withCloseable { zip ->
+                new java.util.zip.ZipOutputStream(objcNatives.newOutputStream()).withCloseable { out ->
+                    out.putNextEntry(new java.util.zip.ZipEntry('libjcocoa.dylib'))
+                    zip.getInputStream(zip.getEntry('libjcocoa.dylib')).withCloseable { it.transferTo(out) }
+                    out.closeEntry()
+                }
+            }
+        }
+    }
+}
+
+// Both classpaths that reach the arm64 repo are resolved by tasks rather than at
+// configuration time, so every task that reads one has to be ordered after the staging
+// above (Gradle rejects an undeclared read of another task's output directory).
+tasks.matching { it.name in ['runClient', 'slimeLauncherMetadataForForge'] }
+        .configureEach { dependsOn 'stageLwjgl2Arm64Natives' }
+tasks.withType(JavaCompile).configureEach { dependsOn 'stageLwjgl2Arm64Natives' }
+
+// Deletes the previous run's output so the verification task can never read an
+// older verdict. A real task dependency, not a doFirst: Gradle snapshots a task's
+// inputs before running its actions, so a doFirst is never reached when the
+// runtime classpath fails to resolve - exactly the case the delete exists for.
+def jechUiTestCleanReport = tasks.register('jechCleanUiTestReport', Delete) {
+    group = 'verification'
+    description = 'Deletes the previous JECh UI test run output.'
+    if (jechUiTestRunDir == null) {
+        // The hot folder <game dir>/jech-scenarios is an *input* (a scenario dropped in
+        // needs no rebuild) and mods/ belongs to stageUiTestDevMod (it re-stages what a
+        // bare run needs), so the bare form enumerates the game directory's own direct
+        // children and deletes all but those two folders. A Provider, not a File list,
+        // so the listing is taken when the task runs.
+        delete providers.provider {
+            def children = jechUiTestGameDir.listFiles()
+            children == null ? [] : children.findAll { it.name != 'jech-scenarios' && it.name != 'mods' }
+        }
+    } else {
+        // With -PjechRunDir the run borrows a game directory a launcher owns; only the
+        // harness's own output directory under it (<game dir>/uitest) is ours to clear.
+        delete jechUiTestOutDir
+    }
+}
+
+// The options.txt a bare harness run needs: lang:zh_CN (the JEI scenarios assert
+// that a pinyin query reaches a Chinese item name) and onboardAccessibility:true
+// (the "Welcome to Minecraft!" page is not shown). A key_* line must never be
+// added: it has no "version:" header, so the legacy OptionsKeyLwjgl3Fix runs
+// Integer.parseInt over every key_* value and one modern binding with a modifier
+// kills every other option (measured on the 1.21.1 line; the 1.12.2 fixer is the
+// same shape). A directory jt handed us is NOT preset from here - jt stages its
+// own options.txt.
+def jechUiTestPresetOptions = tasks.register('jechPresetUiTestOptions') {
+    group = 'verification'
+    description = 'Writes the options.txt a bare harness run needs into the harness game directory.'
+    onlyIf { jechUiTestSelection != null && jechUiTestRunDir == null }
+    dependsOn jechUiTestCleanReport
+    def outDir = jechUiTestGameDir
+    inputs.property('jechUiTestOptions', 'onboardAccessibility:true\nlang:zh_CN\n')
+    outputs.file(new File(outDir, 'options.txt'))
+    doLast {
+        def preset = new File(outDir, 'options.txt')
+        preset.parentFile.mkdirs()
+        // 1.12.2's Options.load() reads "lang:zh_CN" and hands "zh_CN" to Locale; a bare
+        // "zh_cn" is accepted by the same path (LangMap registers the lower-cased
+        // resource name), so the value is the locale form the 1.12.2 client writes itself.
+        preset.text = 'onboardAccessibility:true\nlang:zh_CN\n'
+        logger.lifecycle("jechtest-uitest: preset ${preset} (${preset.text.trim().replace('\n', ', ')})")
+    }
+}
+
+def jechUiTestVerify = tasks.register('verifyJechUiTest') {
+    group = 'verification'
+    description = 'Reads the UI test report and fails the build unless every scenario passed.'
+    onlyIf { jechUiTestSelection != null }
+    doLast {
+        def report = new File(jechUiTestOutDir, 'report.json')
+        if (!report.isFile()) {
+            throw new GradleException(
+                "no UI test report at ${report} - the client crashed, never reached the runner, "
+                    + 'or -PjechTest matched no scenarios'
+            )
+        }
+        def run = new groovy.json.JsonSlurper().parse(report)
+        def totals = run.totals
+        logger.lifecycle(
+            "jechtest-uitest ${run.status}: ${totals.passed}/${totals.scenarios} scenarios passed, "
+                + "${totals.checks - totals.checksFailed}/${totals.checks} checks passed, "
+                + "${totals.captures} captures, ${run.durationMs} ms"
+        )
+        def failures = []
+        // The run's own verdict is checked too, not only the scenarios': a run that never
+        // reached the runner's scenario queue (a fatal in the world half, a rejected input
+        // mode, a watchdog) has no scenario to be non-PASS, and reading only the scenario
+        // rows would report it as a pass.
+        if (run.status != 'PASS') {
+            failures.add("run: ${run.status}")
+        }
+        run.scenarios.each { scenario ->
+            if (scenario.status != 'PASS') {
+                failures.add("scenario ${scenario.name}: ${scenario.status}"
+                    + (scenario.message == null ? '' : " (${scenario.message})"))
+            }
+            scenario.steps.each { step ->
+                if (step.status != 'PASS') {
+                    logger.error("  step ${step.index} ${step.name}: ${step.status}"
+                        + (step.waitingFor == null ? '' : " waitingFor=${step.waitingFor}"))
+                    step.checks.each { check ->
+                        if (!check.passed) {
+                            logger.error("    check ${check.label} FAILED"
+                                + (check.detail == null ? '' : " (${check.detail})"))
+                        }
+                    }
+                    step.captures.each { capture ->
+                        logger.error("    capture ${capture.path}"
+                            + (capture.suspect ? ' SUSPECT flat colour' : ''))
+                    }
+                    if (step.error != null) {
+                        logger.error("    error ${step.error.type}: ${step.error.message}")
+                    }
+                }
+            }
+        }
+        if (!failures.isEmpty()) {
+            throw new GradleException('UI test failed:\n  ' + failures.join('\n  '))
+        }
+    }
+}
+
+// The run task is created by FG7 while this script is evaluated, so the hook is
+// a configureEach rather than a direct reference. A missing report is itself a
+// failure, which is what makes a client that crashed before the runner started
+// show up as a red build.
+tasks.configureEach { task ->
+    if (task.name != 'runClient' || jechUiTestSelection == null) return
+    task.dependsOn jechUiTestCleanReport
+    // ordered after the delete, so the preset is not deleted with the rest of the output
+    task.dependsOn jechUiTestPresetOptions
+    task.finalizedBy jechUiTestVerify
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
