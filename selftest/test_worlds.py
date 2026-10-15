@@ -303,9 +303,9 @@ class SeedWorldCliTest(unittest.TestCase):
 
     def test_a_verified_cache_is_reused_and_reported(self):
         with support.temp_home():
-            env = envs.find_env("mv-1.20.1-fabric")
+            env = envs.find_env("mv-1.20.1-forge")
             seed = support.write_world_seed(env)
-            code, output = self.cli(["seed-world", "mv-1.20.1-fabric"])
+            code, output = self.cli(["seed-world", "mv-1.20.1-forge"])
         self.assertEqual(code, 0)
         self.assertIn("reused", output)
         self.assertIn(seed.digest[:16], output)
@@ -321,9 +321,9 @@ class SeedWorldCliTest(unittest.TestCase):
 
     def test_a_mixed_selection_seeds_what_needs_it_and_exits_zero(self):
         with support.temp_home():
-            env = envs.find_env("mv-1.20.1-fabric")
+            env = envs.find_env("mv-1.20.1-forge")
             seed = support.write_world_seed(env)
-            code, output = self.cli(["seed-world", "1.12.2-forge-hei,mv-1.20.1-fabric"])
+            code, output = self.cli(["seed-world", "1.12.2-forge-hei,mv-1.20.1-forge"])
         self.assertEqual(code, 0)
         self.assertIn(seed.digest[:16], output)
         self.assertIn("declares no world", output)
@@ -355,8 +355,15 @@ class SeedWorldCliTest(unittest.TestCase):
             code, output = self.cli(["envs", "--json"])
         self.assertEqual(code, 0)
         listed = {item["name"]: item for item in json.loads(output)}
-        self.assertIsNone(listed["mv-1.20.1-fabric"]["skip"])
-        self.assertEqual(listed["mv-1.20.1-fabric"]["world"]["savesPath"], "saves/jechworld")
+        # `mv-1.20.1-forge` is the only world-declaring row left: the fabric
+        # rows that shared the quick-play launch (mv-1.20.1-fabric first, then
+        # the 26.1.2 pair) joined the standalone harness rows on 2026-10-15
+        # and dropped their worlds with the quick-play launch.
+        self.assertEqual(listed["mv-1.20.1-forge"]["world"]["savesPath"], "saves/jechworld")
+        # `moderner-26.1.2-fabric` is the current example of a standalone row:
+        # no skip, no world — the level asserted against is the harness's own.
+        self.assertIsNone(listed["moderner-26.1.2-fabric"]["skip"])
+        self.assertIsNone(listed["moderner-26.1.2-fabric"]["world"])
         # Both 1.21.1 rows are harness rows now (the standalone builds since
         # 2026-10-15): neither declares a world, because the level asserted
         # against is the one the in-client runner creates and pins itself, and

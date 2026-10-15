@@ -1,5 +1,5 @@
 {
-  "_comment": "multiple-version line, MC 1.20.1 fabric. Launched through the checkout's own Gradle run task (gradle launch): architectury-loom's `:1.20.1:fabric:runClient` registers the module's own sources as the mod under test, so JECh rides the run's classpath (via=dev-classpath); JEI is `compileOnly` in `1.20.1/build.gradle` and fabric-api cannot even be a mod dependency of that module (see below), so both are jars staged into mods/. daemon_java is 17 because the wrapper is Gradle 8.1.1, which cannot run on the machine's default JDK (JBR 25). Upstream's two fabric properties are corrected in the checkout: fabric_api_version=0.76.0+1.19.4 is a 1.19.4 build, and no such file exists for 1.20.1 on CurseForge or Modrinth, while fabric_loader_version=0.14.11 cannot load the set at all (the pinned jei 15.48.0.179 requires fabricloader >=0.16.3). The loader is therefore 0.16.14, the version the 1.21.1 fabric row already runs, and the api property is a *compile* api rather than the run's api, for a third reason: jei 15.48.0.179 also requires fabric-api >=0.92.2+1.20.1, and every MC 1.20.1 fabric-api from 0.91.1 on is built by loom >= 1.5, which stamps `Fabric-Loom-Mixin-Remap-Type` into the jar manifest — the checkout's architectury-loom 1.1 refuses to configure any project that resolves such a jar ('does not support the mixin remap type value'). So the module keeps `modCompileOnly` on the newest 1.20.1 api loom 1.1 can read (0.91.0+1.20.1, which is all its two `fabric-command-api-v2` imports need) and the run loads the pinned 0.92.12+1.20.1 from mods/, where fabric-loader's dev-mode remapper (loom passes -Dfabric.remapClasspathFile) turns it from intermediary into the run's named namespace exactly as it does for JEI. This row keeps its world: JEI 15 defers `registerAdvancedSearch` (the phase that logs JECh's storage marker) to level load, so the marker check needs a level, and 1.20.1 accepts `--quickPlaySingleplayer`.",
+  "_comment": "multiple-version line, MC 1.20.1 fabric. Runs the standalone in-client UI test harness (uitest/mv-1.20.1-fabric, an independent architectury-loom build in this repository) through the three-stage pipeline config->build->test. The harness build stages the two jars under test into the run's mods/ folder itself (production fabric jars are intermediary-named; fabric-loader's dev-mode remapper brings them into the run's namespace) and resolves the run's fabric-api itself — through a plain (non-mod) configuration, because loom 1.1 cannot read any MC 1.20.1 fabric-api from 0.91.1 on (the Fabric-Loom-Mixin-Remap-Type manifest key): it compiles against 0.91.0+1.20.1 and stages the pinned 0.92.12+1.20.1 into the same mods/. So jech, jei and fabric-api all carry via=dev-classpath: there is nothing for jt to stage. The row is a harness row since this move (2026-10-15): it declares no ready_when and no world, because the harness's own runner creates and pins its flat level (and so reaches the JEI storage marker JEI 15 defers to level load, which is why the row keeps that check) and quits the client when the selection is done. daemon_java is 17 because the harness wrapper is Gradle 8.1.1, which cannot run on the machine's default JDK (JBR 25). Upstream's two fabric pins stay corrected the way the checkout corrected them: loader 0.16.14 (the pinned jei 15.48.0.179 requires fabricloader >=0.16.3) and the api split above.",
   "name": "mv-1.20.1-fabric",
   "tags": [
     "mv",
@@ -15,10 +15,13 @@
   "java": {
     "version": 17
   },
-  "gradle": {
-    "task": ":1.20.1:fabric:runClient",
-    "project_dir": "multiple-version",
-    "daemon_java": 17
+  "uitest": {
+    "selection": "tag:smoke,tag:jei",
+    "project": "uitest/mv-1.20.1-fabric",
+    "options": {
+      "version": "3465",
+      "key_key.jei.focusSearch": "key.keyboard.f"
+    }
   },
   "jech": {
     "source": "local-build",
@@ -32,6 +35,7 @@
       "name": "jei",
       "source": "curseforge",
       "slug": "jei",
+      "via": "dev-classpath",
       "describe": {
         "version": "15.48.0.179"
       },
@@ -47,6 +51,7 @@
       "name": "fabric-api",
       "source": "curseforge",
       "slug": "fabric-api",
+      "via": "dev-classpath",
       "describe": {
         "version": "0.92.12+1.20.1"
       },
@@ -84,6 +89,10 @@
       "name": "config-generated"
     },
     {
+      "type": "uitest_report",
+      "name": "uitest-report"
+    },
+    {
       "type": "no_crash_reports",
       "name": "no-crash-reports"
     },
@@ -92,11 +101,6 @@
       "name": "exit-code"
     }
   ],
-  "ready_when": {
-    "value": "Sound engine started"
-  },
-  "world": {
-    "name": "jechworld"
-  },
+  "world": null,
   "timeout_sec": 600
 }
