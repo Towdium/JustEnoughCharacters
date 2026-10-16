@@ -21,15 +21,6 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-/**
- * Runs world mutation on the integrated server thread and holds the step clock still until it has
- * happened.
- *
- * <p>A step body runs on the client, one attempt per frame. Submitting work to the server is
- * therefore not a call but a handshake: the first attempt of a step submits, every attempt after
- * that repeats the step until the server has run the task (or the step's wait budget expires). The
- * runner tells this context when a new step starts, so a task is submitted exactly once per step.
- */
 public final class ServerContext {
 
     private final MinecraftServer server;
@@ -44,12 +35,10 @@ public final class ServerContext {
         this.server = server;
     }
 
-    /** The integrated server this context drives. */
     public MinecraftServer server() {
         return server;
     }
 
-    /** Tells the context which step is running; a different sequence resets the handshake. */
     public void beginStep(long sequence) {
         if (sequence == stepSeq) return;
         stepSeq = sequence;
@@ -60,18 +49,15 @@ public final class ServerContext {
         tickAnchor = -1L;
     }
 
-    /** The overworld of the integrated server. */
     public ServerLevel overworld() {
         return server.overworld();
     }
 
-    /** The local player, or {@code null} when the server has no player yet. */
     public @Nullable ServerPlayer localPlayer() {
         List<ServerPlayer> players = server.getPlayerList().getPlayers();
         return players.isEmpty() ? null : players.get(0);
     }
 
-    /** Submits a task once and repeats the step until it has run. */
     public void run(TestContext context, String label, Runnable task) {
         submitOnce(() -> {
             task.run();
@@ -84,7 +70,6 @@ public final class ServerContext {
         finish(label, true);
     }
 
-    /** Submits a poll once per frame and repeats the step until the predicate holds. */
     public void poll(TestContext context, String label, Supplier<Boolean> predicate) {
         submitOnce(predicate);
         if (!done) {
@@ -97,12 +82,10 @@ public final class ServerContext {
         }
     }
 
-    /** Places one block. */
     public void setBlock(TestContext context, BlockPos pos, BlockState state) {
         run(context, "setBlock " + pos.toShortString(), () -> overworld().setBlock(pos, state, 3));
     }
 
-    /** Fills an inclusive box with one block. */
     public void fill(TestContext context, BlockPos from, BlockPos to, BlockState state) {
         run(context, "fill " + from.toShortString() + ".." + to.toShortString(), () -> {
             BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
@@ -116,12 +99,10 @@ public final class ServerContext {
         });
     }
 
-    /** Replaces an inclusive box with air. */
     public void clearArea(TestContext context, BlockPos from, BlockPos to) {
         fill(context, from, to, Blocks.AIR.defaultBlockState());
     }
 
-    /** Hands a block entity to an action, on the server thread. */
     public void withBlockEntity(TestContext context, BlockPos pos, Consumer<BlockEntity> action) {
         run(context, "withBlockEntity " + pos.toShortString(), () -> {
             BlockEntity blockEntity = overworld().getBlockEntity(pos);
@@ -132,15 +113,6 @@ public final class ServerContext {
         });
     }
 
-    /**
-     * Moves the local player, keeping the current aim.
-     *
-     * <p>MC 1.21.10 replaced the six-argument {@code ServerPlayer.teleportTo(level, x, y, z, yaw,
-     * pitch)} with an eight-argument one that carries the {@code Set<Relative>} the move is applied
-     * with and a "put the camera back on this player" flag. An empty set is the absolute move the old
-     * call performed, and {@code true} is the flag {@code /tp} itself passes for its own teleports —
-     * the old six-argument body set the camera too.
-     */
     public void teleportPlayer(TestContext context, double x, double y, double z) {
         run(context, "teleportPlayer", () -> {
             ServerPlayer player = requirePlayer();
@@ -148,7 +120,6 @@ public final class ServerContext {
         });
     }
 
-    /** Aims the local player, keeping the current position. */
     public void yawPitch(TestContext context, float yaw, float pitch) {
         run(context, "yawPitch", () -> {
             ServerPlayer player = requirePlayer();
@@ -156,11 +127,8 @@ public final class ServerContext {
         });
     }
 
-    /** Puts a stack of an item into the local player's inventory. */
     public void giveItem(TestContext context, ResourceLocation item, int count) {
         run(context, "giveItem " + item, () -> {
-            // Registry#get answers an Optional<Holder.Reference<Item>> on MC 1.21.10; getValue is the
-            // same lookup with the plain item the harness wants (and null, not AIR, when unknown).
             Item resolved = BuiltInRegistries.ITEM.getValue(item);
             if (resolved == null || resolved == Items.AIR) {
                 throw new IllegalStateException("unknown item " + item);
@@ -169,7 +137,6 @@ public final class ServerContext {
         });
     }
 
-    /** Runs a server command with its output suppressed. */
     public void runCommand(TestContext context, String command) {
         run(context, "command " + command, () -> {
             CommandSourceStack source = server.createCommandSourceStack().withSuppressedOutput().withPermission(4);
@@ -177,7 +144,6 @@ public final class ServerContext {
         });
     }
 
-    /** Holds the step clock until the server has ticked a number of times. */
     public void serverTicks(TestContext context, int ticks) {
         if (tickAnchor < 0L) {
             tickAnchor = server.getTickCount();
