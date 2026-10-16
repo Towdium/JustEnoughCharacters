@@ -171,14 +171,24 @@ public final class WorldBootstrap {
         Registry<NoiseGeneratorSettings> noiseSettings = registryHolder.registryOrThrow(Registry.NOISE_GENERATOR_SETTINGS_REGISTRY);
         FlatLevelGeneratorSettings flatSettings = FlatLevelGeneratorSettings.getDefault(biomes);
         FlatLevelSource flatSource = new FlatLevelSource(flatSettings);
-        WorldGenSettings normalSettings = WorldGenSettings.makeDefault(dimensionTypes, biomes, noiseSettings);
-        MappedRegistry<LevelStem> dimensions = WorldGenSettings.withOverworld(dimensionTypes, normalSettings.dimensions(), flatSource);
-        WorldGenSettings worldGenSettings = new WorldGenSettings(
-            seed,
-            normalSettings.generateFeatures(),
-            normalSettings.generateBonusChest(),
-            dimensions
+        // Port note (1.18.2 → 1.16.5): the level-stem registry has to come from
+        // DimensionType.defaultDimensions(..., seed) — the shape the vanilla superflat preset uses
+        // itself — not from WorldGenSettings.makeDefault(...).dimensions(). makeDefault invents a
+        // seed of its own (1.16.5 bytecode: `new Random().nextLong()`, feeding both
+        // DimensionType.defaultDimensions(dimensionTypes, biomes, noiseSettings, seed) and
+        // makeDefaultOverworld(biomes, noiseSettings, seed)) and wraps those in a WorldGenSettings
+        // carrying *that* seed; keeping those stems while the WorldGenSettings built below carries
+        // this copy's fixed seed leaves the nether/end stems disagreeing with the world seed, so
+        // the run creates the save, brings the integrated server up and the client never completes
+        // the join — no "Time elapsed" / "Preparing spawn area" marker anywhere
+        // (runs/mv-1.16.5-fabric-20261016-110338). defaultDimensions takes this copy's seed, so
+        // both halves agree. Same symptom, same fix as the 1.18.2 copies.
+        MappedRegistry<LevelStem> dimensions = WorldGenSettings.withOverworld(
+            dimensionTypes,
+            DimensionType.defaultDimensions(dimensionTypes, biomes, noiseSettings, seed),
+            flatSource
         );
+        WorldGenSettings worldGenSettings = new WorldGenSettings(seed, false, false, dimensions);
         minecraft.createLevel(worldName, settings, registryHolder, worldGenSettings);
     }
 
