@@ -1,5 +1,5 @@
 {
-  "_comment": "multiple-version line, MC 1.18.2 forge, smoke env. Declared `skip` on 2026-10-14: the row's only launch path was the Prism instance launcher (it staged the built jar into mods/), and that launcher was removed the same day. The checkout cannot host the row instead: its Forge dev run dies before Minecraft starts on a JPMS split package — two modules put classes in `me.towdium.jecharacters` (measured 2026-10-14; the control run and the exact `ResolutionException` are in envs/README.md, `Forge rows and the gradle launch`). This line has no JEI plugin class, so there is no plugin log marker to assert and the checks stay on the failure markers; it has no world either, because they are all startup markers. The checks stay as written.",
+  "_comment": "multiple-version line, MC 1.18.2 forge. Runs the standalone in-client UI test harness (uitest/mv-1.18.2-forge, an independent Gradle build in this repository on ModDevGradle legacyforge) through the three-stage pipeline config->build->test; the two production (SRG-named) jars ride MDG's remapping modRuntimeOnly configuration out of a content-addressed flatDir repository inside the build, and world creation is 1.18.2's own Minecraft.createLevel (no WorldOpenFlows on this generation). The old skip's launch-path story is void for the same reason as its 1.20.1 sibling: the checkout's JPMS split package never existed here. The selection matches its two siblings (tag:smoke,tag:jei) even though this line's JECh build carries no JEI plugin class (measured 2026-10-14, when the row was skipped): its JEI bridge is the legacy ASM coremod coremods/jei_transformer.js plus me.towdium.jecharacters.utils.FakeTree, and the harness taps that tree itself (FakeTreeMixin) instead of the JechSearchStorage its 1.19.2/1.20.1 siblings tap, so the JEI scenarios' match assertions hold on this line too. Consequences of the same fact: no plugin log marker to assert (there is no 'Registering JEI pinyin search storage' line on this generation, so this env carries no jei-storage-registered check), and the harness's report is the behavioural verdict, with the failure markers alongside it. Harness-row shape, as the 1.21.1 rows carry it: no ready_when, no world, no gradle block, and every artifact via=dev-classpath (the standalone build loads everything itself; a jt-staged copy would double-load).",
   "name": "mv-1.18.2-forge",
   "tags": [
     "mv",
@@ -14,18 +14,23 @@
   "java": {
     "version": 17
   },
-  "skip": "the Prism instance launcher is removed, and the checkout's Forge dev run dies before Minecraft starts on a JPMS split package (two modules export me.towdium.jecharacters); see envs/README.md",
+  "uitest": {
+    "selection": "tag:smoke,tag:jei",
+    "project": "uitest/mv-1.18.2-forge"
+  },
   "jech": {
     "source": "local-build",
     "project": "multiple-version",
     "path": "1.18.2/forge/build/libs/jecharacters-1.18.2-forge-4.6.12.jar",
-    "expectModId": "jecharacters"
+    "expectModId": "jecharacters",
+    "via": "dev-classpath"
   },
   "mods": [
     {
       "name": "jei",
       "source": "curseforge",
       "slug": "jei",
+      "via": "dev-classpath",
       "describe": {
         "version": "10.2.1.1005"
       },
@@ -45,6 +50,10 @@
       "name": "no-transformer-failure"
     },
     {
+      "type": "uitest_report",
+      "name": "uitest-report"
+    },
+    {
       "type": "no_crash_reports",
       "name": "no-crash-reports"
     },
@@ -53,8 +62,6 @@
       "name": "exit-code"
     }
   ],
-  "ready_when": {
-    "value": "Sound engine started"
-  },
+  "world": null,
   "timeout_sec": 600
 }
