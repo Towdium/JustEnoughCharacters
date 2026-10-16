@@ -52,6 +52,24 @@ public abstract class InputDriver {
     /** Move while a button is held, as the screen's drag callback expects. */
     public void dragTo(Screen screen, float x, float y, int button, float deltaX, float deltaY) {}
 
+    /**
+     * Press a button at a position through the client's own mouse handler instead of at the screen.
+     *
+     * <p>{@link #mouseDown} hands the event straight to the screen, which is what a vanilla widget
+     * reads. A mod's overlay that is <em>not</em> a widget of the open screen never sees that: on
+     * Forge its pointer input arrives as a screen event raised in {@code MouseHandler.onPress}, so
+     * the only click it can hear is one dispatched through that body. This is the pointer half of
+     * the "handler route" the keyboard steps ({@code pressKey}, {@code typeText}) already take, and
+     * it is what makes a click reach an overlay whose field lives outside the screen's widget tree.
+     *
+     * <p>Both halves of a click are needed: the press is what a handler is offered first, the
+     * release is where an overlay that decided it could handle the press applies it.
+     */
+    public void mouseDownThroughHandler(Screen screen, float x, float y, int button) {}
+
+    /** Release a button at a position through the client's own mouse handler. */
+    public void mouseUpThroughHandler(Screen screen, float x, float y, int button) {}
+
     /** Scroll at a position. */
     public void scroll(Screen screen, float x, float y, double amount) {}
 

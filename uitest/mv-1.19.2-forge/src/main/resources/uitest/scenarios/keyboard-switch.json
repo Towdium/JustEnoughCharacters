@@ -9,11 +9,11 @@
     {"do": "command", "text": "/jech keyboard xiaohe"},
     {"do": "record_matches", "clear": true},
 
-    {"do": "log", "text": "keyboard-switch: open the inventory and focus JEI's search bar (the harness's level is creative, so this is the creative inventory)"},
+    {"do": "log", "text": "keyboard-switch: open the inventory and focus JEI's search bar with a mouse click (the harness's level is creative, so this is the creative inventory). JEI's field is not a widget of the open screen (measured on this row's 1.18.2 forge sibling), so the click goes through the client's own mouse handler — the only route JEI's overlay hears — at 1180,703, the bar's centre measured there (the GUI space is 1280x720 at the pinned GUI scale 2, so a 2560x1440 framebuffer pixel is GUI(pixel/2)); this scenario's own assertion is what confirms it here, and it needs re-measuring if JEI's layout changes"},
     {"do": "press_bind", "bind": "inventory"},
     {"do": "wait_until_screen", "screen": "CreativeModeInventoryScreen"},
     {"do": "wait_ms", "ms": 500},
-    {"do": "press_bind", "bind": "key.jei.focusSearch"},
+    {"do": "click_mouse", "x": 1180, "y": 703},
     {"do": "wait_ms", "ms": 300},
 
     {"do": "log", "text": "keyboard-switch: the bar is JEI's own field, so clear it the way a player would"},
