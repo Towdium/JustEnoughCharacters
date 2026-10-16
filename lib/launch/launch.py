@@ -61,7 +61,14 @@ def values(*, client, loader, game_dir, natives_dir, classpath):
 def build_command(*, java, client, loader, game_dir, natives_dir, extra_jvm=(),
                   extra_game=(), features=None, log=print):
     """The full argv for one launch; returns ``(command, values)``."""
-    path = list(client.classpath) + (list(loader.classpath) if loader is not None else [])
+    # The loader *inherits* the version, so its libraries are merged over the
+    # version's rather than appended to them: concatenating the two lists is what
+    # put two ASM jars — the version's 9.6 and the loader's 9.9 — on the classpath
+    # of a 1.21.10 run, which fabric's loader refuses to start on. See
+    # :func:`vanilla.merge_libraries` for the identity and collision rules.
+    libraries = vanilla.merge_libraries(
+        client.libraries, loader.libraries if loader is not None else [], log=log)
+    path = [client.client_jar] + [library.path for library in libraries]
     filled = values(client=client, loader=loader, game_dir=game_dir, natives_dir=natives_dir,
                     classpath=path)
     features = dict(features or {})

@@ -3,11 +3,14 @@ package me.towdium.jecharacters.uitest.datadriven;
 import me.towdium.jecharacters.mixin.uitest.KeyMappingAccessor;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Options;
+import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
 import org.lwjgl.glfw.GLFW;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -152,9 +155,22 @@ final class JsonTargets {
      *
      * <p>A fully qualified name is taken as it is; a bare one is looked for in the two packages the
      * game's own screens live in, which is what lets a scenario say {@code "InventoryScreen"}.
+     *
+     * <p>Scenarios name screens in the game's own (Mojang) names, and those names only exist in a
+     * run the loader leaves in that namespace. This harness is loaded as a *mod*, from a jar
+     * {@code remapJar} already translated, so a name found by reflection answers for a mod's own
+     * screen and for anything spelled out under a name the run really has — but not for the game's
+     * own screens, whose names the loader rewrites (see {@link #vanillaScreens}). The game's own
+     * screens therefore come from the table below, which is a compile-time reference the remapper
+     * translates with the rest of this jar; reflection is only the path for everything the table
+     * cannot know.
      */
     static Class<? extends Screen> screenClass(String name) {
         String bare = name.trim();
+        Class<? extends Screen> known = vanillaScreens.get(bare);
+        if (known != null) {
+            return known;
+        }
         List<String> candidates = new ArrayList<>();
         candidates.add(bare);
         candidates.add("net.minecraft.client.gui.screens." + bare);
@@ -169,11 +185,53 @@ final class JsonTargets {
                 }
                 throw new ScenarioJsonException(candidate + " is not a Screen");
             } catch (ClassNotFoundException ignored) {
-                // try the next package
+                // try the next spelling / package
             }
         }
         throw new ScenarioJsonException(
             "no screen class named '" + name + "' (try a fully qualified name)"
         );
+    }
+
+    /**
+     * The game's own screens a scenario may name, as compile-time class references.
+     *
+     * <p>A client loaded as a mod does not run the game in the namespace a scenario writes. In
+     * production the loader targets <b>intermediary</b> — {@code Knot.getTargetNamespace()} is
+     * {@code IS_DEVELOPMENT ? "named" : "intermediary"}, and the mapping tree it builds comes from
+     * the one {@code mappings/mappings.tiny} on the class path, which this run's launcher supplies
+     * as {@code net.fabricmc:intermediary:1.21.10} (fabric-loader 0.19.2). There is therefore no
+     * {@code named} namespace at all in such a run, and no string can name the game's own classes:
+     * measured on this harness's own {@code remapJar} output
+     * ({@code build/libs/jechtest-1.21.10-fabric-1.0.0.jar}, read 2026-10-16), whose constant pool
+     * already references {@code net/minecraft/class_437} for {@link Screen},
+     * {@code net/minecraft/class_408} for {@link ChatScreen} and {@code net/minecraft/class_481} for
+     * {@link CreativeModeInventoryScreen}. A class <i>literal</i> is the reference that does work:
+     * the remapper rewrites it here, in this jar, and hands the runtime the class the runtime
+     * actually has — the same road {@code ChatScreen.class} in {@link ScenarioSteps} and
+     * {@code SmokeScenario} already takes.
+     *
+     * <p>The key is written out rather than read back off the class: at runtime the class object is
+     * the loader's own name for the screen — the two entries below come back as {@code class_408}
+     * and {@code class_481} in the jar this harness ships — so a key derived from the class
+     * ({@code type.getName()}, {@code type.getSimpleName()}) would not be the name a scenario
+     * writes. That is also why a screen this table does not list cannot be addressed in production
+     * by a Mojang name: add the line. A mod's own screens need no entry — a fabric mod's classes
+     * keep the names their author gave them (measured on the JECh jar under test: it ships
+     * {@code me/towdium/jecharacters/JechCommand.class}), so the reflection path above reaches a
+     * mod's own screen by fully qualified name even in production.
+     */
+    private static final Map<String, Class<? extends Screen>> vanillaScreens = vanillaScreens();
+
+    private static Map<String, Class<? extends Screen>> vanillaScreens() {
+        Map<String, Class<? extends Screen>> screens = new LinkedHashMap<>();
+        screens.put("ChatScreen", ChatScreen.class);
+        screens.put("net.minecraft.client.gui.screens.ChatScreen", ChatScreen.class);
+        screens.put("CreativeModeInventoryScreen", CreativeModeInventoryScreen.class);
+        screens.put(
+            "net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen",
+            CreativeModeInventoryScreen.class
+        );
+        return Map.copyOf(screens);
     }
 }

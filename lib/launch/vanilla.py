@@ -322,6 +322,72 @@ def maven_path(name):
     return "/".join([group.replace(".", "/"), artifact, version, stem + ".jar"])
 
 
+def library_key(name):
+    """The identity that decides whether two declarations are the same library.
+
+    ``<group>:<artifact>:<classifier>``. The version is left out on purpose and the
+    classifier is kept on purpose; :func:`merge_libraries` carries both reasons. A
+    name that is not a maven coordinate keys to itself, so it can never fold into
+    anything else.
+    """
+    parts = str(name or "").split(":")
+    if len(parts) < 3:
+        return str(name or "")
+    classifier = parts[3] if len(parts) > 3 else ""
+    return f"{parts[0]}:{parts[1]}:{classifier}"
+
+
+def merge_libraries(base, overlay, *, log=print):
+    """``base`` (the version's own libraries) with ``overlay`` (the loader's) over it.
+
+    This is the launcher's ``inheritsFrom`` rule, and it is not decoration: a
+    loader profile *inherits* the version it installs on, so its libraries are
+    merged into the version's rather than concatenated after them. Two identity
+    rules make the merge what it is, and both are easy to "simplify" into a crash:
+
+    * **the version is not part of the identity.** A re-declaration with a newer
+      version replaces the inherited one — that is the whole point of the rule, and
+      it is what has to happen here: 1.21.10's own metadata ships
+      ``org.ow2.asm:asm:9.6``, the fabric 0.19.2 profile wants ``9.9``, and
+      concatenating the two lists puts two ``org/objectweb/asm/ClassReader.class``
+      on the classpath, which fabric's loader refuses by design
+      (``LoaderUtil.verifyClasspath``: "duplicate ASM classes found on classpath")
+      — a hard startup failure, not a shadowed jar;
+    * **the classifier is part of the identity.** ``org.lwjgl:lwjgl:3.3.3`` and
+      ``org.lwjgl:lwjgl:3.3.3:natives-macos-arm64`` are two different jars, and in
+      a version of the modern shape natives *are* ordinary libraries on the
+      classpath: a key without the classifier would fold the natives into their
+      plain sibling and silently drop the macOS natives, which is a launch that
+      fails much later and much less legibly than the duplicate above. The classic
+      shape is no different: a natives-classified entry is still a natives jar to
+      extract, never a plain classpath entry, and it never reaches this merge at
+      all (it is not one of the version's classpath libraries).
+
+    On a collision ``overlay`` wins (it is the inheriting side) and the *base*
+    entry is dropped, so the classpath is exactly the concatenation minus the
+    shadowed version's jar — the surviving entry keeps the place the overlay gives
+    it, and every library the overlay does not re-declare is untouched, natives
+    flags included.
+
+    Each replacement is logged: it is a silent override of one jar by another, and
+    a reader of a run's log should not have to infer it from a crash.
+    """
+    claimed = {library_key(library.name): library for library in overlay}
+    merged = []
+    replaced = []
+    for library in base:
+        winner = claimed.get(library_key(library.name))
+        if winner is None:
+            merged.append(library)
+        else:
+            replaced.append((library, winner))
+    merged.extend(overlay)
+    for loser, winner in replaced:
+        log(f"cache: library {library_key(winner.name)} replaced: {loser.name} -> {winner.name} "
+            "(an inheriting declaration wins; only its jar goes on the classpath)")
+    return merged
+
+
 def _library(mc, entry, http, *, refresh, log, counts):
     """One library's main artifact, downloaded when the metadata names one."""
     artifact = (entry.get("downloads") or {}).get("artifact")
