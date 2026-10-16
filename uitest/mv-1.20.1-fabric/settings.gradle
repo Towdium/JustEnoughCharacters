@@ -2,9 +2,10 @@ pluginManagement {
     repositories {
         mavenCentral()
         gradlePluginPortal()
-        // architectury-loom (the plugin this build pins, the same repo the
-        // multiple-version checkout resolves it from)
-        maven { url = 'https://maven.architectury.dev/' }
+        // Stock fabric-loom (the plugin this build pins since it moved off
+        // architectury-loom) resolves from the Fabric maven below — the same
+        // repository the multiple-version checkout resolves it from. The
+        // architectury maven this list used to carry went with architectury-loom.
         maven { url = 'https://maven.neoforged.net/releases' }
         maven { url "https://maven.fabricmc.net/" }
     }

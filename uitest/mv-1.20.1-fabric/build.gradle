@@ -12,10 +12,15 @@
 // seam proper is the same shape on 1.20.1 as on 1.21.1 (verified against
 // Mojang's client mappings for both versions).
 //
-// Toolchain: architectury-loom 1.1 on Gradle 8.1.1, the same pairing the
-// multiple-version checkout uses for this line. The wrapper therefore starts on
-// JDK 17 (8.1.1 cannot run on the machine's default JDK 25), which is also the
-// toolchain MC 1.20.1 compiles for.
+// Toolchain: stock fabric-loom 1.10.5 on Gradle 9.5.0 — the pairing the
+// multiple-version checkout uses for this line (it pins the plugin version once
+// in its settings.gradle pluginManagement; this standalone build declares its
+// own). The row ran architectury-loom 1.1 on Gradle 8.1.1 until that pairing
+// was retired: it used nothing arch-specific (no architectury {} block, no
+// remapArchitectury, no namedElements, no injectAccessWidener), so plain loom
+// takes its place with no change to what the build does. Gradle 9 needs a JDK
+// 17+ to start — the machine's default JBR 25 serves, and JDK 17 is what MC
+// 1.20.1 compiles for anyway.
 //
 // This is a loom mod project whose whole `main` source set is the jechtest mod.
 // The two jars under test (JECh's built fabric jar and the pinned JEI jar) are
@@ -24,8 +29,11 @@
 // directory's mods/ folder, where fabric-loader's dev-mode remapper brings them
 // into the run's Mojang-mapped namespace (the same road the matrix's
 // multiple-version fabric rows take for JEI). The run's fabric-api rides the
-// same mods/ staging here, for the loom-1.1 manifest reason gradle.properties
-// records.
+// same mods/ staging here: the split into a compile api and a staged runtime api
+// is the shape architectury-loom 1.1 forced (its manifest-key dead end is
+// recorded in gradle.properties), and with stock loom 1.10.5 a single mod*
+// dependency would work — but the pins and the staging stay as they are until
+// someone decides otherwise, so nothing about the run's input set changes here.
 //
 // Properties every run understands (the two jars are REQUIRED):
 //   -PjechTest=<selection>      the scenario selection; without it no run wiring
@@ -40,7 +48,10 @@
 //   -PjechTestHeadless          the same dials the other line's run has
 
 plugins {
-    id 'dev.architectury.loom' version '1.1-SNAPSHOT'
+    // The checkout pins this plugin once, in its root settings.gradle
+    // pluginManagement (id 'fabric-loom' version '1.10.5'); a standalone build
+    // resolves its own, so the same version is spelled here.
+    id 'fabric-loom' version '1.10.5'
     id 'java-library'
     id 'idea'
 }
@@ -122,10 +133,14 @@ repositories {
 }
 
 // The runtime fabric-api's ride into mods/: a plain configuration, never a mod*
-// one — loom 1.1 refuses to configure any project whose mod configuration
-// resolves a fabric-api from 0.91.1+1.20.1 on (the manifest key it cannot read;
-// gradle.properties records the dead end), and a plain configuration is not
-// remapped or inspected by loom at all. Only stageUiTestMods consumes it.
+// one. It was introduced because architectury-loom 1.1 refused to configure any
+// project whose mod configuration resolved a fabric-api from 0.91.1+1.20.1 on
+// (the manifest key it could not read; gradle.properties records the dead end),
+// and a plain configuration is not remapped or inspected by loom at all. Stock
+// fabric-loom 1.10.5 has no such limitation, so the configuration is no longer
+// *forced* — it is kept, because it is what makes the run load exactly the
+// pinned api jar from mods/ (the input set this row was measured on). Only
+// stageUiTestMods consumes it.
 configurations {
     jechFabricApiRuntime
 }
@@ -135,12 +150,17 @@ dependencies {
     mappings loom.officialMojangMappings()
     modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
     // The compile api: everything the engine imports from fabric-api
-    // (KeyBindingHelper, the client-command v2 callback) exists in 0.91.0+1.20.1,
-    // the newest MC 1.20.1 api architectury-loom 1.1 can read.
+    // (KeyBindingHelper, the client-command v2 callback) exists in 0.91.0+1.20.1.
+    // That pin was the newest MC 1.20.1 api architectury-loom 1.1 could read;
+    // stock loom 1.10.5 reads every one of them, so the pin is a leftover held
+    // for stability rather than a limit (fabric_compile_version, gradle.properties).
     modCompileOnly "net.fabricmc.fabric-api:fabric-api:${fabric_compile_version}"
     // The run's api is NOT a mod* dependency: it rides the run's mods/ folder
     // through jechFabricApiRuntime (staged by stageUiTestMods), which is what
-    // lets the run load 0.92.12+1.20.1 while loom 1.1 never resolves it.
+    // keeps the run on exactly the pinned 0.92.12+1.20.1 the env row names.
+    // (Under archloom 1.1 loom could not even resolve it, which is how the
+    // staging arose; loom 1.10.5 could resolve it, but the run's input set is
+    // kept as the one this row was measured on.)
     jechFabricApiRuntime "net.fabricmc.fabric-api:fabric-api:${fabric_runtime_version}"
 
     // The harness engine compiles against the mod under test's own classes (the
@@ -188,9 +208,15 @@ processResources {
 }
 
 loom {
-    // The checkout's own build silences the Mojang-mappings licence prompt the
-    // same way; a headless configure must not block on it.
-    silentMojangMappingsLicense()
+    // No silentMojangMappingsLicense() any more: the switch went with
+    // architectury-loom 1.1, and stock loom 1.10.5 does not carry it at all —
+    // calling it fails configuration with "Could not find method
+    // silentMojangMappingsLicense() for arguments [] on extension 'loom' of type
+    // net.fabricmc.loom.extension.LoomGradleExtensionImpl" (measured 2026-10-17 on
+    // the 1.19.2 sibling of this row: same plugin, same failure shape). Nothing is
+    // lost: officialMojangMappings() resolves without a prompt in a
+    // non-interactive configure, which is how every other plain-loom build in this
+    // repository (and the checkout that built the jar under test) resolves it.
     runs {
         // Loom's own client run is the only run this build has; the wiring below
         // is what turns it into a harness run when -PjechTest is given.
