@@ -28,49 +28,24 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
 import java.util.stream.Stream;
 
-/**
- * Creates the throwaway world a run uses, and sweeps the ones earlier runs left behind.
- *
- * <p>The world is a fixed-seed superflat level in creative with cheats on, so two runs share a
- * backdrop and a scenario can place blocks without any setup of its own. Sweeping stale worlds is
- * not housekeeping: two runs of the same run id would otherwise collide on the save directory, and
- * a leftover locked world is the single biggest source of flakiness in this kind of harness.
- */
 public final class WorldBootstrap {
 
-    /**
-     * Every generated test world starts with this prefix, which is what the sweep matches. Renamed
-     * from the upstream harness's {@code cltest_}, so a JECh harness run never shares a save
-     * directory with a CloudLib one on the same machine.
-     */
     public static final String worldPrefix = "jechtest_";
 
-    /** The fixed seed, so the same world is generated every run. */
     private static final long seed = 4_948_311_507L;
 
     private static final Logger log = LoggerFactory.getLogger("jechtest-uitest");
 
     private WorldBootstrap() {}
 
-    /** The world name for a run id. */
     public static String worldName(String runId) {
         return worldPrefix + runId;
     }
 
-    /** Reports which save directories the sweep would remove, for the log. */
     public static List<String> staleWorlds(LevelStorageSource source) {
         return staleWorlds(source, List.of());
     }
 
-    /**
-     * Reports which save directories the sweep would remove, keeping the ones this run owns.
-     *
-     * <p>A run's own saves are the world it is in and the ones it has already created, and they are
-     * excluded because the sweep's job is the wrecks of earlier runs: a world this run just left is
-     * still being flushed to disk by its own server for a few ticks, and deleting it underneath that
-     * write is how a run loses its save — observed as {@code NoSuchFileException} for the temp files
-     * the save writes.
-     */
     public static List<String> staleWorlds(LevelStorageSource source, List<String> keep) {
         Path base = source.getBaseDir();
         if (!Files.isDirectory(base)) return List.of();
@@ -84,18 +59,14 @@ public final class WorldBootstrap {
         }
     }
 
-    /** Deletes every stale save directory, and reports how many went. */
     public static int deleteStaleWorlds(LevelStorageSource source) {
         return deleteStaleWorlds(source, List.of());
     }
 
-    /** Deletes every save directory named after the test prefix, keeping the ones this run owns. */
     public static int deleteStaleWorlds(LevelStorageSource source, List<String> keep) {
         List<String> stale = staleWorlds(source, keep);
         int removed = 0;
         for (String name : stale) {
-            // Port note (1.20.1): LevelStorageSource.getLevelPath(String) is private here
-            // (it becomes public in 1.21.x); its whole body is baseDir.resolve(name).
             Path directory = source.getBaseDir().resolve(name);
             try {
                 deleteRecursively(directory);
@@ -110,76 +81,11 @@ public final class WorldBootstrap {
         return removed;
     }
 
-    /**
-     * Reopens an existing save — the rejoin half of a {@code reenter} session.
-     *
-     * <p>The world is not regenerated and nothing about it is reset: the save is opened the way the
-     * single-player world list opens it, so blocks, block entities and the pinned rules placed by
-     * earlier scenarios are all still there. That is the difference this tier exists for.
-     *
-     * <p><b>Port note (Forge 1.19.2 → Forge 1.18.2).</b> 1.18.2 has no {@code WorldOpenFlows} at
-     * all (that class is 1.19+); the world list's own load entry is
-     * {@code WorldSelectionList.WorldListEntry.joinWorld()}, whose tail funnels into the public
-     * {@code Minecraft.loadLevel(String)} (piston mappings, Minecraft 1937:1938; public on forge
-     * 1.18.2 — the forge javadoc generation of the class lists it as such). The joinWorld head we
-     * skip is the experimental-settings and backup confirmation dialog chain — a save this
-     * harness created is neither experimental nor from a newer version, so the dialogs could only
-     * ever block a run. Failures surface through the error screen {@code loadLevel} opens rather
-     * than a callback; the world-name log line below is the report this side can add.
-     */
     public static void rejoinLevel(Minecraft minecraft, String worldName) {
         log.info("rejoining the test world {} through loadLevel", worldName);
         minecraft.loadLevel(worldName);
     }
 
-    /**
-     * Creates and loads a fresh world.
-     *
-     * <p>This call pumps the render loop internally — it opens a loading screen, which fires frame
-     * events of its own — so the caller must set up its state before calling it, never after.
-     *
-     * <p><b>Port note (Forge 1.19.2 → Forge 1.18.2).</b> World creation is a direct
-     * {@code Minecraft.createLevel(String, LevelSettings, RegistryAccess, WorldGenSettings)}
-     * (piston mappings, Minecraft 1941:1955) — no {@code WorldOpenFlows} on this generation — and
-     * {@code LevelSettings}'s tail argument is {@code DataPackConfig.DEFAULT} (1.19.4's
-     * {@code WorldDataConfiguration} does not exist yet). The flat recipe is vanillas own superflat
-     * world preset, which is also JEI's 1.18 client-test world (mezz/JustEnoughItems branch 1.18,
-     * FabricClientTestWorld): the seed's default dimensions with the overworld stem's generator
-     * replaced by a {@code FlatLevelSource} over the default flat generator settings.
-     *
-     * <p><b>Why the dimensions come from {@code defaultDimensions(access, seed)} and the seed is
-     * read back off it rather than invented.</b> 1.18.2's {@code createLevel} does not load the
-     * world it is handed straight away: it re-encodes the {@code WorldGenSettings} into the level
-     * data through the data-pack-aware dimension codec, reads it back, and stamps the round trip's
-     * lifecycle onto the world data (Minecraft.java:1878-1893,
-     * {@code new PrimaryLevelData(settings, worldgenSettings, dataResult.lifecycle())}). That
-     * lifecycle is where the world's "experimental settings" warning comes from:
-     * {@code WorldGenSettings.CODEC} runs the decoded value through
-     * {@code guardExperimental} (WorldGenSettings.java:51-61), which only reports
-     * {@code Lifecycle.stable} when {@code LevelStem.stable(seed, dimensions)} holds — and that
-     * check compares the nether and end generators' own seeds against the world seed
-     * (LevelStem.java:76-124; {@code NoiseBasedChunkGenerator.stable} :131-133 is {@code this.seed
-     * == seed}; {@code TheEndBiomeSource.stable} :75-77 is the same for the end island noise).
-     * {@code doLoadLevel} then refuses to load a world whose data is not stable: with
-     * {@code flag1 = worldGenSettingsLifecycle() != Lifecycle.stable()} it branches into Forge's
-     * confirmation screen instead of loading (Minecraft.java:1930-1933, :2005 →
-     * ForgeHooksClient.java:1120, a {@code ConfirmScreen} on
-     * {@code selectWorld.backupWarning.experimental} that only continues once a player confirms).
-     *
-     * <p>Building the dimensions off {@code WorldGenSettings.makeDefault}'s own settings — the
-     * shape this file first carried, where the engine's fixed seed was passed separately — is
-     * exactly what breaks that check: {@code makeDefault} picks a random seed of its own
-     * (WorldGenSettings.java:85-88) and feeds it to {@code DimensionType.defaultDimensions}, so the
-     * round-tripped end island keeps the other seed, {@code LevelStem.stable} is false, and the
-     * run parks on the confirmation screen for good. Observed as the 2026-10-16 first run: the
-     * client reached "creating throwaway world", loaded recipes and advancements, and then reported
-     * no loaded world for the whole budget, leaving a save directory with a {@code session.lock}
-     * and no {@code level.dat} at all. The vanilla superflat preset does not do this — it builds
-     * {@code withOverworld(dimensionTypes, DimensionType.defaultDimensions(access, seed),
-     * generator)} (WorldPreset.java:126-128, and the server-side twin at
-     * WorldGenSettings.java:203-205) — so this engine uses the seed's own dimensions, which keeps
-     * the whole world stable and the backdrop identical across runs.
-     */
     public static void createFreshLevel(Minecraft minecraft, String worldName) {
         LevelSettings settings = new LevelSettings(
             worldName,
