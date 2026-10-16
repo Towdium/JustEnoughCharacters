@@ -266,10 +266,11 @@ class EnvParsingTest(unittest.TestCase):
         their ``uitest`` block names the harness build it runs, so the row
         carries its own launch layer and declares no ``gradle`` block at all.
         The three multiple-version forge rows joined them the same day
-        (``uitest/mv-{1.18.2,1.19.2,1.20.1}-forge``); the 1.18.2 row answers the
-        smoke tag only, because that line's JECh build carries no JEI plugin
-        class (measured 2026-10-14), so the JEI scenarios have nothing to assert
-        against there.
+        (``uitest/mv-{1.18.2,1.19.2,1.20.1}-forge``), all three answering the JEI
+        tag: the 1.18.2 row's JECh build carries no JEI plugin class (measured
+        2026-10-14), but its JEI bridge is the legacy ASM coremod plus
+        ``FakeTree``, which the harness taps itself, and both its JEI scenarios
+        are green (measured 2026-10-16).
         """
         expected = {
             "1.12.2-forge-hei": "tag:smoke",
@@ -278,7 +279,7 @@ class EnvParsingTest(unittest.TestCase):
             "1.21.1-fabric": "tag:smoke,tag:jei",
             "moderner-1.21.10-fabric": "tag:smoke,tag:jei",
             "moderner-1.21.10-neoforge": "tag:smoke,tag:jei",
-            "mv-1.18.2-forge": "tag:smoke",
+            "mv-1.18.2-forge": "tag:smoke,tag:jei",
             "mv-1.19.2-forge": "tag:smoke,tag:jei",
             "mv-1.20.1-forge": "tag:smoke,tag:jei",
         }
