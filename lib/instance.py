@@ -39,7 +39,6 @@ from .errors import ConfigError, JtError, ToolMissingError
 
 JAVA_HOME_CMD_ENV = "JT_JAVA_HOME_CMD"
 JAVA_HOME_ENV_TEMPLATE = "JT_JAVA_{version}_HOME"
-# The one absolute path in this codebase: macOS's JDK lookup helper.
 MACOS_JAVA_HOME_CMD = "/usr/libexec/java_home -v {version}"
 
 
@@ -58,30 +57,12 @@ def java_version_queries(version):
 
 LOG_NAME = "latest.log"
 
-# The launch layer's contract with the checkout's build files: the wrapper it
-# runs, and the project properties the checkout's run configuration reads to
-# point the client at the harness's game directory, at a world to join, and at
-# the in-client UI test harness. They are properties (not environment variables)
-# so a plain `./gradlew runClient` without them keeps the checkout's own default
-# behaviour.
 GRADLE_WRAPPER = "gradlew"
 GRADLE_RUN_DIR_PROPERTY = "jechRunDir"
 GRADLE_QUICK_PLAY_PROPERTY = "jechQuickPlayWorld"
-# ``-PjechTest=<selection>`` is what switches the checkout's UI test harness on
-# and picks the scenarios to run; it is the *only* gate on that wiring, so a run
-# without it never loads the harness mod at all.
 GRADLE_UITEST_PROPERTY = "jechTest"
-# How the Gradle-launched client is identified in the process table: the client's
-# *working directory* is the game directory the run was given (both loaders launch
-# it there), and that is the only per-run fact available. The client's own argv
-# cannot carry one — ModDevGradle passes every JVM and program argument through
-# ``@argfile`` files, which the process table does not show — and a name-based
-# rule ("a java descendant that is not Gradle") matched Gradle's own short-lived
-# toolchain probe, which made the runner read a vanished probe as "the game
-# exited" and abandon a run that had not launched anything yet.
 LSOF_ENV = "JT_LSOF"
 MIN_GRADLE_GAME_SEARCH_SEC = 1.0
-# How long a SIGTERMmed process tree is given to go away before it is SIGKILLed.
 TERMINATION_GRACE_SEC = 6.0
 
 
@@ -95,7 +76,6 @@ class IsolationReport:
         self.config_archive = config_archive
         self.saves_cleared = saves_cleared
         self.logs_cleared = logs_cleared
-        # Non-mod overrides re-staged from the pack: "options.txt", "saves/<world>".
         self.overrides_staged = list(overrides_staged)
         self.notes = list(notes)
 
@@ -119,9 +99,6 @@ class IsolationReport:
                 f"logs cleared {self.logs_cleared}{staged}")
 
 
-# ---------------------------------------------------------------------------
-# locations
-# ---------------------------------------------------------------------------
 
 
 def run_game_dir(run_dir):
@@ -140,9 +117,6 @@ def log_path_in(minecraft_dir):
     return Path(minecraft_dir) / "logs" / LOG_NAME
 
 
-# ---------------------------------------------------------------------------
-# java lookup
-# ---------------------------------------------------------------------------
 
 
 def java_home_for(version, *, require_exists=True, command=None):
@@ -174,10 +148,6 @@ def java_home_for(version, *, require_exists=True, command=None):
             if require_exists and not (candidate / "bin" / "java").is_file():
                 tried.append(f"{rendered!r} -> {paths.display(candidate)} (no bin/java)")
                 continue
-            # The helper answers with a *path*, and some of them fall back to the
-            # default JDK when nothing matches. Verify the major version instead
-            # of trusting the request, so a Java 8 env can never silently be
-            # handed a Java 25 runtime.
             found = read_java_major(candidate)
             if found is not None and found != version:
                 tried.append(f"{rendered!r} -> {paths.display(candidate)} (that is JDK {found})")
@@ -225,9 +195,6 @@ def read_java_major(home):
     return None
 
 
-# ---------------------------------------------------------------------------
-# isolation
-# ---------------------------------------------------------------------------
 
 
 def clear_dir(path):
@@ -282,9 +249,6 @@ def isolate(label, resolved, run_dir, *, game_dir_path, pack_result=None, log=pr
     mc = Path(game_dir_path)
     notes = []
 
-    # Only the artifacts that travel as files: an artifact the checkout's Gradle
-    # run already carries on its classpath (``via: dev-classpath``) must not be
-    # copied here, or the loader would see the same mod id twice.
     staged_artifacts = resolved.staged
     mods_dir = mc / "mods"
     removed = clear_dir(mods_dir)
@@ -359,9 +323,6 @@ def stage_override_tree(minecraft_dir, pack_result, *, log=print):
     return staged
 
 
-# ---------------------------------------------------------------------------
-# process tracking
-# ---------------------------------------------------------------------------
 
 
 def process_table():
@@ -420,8 +381,6 @@ def cwd_of(pid, *, command=None):
     lines = [line for line in completed.stdout.splitlines() if line.strip()]
     if len(lines) < 2:
         return None
-    # ``COMMAND PID USER FD TYPE DEVICE SIZE/OFF NODE NAME`` — NAME is the tail and
-    # may itself contain spaces, so it is taken with a bounded split.
     fields = lines[-1].split(None, 8)
     if len(fields) < 9:
         return None
@@ -465,9 +424,6 @@ def gradle_game_pids(launch_pid, game_dir, *, command=None):
         cwd = cwd_of(pid, command=command)
         if cwd is None:
             continue
-        # The launcher hands the client the directory, not a normalised form of it:
-        # compare resolved paths so a trailing separator or a symlink in the middle
-        # cannot hide the game.
         if _same_dir(cwd, wanted):
             pids.append(pid)
     return pids
@@ -568,9 +524,6 @@ def _signal(pid, signum):
         pass
 
 
-# ---------------------------------------------------------------------------
-# launching and log tracking
-# ---------------------------------------------------------------------------
 
 
 def gradle_command(checkout, task, game_dir, *, world=None, uitest=None, wrapper=GRADLE_WRAPPER):

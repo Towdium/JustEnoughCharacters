@@ -32,7 +32,6 @@ from .errors import HttpError, NetworkError
 from .util import dump_json_text, load_json, sha1_file
 
 API_USER_AGENT = "jech-compat-tests/0.1 (github:vfyjxf)"
-# CDN and API downloads from both hosts reject the bare python UA on some paths.
 BROWSER_USER_AGENT = (
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
     "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
@@ -60,15 +59,8 @@ class HttpClient:
         self.api_max_age_sec = api_max_age_sec
         self.user_agent = user_agent
         self._cache_root = Path(cache_root) if cache_root else paths.http_cache_dir()
-        # A caller that passes a log gets one ``cache:`` line per json cache
-        # interaction — the http layer is a layer of the cache like any other, so
-        # a run's log can account for it instead of leaving a reader to guess
-        # whether the loader profile came off the network. Silent by default:
-        # most of this module's callers are API clients whose request log would
-        # be noise.
         self.log = log
 
-    # -- json --------------------------------------------------------------
     def get_json(self, url, *, headers=None, max_age_sec="inherit", what=None, cache=True):
         label = what or url
         cache_path = None
@@ -92,7 +84,6 @@ class HttpClient:
             self._note(label, cache_path, cached=False)
         return parsed
 
-    # -- downloads ---------------------------------------------------------
     def get_text(self, url, *, headers=None, what=None):
         """A response body as text, with no cache entry.
 
@@ -138,16 +129,12 @@ class HttpClient:
                 os.unlink(tmp)
         return dest
 
-    # -- internals ---------------------------------------------------------
     def _note(self, label, cache_path, *, cached):
         """Say which http cache entry answered this request, when asked to."""
         if self.log is not None:
             cache.note(f"http {label}", cache_path, log=self.log, cached=cached)
 
     def _json_cache_path(self, url, headers):
-        # The API key is deliberately part of the key (it changes what an
-        # authorised response contains) but the digest is one-way, so the cache
-        # never stores or names the secret.
         material = url + "\n" + "\n".join(f"{k}:{v}" for k, v in sorted((headers or {}).items()))
         digest = hashlib.sha256(material.encode("utf-8")).hexdigest()
         self._cache_root.mkdir(parents=True, exist_ok=True)

@@ -25,9 +25,6 @@ from .. import __version__, cache, paths
 from ..errors import DependencyError
 from . import vanilla
 
-# What the client is told about its player. A dev client authenticates nothing;
-# these are the values a launcher uses for an offline session, and the harness's
-# scenarios never touch the account.
 PLAYER_NAME = "Dev"
 PLAYER_UUID = "00000000-0000-0000-0000-000000000000"
 ACCESS_TOKEN = "0"
@@ -61,11 +58,6 @@ def values(*, client, loader, game_dir, natives_dir, classpath):
 def build_command(*, java, client, loader, game_dir, natives_dir, extra_jvm=(),
                   extra_game=(), features=None, log=print):
     """The full argv for one launch; returns ``(command, values)``."""
-    # The loader *inherits* the version, so its libraries are merged over the
-    # version's rather than appended to them: concatenating the two lists is what
-    # put two ASM jars — the version's 9.6 and the loader's 9.9 — on the classpath
-    # of a 1.21.10 run, which fabric's loader refuses to start on. See
-    # :func:`vanilla.merge_libraries` for the identity and collision rules.
     libraries = vanilla.merge_libraries(
         client.libraries, loader.libraries if loader is not None else [], log=log)
     path = [client.client_jar] + [library.path for library in libraries]

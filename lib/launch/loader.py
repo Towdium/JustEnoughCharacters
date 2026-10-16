@@ -32,9 +32,7 @@ from ..util import atomic_write_text, dump_json_text, load_json, sha1_file
 from . import vanilla
 
 FABRIC_PROFILE_URL = "https://meta.fabricmc.net/v2/versions/loader/{mc}/{loader}/profile/json"
-# Which loaders this module can install without a userland installer.
 HEADLESS_LOADERS = ("fabric",)
-# The loader's own name for the state it derives from the game jar and the mods.
 LOADER_STATE_DIRNAME = ".fabric"
 
 
@@ -44,8 +42,6 @@ class LoaderInstall:
         self.loader_type = loader_type
         self.loader_version = loader_version
         self.mc = mc
-        # The version id the client reports (and the loader's own name for this
-        # install): fabric spells it ``fabric-loader-<loader>-<mc>``.
         self.profile_id = profile_id
         self.main_class = main_class
         self.jvm_args = list(jvm_args)
@@ -121,8 +117,6 @@ def share_remap_state(install, client, *, game_dir, log=print):
         )
     else:
         os.symlink(directory, link)
-    # "fetch" here means what the loader would call a first launch: the state was
-    # not there, so this run pays for the remap.
     cache.note(f"loader {install.loader_type} {install.loader_version} remap state", directory,
                log=log, cached=populated)
     return directory
@@ -140,9 +134,6 @@ def client_sha1(client):
     return sha1_file(client.client_jar)
 
 
-# ---------------------------------------------------------------------------
-# fabric
-# ---------------------------------------------------------------------------
 
 
 def _fabric(loader_version, mc, *, http, refresh, log):

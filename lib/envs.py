@@ -19,30 +19,17 @@ from .util import atomic_write_text, dump_json_text, load_json
 LOADER_TYPES = ("forge", "neoforge", "fabric", "quilt")
 MOD_SOURCES = ("curseforge", "modrinth")
 JECH_SOURCES = ("local-build", "curseforge", "modrinth")
-# Where an artifact's jar ends up. ``game-dir`` copies it into the game
-# directory's ``mods/`` (what a non-dev launch needs); ``dev-classpath``
-# stages nothing because the checkout's own Gradle run already carries it —
-# either as the mod under test (the source set the run config registers) or as a
-# declared dependency (``localRuntime`` / ``modImplementation``), and a second
-# copy of the same mod id in ``mods/`` is a double load, not a second opinion.
 MOD_VIA = ("game-dir", "dev-classpath")
 DEFAULT_VIA = "game-dir"
 CHECK_TYPES = ("log_contains", "log_not_contains", "log_regex", "no_crash_reports", "exit_code_zero",
                "file_exists", "uitest_report")
 CHECK_VALUE_REQUIRED = ("log_contains", "log_not_contains", "log_regex", "file_exists")
 
-# Checks whose value is a path inside the run's game directory, and
-# therefore must stay relative: an absolute value would silently escape it.
-# ``uitest_report``'s is optional and its default lives in checks.py; the rest
-# require one.
 CHECK_PATH_TYPES = ("file_exists", "uitest_report")
 CHECK_PATH_OPTIONAL_TYPES = ("uitest_report",)
 
-# The id key a resolved pin must carry, per source.
 _PIN_ID_KEYS = {"curseforge": "fileId", "modrinth": "versionId"}
 
-# mrpack dependency keys, used by pack.py; kept next to the schema so the two
-# never drift apart.
 MRPACK_DEPENDENCY_KEYS = {
     "forge": "forge",
     "neoforge": "neoforge",
@@ -69,9 +56,6 @@ class ModSpec:
         self.slug = slug
         self.describe = describe
         self.pin = pin
-        # ``game-dir`` (default) stages the jar into the game directory's mods/;
-        # ``dev-classpath`` records it but stages nothing, because the checkout's
-        # Gradle run already provides it.
         self.via = via
         self.raw = raw
 
@@ -218,7 +202,6 @@ class JechSpec:
         self.describe = describe
         self.pin = pin
         self.project = project
-        # The mod under test is staged like any other artifact; see ``MOD_VIA``.
         self.via = via
         self.raw = raw
 
@@ -253,10 +236,6 @@ class Env:
                  timeout_sec, path, raw, ready_when=None, skip=None, world=None,
                  gradle=None, uitest=None):
         self.name = name
-        # An env that declares ``skip`` also carries the ``skip`` tag, so a
-        # selection can say "everything runnable" as ``--exclude tag:skip``
-        # instead of naming the skipped envs one by one. The tag is derived, not
-        # written: ``write()`` persists ``raw``, which never gains it.
         self.tags = list(tags) + (["skip"] if skip and "skip" not in tags else [])
         self.mc = mc
         self.loader = loader
@@ -268,13 +247,7 @@ class Env:
         self.ready_when = ready_when
         self.skip = skip
         self.world = world
-        # Every env that is not declared ``skip`` must name a Gradle run task in
-        # the checkout under test: that is the only launch layer there is (see
-        # :class:`GradleSpec`).
         self.gradle = gradle
-        # ``None`` means "judge this run by the log alone"; a :class:`UiTestSpec`
-        # makes the checkout's in-client UI test harness run too, and its report
-        # the evidence (see lib/checks.py's ``uitest_report``).
         self.uitest = uitest
         self.path = Path(path)
         self.raw = raw
@@ -292,9 +265,6 @@ class Env:
         return self.path
 
 
-# ---------------------------------------------------------------------------
-# loading
-# ---------------------------------------------------------------------------
 
 
 def env_files(directory=None):
@@ -335,19 +305,9 @@ def parse_env(data, path="<dict>"):
     ready_when = _parse_ready_when(data.get("ready_when"), problems)
     skip = _parse_skip(data.get("skip"), problems)
     world = _parse_world(data.get("world"), problems)
-    # ``project_dir`` defaults to the checkout ``jech.project`` already names, so
-    # a gradle env cannot accidentally run a different checkout's task than the
-    # one its artifact was resolved from.
     gradle = _parse_gradle(data.get("gradle"), problems,
                            default_project=(jech.project if jech is not None else None))
     uitest = _parse_uitest(data.get("uitest"), problems)
-    # The launch layer. There is exactly one — the checkout's own Gradle run task
-    # — because the Prism instance backend was removed on 2026-10-14 (see
-    # envs/README.md). An env that names no run task cannot be executed, and that
-    # is a configuration error rather than a run that quietly launches nothing;
-    # the only other honest state is a declared ``skip``, which says why. The one
-    # alternative to naming a checkout task is naming a standalone harness build
-    # (``uitest.project``), which carries its own launch layer.
     standalone_uitest = uitest is not None and uitest.project is not None
     if gradle is None and not standalone_uitest and skip is None:
         problems.append(
@@ -357,27 +317,18 @@ def parse_env(data, path="<dict>"):
             "standalone harness build by adding \"project\" to env.uitest, or declare "
             "skip with the reason the row cannot run"
         )
-    # The selection is handed to Gradle as a project property, so there has to be
-    # a Gradle run to hand it to: either the checkout backend's own task (the
-    # original shape) or the standalone build the block itself names.
     if uitest is not None and gradle is None and not standalone_uitest:
         problems.append(
             "env.uitest requires env.gradle (or env.uitest.project for the standalone harness "
             "build): the scenario selection travels to the run as the -PjechTest project property, "
             "which only a Gradle launch can pass"
         )
-    # A standalone build IS the launch layer; naming a checkout task as well would
-    # leave two launchers for one env, and which one ran would be undefined.
     if standalone_uitest and gradle is not None:
         problems.append(
             "env.uitest.project and env.gradle are mutually exclusive: the standalone harness "
             "build carries its own run task, so a checkout task alongside it would name a second "
             "launcher for the same env"
         )
-    # On the standalone backend the harness build loads every jar itself (the
-    # JECh jar and the JEI jar as -P properties, fabric-api as its own Gradle
-    # dependency), so there is nothing for the isolation step to stage — and a
-    # ``game-dir`` jar would be loaded twice (staged copy and the build's own).
     if standalone_uitest:
         for label, spec in [("jech", jech)] + [(f"mods[{m.name}]", m) for m in mods]:
             if spec.via == "game-dir":
@@ -417,14 +368,9 @@ def find_env(selector, directory=None):
     return matches[0]
 
 
-# ---------------------------------------------------------------------------
-# field parsers
-# ---------------------------------------------------------------------------
 
 _NAME_RE = re.compile(r"^[A-Za-z0-9._-]+$")
 _VERSION_RE = re.compile(r"^\d+(\.\d+)+$")
-# A world name becomes one directory under saves/ and one zip entry inside the
-# pack, so it may not carry a separator or a parent-directory hop.
 _WORLD_NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9 ._-]*$")
 
 
@@ -433,7 +379,7 @@ def _reject_unknown(data, allowed, context, problems):
         if key in allowed:
             continue
         if key.startswith("_") or key == "$schema":
-            continue  # documented comment slot
+            continue
         problems.append(
             f"{context}: unknown key {key!r} (allowed: {', '.join(sorted(allowed))}; "
             "prefix a comment with '_' instead)"
@@ -606,19 +552,11 @@ def _parse_uitest(data, problems):
         problems.append('env.uitest must be an object {"selection": "tag:smoke"}')
         return None
     _reject_unknown(data, {"selection", "project", "options"}, "env.uitest", problems)
-    # ``_string`` already refuses a missing, null or blank selection and trims it
-    # (which is also why no example is repeated in its message). What is left to
-    # check is that the value survives being handed to Gradle as one argv element.
     selection = _string(data, "selection", "env.uitest", problems, required=True)
     if selection is not None and any(char in selection for char in "\n\r\t\0"):
         problems.append("env.uitest.selection must be one line without control characters "
                         "(it is passed to Gradle verbatim)")
         selection = None
-    # ``project`` opts the env into the standalone backend: a path relative to the
-    # compat-tests repository that names the harness's own Gradle build. The shape
-    # is checked here (a plain relative path with no hop out of the repository);
-    # whether the directory actually holds a build is the pipeline's to verify,
-    # where the missing build is named with the full expected path.
     project = _string(data, "project", "env.uitest", problems, required=False)
     if project is not None:
         if project.startswith("/") or project.startswith("~") or ".." in project.split("/"):
@@ -627,9 +565,6 @@ def _parse_uitest(data, problems):
                 f"(got {project!r}); absolute paths and '..' segments are not accepted"
             )
             project = None
-    # ``options`` are extra preset keys (see the class docstring). A key_* entry
-    # without a version entry would re-create the OptionsKeyLwjgl3Fix trap the
-    # base preset avoids, so the pair is enforced here rather than at run time.
     extra_options = None
     if "options" in data:
         raw_options = data.get("options")
@@ -781,7 +716,7 @@ def _parse_checks(data, problems):
         if type_ in CHECK_VALUE_REQUIRED:
             ok = isinstance(value, str) and bool(value.strip())
             if not ok and isinstance(value, str):
-                ok = bool(value)  # an explicitly empty pattern is a config mistake
+                ok = bool(value)
             if not isinstance(value, (str, list)):
                 problems.append(f"{context}.value is required for {type_} (string, or list of strings)")
                 value = None
@@ -802,9 +737,6 @@ def _parse_checks(data, problems):
                     )
                     value = None
         elif type_ in CHECK_PATH_OPTIONAL_TYPES:
-            # An optional path, and the only checks shaped that way: the artifact
-            # they read has one well-known location in the game directory, so an
-            # env may name another one but usually says nothing.
             if value is not None:
                 if not isinstance(value, str) or not value.strip():
                     problems.append(f"{context}.value must be a non-empty path relative to the "

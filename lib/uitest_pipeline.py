@@ -30,7 +30,6 @@ from pathlib import Path
 from . import paths
 from .errors import ConfigError, DependencyError
 
-# How the build stage logs itself; the prefix is what a reader greps for.
 STAGE_PREFIX = "stage:"
 
 
@@ -87,8 +86,6 @@ def ensure_jech_jar(env, resolved, *, java_home=None, log=print):
     _run_gradle(checkout, [task, "--no-daemon"], java_home=java_home,
                 what=f"{env.name}: JECh jar build", log=log)
     log(f"{STAGE_PREFIX} build: JECh jar build finished in {time.monotonic() - started:.0f}s")
-    # Re-glob exactly the way resolve did; a build that produced no jar at the
-    # env's glob is a dependency error, not something to guess around.
     from .resolve import local_build_jar
     jar = local_build_jar(env)
     log(f"{STAGE_PREFIX} build: JECh jar ready: {paths.display(jar)}")
@@ -164,10 +161,6 @@ def jar_arguments(jech_jar, resolved):
     return arguments + [f"-PjeiJar={jei.path}"]
 
 
-# The name of the env's mod entry the harness build receives as ``-PjeiJar``.
-# The pinned JEI jar is the target mod of every uitest line that has one; the
-# property name keeps the "jei" spelling the builds' scripts document, whatever
-# jar a future line pins under this name (a HEI jar travels the same slot).
 JEI_MOD_NAME = "jei"
 
 

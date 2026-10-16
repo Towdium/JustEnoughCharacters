@@ -38,7 +38,6 @@ class Selection:
         self.expression = expression
         self.exclude_expression = exclude_expression
 
-    # -- parsing -----------------------------------------------------------
     @classmethod
     def parse(cls, expression, exclude=None):
         include_expr = "" if expression is None else str(expression)
@@ -50,7 +49,6 @@ class Selection:
             exclude_expression=exclude_expr,
         )
 
-    # -- predicates --------------------------------------------------------
     @property
     def is_empty(self):
         """True when the expression literally contains no term."""
@@ -66,7 +64,6 @@ class Selection:
     def select(self, items, *, name_of=str, tags_of=lambda item: ()):
         return [item for item in items if self.matches(name_of(item), tags_of(item))]
 
-    # -- reporting ---------------------------------------------------------
     def describe(self):
         include = self.expression.strip() or "(empty)"
         out = f"include={include!r}"
@@ -126,6 +123,5 @@ def term_matches(term, name, tags):
             except re.error as exc:
                 raise UsageError(f"selection term {folded!r} is not a valid regex: {exc}")
             return pattern.search(str(name)) is not None
-        # an unknown prefix is a plain name, so it matches nothing
         return str(name) == folded
     return str(name) == folded

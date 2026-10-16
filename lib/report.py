@@ -75,11 +75,6 @@ def finalize(report, *, finished_at, duration_ms):
                 checks_skipped += 1
         if entry.get("watchdog"):
             watchdogs += 1
-    # An env that is not PASS is not verified: a FAILed check, a config error, a
-    # watchdog and a *declared skip* all count here. A skip is a deliberate
-    # decision not to verify, which must never read as a pass — the selection is
-    # red and the reason is in the report, so hiding it takes an explicit
-    # ``--exclude`` rather than a silent green.
     skipped_envs = [e for e in envs if e.get("status") == checks_mod.SKIP]
     unverified = [e for e in envs if e.get("status") != checks_mod.PASS]
     report["totals"] = {
@@ -110,9 +105,6 @@ def finalize(report, *, finished_at, duration_ms):
     return report
 
 
-# ---------------------------------------------------------------------------
-# writing
-# ---------------------------------------------------------------------------
 
 
 def write_report(run_dir, report, *, log=None):
@@ -122,8 +114,6 @@ def write_report(run_dir, report, *, log=None):
     json_path = run_dir / REPORT_JSON
     txt_path = run_dir / REPORT_TXT
     xml_path = run_dir / JUNIT_XML
-    # json first: the gate reads it, and a crash between writes leaves the newest
-    # verdict on disk rather than a text file that disagrees with it.
     atomic_write_text(json_path, dump_json_text(report))
     atomic_write_text(txt_path, render_text(report))
     atomic_write_text(xml_path, render_junit(report))
@@ -177,8 +167,6 @@ def render_text(report):
                 f"    ready_when={entry.get('readyWhen')!r} "
                 f"readyReached={bool(entry.get('readyReached'))}"
             )
-            # ``readyReached`` is the whole rule (line AND markers); naming the half
-            # that was missing is what makes the field actionable.
             lines.append(
                 f"    readyLineSeen={bool(entry.get('readyLineSeen'))} "
                 f"missingMarkers={entry.get('missingMarkers') or '[]'}"
@@ -219,8 +207,6 @@ def render_junit(report):
     for entry in envs:
         entry_checks = entry.get("checks") or []
         if entry.get("status") == checks_mod.SKIP and not entry_checks:
-            # A skipped env has no checks to report; give it one testcase anyway,
-            # so CI shows the skip instead of an empty, invisible suite.
             entry_checks = [{"name": "env-skip", "type": "skip", "status": checks_mod.SKIP,
                              "detail": entry.get("skipReason") or "declared skip"}]
         entry_failures = sum(1 for c in entry_checks if c.get("status") == checks_mod.FAIL)
@@ -271,9 +257,6 @@ def render_junit(report):
     return "\n".join(['<?xml version="1.0" encoding="UTF-8"?>', header] + suites + ["</testsuites>"]) + "\n"
 
 
-# ---------------------------------------------------------------------------
-# reading and verifying
-# ---------------------------------------------------------------------------
 
 
 def resolve_report_dir(target):
@@ -328,7 +311,7 @@ def exit_code_for(report):
     """0 pass, 3 watchdog, 1 anything else — the CloudLib harness's convention."""
     if report.get("status") == checks_mod.PASS and not (report.get("totals") or {}).get("watchdogs"):
         if not (report.get("envs") or []):
-            return EXIT_FAIL  # a report with nothing in it is not a pass
+            return EXIT_FAIL
         return EXIT_OK
     if (report.get("totals") or {}).get("watchdogs"):
         return EXIT_WATCHDOG

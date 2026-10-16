@@ -15,9 +15,6 @@ from pathlib import Path
 
 from .errors import JtError
 
-# ---------------------------------------------------------------------------
-# atomic file IO
-# ---------------------------------------------------------------------------
 
 
 def atomic_write_bytes(path, data):
@@ -87,9 +84,6 @@ def read_text_lossy(path, limit=None):
     return data.decode("utf-8", errors="replace")
 
 
-# ---------------------------------------------------------------------------
-# hashing
-# ---------------------------------------------------------------------------
 
 
 def sha1_file(path):
@@ -117,9 +111,6 @@ def sha256_json(obj):
     return sha256_text(json.dumps(obj, sort_keys=True, ensure_ascii=False, separators=(",", ":")))
 
 
-# ---------------------------------------------------------------------------
-# names and time
-# ---------------------------------------------------------------------------
 
 
 def now_stamp():
@@ -140,9 +131,6 @@ def human_seconds(seconds):
     return f"{seconds:.1f}s"
 
 
-# ---------------------------------------------------------------------------
-# matching helpers
-# ---------------------------------------------------------------------------
 
 
 def fold(text):
@@ -157,9 +145,6 @@ def glob_match(value, pattern):
     return fnmatch.fnmatchcase(fold(value), fold(pattern))
 
 
-# ---------------------------------------------------------------------------
-# jar metadata
-# ---------------------------------------------------------------------------
 
 _MODS_TOML = ("META-INF/neoforge.mods.toml", "META-INF/mods.toml")
 _TOML_MOD_ID = re.compile(r"""modId\s*=\s*["']([^"']+)["']""")
@@ -204,9 +189,6 @@ def jar_mod_ids(path):
     return {i for i in ids if i}
 
 
-# ---------------------------------------------------------------------------
-# process helpers
-# ---------------------------------------------------------------------------
 
 
 def eprint(*parts):

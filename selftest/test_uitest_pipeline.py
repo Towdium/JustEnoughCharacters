@@ -103,7 +103,6 @@ class StandaloneOptionsTest(unittest.TestCase):
         lines = text.strip().splitlines()
         self.assertEqual(lines[0], "version:3955")
         self.assertIn("key_key.jei.focusSearch:key.keyboard.f", lines)
-        # the base preset rides along unchanged
         self.assertIn("lang:zh_cn", lines)
         self.assertIn("onboardAccessibility:true", lines)
 

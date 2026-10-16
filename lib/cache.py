@@ -40,9 +40,6 @@ def ensure_dir(path) -> Path:
     return path
 
 
-# ---------------------------------------------------------------------------
-# one Minecraft version
-# ---------------------------------------------------------------------------
 
 
 def mc_dir(mc) -> Path:
@@ -77,9 +74,6 @@ def logging_dir(mc) -> Path:
     return mc_dir(mc) / "logging"
 
 
-# ---------------------------------------------------------------------------
-# one loader install, one subject jar
-# ---------------------------------------------------------------------------
 
 
 def loader_dir(loader_type, loader_version, mc) -> Path:
@@ -109,9 +103,6 @@ def subject_dir(modid, sha1) -> Path:
     return paths.cache_dir() / "subject" / f"{modid}-{sha1}"
 
 
-# ---------------------------------------------------------------------------
-# the loader's remap state, shared by every run of one client jar
-# ---------------------------------------------------------------------------
 
 
 def loader_remap_dir(loader_type, loader_version, mc, client_sha1, side="client") -> Path:
@@ -133,9 +124,6 @@ def loader_remap_dir(loader_type, loader_version, mc, client_sha1, side="client"
     return loader_dir(loader_type, loader_version, mc) / f"remap-{side}-{str(client_sha1)[:12]}"
 
 
-# ---------------------------------------------------------------------------
-# telling a reader what happened
-# ---------------------------------------------------------------------------
 
 
 def note(kind, path, *, log=print, cached=True):

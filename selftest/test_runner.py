@@ -268,8 +268,6 @@ class WatchLoopTest(unittest.TestCase):
             checks=[{"type": "log_contains", "value": m} for m in markers] or
             [{"type": "no_crash_reports"}],
         )
-        # The schema floor for timeout_sec is 30s; a test that needs a shorter truth
-        # sets the attribute on the parsed env instead of fighting the validator.
         env.timeout_sec = timeout_sec
         ready_values, marker_values = runner.readiness_rule(env)
         killed = {}
@@ -336,16 +334,12 @@ class WatchLoopTest(unittest.TestCase):
         watch, _killed = self.watch("booting\nREADY\n", ready=["READY"], markers=["MARKER"])
         self.assertEqual(watch["stop_reason"], checks.STOP_READY_TIMEOUT)
         self.assertFalse(watch["ready_reached"])
-        # The ready line was there — the *marker* was the half that failed. That
-        # distinction is exactly what the report has to carry.
         self.assertTrue(watch["ready_line_reached"])
         self.assertEqual(watch["missing_markers"], ["MARKER"])
         self.assertTrue(watch["game_exited"])
         self.assertFalse(watch["timed_out"])
 
     def test_a_ready_line_that_never_appears_is_visible_as_such(self):
-        # A ready line that never lands is bounded by the watchdog, so the env gets
-        # a short budget here: the point is the reported halves, not the waiting.
         watch, _killed = self.watch("booting\nMARKER\n", ready=["READY"], markers=["MARKER"],
                                     timeout_sec=1)
         self.assertTrue(watch["timed_out"])

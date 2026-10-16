@@ -51,25 +51,14 @@ MANIFEST_NAME = "manifest.json"
 WORLD_DIRNAME = "world"
 SERVER_LOG_NAME = "seed-server.log"
 
-# The file a client rewrites the moment it opens the world; hashing it would make
-# the seed look different on every run, so it is neither hashed nor staged.
 UNSTABLE_FILES = ("session.lock",)
 
-# The dedicated server's own budget: the vanilla server of any version here
-# reaches "Done (" in well under a minute on a flat world, and stopping it is a
-# flush of a handful of chunks.
 SERVER_START_TIMEOUT_SEC = 300
 SERVER_STOP_TIMEOUT_SEC = 60
 SERVER_POLL_SEC = 0.5
 SERVER_MEM_MB = 1024
-# A *fixed* seed, so a rebuild lays out the same landscape (structure placement
-# included). It does not make builds byte-identical — see the module docstring.
 FLAT_SEED = "jechcompat"
 
-# server.properties: the smallest recipe that still produces a usable, tiny world.
-# ``level-type=flat`` keeps generation to one layer of blocks; the small view and
-# simulation distances keep the spawn area the only region that is generated;
-# the port is ephemeral (nothing ever connects — the world is only generated).
 SERVER_PROPERTIES = (
     "level-name={level_name}\n"
     "level-type=flat\n"
@@ -132,9 +121,6 @@ class SeedInfo:
         return f"SeedInfo({self.mc}/{self.name!r}, {self.digest[:12]})"
 
 
-# ---------------------------------------------------------------------------
-# locations and manifests
-# ---------------------------------------------------------------------------
 
 
 def seed_key(env):
@@ -230,9 +216,6 @@ def cached_seed(env):
     return verify_seed(env.mc, env.world.name, seed_dir(env))
 
 
-# ---------------------------------------------------------------------------
-# building
-# ---------------------------------------------------------------------------
 
 
 def ensure_seed(env, *, java_home, refresh=False, log=print):
@@ -305,8 +288,6 @@ def _run_server(env, scratch, *, java, jar, log):
     log_path = scratch / SERVER_LOG_NAME
     command = [str(java), f"-Xmx{SERVER_MEM_MB}M", f"-Xms{max(SERVER_MEM_MB // 2, 256)}M",
                "-jar", str(jar), "nogui"]
-    # stdout goes to a file rather than a pipe: polling the file cannot deadlock
-    # on a full pipe buffer, and the same file is the failure evidence.
     with open(log_path, "wb") as handle:
         proc = subprocess.Popen(command, cwd=str(scratch), stdin=subprocess.PIPE,
                                 stdout=handle, stderr=subprocess.STDOUT)
@@ -421,9 +402,6 @@ def describe(env, seed):
     }
 
 
-# ---------------------------------------------------------------------------
-# staging
-# ---------------------------------------------------------------------------
 
 
 def stage_world(source_world, dest_world):
@@ -443,9 +421,6 @@ def stage_world(source_world, dest_world):
     return dest_world
 
 
-# ---------------------------------------------------------------------------
-# helpers
-# ---------------------------------------------------------------------------
 
 
 def _free_port():

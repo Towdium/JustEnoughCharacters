@@ -25,7 +25,6 @@ from .net import BROWSER_USER_AGENT, HttpClient
 from .util import fold, jar_mod_ids, sha1_file
 
 JECH_ROOT_ENV = "JT_JECH_ROOT"
-# Build outputs that are never the artifact under test.
 NON_RUNTIME_SUFFIXES = ("-sources.jar", "-javadoc.jar")
 
 LOCAL_BUILD_TAG = "local-build"
@@ -34,14 +33,12 @@ LOCAL_BUILD_TAG = "local-build"
 class ResolvedArtifact:
     def __init__(self, *, role, name, source, filename, path=None, source_path=None,
                  sha1=None, size=0, url=None, pin=None, detail="", via=envs.DEFAULT_VIA):
-        self.role = role                  # "jech" or "mod"
-        self.name = name                  # env-visible name
+        self.role = role
+        self.name = name
         self.source = source
         self.filename = filename
-        # "game-dir" stages the jar into the game directory's mods/; "dev-classpath"
-        # stages nothing because the checkout's Gradle run already carries it.
         self.via = via
-        self.path = Path(path) if path else None            # jar to stage into mods/
+        self.path = Path(path) if path else None
         self.source_path = Path(source_path) if source_path else None
         self.sha1 = sha1
         self.size = size
@@ -104,9 +101,6 @@ class ResolvedEnv:
         return f"ResolvedEnv({self.env.name!r}, {len(self.artifacts)} artifact(s))"
 
 
-# ---------------------------------------------------------------------------
-# top level
-# ---------------------------------------------------------------------------
 
 
 def resolve_env(env, *, refresh=False, download=True, list_only=False, log=print,
@@ -126,7 +120,6 @@ def resolve_env(env, *, refresh=False, download=True, list_only=False, log=print
     changed = False
     artifacts = []
 
-    # 1. the mod under test
     jech = env.jech if include_jech else None
     if jech is None:
         notes.append("no jar under test is declared here: this run takes it from the command line "
@@ -173,7 +166,6 @@ def resolve_env(env, *, refresh=False, download=True, list_only=False, log=print
         )
         artifacts.append(artifact)
 
-    # 2. the mods
     for mod in env.mods:
         if list_only:
             _list_candidates(env, mod, log=log)
@@ -197,7 +189,6 @@ def resolve_env(env, *, refresh=False, download=True, list_only=False, log=print
                                             detail=f"{mod.slug} {(mod.describe or {}).get('version', '')}",
                                             via=mod.via))
 
-    # 3. downloads
     if download:
         for artifact in artifacts:
             ensure_download(artifact, http=http, refresh=refresh, log=log)
@@ -214,9 +205,6 @@ def resolve_envs(selected, *, refresh=False, download=True, list_only=False, log
             for env in selected]
 
 
-# ---------------------------------------------------------------------------
-# local build
-# ---------------------------------------------------------------------------
 
 
 def search_roots(env, env_root):
@@ -307,9 +295,6 @@ def jars_under(base, pattern):
     return runtime or group
 
 
-# ---------------------------------------------------------------------------
-# downloads
-# ---------------------------------------------------------------------------
 
 
 def cache_path_for(filename):
@@ -344,7 +329,7 @@ def download_urls(artifact):
     if artifact.source == "modrinth" and pin.get("versionId"):
         version_url = f"{mrapi.BASE_URL}/version/{pin['versionId']}"
         if version_url not in urls:
-            urls.append(version_url)  # resolved by the client when needed
+            urls.append(version_url)
     return urls
 
 
@@ -402,9 +387,6 @@ def ensure_download(artifact, *, http, refresh=False, log=print):
     return artifact
 
 
-# ---------------------------------------------------------------------------
-# candidate listing
-# ---------------------------------------------------------------------------
 
 
 def _list_candidates(env, spec, *, log):

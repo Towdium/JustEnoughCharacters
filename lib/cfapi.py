@@ -19,9 +19,7 @@ CLASS_ID_MODS = 6
 API_KEY_ENV = "CF_API_KEY"
 CDN_HOST = "https://mediafilez.forgecdn.net"
 
-# CurseForge's ModLoaderType enum numbers.
 LOADER_TYPE_IDS = {"forge": 1, "neoforge": 6, "fabric": 4, "quilt": 5}
-# The loader tag CurseForge puts into a file's gameVersions list.
 LOADER_TAGS = {
     "forge": ("forge",),
     "neoforge": ("neoforge",),
@@ -121,7 +119,6 @@ class CurseForgeClient:
     def from_env(cls, http=None):
         return cls(secrets.get(API_KEY_ENV), http=http)
 
-    # -- requests ----------------------------------------------------------
     def _headers(self):
         return {"x-api-key": self._api_key}
 
@@ -176,9 +173,6 @@ class CurseForgeClient:
             if not data or total is None or index >= total:
                 break
         if not files:
-            # CurseForge sometimes reports nothing for a loader filter even though
-            # the file list carries the loader in gameVersions. Re-query unfiltered
-            # and filter locally so a resolvable version never looks missing.
             files = self._list_files_unfiltered(mod_id, mc, loader)
         return files
 
@@ -202,7 +196,6 @@ class CurseForgeClient:
                 break
         return keep
 
-    # -- resolution --------------------------------------------------------
     def resolve(self, slug, mc, loader, describe_version, *, what=None):
         label = what or slug
         mod = self.search_mod(slug)

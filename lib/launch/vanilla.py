@@ -48,13 +48,9 @@ from ..util import atomic_write_text, load_json, sha1_file
 ASSET_OBJECT_URL = "https://resources.download.minecraft.net"
 ASSET_WORKERS = 8
 PLACEHOLDER = re.compile(r"\$\{([^}]+)\}")
-# The one directory every extraction spec excludes.
 DEFAULT_EXCLUDE = ("META-INF/",)
 
 
-# ---------------------------------------------------------------------------
-# this machine, in Mojang's spelling
-# ---------------------------------------------------------------------------
 
 
 def platform_name():
@@ -92,30 +88,9 @@ def os_version():
         return ""
 
 
-# ---------------------------------------------------------------------------
-# LWJGL a version older than 1.19 has to be handed on macOS arm64
-# ---------------------------------------------------------------------------
 
-# An Apple Silicon JVM cannot load the dylibs such a version's own metadata names:
-# up to roughly 1.18 the version json carries one native classifier per library
-# (``natives: {osx: natives-macos}``) and that jar holds **x86_64** dylibs — Mojang
-# only started publishing an arm64 one with 1.19's LWJGL 3.3.1. A *dev* run on this
-# machine is spared the problem because the build tool upgrades the version's
-# LWJGL out from under it (architectury-loom 1.1, measured in the mv-1.16.5-fabric
-# row's own baseline launcher log: "Loom is upgrading Minecraft's LWJGL version to
-# 3.3.1", after which its client logs "Backend library: LWJGL version 3.3.1
-# SNAPSHOT"), and a direct launch has to do the same, or the client dies inside
-# ``System.loadLibrary`` before its first frame.
-#
-# The seven modules below are the LWJGL 3.3.1 set Mojang's own 1.19.2 metadata
-# declares, with the sha1/size it declares for each jar and for the
-# ``natives-macos-arm64`` jar of the same module — that era of the metadata puts a
-# native on the **classpath** as an ordinary library (LWJGL extracts the dylib it
-# needs itself), which is also the shape added below, so nothing here goes through
-# the legacy extraction path.
 LWJGL_ARM64_VERSION = "3.3.1"
 LWJGL_LIBRARY_BASE_URL = "https://libraries.minecraft.net"
-# artifact: (jar sha1, jar size, arm64 natives sha1, arm64 natives size)
 LWJGL_MACOS_ARM64 = (
     ("lwjgl", "ae58664f88e18a9bb2c77b063833ca7aaec484cb", 724243,
      "71d0d5e469c9c95351eb949064497e3391616ac9", 42693),
@@ -218,25 +193,7 @@ def _library_entry(name, sha1, size, *, rules=None):
     return entry
 
 
-# ---------------------------------------------------------------------------
-# the window shim a macOS arm64 client of that same era needs
-# ---------------------------------------------------------------------------
 
-# 1.16.5 sets its window icon through ``glfwSetWindowIcon`` from inside
-# ``Minecraft``'s own constructor, and GLFW's Cocoa backend answers with an error
-# ("Cocoa: Regular windows do not have icons on macOS"). Minecraft turns every GLFW
-# error into an exception, so the client dies in that constructor: measured on this
-# row's direct run, ``client.log`` ends with that stack
-# (``glfwSetWindowIcon`` -> ``Window.method_4491`` -> ``Minecraft.<init>`` ->
-# ``Main.main``), the process exits 0, and the harness never reaches its runner. A
-# loom dev run never sees it because loom injects ``fabric-loom-native-support``
-# into every macOS run, and the very same jar is what makes this run's *identical*
-# classpath boot (measured: the recorded command line, with only that jar added to
-# ``mods/``, runs the whole harness).
-#
-# So the launcher ships it too, on the same gate as the LWJGL substitution above
-# (:func:`needs_arm64_native_support`): it is the mod's own published artifact,
-# pinned by the checksum its repository serves.
 NATIVE_SUPPORT_FILENAME = "fabric-loom-native-support-1.0.1.jar"
 NATIVE_SUPPORT_URL = (
     "https://maven.fabricmc.net/net/fabricmc/fabric-loom-native-support/1.0.1/"
@@ -276,9 +233,6 @@ def ensure_native_support(*, http=None, refresh=False, log=print):
     return dest
 
 
-# ---------------------------------------------------------------------------
-# rules and placeholders
-# ---------------------------------------------------------------------------
 
 
 def rule_matches(rule, features=None):
@@ -362,9 +316,6 @@ def expand(entries, *, features=None, values=None):
     return out
 
 
-# ---------------------------------------------------------------------------
-# what a version gives the launcher
-# ---------------------------------------------------------------------------
 
 
 class Library:
@@ -374,8 +325,6 @@ class Library:
         self.url = url
         self.sha1 = sha1
         self.size = size
-        # A legacy natives jar: it is extracted into natives_directory rather
-        # than put on the classpath (see the module docstring).
         self.native = native
 
     def __repr__(self):
@@ -390,12 +339,10 @@ class ClientInstall:
                  logging_argument=None, java_major=None, notes=()):
         self.mc = mc
         self.version_json = version_json
-        # ``json`` is the version id the client reports and the asset index of the
-        # version; ``client_jar`` the jar itself.
         self.client_jar = Path(client_jar)
         self.libraries = list(libraries)
         self.natives_dir = Path(natives_dir)
-        self.natives = list(natives)              # legacy natives jars (extracted)
+        self.natives = list(natives)
         self.asset_index_id = asset_index_id
         self.assets_dir = Path(assets_dir)
         self.main_class = main_class
@@ -464,9 +411,6 @@ def ensure_client(mc, *, http=None, refresh=False, assets=True, log=print):
     )
 
 
-# ---------------------------------------------------------------------------
-# libraries and natives
-# ---------------------------------------------------------------------------
 
 
 def _libraries(mc, entries, http, *, refresh, log):
@@ -580,10 +524,6 @@ def _library(mc, entry, http, *, refresh, log, counts):
     artifact = (entry.get("downloads") or {}).get("artifact")
     name = entry.get("name")
     if not isinstance(artifact, dict) or not artifact.get("url"):
-        # The pre-1.19 metadata has entries that contribute only natives (their
-        # main artifact lives under ``classifiers``), so a missing artifact is
-        # legitimate — but it is said out loud, because the same shape for a
-        # library that *should* be on the classpath would leave a silent hole.
         log(f"cache: mc {mc} library {name} publishes no main artifact; it contributes nothing to "
             "the classpath")
         return None
@@ -604,8 +544,6 @@ def _native_classifier(entry):
     classifier = natives.get(platform_name())
     if not classifier:
         return None
-    # Mojang's spelling carries a placeholder for the architecture in a few old
-    # versions (``natives-osx`` + ``${arch}``).
     return str(classifier).replace("${arch}", "64" if platform_arch() != "x86" else "32")
 
 
@@ -652,9 +590,6 @@ def _stamp_natives(natives_dir, hashes, *, log):
     atomic_write_text(stamp, "\n".join(hashes) + "\n")
 
 
-# ---------------------------------------------------------------------------
-# assets
-# ---------------------------------------------------------------------------
 
 
 def _assets(mc, version_json, http, *, refresh, download, log):
@@ -701,11 +636,6 @@ def _asset_objects(mc, index_path, assets_root, http, *, refresh, log):
         if not digest:
             continue
         dest = assets_root / "objects" / digest[:2] / digest
-        # An object's *name* is its hash, so a hit is only a hit when the bytes
-        # hash back to it: a store that was filled from somewhere else (another
-        # launcher's, a warm-up copy) is then trusted exactly as far as a download
-        # would be, and a truncated file is not mistaken for a cached one. Reading
-        # the store costs a few seconds against ~800 MB, once per run.
         if dest.is_file() and _object_ok(dest, digest, entry.get("size")):
             continue
         wanted.append((digest, dest))
@@ -734,9 +664,6 @@ def _asset_objects(mc, index_path, assets_root, http, *, refresh, log):
     log(f"cache: mc {mc} assets: {len(wanted)} object(s) fetched")
 
 
-# ---------------------------------------------------------------------------
-# the client's logging configuration
-# ---------------------------------------------------------------------------
 
 
 def _logging(mc, version_json, http, *, refresh, log):

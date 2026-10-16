@@ -14,12 +14,8 @@ from lib.errors import SecretMissingError
 
 from . import support
 
-# The single absolute path this codebase is allowed to name: macOS's JDK lookup
-# helper, the only way to honour an env's java.version on this machine.
 ABSOLUTE_PATH_ALLOWED = {"/usr/libexec/java_home"}
 
-# Prefixes that mark a literal as a machine path rather than, say, a url path
-# segment ("/mods/search") or a relative fragment ("/files/").
 MACHINE_PATH_ROOTS = (
     "/Users/", "/home/", "/tmp/", "/var/", "/private/", "/opt/", "/Applications/", "/Library/",
     "/Volumes/", "/usr/", "/etc/", "/mnt/", "/media/", "/srv/", "/System/", "/root/",
@@ -68,8 +64,6 @@ class SourceHygieneTest(unittest.TestCase):
         for path in source_files():
             tree = ast.parse(read(path))
             for literal, line in string_literals(tree):
-                # a literal that only mentions the allowed helper (an error message
-                # or a docstring naming it) is fine; any other machine path is not
                 if any(allowed in literal for allowed in ABSOLUTE_PATH_ALLOWED):
                     continue
                 token = literal.split()[0] if literal.split() else ""

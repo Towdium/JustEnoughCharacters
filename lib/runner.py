@@ -43,23 +43,7 @@ from .util import atomic_write_json, atomic_write_text, now_iso, now_stamp, sani
 
 POLL_SEC = 0.5
 LAUNCHER_EXIT_GRACE_SEC = 60
-# How long the run keeps waiting, after the ``ready_when`` line has appeared,
-# for the env's ``log_contains`` markers to show up too. In a healthy run they
-# are already there when the ready line lands (the markers are earlier), so the
-# runner stops at once; the grace only bounds a run whose markers never arrive,
-# turning it into an assertion FAIL instead of a watchdog kill.
 READY_GRACE_SEC = 120
-# How long the run keeps watching after the env's stopping rule is satisfied,
-# before it ends the session itself. Reaching the ready line is not the last
-# thing a client writes: FML dumps a mod-loading crash report — and logs the
-# "Crash report saved to …" line — a fraction of a second *after* the ready line
-# (measured: 0.37 s on a 1.16.5-forge run whose mod set was rejected for a Forge
-# version mismatch). Ending the process the instant the markers are in races that
-# write, and a race the harness wins reports a real failure as a pass: the same
-# env PASSed once and FAILed once on identical inputs before this. So the stop
-# waits out a bounded settle first, which lets both the crash-report file and the
-# log lines written with it land before the evidence is read. It costs
-# SETTLE_GRACE_SEC per run and is skipped when the game has already exited.
 SETTLE_GRACE_SEC = 3
 CONFIG_ERROR = "configError"
 
@@ -76,9 +60,6 @@ class RunOutcome:
         return max(codes) if codes else EXIT_FAIL
 
 
-# ---------------------------------------------------------------------------
-# entry points
-# ---------------------------------------------------------------------------
 
 
 def run_selection(expression, exclude=None, *, envs=None, refresh=False, log=print,
@@ -168,9 +149,6 @@ def run_env(env, *, refresh=False, log=print, selection_label=None, subject_spec
     }
 
     if env.skip:
-        # A declared skip is a first-class outcome: the env is not executed, and
-        # the report says so instead of rendering it as a pass. See envs.README.md
-        # for why a skip keeps a selection red rather than quietly greening it.
         entry["status"] = checks_mod.SKIP
         entry["exitCodeKind"] = "skip"
         entry["checks"] = [
@@ -254,9 +232,6 @@ def _env_report(run_id, env, entry, started_iso, duration_ms, *, selection_label
     return report_mod.finalize(report, finished_at=entry["finishedAt"], duration_ms=duration_ms)
 
 
-# ---------------------------------------------------------------------------
-# the per-env body
-# ---------------------------------------------------------------------------
 
 
 def _execute(env, run_dir, entry, *, started_wall, refresh, log, subject_spec=None,
@@ -294,13 +269,8 @@ def _execute(env, run_dir, entry, *, started_wall, refresh, log, subject_spec=No
 
 def _launch_gradle_backend(env, run_dir, entry, resolved, *, refresh, log):
     """The Gradle backends: a run task in a checkout or a standalone ``uitest`` build."""
-    # The world seed is built before the pack, because the pack carries it: an env
-    # that declares a world is launched into it, and a missing seed is built here
-    # (once — every later run, and every env naming the same pair, reuses it).
     seed = None
     if env.world is not None:
-        # The JDK is only resolved when the seed actually has to be built: a cache
-        # hit re-hashes the tree and returns without touching java_home.
         seed = worlds.ensure_seed(env, java_home=lambda: instance.java_home_for(env.java_version),
                                   log=log)
         entry["world"] = worlds.describe(env, seed)
@@ -310,16 +280,11 @@ def _launch_gradle_backend(env, run_dir, entry, resolved, *, refresh, log):
             f"{seed.source.get('server', '?')})"
         )
     entry["notes"].append(
-        # The values, not just the keys: the language code is per Minecraft version
-        # (1.12.2 spells Simplified Chinese `zh_CN`), so the number in the report is
-        # what tells a reader which fixture the run was started with.
         "options: preset options.txt stages "
         + ", ".join(f"{key}={value}" for key, value, _why in options.explain(env.mc))
         + " (see lib/options.py)"
     )
 
-    # The pack is the run's written-down input set: what isolation stages into the
-    # game directory from, and what the report keeps next to the evidence.
     pack_result = pack_mod.build_pack(env, resolved, run_dir, seed=seed, log=log)
     entry["mrpack"] = paths.display(pack_result.mrpack_path)
     entry["packHash"] = pack_result.pack_hash
@@ -328,19 +293,10 @@ def _launch_gradle_backend(env, run_dir, entry, resolved, *, refresh, log):
         f"({len(pack_result.mod_filenames)} jar(s) in overrides/mods, files list empty, "
         f"overrides {', '.join(pack_result.extra_overrides)})")
 
-    # The launch layer: exactly one. The checkout backend runs the checkout's own
-    # Gradle run task; the standalone backend (an env whose ``uitest`` block names
-    # a ``project``) runs that harness build's run task through the three-stage
-    # pipeline. Everything above (resolve, seed, pack) and everything below
-    # (isolation, watching, judging) is independent of which one an env uses.
     uitest_selection = env.uitest.selection if env.uitest is not None else None
     standalone = env.uitest is not None and env.uitest.project is not None
     jar_args = []
     if standalone:
-        # Stage build: the JECh jar (built if the checkout has none) and the
-        # harness build's own compile, both before anything is staged, so a build
-        # failure never leaves a half-run behind. Gradle itself runs on the JDK
-        # the env names — the same rule the checkout backend's daemon_java follows.
         harness_dir = uitest_pipeline.harness_build_dir(env, log=log)
         gradle_home = instance.java_home_for(env.java_version)
         jech_jar = uitest_pipeline.ensure_jech_jar(env, resolved, java_home=gradle_home, log=log)
@@ -358,10 +314,6 @@ def _launch_gradle_backend(env, run_dir, entry, resolved, *, refresh, log):
         log(f"{env.name}: standalone harness build {env.uitest.project!r} — "
             f"{uitest_pipeline.STAGE_PREFIX} test: launching {run_task}")
     elif env.gradle is None:
-        # Unreachable through the schema, which refuses an env with neither a run
-        # task, a standalone harness build, nor a declared skip (see
-        # envs.parse_env). Kept fail-closed so a programmatically built env
-        # cannot silently launch nothing.
         raise ConfigError(
             f"{env.name}: no launch layer (env.gradle and env.uitest.project are both absent); the "
             "Prism instance launcher was removed on 2026-10-14"
@@ -382,10 +334,6 @@ def _launch_gradle_backend(env, run_dir, entry, resolved, *, refresh, log):
         world=env.world.name if env.world is not None else None, uitest=uitest_selection)
         + jar_args + (list(env.gradle.args) if env.gradle is not None else [])))
     if uitest_selection is not None:
-        # The env makes no claim about where that output lands: the checkout's
-        # own harness wiring does, and the uitest_report check reads it back
-        # from there. Saying it here is what lets a reader of the report find
-        # the captures without opening the build files.
         entry["notes"].append(
             f"uitest: scenarios selected by {uitest_selection!r}; the harness writes "
             f"{checks_mod.UITEST_REPORT_DEFAULT} and its captures under "
@@ -404,9 +352,6 @@ def _launch_gradle_backend(env, run_dir, entry, resolved, *, refresh, log):
     entry["launcherLog"] = paths.display(launcher_log)
 
     crash_before = crash_report_snapshot(minecraft_dir)
-    # The launch itself. The standalone backend hands the jars under test over as
-    # extra project properties and runs the harness build's own run task; the
-    # checkout backend stays exactly as it was, its daemon_java included.
     if standalone:
         launcher_java = instance.java_home_for(env.java_version)
         log(f"{env.name}: gradle JAVA_HOME={paths.display(launcher_java)} "
@@ -420,9 +365,6 @@ def _launch_gradle_backend(env, run_dir, entry, resolved, *, refresh, log):
                                   uitest=uitest_selection,
                                   java_home=launcher_java,
                                   log_path=launcher_log, extra_args=extra_args, log=log)
-    # The game is a java process under this launcher whose working directory is
-    # this run's game directory. The tracker searches until it has found the client
-    # and re-checks it by signal afterwards (see the class).
     return LaunchHandle(
         minecraft_dir=minecraft_dir, launcher_log=launcher_log, proc=proc,
         pids_fn=instance.GradleGameTracker(proc.pid, minecraft_dir).pids,
@@ -474,11 +416,6 @@ def _launch_direct(env, run_dir, entry, resolved, *, subject_spec, subject_jar, 
     client = vanilla_mod.ensure_client(env.mc, refresh=refresh, log=log)
     for note in client.notes:
         entry["notes"].append(note)
-    # A version of this era cannot open a window on macOS arm64 without the native
-    # support mod loom injects into its dev runs (see lib/launch/vanilla.py). It is a
-    # fabric mod, so only a fabric row takes it: another loader would ignore the jar,
-    # and a version that carries its own arm64 natives needs neither it nor the LWJGL
-    # substitution.
     shim = None
     if env.loader.type == "fabric" and vanilla_mod.needs_arm64_native_support(
             client.version_json.get("libraries") or []):
@@ -500,10 +437,6 @@ def _launch_direct(env, run_dir, entry, resolved, *, subject_spec, subject_jar, 
         options_extra=env.uitest.options, log=log,
     )
     entry["notes"].extend(game.notes)
-    # The loader's own state (its remapped game jar and remapped mods) is a
-    # function of the client jar and the loader, not of the run, so the game
-    # directory links to the shared copy instead of letting the loader rebuild
-    # ~29 MiB in every run directory (see lib.launch.loader.share_remap_state).
     remap_state = loader_mod.share_remap_state(loader, client, game_dir=minecraft_dir, log=log)
     entry["notes"].append(
         f"loader state: {paths.display(minecraft_dir)}/.fabric -> {paths.display(remap_state)} "
@@ -540,8 +473,6 @@ def _launch_direct(env, run_dir, entry, resolved, *, subject_spec, subject_jar, 
     proc = launch_mod.launch(command, cwd=minecraft_dir, log_path=run_dir / "client.log", log=log)
 
     def pids():
-        # The client *is* this process: nothing has to be searched for, and its
-        # exit is the run's exit code.
         return [] if proc.poll() is not None else [proc.pid]
 
     return LaunchHandle(minecraft_dir=minecraft_dir, launcher_log=run_dir / "client.log", proc=proc,
@@ -579,10 +510,6 @@ def _watch_and_judge(env, entry, run_dir, handle, started_wall, *, log):
     entry["exitCodeSource"] = watch["exit_code_source"]
     entry["stopReason"] = watch["stop_reason"]
     entry["readyReached"] = watch["ready_reached"]
-    # ``readyReached`` is the *whole* readiness rule (the ready line AND every
-    # marker), so a False on its own does not say which half was missing. Both
-    # halves are recorded separately: "the ready line was there but the marker
-    # never arrived" and "the ready line never arrived" are different bugs.
     entry["readyLineSeen"] = watch["ready_line_reached"]
     entry["missingMarkers"] = watch["missing_markers"]
     entry["notes"].extend(watch["notes"])
@@ -743,19 +670,12 @@ def _watch(env, proc, follower, started_wall, *, log, pids_fn, ready_values=(), 
         if pids:
             game_started = True
             if proc.poll() is not None:
-                # the wrapper is not necessarily the game's parent (Gradle may hand
-                # the client to another process): its exit code is unobservable then
                 launcher_died_early = True
         if session_started and ready_values:
             if ready_seen_at is None and ready_line_seen(follower.text, ready_values):
                 ready_seen_at = now
             if ready_seen_at is not None:
                 if all_markers_seen(follower.text, markers):
-                    # The env is ready, but the client may still be writing the
-                    # evidence the checks read (see SETTLE_GRACE_SEC): wait the
-                    # settle out, or stop at once when the game is already gone
-                    # and nothing more can arrive. Reaching the goal is sticky —
-                    # the ready-timeout below must not preempt it.
                     if goal_reached_at is None:
                         goal_reached_at = now
                     if now - goal_reached_at >= SETTLE_GRACE_SEC or not pids:
@@ -767,8 +687,6 @@ def _watch(env, proc, follower, started_wall, *, log, pids_fn, ready_values=(), 
         if game_started and not pids:
             break
         if not game_started and proc.poll() is not None:
-            # The launcher is gone and no game showed up: the launch failed. The
-            # run is over — there is nothing left that could still start it.
             note = (f"the launcher exited (code {proc.poll()}) with no game process; "
                     "no game session was started")
             log(f"{env.name}: {note}")
@@ -784,23 +702,14 @@ def _watch(env, proc, follower, started_wall, *, log, pids_fn, ready_values=(), 
     if stop_reason or timed_out or was_running:
         instance.kill_process_tree(sorted(set(pids) | {proc.pid}), log=log)
     elif proc.poll() is None and not session_started:
-        # The run gave up on a launcher that is still alive and never produced a
-        # session: everything it will ever start is still to come, so the tree it
-        # owns is ended here rather than left behind (a Gradle daemon keeps its
-        # JVMs, and the client it launches with them).
         instance.kill_process_tree([proc.pid], log=log)
     exit_code = _reap(proc, log=log, timeout=LAUNCHER_EXIT_GRACE_SEC)
     if exit_code is None:
-        # The launcher is never left behind: whatever it is still doing, this run
-        # is over and a Gradle daemon plus a client it keeps alive is exactly the
-        # memory this machine does not have.
         instance.kill_process_tree([proc.pid], log=log)
         log(f"{env.name}: the gradle launcher outlived its grace period; its process tree was ended")
     if stop_reason:
         source = "runner"
     elif launcher_died_early:
-        # The wrapper exited while the game kept running: the game is not its
-        # child any more, so its own exit code cannot be observed from here.
         source = "detached"
     elif exit_code is not None:
         source = "launcher"
@@ -811,8 +720,6 @@ def _watch(env, proc, follower, started_wall, *, log, pids_fn, ready_values=(), 
     if stop_reason:
         log(f"{env.name}: the runner ended the session (stop_reason={stop_reason}, "
             f"after {time.time() - started_wall:.0f}s)")
-    # A run the runner ended is exited by definition: SIGKILLed children can linger
-    # in the process table for a moment, which must not read as "still running".
     game_exited = bool(stop_reason) or (game_started and not pids_fn())
     ready_line_reached = True if not ready_values else ready_line_seen(follower.text, ready_values)
     missing = ([value for value in markers if value not in follower.text]
@@ -820,8 +727,6 @@ def _watch(env, proc, follower, started_wall, *, log, pids_fn, ready_values=(), 
     return {
         "timed_out": timed_out,
         "stop_reason": stop_reason,
-        # An env without ``ready_when`` has no readiness gate at all, so readiness
-        # is not in question; with one, it is the ready line *and* every marker.
         "ready_reached": True if not ready_values else (ready_line_reached and not missing),
         "ready_line_reached": ready_line_reached,
         "missing_markers": missing,

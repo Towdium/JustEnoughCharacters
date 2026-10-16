@@ -139,10 +139,6 @@ class OverridesTest(unittest.TestCase):
         staged = result.overrides_dir() / "options.txt"
         self.assertEqual(staged.read_text(encoding="utf-8"), options.render("1.21.1"))
         self.assertIn("onboardAccessibility:true", options.render())
-        # The language code is per Minecraft version, and a row's own run must carry
-        # its version's spelling: 1.12.2 renamed nothing, so it is `zh_CN` there and
-        # `zh_cn` from 1.13 on (see lib/options.py). This is the value the client
-        # stores verbatim and the one that decides whether item names are Chinese.
         self.assertEqual(options.language_code("1.12.2"), "zh_CN")
         self.assertEqual(options.language_code("1.21.1"), "zh_cn")
         self.assertEqual(options.language_code(None), "zh_cn")

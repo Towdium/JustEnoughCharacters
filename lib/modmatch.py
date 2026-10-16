@@ -31,7 +31,6 @@ def score(needle, fields):
         return 0
     best = 0
     for index, field in enumerate(fields):
-        # fields are (label, text) pairs; accept a bare string too
         text = field[1] if isinstance(field, (tuple, list)) and len(field) > 1 else field
         value = fold(text)
         if not value:

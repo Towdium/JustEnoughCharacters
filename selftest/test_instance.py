@@ -74,7 +74,6 @@ class JavaQueryTest(unittest.TestCase):
             (wrong / "bin").mkdir(parents=True)
             (wrong / "bin" / "java").write_text("#!/bin/sh\n", encoding="utf-8")
             (wrong / "release").write_text('JAVA_VERSION="25.0.3"\n', encoding="utf-8")
-            # a helper that always answers with the (wrong) JDK
             command = f'{os.sys.executable} -c "print(\'{wrong}\')" # {{version}}'
             with self.assertRaises(ConfigError) as caught:
                 instance.java_home_for(8, command=command)
@@ -91,7 +90,6 @@ class JavaQueryTest(unittest.TestCase):
             (wrong / "bin").mkdir(parents=True)
             (wrong / "bin" / "java").write_text("#!/bin/sh\n", encoding="utf-8")
             (wrong / "release").write_text('JAVA_VERSION="25.0.3"\n', encoding="utf-8")
-            # '8' -> the wrong JDK, '1.8' -> the right one
             script = (f'import sys; print(r"{wrong}" if sys.argv[1] == "8" else r"{eight}")')
             command = f'{os.sys.executable} -c {json.dumps(script)} {{version}}'
             self.assertEqual(instance.java_home_for(8, command=command), eight)
@@ -351,7 +349,6 @@ class GradleLaunchTest(unittest.TestCase):
             101: (100, "/opt/jdk21/bin/java org.gradle.launcher.daemon.bootstrap.GradleDaemon"),
             102: (101, "/azul-1.8/bin/java -Xmx32m -cp . JavaProbe"),
         }
-        # The probe runs in the module directory, like every other Gradle JVM.
         with mock.patch.object(instance, "process_table", return_value=table), \
                 mock.patch.object(instance, "cwd_of", return_value="/checkout"):
             self.assertEqual(instance.gradle_game_pids(100, "/runs/rid/game"), [])
@@ -414,7 +411,6 @@ class GradleGameTrackerTest(unittest.TestCase):
             self.assertEqual(tracker.pids(), [999])
             self.assertEqual(search.call_count, 2)
 
-            # Once found, the search is never repeated: liveness is enough.
             for step in range(1, 6):
                 clock["now"] = 2.0 + step
                 self.assertEqual(tracker.pids(), [999])
@@ -473,7 +469,7 @@ class ProcessHelpersTest(unittest.TestCase):
             started = os.path.getmtime(log_path)
             follower = instance.LogFollower(log_path, started, poll=0.01)
             self.assertTrue(follower.wait_for_session(time.time() + 5))
-            follower.poll_once()  # the session's first lines
+            follower.poll_once()
             with open(log_path, "a", encoding="utf-8") as handle:
                 handle.write("line one\n")
             follower.poll_once()
@@ -487,7 +483,7 @@ class ProcessHelpersTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             log_path = paths.Path(tmp) / "latest.log"
             log_path.write_text("previous session\n", encoding="utf-8")
-            started = os.path.getmtime(log_path) + 3600  # the run starts an hour later
+            started = os.path.getmtime(log_path) + 3600
             follower = instance.LogFollower(log_path, started, poll=0.01)
             self.assertFalse(follower.wait_for_session(time.time() + 0.05))
             self.assertFalse(follower.session_started)

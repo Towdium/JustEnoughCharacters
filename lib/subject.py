@@ -42,10 +42,8 @@ class Subject:
     def __init__(self, *, modid, sha1, path, filename, origin, built=False, notes=()):
         self.modid = modid
         self.sha1 = sha1
-        # The cached copy the run assembles from (never the checkout's own file).
         self.path = Path(path)
         self.filename = filename
-        # Where it came from, for the report: a spec, a path, or "built".
         self.origin = origin
         self.built = built
         self.notes = list(notes)
@@ -106,9 +104,6 @@ def resolve(*, spec=None, jar=None, java_home=None, log=print):
                    origin=origin, built=built)
 
 
-# ---------------------------------------------------------------------------
-# --subject
-# ---------------------------------------------------------------------------
 
 
 def _from_spec(spec, *, java_home, log):
@@ -169,9 +164,6 @@ def _gradle(directory, task, *, java_home, what, log):
         raise DependencyError(f"{what} failed (exit {result.returncode}):\n{tail}")
 
 
-# ---------------------------------------------------------------------------
-# identity
-# ---------------------------------------------------------------------------
 
 
 def _mod_id(jar):

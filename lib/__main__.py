@@ -79,9 +79,6 @@ def build_parser():
     return parser
 
 
-# ---------------------------------------------------------------------------
-# commands
-# ---------------------------------------------------------------------------
 
 
 def cmd_envs(args, log=print):
@@ -173,7 +170,7 @@ def cmd_resolve(args, log=print):
                 env, refresh=args.refresh, download=not args.no_download,
                 list_only=args.list_candidates, log=log,
             )
-        except Exception as exc:  # JtError plus the API/parse errors it wraps
+        except Exception as exc:
             from .errors import JtError
             if not isinstance(exc, JtError):
                 raise
@@ -214,9 +211,6 @@ def cmd_selftest(args, log=print):
     return 0 if result.wasSuccessful() else 1
 
 
-# ---------------------------------------------------------------------------
-# helpers
-# ---------------------------------------------------------------------------
 
 
 def _select(loaded, expression, exclude, *, log):

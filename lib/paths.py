@@ -33,7 +33,6 @@ from pathlib import Path
 
 JT_HOME_ENV = "JT_HOME"
 DEFAULT_JT_HOME = "~/.jech-compat"
-# The workspace data root, relative to the workspace root (see repo_data_home).
 REPO_DATA_HOME_PARTS = ("Data", "jech-compat")
 SECRETS_FILENAME = "secrets.env"
 

@@ -160,57 +160,19 @@ class EnvParsingTest(unittest.TestCase):
     def test_the_shipped_matrix_declares_the_world_and_the_skip(self):
         """The env files are the record of what is verified and what is not."""
         loaded = {env.name: env for env in envs.load_all()}
-        # Both 1.21.1 rows run the standalone in-client harness (since
-        # 2026-10-15), so their level is the harness's own and neither declares
-        # a world (see the uitest tests).
         for name in ("1.21.1-neoforge", "1.21.1-fabric"):
             self.assertIsNone(loaded[name].world, name)
-        # The 1.18.2/1.19.2/1.20.1 multiple-version forge rows joined them on
-        # the standalone backend the same day, for the same world reason, and
-        # mv-1.16.5-forge — whose own FG6 build creates and pins its own level —
-        # joined them on 2026-10-16.
         self.assertIsNone(loaded["mv-1.16.5-forge"].world, "mv-1.16.5-forge")
         for name in ("1.21.1-neoforge", "1.21.1-fabric", "mv-1.20.1-fabric",
                      "mv-1.16.5-forge", "mv-1.20.1-forge", "mv-1.19.2-forge",
                      "mv-1.18.2-forge"):
             self.assertIsNone(loaded[name].skip, name)
-        # `mv-1.19.2-forge`'s old skip named a capability gap — no non-interactive
-        # way to load a level before 1.20 — that the standalone harness closes by
-        # creating the level itself (WorldOpenFlows.createFreshLevel), so the row
-        # runs again and its JEI marker arrives at the harness's own level load.
-        # The four `multiple-version` forge rows were the only rows still launched
-        # by the instance launcher; with it removed (2026-10-14) they had no
-        # launch path at all — their checkout's Forge dev run cannot host the mod
-        # under test (a JPMS split package on 1.18.2/1.19.2/1.20.1, a
-        # self-contradicting merged dev jar on 1.16.5) — so they joined the skip
-        # list that day, exactly as their checks stay written down. Three of the
-        # four left it on 2026-10-15 for the standalone harness builds (a JPMS
-        # split package never existed there: JECh rides as one jar), and
-        # `mv-1.16.5-forge` left it on 2026-10-16: its own harness build exists
-        # now (uitest/mv-1.16.5-forge, ForgeGradle 6 on Gradle 8.4, the one
-        # route that hosts the mod under test on this line), and that build is
-        # its launch layer, so the row declares an `uitest` block and no
-        # `gradle` block at all.
-        # The two `1.12.2-*` rows left this list the same day they entered it:
-        # they were skipped because a 1.12.2 client could not be dev-run on this
-        # arm64 machine, and the checkout now boots one (its conditional arm64
-        # natives repository) and runs the harness on it — see envs/README.md,
-        # "The 1.12.2 rows and the gradle launch".
         self.assertEqual(
             sorted(env.name for env in loaded.values() if env.skip),
             [],
             "every shipped row now has a launch layer of its own")
         self.assertIsNone(loaded["mv-1.19.2-fabric"].skip)
         self.assertIsNone(loaded["mv-1.19.2-fabric"].world)
-        # A skipped row keeps everything but the launch: its checks are the
-        # written record of what the row verifies, and it is skipped by the
-        # *launch* layer, not by weakening an assertion. The revived
-        # multiple-version forge rows keep the markers they were skipped with
-        # for exactly that reason — reviving a row must not lose one — and
-        # mv-1.16.5-forge is in this loop for the same reason although it no
-        # longer skips: the marker it was skipped with is still a check on the
-        # row that runs, and the row still declares no `gradle` block — its own
-        # build is the launch layer.
         for name, marker in (("mv-1.16.5-forge", "no-transformer-failure"),
                              ("mv-1.18.2-forge", "no-transformer-failure"),
                              ("mv-1.19.2-forge", "jei-storage-registered"),
@@ -218,10 +180,6 @@ class EnvParsingTest(unittest.TestCase):
             row = loaded[name]
             self.assertIsNone(row.gradle, f"{name} carries its own launch layer")
             self.assertIn(marker, [check.name for check in row.checks], name)
-        # And the two revived rows keep the markers they were skipped with: the
-        # reason for a skip was never the checks, so reviving a row must not lose
-        # one of them. They run the standalone harness build since 2026-10-15
-        # (uitest/1.12.2-forge), so they carry their own launch layer.
         for name, marker in (("1.12.2-forge-jei-legacy", "legacy-tree-transformed"),
                              ("1.12.2-forge-hei", "jei-index-registered")):
             row = loaded[name]
@@ -347,9 +305,6 @@ class EnvParsingTest(unittest.TestCase):
         for name, env in rows.items():
             self.assertEqual(env.uitest.selection, expected[name], name)
             self.assertNotEqual(env.uitest.selection, "all", name)
-            # Every term carries its own prefix: the harness's grammar ORs bare terms as *names*, so
-            # "tag:smoke,jei" would select the smoke scenarios and nothing else, silently running two
-            # of the four scenarios this row was measured with.
             for term in env.uitest.selection.split(","):
                 self.assertTrue(":" in term,
                                 f"{name}: {term!r} has no selector prefix, so it can only match a "
@@ -748,8 +703,6 @@ class ViaTest(unittest.TestCase):
         row that silently reclaims or loses a launch layer cannot pass this test.
         """
         loaded = {env.name: env for env in envs.load_all()}
-        # No shipped row launches through a checkout run task any more; the set is
-        # kept so the assertion below fails the moment one comes back.
         gradle_rows = set()
         standalone_rows = {
             "1.12.2-forge-hei": "uitest/1.12.2-forge",
@@ -876,8 +829,6 @@ class CheckoutWiringTest(unittest.TestCase):
             for needle in (instance.GRADLE_RUN_DIR_PROPERTY,
                            instance.GRADLE_QUICK_PLAY_PROPERTY):
                 self.assertIn(needle, text, f"{module}: {path} does not read {needle!r}")
-            # The wiring must be conditional: a dev run with neither property must
-            # keep the checkout's own defaults.
             self.assertIn("isPresent()", text, f"{module}: the wiring is not property-guarded")
         self.assertTrue(checked, "no checkout found; the wiring contract was not verified")
 

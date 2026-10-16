@@ -50,8 +50,6 @@ class PackResult:
         self.mod_filenames = list(mod_filenames)
         self.version_id = version_id
         self.dependencies = dict(dependencies)
-        # Overrides beyond ``mods/``, as pack-relative posix paths ("options.txt",
-        # "saves/jechworld"). What the isolation step has to stage as well.
         self.extra_overrides = list(extra_overrides)
         self.world = world
         self.world_digest = world_digest
@@ -134,16 +132,13 @@ def build_pack(env, resolved, run_dir, *, version_id=None, seed=None, log=print)
                 "(run jt resolve first; jt run does it automatically)"
             )
         dest = mods_dir / artifact.filename
-        if dest.exists():  # two mods cannot share one jar name
+        if dest.exists():
             raise DependencyError(
                 f"two artifacts stage to {artifact.filename!r}; rename one in the env "
                 "(mods[].name is only a label, the file name comes from the pin)"
             )
         _link_or_copy(artifact.path, dest)
         staged.append(artifact.filename)
-    # An artifact the checkout's own Gradle run already carries (``via:
-    # dev-classpath``) is deliberately absent from ``overrides/mods``: staging it
-    # would put a second copy of the same mod id in front of the loader.
     for artifact in resolved.artifacts:
         if not artifact.staged:
             log(f"pack: {artifact.name} ({artifact.filename}) stays on the checkout's dev "
@@ -183,9 +178,6 @@ def stage_overrides(env, pack_dir, *, seed=None, log=print):
     staged = []
 
     options_path = overrides_dir / options.FILENAME
-    # An env's ``uitest.options`` adds row-specific keys on top of the base
-    # preset (a standalone fabric row pins JEI's focusSearch binding there);
-    # everything else keeps the two-line base.
     extra_options = env.uitest.options if env.uitest is not None else None
     atomic_write_text(options_path, options.render(env.mc, extra=extra_options))
     staged.append(options.FILENAME)

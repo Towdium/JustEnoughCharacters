@@ -30,9 +30,7 @@ from . import checks, paths
 from .errors import ConfigError, DependencyError
 
 PROPERTY_PREFIX = "jech.uitest."
-# Build outputs that are never the artifact the loader gets.
 NON_RUNTIME_SUFFIXES = ("-sources.jar", "-javadoc.jar", "-dev.jar")
-# The name an env's target mod travels under (the harness's own slot name).
 TARGET_MOD_NAME = "jei"
 
 

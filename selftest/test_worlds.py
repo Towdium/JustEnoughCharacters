@@ -237,8 +237,6 @@ class ServerRunTest(unittest.TestCase):
                 'printf "level" > world/level.dat\n'
                 'printf "region" > world/r.0.0.mca\n'
                 '/bin/cp server.properties eula.txt "$SEED_CAPTURE"/\n'
-                # /bin/echo, not the shell builtin: a builtin's output sits in sh's
-                # block buffer and would not be visible in the log file until sh exits.
                 '/bin/echo "[00:00:00] [Server thread/INFO]: Done (0.1s)! For help, type \\"help\\""\n'
                 'read line\n'
             ))
@@ -247,10 +245,8 @@ class ServerRunTest(unittest.TestCase):
         self.assertEqual(worlds.cached_seed(self.env).digest, seed.digest)
         self.assertEqual(seed.source["server"], "vanilla-1.21.1")
         self.assertEqual(seed.source["levelType"], "flat")
-        # the scratch directory is not left behind
         strays = [p.name for p in paths.worlds_cache_dir().iterdir() if p.name.endswith(".tmp")]
         self.assertEqual(strays, [])
-        # the scratch server was given an accepted eula and a flat, tiny world
         properties = (capture / "server.properties").read_text(encoding="utf-8")
         self.assertIn("level-type=flat", properties)
         self.assertIn("level-name=world", properties)
@@ -268,8 +264,6 @@ class ServerRunTest(unittest.TestCase):
         self.assertIn("boom: no eula", message)
 
     def test_a_server_that_never_finishes_is_bounded(self):
-        # Long enough for the shell to start and write (a shebang exec takes a
-        # moment), short enough to keep the test quick.
         message = self.run_build(body='/bin/echo "starting"\nsleep 30\n', expect_error=True,
                                  timeout=2.0)
         self.assertIn("did not reach", message)
@@ -302,9 +296,6 @@ class SeedWorldCliTest(unittest.TestCase):
         return code, buffer.getvalue()
 
     def test_a_verified_cache_is_reused_and_reported(self):
-        # No shipped row declares a world any more — every row owns the level it
-        # is asserted against — so the subject is built here and handed to the
-        # CLI through the same loader it would use for the matrix.
         with support.temp_home():
             env = support.mk_env(name="world-row", world={"name": "jechworld"})
             seed = support.write_world_seed(env)
@@ -356,10 +347,6 @@ class SeedWorldCliTest(unittest.TestCase):
         with support.temp_home():
             code, output = self.cli(["envs"])
         self.assertEqual(code, 0)
-        # No shipped row declares a world or a skip any more — every row owns the
-        # level it is asserted against and every row has a launch layer of its
-        # own — so the listing names neither; a row that reclaimed one would
-        # surface here.
         self.assertNotIn("world:", output)
         self.assertIn("uitest: tag:smoke,tag:jei", output)
         self.assertNotIn("skip:", output)
@@ -369,23 +356,10 @@ class SeedWorldCliTest(unittest.TestCase):
             code, output = self.cli(["envs", "--json"])
         self.assertEqual(code, 0)
         listed = {item["name"]: item for item in json.loads(output)}
-        # No shipped row declares a world any more: every row owns the level it
-        # is asserted against. The last one was `mv-1.20.1-forge`, which joined
-        # the standalone harness builds on 2026-10-16 (the fabric rows had gone
-        # the same way with the quick-play launch); a row that reclaimed a world
-        # would fail here.
         self.assertTrue(all(item["world"] is None for item in listed.values()),
                         "a row declares a world, and the matrix has none")
-        # `moderner-26.1.2-fabric` is a current example of a standalone row:
-        # no skip, no world — the level asserted against is the harness's own.
         self.assertIsNone(listed["moderner-26.1.2-fabric"]["skip"])
         self.assertIsNone(listed["moderner-26.1.2-fabric"]["world"])
-        # Both 1.21.1 rows are harness rows now (the standalone builds since
-        # 2026-10-15): neither declares a world, because the level asserted
-        # against is the one the in-client runner creates and pins itself, and
-        # both carry the scenario selection instead. The fabric row also pins
-        # JEI's focusSearch binding in the preset (JEI 19.x on fabric registers
-        # no usable default), which is why its uitest block carries options.
         self.assertIsNone(listed["1.21.1-fabric"]["world"])
         self.assertIsNone(listed["1.21.1-fabric"]["readyWhen"])
         self.assertEqual(listed["1.21.1-fabric"]["uitest"],
@@ -397,20 +371,9 @@ class SeedWorldCliTest(unittest.TestCase):
         self.assertEqual(listed["1.21.1-neoforge"]["uitest"],
                          {"selection": "tag:smoke,tag:jei",
                           "project": "uitest/1.21.1-neoforge"})
-        # The four multiple-version forge rows lost their only launch path when
-        # the instance launcher was removed (2026-10-14; see the matrix test in
-        # test_envs.py), so `jt envs --json` reported four skipped rows. It
-        # reports none now: all four have been revived onto standalone harness
-        # builds, the last of them — mv-1.16.5-forge, whose own FG6 build was a
-        # separate wave — on 2026-10-16. The two 1.12.2 rows used to be in this
-        # list too and are not any more: the checkout now boots a 1.12.2 client
-        # on this arm64 machine and runs the harness on it — see envs/README.md,
-        # "The 1.12.2 rows and the gradle launch".
         self.assertEqual(
             sorted(name for name, item in listed.items() if item["skip"]),
             [])
-        # The four revived rows say what they are: a harness row with the
-        # harness's own level, its scenario selection and its own build.
         for name, selection in (("mv-1.16.5-forge", "tag:smoke"),
                                 ("mv-1.18.2-forge", "tag:smoke,tag:jei"),
                                 ("mv-1.19.2-forge", "tag:smoke,tag:jei"),
@@ -420,14 +383,7 @@ class SeedWorldCliTest(unittest.TestCase):
             self.assertEqual(listed[name]["uitest"],
                              {"selection": selection,
                               "project": f"uitest/{name}"})
-        # The 1.19.2 row is the one whose storage marker is unreachable before
-        # 1.20; the skip that used to carry that reason is gone, so what has to
-        # hold is that the row no longer claims it.
         self.assertIsNone(listed["mv-1.19.2-forge"]["skip"])
-        # The revived 1.12.2 rows report the harness selection they run and the
-        # level the harness creates for them, not a world of their own. Since
-        # 2026-10-15 they run the shared standalone harness build
-        # (uitest/1.12.2-forge) rather than the checkout's run task.
         self.assertEqual(listed["1.12.2-forge-jei-legacy"]["uitest"],
                          {"selection": "tag:smoke,tag:jei",
                           "project": "uitest/1.12.2-forge"})
@@ -437,8 +393,6 @@ class SeedWorldCliTest(unittest.TestCase):
         for name in ("1.12.2-forge-jei-legacy", "1.12.2-forge-hei"):
             self.assertIsNone(listed[name]["skip"])
             self.assertIsNone(listed[name]["world"], "the harness's own level is the world")
-        # mv-1.16.5-forge is the same shape since 2026-10-16: its own standalone
-        # build is the launch layer, its level is the harness's.
         self.assertEqual(listed["mv-1.16.5-forge"]["uitest"],
                          {"selection": "tag:smoke", "project": "uitest/mv-1.16.5-forge"})
         self.assertIsNone(listed["mv-1.16.5-forge"]["skip"])

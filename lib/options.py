@@ -88,16 +88,11 @@ from __future__ import annotations
 
 FILENAME = "options.txt"
 
-# The Simplified-Chinese language code a Minecraft version spells, for the versions
-# that do not use the post-1.13 lower-case one. See the ``lang`` bullet above: the
-# code names the pack's ``assets/minecraft/lang/<code>.lang`` file, and the client
-# stores the option verbatim, so the case is load-bearing.
 LANGUAGE_CODE = {
     "1.12.2": "zh_CN",
 }
 DEFAULT_LANGUAGE_CODE = "zh_cn"
 
-# (key, value, why) — the order is the order in the rendered file.
 PRESET = (
     ("onboardAccessibility", "true",
      "the accessibility onboarding screen is shown while this is false; a profile "

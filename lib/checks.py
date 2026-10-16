@@ -38,26 +38,15 @@ PASS = "PASS"
 FAIL = "FAIL"
 SKIP = "SKIP"
 
-# ``stop_reason`` values that mean the runner ended the session on purpose, so
-# the process exit code is an artefact of the harness and carries no signal.
 STOP_GOAL_REACHED = "goal-reached"
 STOP_READY_TIMEOUT = "ready-timeout"
 DELIBERATE_STOP_REASONS = (STOP_GOAL_REACHED, STOP_READY_TIMEOUT)
 
-# Where the checkout's in-client UI test harness writes its output inside the
-# game directory when Gradle is given -PjechTest (see the checkout's
-# gradle/jech-uitest.gradle: the harness's own output directory follows
-# -PjechRunDir into <game dir>/uitest). The report is the harness's verdict; the
-# captures sit beside it, one directory per scenario.
 UITEST_REPORT_DIR = "uitest"
 UITEST_REPORT_DEFAULT = f"{UITEST_REPORT_DIR}/report.json"
 UITEST_CAPTURES_DIR = f"{UITEST_REPORT_DIR}/screenshots"
-# The report's own version. A report that says a version this check does not know
-# is refused rather than read loosely: the fields below would still be there, but
-# nobody would have agreed on what they mean.
 UITEST_REPORT_SCHEMA = 1
 UITEST_PASS = "PASS"
-# How many non-PASS scenarios the failure detail names before summarizing the rest.
 UITEST_FAILURE_DETAIL_LIMIT = 3
 
 
@@ -70,8 +59,6 @@ class CheckContext:
                  stop_reason=None, ready_reached=True):
         self.log_text = log_text or ""
         self.log_path = log_path
-        # The run's game directory: the root every file_exists value is relative
-        # to. None when no game directory was known at all.
         self.minecraft_dir = Path(minecraft_dir) if minecraft_dir else None
         self.session_started = bool(session_started)
         self.exit_code = exit_code
@@ -82,11 +69,7 @@ class CheckContext:
         self.game_exited = bool(game_exited)
         self.duration_sec = duration_sec
         self.timeout_sec = timeout_sec
-        # Why tracking stopped: one of DELIBERATE_STOP_REASONS when the runner
-        # ended the session itself, None when the game (or the watchdog) decided.
         self.stop_reason = stop_reason
-        # Whether the env's readiness rule was satisfied before tracking stopped.
-        # True by default: an env without ``ready_when`` has no readiness gate.
         self.ready_reached = bool(ready_reached)
 
 
@@ -166,9 +149,6 @@ def summarize(check_results):
     }
 
 
-# ---------------------------------------------------------------------------
-# individual checks
-# ---------------------------------------------------------------------------
 
 
 def _values(spec):
@@ -321,8 +301,6 @@ def _uitest_report(spec, ctx):
         return result(spec.name, spec.type, FAIL, f"{relative} carries no totals block")
     failed = totals.get("failed")
     errored = totals.get("errored")
-    # ``isinstance(True, int)`` is True in Python, and a counter that is a JSON
-    # boolean is a report nobody understands, not a zero.
     if any(isinstance(value, bool) or not isinstance(value, int) for value in (failed, errored)):
         return result(spec.name, spec.type, FAIL,
                       f"{relative} totals carry no integer failed/errored counters")

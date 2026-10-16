@@ -13,8 +13,6 @@ from .net import API_USER_AGENT, HttpClient, with_query
 BASE_URL = "https://api.modrinth.com/v2"
 USER_AGENT = "jech-compat-tests/0.1 (github:vfyjxf)"
 
-# Modrinth's own loader tag names — identical to ours, spelled out so a rename of
-# one side fails loudly here instead of quietly filtering everything away.
 LOADER_TAGS = {"forge": "forge", "neoforge": "neoforge", "fabric": "fabric", "quilt": "quilt"}
 
 
@@ -129,9 +127,6 @@ class ModrinthClient:
             raise DependencyError(f"modrinth versions {slug}: unexpected response shape")
         versions = [MrVersion(item, project=slug) for item in payload if isinstance(item, dict)]
         if not versions:
-            # The filtered endpoint is authoritative, but a mod that only tags its
-            # loader differently (e.g. a Forge mod on 1.12.2 with no loader tag at
-            # all) is still worth a look before declaring it missing.
             unfiltered = self.http.get_json(
                 f"{BASE_URL}/project/{slug}/version", what=f"modrinth versions (unfiltered) {slug}")
             for item in unfiltered if isinstance(unfiltered, list) else []:

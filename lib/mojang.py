@@ -22,8 +22,6 @@ from .errors import DependencyError
 from .net import BROWSER_USER_AGENT, HttpClient
 
 VERSION_MANIFEST_URL = "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json"
-# A server jar is tens of megabytes; the http cache keeps only json, so this is
-# the one download that goes straight to disk.
 SERVER_JAR_TEMPLATE = "server-{mc}.jar"
 
 
@@ -94,8 +92,6 @@ def ensure_server_jar(mc, *, http=None, refresh=False, log=print):
                     sha1=info["sha1"], what=f"vanilla server {mc}", refresh=refresh)
     size = dest.stat().st_size if dest.is_file() else 0
     if info["size"] and size != info["size"]:
-        # Not fatal (the download is sha1-verified), but a size mismatch means the
-        # metadata and the file disagree, which is worth saying out loud.
         log(f"vanilla server {mc}: {size} bytes on disk, {info['size']} bytes in the metadata")
     log(f"vanilla server {mc}: {paths.display(dest)} ({size} bytes, sha1 {info['sha1']})")
     return dest
