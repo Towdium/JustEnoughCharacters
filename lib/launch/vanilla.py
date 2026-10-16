@@ -234,7 +234,7 @@ class ClientInstall:
 
 def ensure_client(mc, *, http=None, refresh=False, assets=True, log=print):
     """Fetch (or reuse) everything a version's client needs; returns the install."""
-    client = http or HttpClient(refresh=refresh)
+    client = http or HttpClient(refresh=refresh, log=log)
     notes = []
     version_json = mojang.version_json(mc, client, refresh=refresh)
 

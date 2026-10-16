@@ -11,7 +11,9 @@ subject) reuses what the first one fetched:
     ``assets/objects/<ab>/<hash>``, ``logging/<id>.xml``.
 ``cache/loader/<type>-<version>-<mc>/``
     the loader's own install: ``libraries/<maven path>`` plus the launch profile
-    it came from (``profile.json``).
+    it came from (``profile.json``), and ``remap-<side>-<client sha1>/`` — the
+    loader's own remap state (see :func:`loader_remap_dir`), which is what the
+    run's ``<game dir>/.fabric`` is a link to.
 ``cache/subject/<modid>-<sha1>/``
     the jar under test, copied out of the checkout so a rebuild during a run
     cannot change what the run tested.
@@ -105,6 +107,30 @@ def loader_hashes_path(loader_type, loader_version, mc) -> Path:
 
 def subject_dir(modid, sha1) -> Path:
     return paths.cache_dir() / "subject" / f"{modid}-{sha1}"
+
+
+# ---------------------------------------------------------------------------
+# the loader's remap state, shared by every run of one client jar
+# ---------------------------------------------------------------------------
+
+
+def loader_remap_dir(loader_type, loader_version, mc, client_sha1, side="client") -> Path:
+    """Where one client jar's *loader remap state* is kept, shared by every run.
+
+    A production Fabric Loader remaps the game jar and every mod into
+    ``<game dir>/.fabric`` on first launch — ``remappedJars/<mc>-<loader>/
+    client-intermediary.jar`` (~25 MiB) and ``processedMods/``. Nothing about
+    that work depends on the run, so it belongs in the cache like everything
+    else, and ``<game dir>/.fabric`` is made a link to this directory instead of
+    a fresh copy per run.
+
+    The key carries the client jar's sha1 on purpose. Loader's own directory name
+    (``minecraft-<mc>-<loader>``) has no hash of its input in it, so it would
+    happily keep a remap of a client jar that has been replaced; a sha1 in the
+    path is the guard loader does not have. ``side`` is ``client`` today, and is
+    part of the name because a server remap is a different output.
+    """
+    return loader_dir(loader_type, loader_version, mc) / f"remap-{side}-{str(client_sha1)[:12]}"
 
 
 # ---------------------------------------------------------------------------

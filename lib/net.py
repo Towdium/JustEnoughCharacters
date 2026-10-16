@@ -27,7 +27,7 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 
-from . import paths
+from . import cache, paths
 from .errors import HttpError, NetworkError
 from .util import dump_json_text, load_json, sha1_file
 
@@ -52,13 +52,21 @@ def with_query(base, params):
 
 class HttpClient:
     def __init__(self, *, refresh=False, timeout=DEFAULT_TIMEOUT_SEC, retries=DEFAULT_RETRIES,
-                 api_max_age_sec=DEFAULT_API_MAX_AGE_SEC, cache_root=None, user_agent=API_USER_AGENT):
+                 api_max_age_sec=DEFAULT_API_MAX_AGE_SEC, cache_root=None, user_agent=API_USER_AGENT,
+                 log=None):
         self.refresh = bool(refresh)
         self.timeout = timeout
         self.retries = retries
         self.api_max_age_sec = api_max_age_sec
         self.user_agent = user_agent
         self._cache_root = Path(cache_root) if cache_root else paths.http_cache_dir()
+        # A caller that passes a log gets one ``cache:`` line per json cache
+        # interaction — the http layer is a layer of the cache like any other, so
+        # a run's log can account for it instead of leaving a reader to guess
+        # whether the loader profile came off the network. Silent by default:
+        # most of this module's callers are API clients whose request log would
+        # be noise.
+        self.log = log
 
     # -- json --------------------------------------------------------------
     def get_json(self, url, *, headers=None, max_age_sec="inherit", what=None, cache=True):
@@ -72,6 +80,7 @@ class HttpClient:
                     age_limit = self.api_max_age_sec if max_age_sec == "inherit" else max_age_sec
                     age = time.time() - cached.get("fetched_at", 0)
                     if age_limit is None or age <= age_limit:
+                        self._note(label, cache_path, cached=True)
                         return cached.get("body")
         body = self._request(url, headers, what=label)
         try:
@@ -80,6 +89,7 @@ class HttpClient:
             raise NetworkError(f"{label}: response is not valid json ({exc})")
         if cache_path is not None:
             self._write_cache(cache_path, url, parsed)
+            self._note(label, cache_path, cached=False)
         return parsed
 
     # -- downloads ---------------------------------------------------------
@@ -129,6 +139,11 @@ class HttpClient:
         return dest
 
     # -- internals ---------------------------------------------------------
+    def _note(self, label, cache_path, *, cached):
+        """Say which http cache entry answered this request, when asked to."""
+        if self.log is not None:
+            cache.note(f"http {label}", cache_path, log=self.log, cached=cached)
+
     def _json_cache_path(self, url, headers):
         # The API key is deliberately part of the key (it changes what an
         # authorised response contains) but the digest is one-way, so the cache

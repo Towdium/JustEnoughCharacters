@@ -486,10 +486,20 @@ def _launch_direct(env, run_dir, entry, resolved, *, subject_spec, subject_jar, 
         options_extra=env.uitest.options, log=log,
     )
     entry["notes"].extend(game.notes)
+    # The loader's own state (its remapped game jar and remapped mods) is a
+    # function of the client jar and the loader, not of the run, so the game
+    # directory links to the shared copy instead of letting the loader rebuild
+    # ~29 MiB in every run directory (see lib.launch.loader.share_remap_state).
+    remap_state = loader_mod.share_remap_state(loader, client, game_dir=minecraft_dir, log=log)
+    entry["notes"].append(
+        f"loader state: {paths.display(minecraft_dir)}/.fabric -> {paths.display(remap_state)} "
+        "(the loader's remapped game jar and mods are shared between runs, not rebuilt per run)"
+    )
     entry["notes"].append(
         f"assemble: {paths.display(game.path)} — mods/ holds {', '.join(game.mods)}; every jar and "
-        "every asset library stays in the shared cache and is linked or passed by path, so this "
-        "directory is the run's own state and nothing else"
+        "every asset library stays in the shared cache and is linked or passed by path, and .fabric "
+        "is a link to the loader's shared remap state, so this directory is the run's own state and "
+        "nothing else"
     )
     entry["launcherLog"] = paths.display(run_dir / "client.log")
     entry["log"] = paths.display(instance.log_path_in(minecraft_dir))

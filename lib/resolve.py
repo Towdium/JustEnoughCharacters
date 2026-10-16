@@ -19,7 +19,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from . import cfapi, envs, mrapi, modmatch, paths
+from . import cache, cfapi, envs, mrapi, modmatch, paths
 from .errors import DependencyError, JtError
 from .net import BROWSER_USER_AGENT, HttpClient
 from .util import fold, jar_mod_ids, sha1_file
@@ -349,7 +349,14 @@ def download_urls(artifact):
 
 
 def ensure_download(artifact, *, http, refresh=False, log=print):
-    """Fetch the artifact into the cache when it is not already there and verified."""
+    """Fetch the artifact into the cache when it is not already there and verified.
+
+    A downloaded artifact is a cache layer like any other, so both outcomes are
+    said out loud (``cache: mod jei hit: ...``): without that line the only way to
+    tell where a run's mod jars came from was to read the game directory's symlink
+    targets. An artifact that is the checkout's own build output gets no line —
+    nothing about it is cached.
+    """
     if artifact.source == LOCAL_BUILD_TAG or artifact.path is None:
         if artifact.path is not None and artifact.path.is_file():
             if not artifact.sha1:
@@ -361,6 +368,7 @@ def ensure_download(artifact, *, http, refresh=False, log=print):
         if not artifact.sha1:
             artifact.sha1 = sha1_file(dest)
         artifact.size = dest.stat().st_size
+        cache.note(f"{artifact.role} {artifact.name}", dest, log=log, cached=True)
         return artifact
     urls = download_urls(artifact)
     if not urls:
@@ -380,6 +388,7 @@ def ensure_download(artifact, *, http, refresh=False, log=print):
             http.download(url, dest, headers={"User-Agent": BROWSER_USER_AGENT}, sha1=artifact.sha1,
                           what=f"{artifact.name} ({artifact.filename})", refresh=refresh)
             log(f"{artifact.name}: cached {artifact.filename} ({dest.stat().st_size} bytes)")
+            cache.note(f"{artifact.role} {artifact.name}", dest, log=log, cached=False)
             artifact.size = dest.stat().st_size
             if not artifact.sha1:
                 artifact.sha1 = sha1_file(dest)
