@@ -20,13 +20,13 @@ import java.util.stream.Collectors;
  * <ul>
  *   <li>every static method of {@code me.towdium.jecharacters.utils.Match} — the funnel every ASM
  *       adapter (creative search, recipe book, other mods' search boxes) is rewritten onto;</li>
- *   <li>the {@code TreeSearcher.search} call inside {@code JechSearchStorage.getSearchResults} — the
- *       PinIn tree JECh's own JEI integration searches with, which does <em>not</em> go through
- *       {@code Match} at all, so a JEI pinyin search would otherwise be invisible.</li>
+ *   <li>the two entry points of {@code me.towdium.jecharacters.utils.FakeTree} — the PinIn tree
+ *       JECh's JEI integration searches with, which does <em>not</em> go through {@code Match} at
+ *       all, so a JEI pinyin search would otherwise be invisible.</li>
  * </ul>
  *
- * <p>Both taps are injections into JECh's own classes (see {@code JechSearchStorageMixin} for why the
- * second one could not go into PinIn itself).
+ * <p>Both taps are injections into JECh's own classes (see {@code FakeTreeMixin} for why the second
+ * one is the tree rather than the search storage the 1.19.2 sibling carries).
  *
  * <p><b>Zero cost outside a harness run.</b> {@link #isEnabled()} is a plain static read and every
  * entry point returns on its first line when recording is off, which is the state a normal dev
