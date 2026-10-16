@@ -378,13 +378,15 @@ class SeedWorldCliTest(unittest.TestCase):
         # declares the storage marker it cannot reach and names what is missing
         # instead of pretending to run; the four multiple-version forge rows lost
         # their only launch path when the instance launcher was removed
-        # (2026-10-14), so `jt envs --json` reports four skipped rows. The two
-        # 1.12.2 rows used to be in this list and are not any more: the checkout
-        # now boots a 1.12.2 client on this arm64 machine and runs the harness on
-        # it — see envs/README.md, "The 1.12.2 rows and the gradle launch".
+        # (2026-10-14), so `jt envs --json` reported four skipped rows. It
+        # reports three now: mv-1.16.5-forge left the list on 2026-10-16 with its
+        # own harness build. The two 1.12.2 rows used to be in this list and are
+        # not any more: the checkout now boots a 1.12.2 client on this arm64
+        # machine and runs the harness on it — see envs/README.md, "The 1.12.2
+        # rows and the gradle launch".
         self.assertEqual(
             sorted(name for name, item in listed.items() if item["skip"]),
-            ["mv-1.16.5-forge", "mv-1.18.2-forge", "mv-1.19.2-forge", "mv-1.20.1-forge"])
+            ["mv-1.18.2-forge", "mv-1.19.2-forge", "mv-1.20.1-forge"])
         self.assertIn("quickPlay needs 1.20+", listed["mv-1.19.2-forge"]["skip"])
         # The revived 1.12.2 rows report the harness selection they run and the
         # level the harness creates for them, not a world of their own.
@@ -394,6 +396,13 @@ class SeedWorldCliTest(unittest.TestCase):
         for name in ("1.12.2-forge-jei-legacy", "1.12.2-forge-hei"):
             self.assertIsNone(listed[name]["skip"])
             self.assertIsNone(listed[name]["world"], "the harness's own level is the world")
+        # mv-1.16.5-forge is the same shape since 2026-10-16: its own standalone
+        # build is the launch layer, its level is the harness's.
+        self.assertEqual(listed["mv-1.16.5-forge"]["uitest"],
+                         {"selection": "tag:smoke", "project": "uitest/mv-1.16.5-forge"})
+        self.assertIsNone(listed["mv-1.16.5-forge"]["skip"])
+        self.assertIsNone(listed["mv-1.16.5-forge"]["world"],
+                          "the harness's own level is the world")
         self.assertIsNone(listed["mv-1.19.2-forge"]["world"])
         self.assertIsNone(listed["mv-1.19.2-fabric"]["skip"])
         self.assertIsNone(listed["mv-1.19.2-fabric"]["world"])

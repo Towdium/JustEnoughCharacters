@@ -165,7 +165,12 @@ class EnvParsingTest(unittest.TestCase):
         # a world (see the uitest tests).
         for name in ("1.21.1-neoforge", "1.21.1-fabric"):
             self.assertIsNone(loaded[name].world, name)
-        for name in ("1.21.1-neoforge", "1.21.1-fabric", "mv-1.20.1-fabric"):
+        # The 1.16.5 forge row joined the standalone rows on 2026-10-16: its
+        # FG6 harness build creates and pins its own level, so it declares no
+        # world either.
+        self.assertIsNone(loaded["mv-1.16.5-forge"].world, "mv-1.16.5-forge")
+        for name in ("1.21.1-neoforge", "1.21.1-fabric", "mv-1.20.1-fabric",
+                     "mv-1.16.5-forge"):
             self.assertIsNone(loaded[name].skip, name)
         # `mv-1.19.2-forge` cannot reach its marker: JEI 11.x
         # logs the storage marker while a level loads, and no non-interactive way
@@ -178,6 +183,11 @@ class EnvParsingTest(unittest.TestCase):
         # under test (a JPMS split package on 1.18.2/1.19.2/1.20.1, a
         # self-contradicting merged dev jar on 1.16.5) — so they joined the skip
         # list that day, exactly as their checks stay written down.
+        # mv-1.16.5-forge left that list on 2026-10-16: its own harness build
+        # exists now (uitest/mv-1.16.5-forge, ForgeGradle 6 on Gradle 8.4, the
+        # one route that hosts the mod under test on this line), and that build
+        # is its launch layer, so the row declares an `uitest` block and no
+        # `gradle` block at all.
         # The two `1.12.2-*` rows left this list the same day they entered it:
         # they were skipped because a 1.12.2 client could not be dev-run on this
         # arm64 machine, and the checkout now boots one (its conditional arm64
@@ -185,7 +195,7 @@ class EnvParsingTest(unittest.TestCase):
         # "The 1.12.2 rows and the gradle launch".
         self.assertEqual(
             sorted(env.name for env in loaded.values() if env.skip),
-            ["mv-1.16.5-forge", "mv-1.18.2-forge", "mv-1.19.2-forge", "mv-1.20.1-forge"])
+            ["mv-1.18.2-forge", "mv-1.19.2-forge", "mv-1.20.1-forge"])
         skipped = loaded["mv-1.19.2-forge"]
         self.assertIsNone(skipped.world, "a world is what the row is missing")
         self.assertIn("jei-storage-registered", [check.name for check in skipped.checks],
@@ -194,12 +204,16 @@ class EnvParsingTest(unittest.TestCase):
         self.assertIsNone(loaded["mv-1.19.2-fabric"].world)
         # A skipped row keeps everything but the launch: its checks are the
         # written record of what the row verifies, and it is skipped by the
-        # *launch* layer, not by weakening an assertion.
+        # *launch* layer, not by weakening an assertion. mv-1.16.5-forge is in
+        # this loop for exactly that reason although it no longer skips: the
+        # marker it was skipped with is still a check on the row that runs, and
+        # the row still declares no `gradle` block — its own build is the launch
+        # layer. Reviving a row must not lose a marker.
         for name, marker in (("mv-1.16.5-forge", "no-transformer-failure"),
                              ("mv-1.18.2-forge", "no-transformer-failure"),
                              ("mv-1.20.1-forge", "jei-storage-registered")):
             row = loaded[name]
-            self.assertIsNone(row.gradle, f"{name} has no working run task to declare")
+            self.assertIsNone(row.gradle, f"{name} carries its own launch layer")
             self.assertIn(marker, [check.name for check in row.checks], name)
         # And the two revived rows keep the markers they were skipped with: the
         # reason for a skip was never the checks, so reviving a row must not lose
@@ -257,6 +271,12 @@ class EnvParsingTest(unittest.TestCase):
         The two 1.21.1 rows are the standalone backend's rows (since 2026-10-15):
         their ``uitest`` block names the harness build it runs, so the row
         carries its own launch layer and declares no ``gradle`` block at all.
+        ``mv-1.16.5-forge`` joined them on 2026-10-16 (its own FG6 build,
+        ``uitest/mv-1.16.5-forge``). It answers the smoke tag alone: this line's
+        JECh jar carries no JEI plugin class (measured 2026-10-15 — no
+        JechSearchStorage; its JEI bridge is the legacy ASM coremod), and the
+        JEI scenarios focus JEI's search field with a measured mouse click,
+        which this row has not been measured with yet.
         """
         expected = {
             "1.12.2-forge-hei": "tag:smoke",
@@ -265,10 +285,12 @@ class EnvParsingTest(unittest.TestCase):
             "1.21.1-fabric": "tag:smoke,tag:jei",
             "moderner-1.21.10-fabric": "tag:smoke,tag:jei",
             "moderner-1.21.10-neoforge": "tag:smoke,tag:jei",
+            "mv-1.16.5-forge": "tag:smoke",
         }
         standalone = {
             "1.21.1-neoforge": "uitest/1.21.1-neoforge",
             "1.21.1-fabric": "uitest/1.21.1-fabric",
+            "mv-1.16.5-forge": "uitest/mv-1.16.5-forge",
         }
         rows = {env.name: env for env in envs.load_all() if env.uitest is not None}
         self.assertEqual(sorted(rows), sorted(expected),
@@ -652,12 +674,13 @@ class ViaTest(unittest.TestCase):
         rows — the 1.21.1 pair moved to the standalone backend on 2026-10-15
         (their ``uitest`` block names ``uitest/1.21.1-{neoforge,fabric}``, an
         independent Gradle build in this repository that carries its own run
-        task), and the other four multiple-version *forge* rows declare `skip`
-        (the checkout's Forge dev run cannot host the mod: a JPMS split package on
-        1.18.2/1.19.2/1.20.1, a self-contradicting merged dev jar on 1.16.5 — see
-        envs/README.md, "Forge rows and the gradle launch"). The rows are named
-        here rather than counted, so a row that silently loses its launch layer
-        cannot pass this test.
+        task), ``mv-1.16.5-forge`` joined them on 2026-10-16 with its own FG6
+        build (``uitest/mv-1.16.5-forge``), and the other three multiple-version
+        *forge* rows declare `skip` (the checkout's Forge dev run cannot host the
+        mod: a JPMS split package on 1.18.2/1.19.2/1.20.1 — see envs/README.md,
+        "Forge rows and the gradle launch"). The rows are named here rather than
+        counted, so a row that silently loses its launch layer cannot pass this
+        test.
         """
         loaded = {env.name: env for env in envs.load_all()}
         gradle_rows = {
@@ -670,6 +693,7 @@ class ViaTest(unittest.TestCase):
         standalone_rows = {
             "1.21.1-neoforge": "uitest/1.21.1-neoforge",
             "1.21.1-fabric": "uitest/1.21.1-fabric",
+            "mv-1.16.5-forge": "uitest/mv-1.16.5-forge",
         }
         self.assertFalse(gradle_rows - set(loaded), "a named gradle row does not exist")
         for env in loaded.values():
