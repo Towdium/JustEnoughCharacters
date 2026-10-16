@@ -1,5 +1,5 @@
 {
-  "_comment": "multiple-version line, MC 1.20.1 forge, smoke env. Declared `skip` on 2026-10-14: the row's only launch path was the Prism instance launcher (it staged the built jar into mods/ and joined the seeded world), and that launcher was removed the same day. The checkout cannot host the row instead: its Forge dev run dies before Minecraft starts on a JPMS split package — two modules put classes in `me.towdium.jecharacters` (measured 2026-10-14; the control run and the exact `ResolutionException` are in envs/README.md, `Forge rows and the gradle launch`). The row would need the world: JEI 15 defers `registerAdvancedSearch` — the phase that logs JECh's storage marker — to level load. The checks stay as written.",
+  "_comment": "multiple-version line, MC 1.20.1 forge. Runs the standalone in-client UI test harness (uitest/mv-1.20.1-forge, an independent Gradle build in this repository on ModDevGradle legacyforge) through the three-stage pipeline config->build->test: jt resolves and pins, reuses the JECh jar from the multiple-version checkout and compiles the harness build, then launches that build's runClient with the jars under test as -PjechJar/-PjeiJar. The two production (SRG-named) jars ride MDG's remapping modRuntimeOnly configuration, staged into a content-addressed flatDir repository inside the build — the documented dead end for them is the game-dir mods/ folder, which has no runtime remapper (envs/README.md, Forge rows). The client drives its own scenarios and writes report.json before it quits itself. The old skip's launch-path story is void: the harness builds the level the JEI marker needs itself (the JPMS split package of the checkout's dev run never existed here — JECh rides as one jar). Consequences carried over from the harness-row shape: no ready_when (stopping this client early would kill it mid-scenario and leave no report), no world (the level asserted against is the one the harness's runner creates and pins itself), and no gradle block (the harness build is the launch layer). jech and jei both carry via=dev-classpath: the standalone build loads every jar itself, so there is nothing for jt to stage, and a staged copy would double-load.",
   "name": "mv-1.20.1-forge",
   "tags": [
     "mv",
@@ -14,18 +14,23 @@
   "java": {
     "version": 17
   },
-  "skip": "the Prism instance launcher is removed, and the checkout's Forge dev run dies before Minecraft starts on a JPMS split package (two modules export me.towdium.jecharacters); see envs/README.md",
+  "uitest": {
+    "selection": "tag:smoke,tag:jei",
+    "project": "uitest/mv-1.20.1-forge"
+  },
   "jech": {
     "source": "local-build",
     "project": "multiple-version",
     "path": "1.20.1/forge/build/libs/jecharacters-1.20.1-forge-4.6.12.jar",
-    "expectModId": "jecharacters"
+    "expectModId": "jecharacters",
+    "via": "dev-classpath"
   },
   "mods": [
     {
       "name": "jei",
       "source": "curseforge",
       "slug": "jei",
+      "via": "dev-classpath",
       "describe": {
         "version": "15.48.0.179"
       },
@@ -50,6 +55,10 @@
       "name": "transformer-loaded"
     },
     {
+      "type": "uitest_report",
+      "name": "uitest-report"
+    },
+    {
       "type": "no_crash_reports",
       "name": "no-crash-reports"
     },
@@ -58,11 +67,6 @@
       "name": "exit-code"
     }
   ],
-  "world": {
-    "name": "jechworld"
-  },
-  "ready_when": {
-    "value": "Sound engine started"
-  },
+  "world": null,
   "timeout_sec": 600
 }

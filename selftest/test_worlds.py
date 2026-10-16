@@ -302,14 +302,18 @@ class SeedWorldCliTest(unittest.TestCase):
         return code, buffer.getvalue()
 
     def test_a_verified_cache_is_reused_and_reported(self):
+        # No shipped row declares a world any more — every row owns the level it
+        # is asserted against — so the subject is built here and handed to the
+        # CLI through the same loader it would use for the matrix.
         with support.temp_home():
-            env = envs.find_env("mv-1.20.1-forge")
+            env = support.mk_env(name="world-row", world={"name": "jechworld"})
             seed = support.write_world_seed(env)
-            code, output = self.cli(["seed-world", "mv-1.20.1-forge"])
+            with mock.patch.object(envs, "load_all", return_value=[env]):
+                code, output = self.cli(["seed-world", "world-row"])
         self.assertEqual(code, 0)
         self.assertIn("reused", output)
         self.assertIn(seed.digest[:16], output)
-        self.assertIn("vanilla-1.20.1", output)
+        self.assertIn("vanilla-1.21.1", output)
 
     def test_a_selection_where_nothing_needs_a_seed_fails_loudly(self):
         with support.temp_home():
@@ -321,46 +325,61 @@ class SeedWorldCliTest(unittest.TestCase):
 
     def test_a_mixed_selection_seeds_what_needs_it_and_exits_zero(self):
         with support.temp_home():
-            env = envs.find_env("mv-1.20.1-forge")
-            seed = support.write_world_seed(env)
-            code, output = self.cli(["seed-world", "1.12.2-forge-hei,mv-1.20.1-forge"])
+            no_world = envs.find_env("1.12.2-forge-hei")
+            world_row = support.mk_env(name="world-row", world={"name": "jechworld"})
+            seed = support.write_world_seed(world_row)
+            with mock.patch.object(envs, "load_all", return_value=[no_world, world_row]):
+                code, output = self.cli(["seed-world", "1.12.2-forge-hei,world-row"])
         self.assertEqual(code, 0)
         self.assertIn(seed.digest[:16], output)
         self.assertIn("declares no world", output)
 
     def test_a_skipped_env_is_still_seedable_when_it_declares_a_world(self):
-        """``skip`` stops execution, not cache maintenance."""
+        """``skip`` stops execution, not cache maintenance.
+
+        The subject is built rather than taken from the matrix: no shipped env is
+        both skipped and world-carrying any more — the three multiple-version
+        forge rows that were are harness rows now, with the harness's own level,
+        and the one row still skipped declares no world. ``jt seed-world`` never
+        consults ``skip``, which is the property under test.
+        """
         with support.temp_home():
-            env = envs.find_env("mv-1.20.1-forge")
+            env = support.mk_env(name="skipped-row", world={"name": "jechworld"},
+                                 skip="parked until its own build lands")
             seed = support.write_world_seed(env)
-            code, output = self.cli(["seed-world", "mv-1.20.1-forge"])
+            with mock.patch.object(envs, "load_all", return_value=[env]):
+                code, output = self.cli(["seed-world", "skipped-row"])
         self.assertEqual(code, 0)
         self.assertIn(seed.digest[:16], output)
 
-    def test_envs_lists_the_world_and_the_skip(self):
+    def test_envs_lists_the_skip_and_names_no_world(self):
         with support.temp_home():
             code, output = self.cli(["envs"])
         self.assertEqual(code, 0)
-        self.assertIn("world: jechworld", output)
+        # No shipped row declares a world any more — every row owns the level it
+        # is asserted against — so the listing names none; a row that reclaimed
+        # one would surface here.
+        self.assertNotIn("world:", output)
         self.assertIn("uitest: tag:smoke,tag:jei", output)
-        # `mv-1.19.2-forge` cannot load a level before 1.20, so its storage
-        # marker is unreachable, and the four multiple-version forge rows lost
-        # their only launch path when the instance launcher was removed
-        # (2026-10-14; see the matrix test in test_envs.py). A skip is a
-        # first-class result, so `jt envs` prints it.
+        # `mv-1.16.5-forge` is the one row still skipped (the instance launcher
+        # that staged its production jar is gone and its own FG6 build is a
+        # separate wave), and a skip is a first-class result, so `jt envs`
+        # prints it.
         self.assertIn("skip:", output)
 
-    def test_envs_json_carries_the_skip_and_the_world(self):
+    def test_envs_json_carries_the_skip_and_no_world(self):
         with support.temp_home():
             code, output = self.cli(["envs", "--json"])
         self.assertEqual(code, 0)
         listed = {item["name"]: item for item in json.loads(output)}
-        # `mv-1.20.1-forge` is the only world-declaring row left: the fabric
-        # rows that shared the quick-play launch (mv-1.20.1-fabric first, then
-        # the 26.1.2 pair) joined the standalone harness rows on 2026-10-15
-        # and dropped their worlds with the quick-play launch.
-        self.assertEqual(listed["mv-1.20.1-forge"]["world"]["savesPath"], "saves/jechworld")
-        # `moderner-26.1.2-fabric` is the current example of a standalone row:
+        # No shipped row declares a world any more: every row owns the level it
+        # is asserted against. The last one was `mv-1.20.1-forge`, which joined
+        # the standalone harness builds on 2026-10-16 (the fabric rows had gone
+        # the same way with the quick-play launch); a row that reclaimed a world
+        # would fail here.
+        self.assertTrue(all(item["world"] is None for item in listed.values()),
+                        "a row declares a world, and the matrix has none")
+        # `moderner-26.1.2-fabric` is a current example of a standalone row:
         # no skip, no world — the level asserted against is the harness's own.
         self.assertIsNone(listed["moderner-26.1.2-fabric"]["skip"])
         self.assertIsNone(listed["moderner-26.1.2-fabric"]["world"])
@@ -381,18 +400,27 @@ class SeedWorldCliTest(unittest.TestCase):
         self.assertEqual(listed["1.21.1-neoforge"]["uitest"],
                          {"selection": "tag:smoke,tag:jei",
                           "project": "uitest/1.21.1-neoforge"})
-        # mv-1.19.2-forge is the row that cannot load a level before 1.20, so it
-        # declares the storage marker it cannot reach and names what is missing
-        # instead of pretending to run; the four multiple-version forge rows lost
-        # their only launch path when the instance launcher was removed
-        # (2026-10-14), so `jt envs --json` reports four skipped rows. The two
-        # 1.12.2 rows used to be in this list and are not any more: the checkout
-        # now boots a 1.12.2 client on this arm64 machine and runs the harness on
-        # it — see envs/README.md, "The 1.12.2 rows and the gradle launch".
+        # The four multiple-version forge rows lost their only launch path when
+        # the instance launcher was removed (2026-10-14; see the matrix test in
+        # test_envs.py), and three of them have been revived onto standalone
+        # harness builds since (2026-10-16), so mv-1.16.5-forge — whose own FG6
+        # build is a separate wave — is the only row still skipped. A skip is a
+        # first-class result, so `jt envs` prints it.
         self.assertEqual(
             sorted(name for name, item in listed.items() if item["skip"]),
-            ["mv-1.16.5-forge", "mv-1.18.2-forge", "mv-1.19.2-forge", "mv-1.20.1-forge"])
-        self.assertIn("quickPlay needs 1.20+", listed["mv-1.19.2-forge"]["skip"])
+            ["mv-1.16.5-forge"])
+        # The three revived rows say what they are: a harness row with the
+        # harness's own level, its scenario selection and its own build.
+        for name in ("mv-1.18.2-forge", "mv-1.19.2-forge", "mv-1.20.1-forge"):
+            self.assertIsNone(listed[name]["skip"], name)
+            self.assertIsNone(listed[name]["world"], "the harness's own level is the world")
+            self.assertEqual(listed[name]["uitest"],
+                             {"selection": "tag:smoke,tag:jei",
+                              "project": f"uitest/{name}"})
+        # The 1.19.2 row is the one whose storage marker is unreachable before
+        # 1.20; the skip that used to carry that reason is gone, so what has to
+        # hold is that the row no longer claims it.
+        self.assertIsNone(listed["mv-1.19.2-forge"]["skip"])
         # The revived 1.12.2 rows report the harness selection they run and the
         # level the harness creates for them, not a world of their own. Since
         # 2026-10-15 they run the shared standalone harness build

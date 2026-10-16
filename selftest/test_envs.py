@@ -165,19 +165,24 @@ class EnvParsingTest(unittest.TestCase):
         # a world (see the uitest tests).
         for name in ("1.21.1-neoforge", "1.21.1-fabric"):
             self.assertIsNone(loaded[name].world, name)
-        for name in ("1.21.1-neoforge", "1.21.1-fabric", "mv-1.20.1-fabric"):
+        # The 1.18.2/1.19.2/1.20.1 multiple-version forge rows joined them on
+        # the standalone backend the same day, for the same world reason.
+        for name in ("1.21.1-neoforge", "1.21.1-fabric", "mv-1.20.1-fabric",
+                     "mv-1.20.1-forge", "mv-1.19.2-forge", "mv-1.18.2-forge"):
             self.assertIsNone(loaded[name].skip, name)
-        # `mv-1.19.2-forge` cannot reach its marker: JEI 11.x
-        # logs the storage marker while a level loads, and no non-interactive way
-        # to load a level exists before 1.20, so the row carries `skip` and its
-        # checks stay written down as documentation. A skip is still a
-        # first-class result (see the runner tests); these envs simply have one.
+        # `mv-1.19.2-forge`'s old skip named a capability gap — no non-interactive
+        # way to load a level before 1.20 — that the standalone harness closes by
+        # creating the level itself (WorldOpenFlows.createFreshLevel), so the row
+        # runs again and its JEI marker arrives at the harness's own level load.
         # The four `multiple-version` forge rows were the only rows still launched
-        # by the instance launcher; with it removed (2026-10-14) they have no
+        # by the instance launcher; with it removed (2026-10-14) they had no
         # launch path at all — their checkout's Forge dev run cannot host the mod
         # under test (a JPMS split package on 1.18.2/1.19.2/1.20.1, a
         # self-contradicting merged dev jar on 1.16.5) — so they joined the skip
-        # list that day, exactly as their checks stay written down.
+        # list that day. Three of the four left it on 2026-10-15 for the
+        # standalone harness builds (a JPMS split package never existed there:
+        # JECh rides as one jar); `mv-1.16.5-forge` stays skipped until its own
+        # build exists (FG6, a separate wave).
         # The two `1.12.2-*` rows left this list the same day they entered it:
         # they were skipped because a 1.12.2 client could not be dev-run on this
         # arm64 machine, and the checkout now boots one (its conditional arm64
@@ -185,18 +190,21 @@ class EnvParsingTest(unittest.TestCase):
         # "The 1.12.2 rows and the gradle launch".
         self.assertEqual(
             sorted(env.name for env in loaded.values() if env.skip),
-            ["mv-1.16.5-forge", "mv-1.18.2-forge", "mv-1.19.2-forge", "mv-1.20.1-forge"])
-        skipped = loaded["mv-1.19.2-forge"]
-        self.assertIsNone(skipped.world, "a world is what the row is missing")
-        self.assertIn("jei-storage-registered", [check.name for check in skipped.checks],
-                      "the skip names the one capability the row is missing")
+            ["mv-1.16.5-forge"])
+        skipped = loaded["mv-1.16.5-forge"]
+        self.assertIsNone(skipped.gradle, "a skipped row declares no run task")
+        self.assertIn("no-transformer-failure", [check.name for check in skipped.checks],
+                      "the skip keeps the checks as the written record")
         self.assertIsNone(loaded["mv-1.19.2-fabric"].skip)
         self.assertIsNone(loaded["mv-1.19.2-fabric"].world)
         # A skipped row keeps everything but the launch: its checks are the
         # written record of what the row verifies, and it is skipped by the
-        # *launch* layer, not by weakening an assertion.
+        # *launch* layer, not by weakening an assertion. The revived
+        # multiple-version forge rows keep the markers they were skipped with
+        # for exactly that reason — reviving a row must not lose one.
         for name, marker in (("mv-1.16.5-forge", "no-transformer-failure"),
                              ("mv-1.18.2-forge", "no-transformer-failure"),
+                             ("mv-1.19.2-forge", "jei-storage-registered"),
                              ("mv-1.20.1-forge", "jei-storage-registered")):
             row = loaded[name]
             self.assertIsNone(row.gradle, f"{name} has no working run task to declare")
@@ -268,7 +276,12 @@ class EnvParsingTest(unittest.TestCase):
         (``uitest/1.12.2-forge``) — the row is picked by the JEI-line jar jt
         hands over as ``-PjeiJar``. The two mv fabric rows 1.20.1 and 1.19.2
         joined the same day (``uitest/mv-1.20.1-fabric``,
-        ``uitest/mv-1.19.2-fabric``).
+        ``uitest/mv-1.19.2-fabric``), and the three multiple-version forge rows
+        joined with them (``uitest/mv-{1.18.2,1.19.2,1.20.1}-forge``), all three
+        answering the JEI tag: the 1.18.2 row's JECh build carries no JEI plugin
+        class (measured 2026-10-14), but its JEI bridge is the legacy ASM coremod
+        plus ``FakeTree``, which the harness taps itself, and both its JEI
+        scenarios are green (measured 2026-10-16).
         """
         expected = {
             "1.12.2-forge-hei": "tag:smoke",
@@ -279,6 +292,9 @@ class EnvParsingTest(unittest.TestCase):
             "moderner-1.21.10-neoforge": "tag:smoke,tag:jei",
             "moderner-26.1.2-neoforge": "tag:smoke,tag:jei",
             "moderner-26.1.2-fabric": "tag:smoke,tag:jei",
+            "mv-1.18.2-forge": "tag:smoke,tag:jei",
+            "mv-1.19.2-forge": "tag:smoke,tag:jei",
+            "mv-1.20.1-forge": "tag:smoke,tag:jei",
             "mv-1.19.2-fabric": "tag:smoke,tag:jei",
             "mv-1.20.1-fabric": "tag:smoke,tag:jei",
         }
@@ -291,6 +307,9 @@ class EnvParsingTest(unittest.TestCase):
             "moderner-1.21.10-fabric": "uitest/moderner-1.21.10-fabric",
             "moderner-26.1.2-neoforge": "uitest/moderner-26.1.2-neoforge",
             "moderner-26.1.2-fabric": "uitest/moderner-26.1.2-fabric",
+            "mv-1.18.2-forge": "uitest/mv-1.18.2-forge",
+            "mv-1.19.2-forge": "uitest/mv-1.19.2-forge",
+            "mv-1.20.1-forge": "uitest/mv-1.20.1-forge",
             "mv-1.19.2-fabric": "uitest/mv-1.19.2-fabric",
             "mv-1.20.1-fabric": "uitest/mv-1.20.1-fabric",
         }
@@ -324,13 +343,14 @@ class EnvParsingTest(unittest.TestCase):
         measured with. ``1.21.1-neoforge`` left the set when it moved to the
         in-client harness, and both ``moderner-1.21.10`` rows followed it there;
         ``1.21.1-fabric`` joined them on 2026-10-15 when it moved to the
-        standalone harness build, and ``mv-1.20.1-fabric`` joined the same day
-        for the same reason: their level is the harness's own, and a
-        quick-play join would race the level the scenarios are asserted against.
+        standalone harness build, and the three multiple-version forge rows
+        (``mv-1.18.2/1.19.2/1.20.1-forge``) plus ``mv-1.20.1-fabric`` left it
+        the same way: their level is the harness's own, and a quick-play join
+        would race the level the scenarios are asserted against. Every shipped
+        row now owns its level, so none declares a world and the measured set
+        is empty.
         """
-        measured = {
-            "mv-1.20.1-forge",
-        }
+        measured = set()
         for env in envs.load_all():
             if env.name in measured:
                 self.assertIsNotNone(env.world, env.name)
@@ -654,17 +674,24 @@ class ViaTest(unittest.TestCase):
         neoforge build rides the two jars on the run's legacy classpath
         (``localRuntime``), the 1.21.1 fabric build stages them into the run's
         ``mods/`` itself and takes fabric-api as its own Gradle dependency at
-        the pinned version, and the 1.12.2 build rides the JECh srg jar on the
-        run task's classpath (FML's ModDiscoverer.findClasspathMods discovers
-        the mod in it) while staging the JEI-line jar into the game directory's
-        ``mods/`` itself, with its access transformer remapped for the dev run
+        the pinned version. The three multiple-version forge rows that moved to
+        the standalone backend are the same contract: their MDG-legacyforge
+        builds remap and load both jars themselves (``modRuntimeOnly`` off a
+        content-hashed flatDir repository inside the build).
+
+        The 1.12.2 build rides the JECh srg jar on the run task's classpath
+        (FML's ``ModDiscoverer.findClasspathMods`` discovers the mod in it) while
+        the JEI-line jar is staged into the game directory's ``mods/`` by the
+        harness run itself, with its access transformer remapped for the dev run
         (its published rules are SRG-named and meet MCP-named members, which is
-        an ``IllegalAccessError`` in JEI's own init — measured, see the rows'
-        own comments). Nothing is staged by jt on any of the four rows — a
+        an ``IllegalAccessError`` in JEI's own init — measured, see the rows' own
+        comments); the row passes ``-PdevMod`` so the checkout stages the one it
+        was measured with. Nothing is staged by jt on any of these rows — a
         staged copy would double-load — so every artifact is ``dev-classpath``.
         """
         loaded = {env.name: env for env in envs.load_all()}
-        for name in ("1.21.1-neoforge", "1.21.1-fabric"):
+        for name in ("1.21.1-neoforge", "1.21.1-fabric",
+                     "mv-1.18.2-forge", "mv-1.19.2-forge", "mv-1.20.1-forge"):
             row = loaded[name]
             self.assertEqual(row.jech.via, "dev-classpath", name)
             self.assertTrue(all(mod.via == "dev-classpath" for mod in row.mods), name)
@@ -683,15 +710,15 @@ class ViaTest(unittest.TestCase):
         2026-10-14), so a row that declares none of the three would be an env that
         cannot run and does not say why. Two rows declare a run task — the two
         remaining multiple-version *fabric* rows (1.18.2, 1.16.5) — while the
-        1.21.1 pair, both moderner pairs (1.21.10, 26.1.2), the 1.12.2 pair,
-        and the mv fabric rows 1.20.1 and 1.19.2 moved to the standalone
-        backend on 2026-10-15 (their ``uitest`` blocks name ``uitest/<line>``,
-        an independent Gradle build in this repository that carries its own run
-        task — the 1.12.2 pair shares ``uitest/1.12.2-forge``), and the other
-        four multiple-version *forge* rows declare `skip`
-        (the checkout's Forge dev run cannot host the mod: a JPMS split package on
-        1.18.2/1.19.2/1.20.1, a self-contradicting merged dev jar on 1.16.5 — see
-        envs/README.md, "Forge rows and the gradle launch"). The rows are named
+        1.21.1 pair, both moderner pairs (1.21.10, 26.1.2), the 1.12.2 pair, the
+        mv fabric rows 1.20.1 and 1.19.2 and the mv forge rows 1.18.2/1.19.2/1.20.1
+        moved to the standalone backend (their ``uitest`` blocks name
+        ``uitest/<line>``, an independent Gradle build in this repository that
+        carries its own run task — the 1.12.2 pair shares ``uitest/1.12.2-forge``),
+        and the one remaining multiple-version *forge* row, ``mv-1.16.5-forge``,
+        declares `skip` (the checkout's Forge dev run cannot host the mod: a
+        self-contradicting merged dev jar — see envs/README.md, "Forge rows and
+        the gradle launch"). The rows are named
         here rather than counted, so a row that silently loses its launch layer
         cannot pass this test.
         """
@@ -708,8 +735,11 @@ class ViaTest(unittest.TestCase):
             "moderner-1.21.10-fabric": "uitest/moderner-1.21.10-fabric",
             "moderner-26.1.2-neoforge": "uitest/moderner-26.1.2-neoforge",
             "moderner-26.1.2-fabric": "uitest/moderner-26.1.2-fabric",
+            "mv-1.18.2-forge": "uitest/mv-1.18.2-forge",
             "mv-1.19.2-fabric": "uitest/mv-1.19.2-fabric",
+            "mv-1.19.2-forge": "uitest/mv-1.19.2-forge",
             "mv-1.20.1-fabric": "uitest/mv-1.20.1-fabric",
+            "mv-1.20.1-forge": "uitest/mv-1.20.1-forge",
         }
         self.assertFalse(gradle_rows - set(loaded), "a named gradle row does not exist")
         for env in loaded.values():

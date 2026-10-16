@@ -1,0 +1,17 @@
+pluginManagement {
+    repositories {
+        mavenCentral()
+        gradlePluginPortal()
+        // ModDevGradle legacyforge and its toolchain (AutoRenamingTool etc.) live
+        // on the NeoForged maven; ForgeGradle-era artifacts some plugin
+        // resolutions touch come from the Forge maven.
+        maven { url = 'https://maven.neoforged.net/releases' }
+        maven { url = 'https://maven.minecraftforge.net/' }
+    }
+}
+
+plugins {
+    id 'org.gradle.toolchains.foojay-resolver-convention' version '0.8.0'
+}
+
+rootProject.name = 'jech-uitest-mv-1.18.2-forge'

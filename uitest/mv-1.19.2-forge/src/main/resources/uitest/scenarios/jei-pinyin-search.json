@@ -1,0 +1,22 @@
+{
+  "name": "jei-pinyin-search",
+  "group": "jei",
+  "tags": ["jei"],
+  "requiresWorld": true,
+  "scenarioTimeoutMs": 120000,
+  "steps": [
+    {"do": "log", "text": "jei-pinyin-search: open the inventory so JEI's ingredient overlay is up (the harness's throwaway level is creative, so the inventory bind opens the creative inventory)"},
+    {"do": "press_bind", "bind": "inventory"},
+    {"do": "wait_until_screen", "screen": "CreativeModeInventoryScreen"},
+    {"do": "wait_ms", "ms": 500},
+    {"do": "log", "text": "jei-pinyin-search: focus JEI's search bar with a mouse click. JEI's field is not a widget of the open screen (measured on this row's 1.18.2 forge sibling: the live children of CreativeModeInventoryScreen are one vanilla EditBox, that screen's own search box), so a click dispatched at the screen never reaches it; click_mouse presses and releases through the client's own mouse handler, which is where Forge raises the screen mouse events JEI's overlay listens to. 1180,703 is the bar's centre — the point measured on that sibling (the GUI space is 1280x720 at the pinned GUI scale 2, so a 2560x1440 framebuffer pixel is GUI(pixel/2)); this scenario's own assertion is what confirms it here, and it needs re-measuring if JEI's layout changes"},
+    {"do": "click_mouse", "x": 1180, "y": 703},
+    {"do": "wait_ms", "ms": 300},
+    {"do": "log", "text": "jei-pinyin-search: type the pinyin of 石头 (shi tou) one character at a time"},
+    {"do": "type_text", "text": "shitou"},
+    {"do": "assert_match_recorded", "candidate_contains": "石", "expect": true, "within_ms": 4000},
+    {"do": "screenshot", "label": "filtered"},
+    {"do": "close_screen"},
+    {"do": "wait_until_screen", "screen": null}
+  ]
+}
