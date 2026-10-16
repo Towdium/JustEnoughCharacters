@@ -8,9 +8,14 @@
 // Port note.
 //
 // The build itself mirrors the multiple-version checkout's own 1.18.2 fabric
-// module: architectury-loom 1.1 + Gradle 8.1.1 + loader 0.14.9 — the toolchain
+// module: stock fabric-loom 1.10.5 + Gradle 9.5.0 + loader 0.14.9 — the toolchain
 // that checkout's dev runs are green with — with the harness as the one mod
-// this build owns.
+// this build owns. (The row ran on architectury-loom 1.1 + Gradle 8.1.1 for as
+// long as the checkout did; the checkout then moved all four of its
+// 1.16.5–1.20.1 fabric modules to stock fabric-loom, and this row followed.
+// Nothing arch-specific was ever used here — no `architectury {}` block, no
+// remapArchitectury, no namedElements, no injectAccessWidener — so the plugin
+// swap is the whole of the change: the loom DSL below is stock loom's.)
 //
 // Like the 1.21.1 fabric build, the two jars under test (JECh's built fabric
 // jar and the pinned JEI jar) are production jars in intermediary names, so
@@ -31,7 +36,10 @@
 //   -PjechTestHeadless          the same dials the other line's run has
 
 plugins {
-    id 'dev.architectury.loom' version '1.1-SNAPSHOT'
+    // The pin lives here rather than in settings.gradle because this row is a
+    // standalone build; it is the multiple-version checkout's pin (declared once
+    // in that repo's settings.gradle pluginManagement) that the row mirrors.
+    id 'fabric-loom' version '1.10.5'
     id 'java-library'
     id 'idea'
 }
