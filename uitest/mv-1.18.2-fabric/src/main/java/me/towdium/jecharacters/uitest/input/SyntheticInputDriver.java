@@ -145,6 +145,48 @@ public class SyntheticInputDriver extends InputDriver implements KeyState.Source
     }
 
     @Override
+    public void mouseDownThroughHandler(Screen screen, float x, float y, int button) {
+        clickThroughHandler(x, y, button, GLFW.GLFW_PRESS);
+    }
+
+    @Override
+    public void mouseUpThroughHandler(Screen screen, float x, float y, int button) {
+        clickThroughHandler(x, y, button, GLFW.GLFW_RELEASE);
+    }
+
+    /**
+     * One half of a click, dispatched by {@code MouseHandler.onPress} — the body a real pointer goes
+     * through, and the one a click on an overlay that is not a widget of the screen has to use.
+     *
+     * <p>Three things have to be arranged for the synthetic press to land where a real one would:
+     *
+     * <ol>
+     *   <li>the scripted pointer is placed, so the screen's own hover state and the mouse arguments a
+     *       handler reads elsewhere agree with the click;</li>
+     *   <li>{@code xpos/ypos} are written, because {@code onPress} derives its GUI-scaled coordinates
+     *       from those two <em>fields</em> rather than from the getters the virtual-cursor seam
+     *       overrides ({@code MouseHandler.java:79-80});</li>
+     *   <li>the call runs inside {@link RawInputGate#runSynthetic}, without which the harness's own
+     *       gate cancels {@code onPress} at HEAD — it is the same bypass the in-world gestures use.</li>
+     * </ol>
+     */
+    private void clickThroughHandler(float xGui, float yGui, int button, int action) {
+        placeCursor(xGui, yGui);
+        MouseHandler mouseHandler = Minecraft.getInstance().mouseHandler;
+        if (!(mouseHandler instanceof MouseHandlerAccessor accessor)) {
+            // refusing is the honest outcome: the alternative is a click that silently goes to
+            // the screen only, which is exactly the failure this route exists to avoid
+            throw new IllegalStateException(
+                "MouseHandlerAccessor is not applied; the harness cannot click through the mouse handler"
+            );
+        }
+        accessor.setXpos(CursorState.toPhysicalX(xGui));
+        accessor.setYpos(CursorState.toPhysicalY(yGui));
+        long window = Minecraft.getInstance().getWindow().getWindow();
+        RawInputGate.runSynthetic(() -> accessor.invokeOnPress(window, button, action, 0));
+    }
+
+    @Override
     public void scroll(Screen screen, float x, float y, double amount) {
         placeCursor(x, y);
         // Port note (1.21.1 → 1.18.2): the horizontal fourth parameter is 1.20.2+; the

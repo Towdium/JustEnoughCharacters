@@ -75,7 +75,7 @@ Two routes exist, and which one to use matters:
 * the **screen route** (`type`, `type_into`, `key`) dispatches at the open screen, which is what a
   vanilla widget reads — but an overlay that is not a widget of that screen never sees it;
 * the **handler route** (`press_key`, `press_bind`, `type_text`) goes through vanilla's own
-  `KeyboardHandler`, which is also where NeoForge raises its screen key events — so it is the route
+  `KeyboardHandler`, which is also where the loader raises its screen key events — so it is the route
   a mod's overlay (JEI's search bar, say) actually hears.
 
 A **release** follows whatever is listening when it arrives: the open screen, or — when the press
@@ -101,9 +101,24 @@ does not need a matching release written out afterwards.
 
 ### Mouse
 
+The same two routes the keys have, and the same rule for choosing between them. The **screen route**
+(`click`) dispatches at the open screen, which is what a vanilla widget reads. The **handler route**
+(`click_mouse`) presses and releases through the client's own `MouseHandler`, the body a real pointer
+goes through — the click an overlay that is *not* a widget of the open screen can hear, because such
+an overlay is invisible to the screen's hit testing and its widget tree. A scenario focusing JEI's
+search bar uses `click_mouse`, and names the position it measured.
+
 | `do` | Parameters | Engine verb |
 | --- | --- | --- |
-| `click` | `x`, `y` *(required)*, `button` (`left`\|`right`\|`middle`), `shift`, `double` | `click`/`rightClick`/`clickAt`/`shiftClick`/`doubleClick` — all in GUI-scaled screen space |
+| `click` | `x`, `y` *(required)*, `button` (`left`\|`right`\|`middle`), `shift`, `double` | `click`/`rightClick`/`clickAt`/`shiftClick`/`doubleClick` — all in GUI-scaled screen space, dispatched at the screen |
+| `click_mouse` | `x`, `y` *(required)*, `button` (`left`\|`right`\|`middle`) | `clickMouse` — hover, press, release through the client's mouse handler |
+
+A `click_mouse` point is a **measured value**, not a rule: an overlay that is not a widget cannot be
+found from a live layout, so the point is where its target was measured on the run's window and GUI
+scale (a `jt` run pins 1280x720 GUI space at GUI scale 2, so a 2560x1440 framebuffer pixel is
+GUI(pixel/2)), and the `log` step beside it should say so — an overlay that changes its layout
+silently invalidates the point, and a note is what turns that into a re-measurement instead of a
+mystery.
 
 ### World and server
 
@@ -143,9 +158,9 @@ assertion is always about the input this scenario made.
 
 `keyboard-switch.json` in this folder is the reference: it switches JECh to 小鹤双拼 with a real
 `/jech` chat command, opens the creative inventory the harness's world puts the player in, focuses
-JEI's search bar through JEI's own bind, types the 小鹤 key order for 石头 (`uitz`), asserts the
-engine matched it, and then asserts that 全拼's key order does **not** reach 石 — the negative
-control that shows the switch actually happened.
+JEI's search bar with a `click_mouse` on the measured position of the bar, types the 小鹤 key order
+for 石头 (`uitz`), asserts the engine matched it, and then asserts that 全拼's key order does **not**
+reach 石 — the negative control that shows the switch actually happened.
 
 ## What a scenario is written against
 

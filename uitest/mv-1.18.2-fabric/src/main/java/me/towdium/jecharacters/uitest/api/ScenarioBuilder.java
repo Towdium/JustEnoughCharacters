@@ -421,6 +421,41 @@ public final class ScenarioBuilder {
         return this;
     }
 
+    /**
+     * Clicks a point the way the client's own mouse handler would: hover, press, release.
+     *
+     * <p>Where {@link #click(double, double)} dispatches at the open screen — the route a vanilla
+     * widget reads — this one goes through {@code MouseHandler.onPress}, the body a real pointer goes
+     * through. An overlay that is not a widget of the screen has no other click it can hear, whatever
+     * the scenario does with the pointer.
+     *
+     * <p>The point is a piece of observed geometry, not a rule: an overlay that is not a widget
+     * cannot be found in a live layout, so a scenario naming one has to name where it was measured
+     * on the run's pinned window and GUI scale, and to say so in a {@code log} step beside it.
+     */
+    public ScenarioBuilder clickMouse(double x, double y) {
+        return clickMouse(x, y, 0);
+    }
+
+    /** Clicks a point through the client's mouse handler with an explicit button. */
+    public ScenarioBuilder clickMouse(double x, double y, int button) {
+        String label = "clickMouse " + x + "," + y;
+        add(StepKind.click, label + ":hover", context -> hoverBody(context, x, y));
+        add(
+            StepKind.click,
+            label + ":press",
+            context -> context.driver()
+                    .mouseDownThroughHandler(context.screenOrThrow(), (float) x, (float) y, button)
+        );
+        add(
+            StepKind.click,
+            label + ":release",
+            context -> context.driver()
+                    .mouseUpThroughHandler(context.screenOrThrow(), (float) x, (float) y, button)
+        );
+        return this;
+    }
+
     /** Scrolls at a point. */
     public ScenarioBuilder scroll(double x, double y, double amount) {
         String label = "scroll " + x + "," + y + ":" + amount;

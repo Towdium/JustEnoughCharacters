@@ -52,6 +52,23 @@ public abstract class InputDriver {
     /** Move while a button is held, as the screen's drag callback expects. */
     public void dragTo(Screen screen, float x, float y, int button, float deltaX, float deltaY) {}
 
+    /**
+     * Press a button at a position through the client's own mouse handler instead of at the screen.
+     *
+     * <p>{@link #mouseDown} hands the event straight to the screen, which is what a vanilla widget
+     * reads. A mod's overlay that is <em>not</em> a widget of the open screen never sees that: JEI's
+     * search bar, say, is a field its overlay owns and feeds itself, so the click it hears is one
+     * dispatched through the body a real pointer goes through — the pointer half of the "handler
+     * route" the keyboard steps ({@code pressKey}, {@code typeText}) already take.
+     *
+     * <p>Both halves of a click are needed: the press is what an overlay's input handler is offered
+     * first, the release is where one that accepted the press applies it.
+     */
+    public void mouseDownThroughHandler(Screen screen, float x, float y, int button) {}
+
+    /** Release a button at a position through the client's own mouse handler. */
+    public void mouseUpThroughHandler(Screen screen, float x, float y, int button) {}
+
     /** Scroll at a position. */
     public void scroll(Screen screen, float x, float y, double amount) {}
 

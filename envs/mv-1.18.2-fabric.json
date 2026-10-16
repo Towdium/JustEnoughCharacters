@@ -18,8 +18,7 @@
     "selection": "tag:smoke,tag:jei",
     "project": "uitest/mv-1.18.2-fabric",
     "options": {
-      "version": "2975",
-      "key_key.jei.focusSearch": "key.keyboard.f"
+      "version": "2975"
     }
   },
   "jech": {

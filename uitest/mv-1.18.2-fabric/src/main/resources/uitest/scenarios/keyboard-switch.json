@@ -9,11 +9,11 @@
     {"do": "command", "text": "/jech keyboard xiaohe"},
     {"do": "record_matches", "clear": true},
 
-    {"do": "log", "text": "keyboard-switch: open the inventory and focus JEI's search bar (the harness's level is creative, so this is the creative inventory). The preset pins JEI's focus bind to a plain key.keyboard.f ahead of a version:2975 line (JEI 10.2's registered default carries a modifier a bare key would not match), so the focus key carries no modifier here"},
+    {"do": "log", "text": "keyboard-switch: open the inventory and focus JEI's search bar with a mouse click (the harness's level is creative, so this is the creative inventory). JEI's field is not a widget of the open screen (measured 2026-10-16; JEI's GuiTextFieldFilter is a private field of its overlay and is never added to the screen), so the click goes through the client's own mouse handler - the body a real pointer goes through - at 1181,704, the bar's centre read off this row's own capture (runs/mv-1.18.2-fabric-20261016-121122): the pinned GUI space is 1280x720 at GUI scale 2, so a 2560x1440 framebuffer pixel is GUI(pixel/2); a measured value, re-measure it if JEI's layout changes"},
     {"do": "press_bind", "bind": "inventory"},
     {"do": "wait_until_screen", "screen": "CreativeModeInventoryScreen"},
     {"do": "wait_ms", "ms": 500},
-    {"do": "press_key", "key": "f"},
+    {"do": "click_mouse", "x": 1181, "y": 704},
     {"do": "wait_ms", "ms": 300},
 
     {"do": "log", "text": "keyboard-switch: the bar is JEI's own field, so clear it the way a player would"},

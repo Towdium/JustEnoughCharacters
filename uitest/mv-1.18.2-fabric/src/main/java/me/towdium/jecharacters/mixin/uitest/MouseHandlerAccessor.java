@@ -11,8 +11,16 @@ import org.spongepowered.asm.mixin.gen.Invoker;
  *
  * <p>{@code mouseGrabbed} is written directly rather than through {@code grabMouse()}, whose body
  * warps the real pointer to the window centre and captures the OS cursor
- * ({@code MouseHandler.java:369-385}). {@code xpos/ypos} are deliberately absent: the virtual-cursor
- * seam covers reads of them with a {@code @Inject} at RETURN, so they are never written.
+ * ({@code MouseHandler.java:369-385}).
+ *
+ * <p>{@code xpos/ypos} are written for one thing only: a click delivered through
+ * {@link #invokeOnPress} <em>at a chosen point</em> — the handler route
+ * {@link me.towdium.jecharacters.uitest.input.SyntheticInputDriver#mouseDownThroughHandler} takes,
+ * which is the route that reaches an overlay whose field is not a widget of the open screen. {@code
+ * onPress} reads those two <em>fields</em> ({@code MouseHandler.java:79-80}), not the getters the
+ * virtual-cursor seam covers, so a handler-route click has to place the pointer through the fields
+ * too or it would land wherever the OS pointer happens to be. Reads stay the getters' business:
+ * nothing in the harness reads the fields.
  *
  * <p>{@code accumulatedDX/DY} are what vanilla itself turns with. {@code onMove} adds the per-frame
  * pointer delta to them ({@code MouseHandler.java:252-253}), {@code handleAccumulatedMovement}
@@ -32,6 +40,12 @@ public interface MouseHandlerAccessor {
 
     @Accessor("mouseGrabbed")
     void setMouseGrabbed(boolean grabbed);
+
+    @Accessor("xpos")
+    void setXpos(double x);
+
+    @Accessor("ypos")
+    void setYpos(double y);
 
     @Accessor("accumulatedDX")
     double getAccumulatedDx();
