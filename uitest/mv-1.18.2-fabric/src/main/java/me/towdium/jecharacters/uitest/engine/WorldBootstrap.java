@@ -160,15 +160,27 @@ public final class WorldBootstrap {
         Registry<Biome> biomes = registryAccess.registryOrThrow(Registry.BIOME_REGISTRY);
         FlatLevelGeneratorSettings flatSettings = FlatLevelGeneratorSettings.getDefault(biomes, structureSets);
         FlatLevelSource flatSource = new FlatLevelSource(structureSets, flatSettings);
-        WorldGenSettings normalSettings = WorldGenSettings.makeDefault(registryAccess);
+        // Port note (1.18.2): the level-stem registry has to come from
+        // DimensionType.defaultDimensions(registryAccess, seed), not from
+        // WorldGenSettings.makeDefault(registryAccess).dimensions(). makeDefault invents a random
+        // seed of its own — the mapped 1.18.2 bytecode is `new Random().nextLong()` feeding both
+        // DimensionType.defaultDimensions(access, seed) and makeDefaultOverworld(access, seed) —
+        // and wraps those in a WorldGenSettings carrying *that* seed. Keeping those stems while the
+        // WorldGenSettings built below carries this copy's fixed seed leaves the nether/end stems
+        // disagreeing with the world seed, so LevelStem.stable(seed, dimensions) is false, the
+        // level data is written non-stable and 1.18.2 parks the load on its experimental-settings
+        // confirmation screen instead of entering the world — observed as a run that creates the
+        // save, brings the integrated server up and never reaches a "Time elapsed"/"Preparing
+        // spawn area" marker (runs/mv-1.18.2-fabric-20261016-105859). defaultDimensions takes the
+        // seed, so both halves agree. Same fix as the sibling mv-1.18.2-forge copy, green in
+        // runs/mv-1.18.2-forge-20261016-105429.
         Registry<DimensionType> dimensionTypes = registryAccess.registryOrThrow(Registry.DIMENSION_TYPE_REGISTRY);
-        Registry<LevelStem> dimensions = WorldGenSettings.withOverworld(dimensionTypes, normalSettings.dimensions(), flatSource);
-        WorldGenSettings worldGenSettings = new WorldGenSettings(
-            seed,
-            normalSettings.generateFeatures(),
-            normalSettings.generateBonusChest(),
-            dimensions
+        Registry<LevelStem> dimensions = WorldGenSettings.withOverworld(
+            dimensionTypes,
+            DimensionType.defaultDimensions(registryAccess, seed),
+            flatSource
         );
+        WorldGenSettings worldGenSettings = new WorldGenSettings(seed, false, false, dimensions);
         minecraft.createLevel(worldName, settings, registryAccess, worldGenSettings);
     }
 
