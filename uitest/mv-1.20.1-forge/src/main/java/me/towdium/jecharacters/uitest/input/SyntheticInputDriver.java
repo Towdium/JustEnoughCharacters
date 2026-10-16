@@ -14,26 +14,6 @@ import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Drives a live {@code Screen} with synthetic input, without moving the real pointer.
- *
- * <p>Every gesture is dispatched to the screen the harness is testing, in GUI-scaled space, after
- * aiming: {@link #placeCursor} stores the position and refreshes hover, because on a CloudLib
- * {@code BasicScreen} hover is event-driven — {@code Scene} recomputes {@code hovered} and fires
- * enter/leave only inside its {@code mouseMoved}, and vanilla only reaches that method when the
- * accumulated cursor delta is non-zero <em>and</em> the window is focused. A stationary synthetic
- * pointer would otherwise hover nothing at all.
- *
- * <p>This class is also the {@link KeyState} and {@link CursorState} source it installs, so both
- * seams can be cleared owner-safely: {@code clearSource(owner)} only clears when the owner is
- * still the installed one.
- *
- * <p>{@link #install()} registers the {@link KeyState} source (so held modifiers are visible to
- * CloudLib, which reads them through vanilla's GLFW-based {@code hasControlDown}), the
- * {@link CursorState} source (so {@code ScreenUtil}, the scene drag bookkeeping and the render
- * mouse arguments all agree), blocks {@link RawInputGate}, and drops any mouse grab left over
- * from the world — without warping the pointer to the window centre.
- */
 public class SyntheticInputDriver extends InputDriver implements KeyState.Source, CursorState.Source {
 
     private static final Logger logger = LoggerFactory.getLogger("jechtest/uitest");
@@ -63,8 +43,6 @@ public class SyntheticInputDriver extends InputDriver implements KeyState.Source
     @Override
     public void uninstall() {
         installed = false;
-        // every step below is unconditional and non-throwing, so a half-installed driver cannot
-        // leave the real keyboard or mouse dead
         try {
             playerInput.releaseAll();
         } catch (RuntimeException e) {
@@ -83,12 +61,10 @@ public class SyntheticInputDriver extends InputDriver implements KeyState.Source
         return playerInput;
     }
 
-    /** Records a held key without dispatching anything, for the in-world gesture path. */
     void markKeyHeld(int keyCode) {
         heldKeys.add(keyCode);
     }
 
-    /** Drops a recorded hold without dispatching anything. */
     void markKeyReleased(int keyCode) {
         heldKeys.remove(keyCode);
     }
@@ -154,28 +130,10 @@ public class SyntheticInputDriver extends InputDriver implements KeyState.Source
         clickThroughHandler(x, y, button, GLFW.GLFW_RELEASE);
     }
 
-    /**
-     * One half of a click, dispatched by {@code MouseHandler.onPress} — the body a real pointer goes
-     * through, and the only one that raises the loader's screen mouse events.
-     *
-     * <p>Three things have to be arranged for the synthetic press to land where a real one would:
-     *
-     * <ol>
-     *   <li>the scripted pointer is placed, so the screen's own hover state and the mouse arguments a
-     *       handler reads elsewhere agree with the click;</li>
-     *   <li>{@code xpos/ypos} are written, because {@code onPress} derives its GUI-scaled coordinates
-     *       from those two <em>fields</em> rather than from the getters the virtual-cursor seam
-     *       overrides ({@code MouseHandler.java:79-80});</li>
-     *   <li>the call runs inside {@link RawInputGate#runSynthetic}, without which the harness's own
-     *       gate cancels {@code onPress} at HEAD — it is the same bypass the in-world gestures use.</li>
-     * </ol>
-     */
     private void clickThroughHandler(float xGui, float yGui, int button, int action) {
         placeCursor(xGui, yGui);
         MouseHandler mouseHandler = Minecraft.getInstance().mouseHandler;
         if (!(mouseHandler instanceof MouseHandlerAccessor accessor)) {
-            // refusing is the honest outcome: the alternative is a click that silently goes to
-            // the screen only, which is exactly the failure this route exists to avoid
             throw new IllegalStateException(
                 "MouseHandlerAccessor is not applied; the harness cannot click through the mouse handler"
             );
@@ -189,8 +147,6 @@ public class SyntheticInputDriver extends InputDriver implements KeyState.Source
     @Override
     public void scroll(Screen screen, float x, float y, double amount) {
         placeCursor(x, y);
-        // Port note (1.20.1): GuiEventListener.mouseScrolled is (double, double, double) -
-        // the horizontal-scroll parameter is a 1.20.2+ addition.
         screen.mouseScrolled(x, y, amount);
     }
 
@@ -211,19 +167,16 @@ public class SyntheticInputDriver extends InputDriver implements KeyState.Source
         screen.charTyped((char) codePoint, modifiers);
     }
 
-    /** Whether {@link #install()} currently holds the seams. */
     @Override
     public boolean installed() {
         return installed;
     }
 
-    /** Stores a GUI-scaled pointer position without dispatching anything. */
     protected void setPointer(float xGui, float yGui) {
         pointerX = xGui;
         pointerY = yGui;
     }
 
-    /** Refreshes hover at the stored pointer position on the live screen. */
     protected void refreshHover() {
         Screen screen = Minecraft.getInstance().screen;
         if (screen != null) {
@@ -244,12 +197,6 @@ public class SyntheticInputDriver extends InputDriver implements KeyState.Source
         return scanCode > 0 ? scanCode : Keys.scanCodeOf(keyCode);
     }
 
-    /**
-     * Releases a grabbed mouse pointer without the warp {@code MouseHandler.releaseMouse} would
-     * perform, so the first screen of an interactive run does not yank the real pointer to the
-     * window centre. Vanilla's {@code releaseMouse} body is guarded by {@code mouseGrabbed}, so
-     * clearing the flag leaves the handler consistent.
-     */
     protected void dropMouseGrabWithoutWarping() {
         Minecraft minecraft = Minecraft.getInstance();
         MouseHandler mouseHandler = minecraft.mouseHandler;
@@ -257,8 +204,6 @@ public class SyntheticInputDriver extends InputDriver implements KeyState.Source
             return;
         }
         if (!(mouseHandler instanceof MouseHandlerAccessor accessor)) {
-            // a hard cast would throw out of install() and leave every seam installed, which is
-            // worse than a grabbed pointer: the real input would be dead for the rest of the run
             logger.warn("[uitest] MouseHandlerAccessor is not applied; the mouse grab stays in place");
             return;
         }
