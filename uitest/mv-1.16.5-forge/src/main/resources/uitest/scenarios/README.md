@@ -61,12 +61,15 @@ Every step is `{"do": "<name>", …parameters}`. A parameter marked *(required)*
 | `close_screen` | — | `closeScreen` |
 
 A `screen` name is a screen class: a fully qualified name, or a bare class name looked up in
-`net.minecraft.client.gui.screens` and `…​.inventory`. **Name the screen the run really opens, not the
+`net.minecraft.client.gui.screen` and `…​.inventory`. **Name the screen the run really opens, not the
 one a player normally sees:** this harness's throwaway level is created in **creative**
-(`WorldBootstrap` pins `GameType.CREATIVE`), so the inventory bind opens
-`CreativeModeInventoryScreen`, which is not an `InventoryScreen`. A scenario that waits for the
-wrong class times out after its `timeoutMs` and captures the screen it did get — which is the
-cheapest way to find the right name.
+(`WorldBootstrap` pins `GameType.CREATIVE`), so the inventory bind opens this line's creative
+inventory screen — `CreativeScreen` under this build's mappings (the Mojang channel names the same
+class `CreativeModeInventoryScreen`), which is not an `InventoryScreen`. A scenario that waits for
+the wrong class times out after its `timeoutMs` and captures the screen it did get — which is the
+cheapest way to find the right name. Screen class names are the one place a scenario carries a
+mapping: this build compiles and runs against the MCP names the ForgeGradle line is mapped to
+(see build.gradle), so a scenario ported from another line has to be re-named, not re-guessed.
 
 ### Keys and text
 

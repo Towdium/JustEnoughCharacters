@@ -21,6 +21,16 @@
 // checkout and the pinned JEI jar is jt's download, both handed over as absolute
 // paths so a stale copy inside this tree can never be the thing tested.
 //
+// This line's resources root also carries a pack.mcmeta, which the later harness
+// lines do not need: FML 1.16.5 counts a mod whose resource root has no
+// pack.mcmeta as a *loading warning* and raises its blocking LoadingErrorScreen
+// for it, so an otherwise fully booted client sits on "1 warning" and never
+// reaches the title screen (measured 2026-10-16 — the screen names this build's
+// own build/resources/main, and the harness's run timed out waiting for the
+// title screen; the log line FML is acting on is ResourcePackInfo's
+// ResourcePackFileNotFoundException for pack.mcmeta). The pack_format is this
+// version's 6, and the description is what FML shows for the mod's pack.
+//
 // Production (SRG-named) jars cannot be dropped into the run's mods/ directory:
 // a dev run has no runtime remapper. They ride `fg.deobf(...)` instead, which
 // remaps SRG -> this build's mapping channel at resolve time — the same job
@@ -249,19 +259,6 @@ mixin {
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
-}
-
-// Temporary probe (removed before the commit): prints the mapped Minecraft jar
-// this build's compile classpath resolves to, so its namespace can be read off
-// the file instead of guessed at.
-tasks.register('probeMappedJar') {
-    group = 'verification'
-    doLast {
-        new File('/tmp/m5b-cp.txt').text = configurations.compileClasspath.files.join('\n') + '\n'
-        configurations.compileClasspath.files.findAll { it.name.contains('mapped') || it.name.startsWith('minecraft') }
-                .each { println "PROBE-JAR ${it}" }
-        println "PROBE-CP ${configurations.compileClasspath.files.size()} entries -> /tmp/m5b-cp.txt"
-    }
 }
 
 // Deletes the previous run's output so the verification task can never read an
