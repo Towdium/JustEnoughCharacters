@@ -8,10 +8,6 @@ import org.jspecify.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * One step's outcome. The fields are private because the report model is serialized by reflection;
- * the accessors are what the writer and the unit tests read.
- */
 public final class StepReport {
 
     private final int index;
@@ -106,30 +102,25 @@ public final class StepReport {
         return List.copyOf(log);
     }
 
-    /** Records the step's outcome and how long it took. */
     public void complete(Status result, long millis, int attemptCount) {
         this.status = result.wire();
         this.durationMs = millis;
         this.attempts = attemptCount;
     }
 
-    /** Records the settle the runner applied after this step. */
     public void setSettleMs(int millis) {
         this.settleMs = millis;
     }
 
-    /** Records why the step was still repeating when it finished. */
     public void setWaitingFor(@Nullable String reason) {
         this.waitingFor = reason;
     }
 
-    /** Attaches the thrown failure, which also makes the status an error. */
     public void failed(Throwable thrown) {
         this.error = ErrorInfo.of(thrown);
         this.status = Status.error.wire();
     }
 
-    /** Replaces the status without touching the error slot, for aborts and skips. */
     public void mark(Status result) {
         this.status = result.wire();
     }
@@ -142,14 +133,6 @@ public final class StepReport {
         captures.add(capture);
     }
 
-    /**
-     * Re-points any capture this step recorded at the file the pipeline wrote.
-     *
-     * <p>The pipeline services one queued request per frame, so a capture a step queued is written
-     * on a later frame — after this report was filled in. Without this the report would name the
-     * path the context guessed, which is wrong for every element capture and hides the flat-colour
-     * verdict.
-     */
     public void markWritten(String kind, String path, boolean suspect) {
         for (int i = 0; i < captures.size(); i++) {
             CaptureRef ref = captures.get(i);
