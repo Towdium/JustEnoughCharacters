@@ -14,34 +14,20 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 
-/**
- * Writes the run's artifacts: {@code report.json}, {@code report.txt} and {@code junit.xml}.
- *
- * <p>Every file is written to a temporary sibling and then moved into place, so a reader never sees
- * a half-written report, and the writes are synchronous because the process may shut down the
- * moment the run finishes.
- */
 public final class ReportWriter {
 
-    /** The machine-readable report. */
     public static final String jsonFile = "report.json";
 
-    /** The same report as text, for a human reading a log. */
     public static final String textFile = "report.txt";
 
-    /** The report as JUnit XML, for a CI job that already understands it. */
     public static final String junitFile = "junit.xml";
 
-    // 1.16.5 ships log4j2 and no slf4j (slf4j-api entered the game with 1.17), so this
-    // line logs through Minecraft's own stack — the same substitution uitest/1.12.2-forge
-    // makes. Measured on the resolved compileClasspath; see build.gradle.
     private static final Logger log = LogManager.getLogger("jechtest-uitest");
 
     private static final Gson gson = new GsonBuilder().setPrettyPrinting().serializeNulls().create();
 
     private ReportWriter() {}
 
-    /** Writes every artifact of a finished run into the output directory. */
     public static void write(RunReport report, Path outDir) throws IOException {
         Files.createDirectories(outDir);
         writeAtomically(outDir.resolve(jsonFile), gson.toJson(report));
@@ -50,7 +36,6 @@ public final class ReportWriter {
         logSummary(report);
     }
 
-    /** The text rendering of a report. */
     public static String summaryOf(RunReport report) {
         StringBuilder text = new StringBuilder(1024);
         Environment environment = report.environment();
@@ -83,7 +68,6 @@ public final class ReportWriter {
         return text.toString();
     }
 
-    /** Logs the one-line verdict a Gradle run shows. */
     public static void logSummary(RunReport report) {
         Totals totals = report.totals();
         log.info(
@@ -130,7 +114,6 @@ public final class ReportWriter {
 
     private static void writeAtomically(Path target, String content) throws IOException {
         Path temporary = target.resolveSibling(target.getFileName() + ".tmp");
-        // Port note (1.21.1 → 1.16.5, Java 11 Files.writeString is 11+): byte-write form.
         Files.write(temporary, content.getBytes(StandardCharsets.UTF_8));
         try {
             Files.move(temporary, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);

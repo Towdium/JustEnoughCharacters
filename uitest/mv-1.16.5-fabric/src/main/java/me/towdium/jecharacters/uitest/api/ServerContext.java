@@ -19,15 +19,6 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-/**
- * Runs world mutation on the integrated server thread and holds the step clock still until it has
- * happened.
- *
- * <p>A step body runs on the client, one attempt per frame. Submitting work to the server is
- * therefore not a call but a handshake: the first attempt of a step submits, every attempt after
- * that repeats the step until the server has run the task (or the step's wait budget expires). The
- * runner tells this context when a new step starts, so a task is submitted exactly once per step.
- */
 public final class ServerContext {
 
     private final MinecraftServer server;
@@ -42,12 +33,10 @@ public final class ServerContext {
         this.server = server;
     }
 
-    /** The integrated server this context drives. */
     public MinecraftServer server() {
         return server;
     }
 
-    /** Tells the context which step is running; a different sequence resets the handshake. */
     public void beginStep(long sequence) {
         if (sequence == stepSeq) return;
         stepSeq = sequence;
@@ -58,18 +47,15 @@ public final class ServerContext {
         tickAnchor = -1L;
     }
 
-    /** The overworld of the integrated server. */
     public ServerLevel overworld() {
         return server.overworld();
     }
 
-    /** The local player, or {@code null} when the server has no player yet. */
     public @Nullable ServerPlayer localPlayer() {
         List<ServerPlayer> players = server.getPlayerList().getPlayers();
         return players.isEmpty() ? null : players.get(0);
     }
 
-    /** Submits a task once and repeats the step until it has run. */
     public void run(TestContext context, String label, Runnable task) {
         submitOnce(() -> {
             task.run();
@@ -82,7 +68,6 @@ public final class ServerContext {
         finish(label, true);
     }
 
-    /** Submits a poll once per frame and repeats the step until the predicate holds. */
     public void poll(TestContext context, String label, Supplier<Boolean> predicate) {
         submitOnce(predicate);
         if (!done) {
@@ -95,12 +80,10 @@ public final class ServerContext {
         }
     }
 
-    /** Places one block. */
     public void setBlock(TestContext context, BlockPos pos, BlockState state) {
         run(context, "setBlock " + pos.toShortString(), () -> overworld().setBlock(pos, state, 3));
     }
 
-    /** Fills an inclusive box with one block. */
     public void fill(TestContext context, BlockPos from, BlockPos to, BlockState state) {
         run(context, "fill " + from.toShortString() + ".." + to.toShortString(), () -> {
             BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
@@ -114,12 +97,10 @@ public final class ServerContext {
         });
     }
 
-    /** Replaces an inclusive box with air. */
     public void clearArea(TestContext context, BlockPos from, BlockPos to) {
         fill(context, from, to, Blocks.AIR.defaultBlockState());
     }
 
-    /** Hands a block entity to an action, on the server thread. */
     public void withBlockEntity(TestContext context, BlockPos pos, Consumer<BlockEntity> action) {
         run(context, "withBlockEntity " + pos.toShortString(), () -> {
             BlockEntity blockEntity = overworld().getBlockEntity(pos);
@@ -130,17 +111,13 @@ public final class ServerContext {
         });
     }
 
-    /** Moves the local player, keeping the current aim. */
     public void teleportPlayer(TestContext context, double x, double y, double z) {
         run(context, "teleportPlayer", () -> {
             ServerPlayer player = requirePlayer();
-            // Port note (1.18.2 → 1.16.5): the aim is read from Entity's public xRot/yRot fields
-            // here; the getYRot()/getXRot() accessors are 1.17+.
             player.teleportTo(overworld(), x, y, z, player.yRot, player.xRot);
         });
     }
 
-    /** Aims the local player, keeping the current position. */
     public void yawPitch(TestContext context, float yaw, float pitch) {
         run(context, "yawPitch", () -> {
             ServerPlayer player = requirePlayer();
@@ -148,27 +125,19 @@ public final class ServerContext {
         });
     }
 
-    /** Puts a stack of an item into the local player's inventory. */
     public void giveItem(TestContext context, ResourceLocation item, int count) {
         run(context, "giveItem " + item, () -> {
-            // Port note (1.21.1 → 1.16.5): BuiltInRegistries is 1.19.3+; the item
-            // registry is a static field of Registry itself here.
             Item resolved = Registry.ITEM.get(item);
             if (resolved == Items.AIR) {
                 throw new IllegalStateException("unknown item " + item);
             }
-            // Port note (1.18.2 → 1.16.5): the player's own inventory is Player's public
-            // `inventory` field here; getInventory() is 1.17+.
             requirePlayer().inventory.add(new ItemStack(resolved, count));
         });
     }
 
-    /** Runs a server command with its output suppressed. */
     public void runCommand(TestContext context, String command) {
         run(context, "command " + command, () -> {
             CommandSourceStack source = server.createCommandSourceStack().withSuppressedOutput().withPermission(4);
-            // Port note (1.21.1 → 1.16.5): performPrefixedCommand is 1.19.1+; this
-            // version's performCommand takes the command without its slash.
             server.getCommands().performCommand(
                 source,
                 command.startsWith("/") ? command.substring(1) : command
@@ -176,7 +145,6 @@ public final class ServerContext {
         });
     }
 
-    /** Holds the step clock until the server has ticked a number of times. */
     public void serverTicks(TestContext context, int ticks) {
         if (tickAnchor < 0L) {
             tickAnchor = server.getTickCount();

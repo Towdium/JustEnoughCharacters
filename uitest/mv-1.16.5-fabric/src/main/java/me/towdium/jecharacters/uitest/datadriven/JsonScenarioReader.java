@@ -15,27 +15,14 @@ import java.util.stream.Collectors;
 import java.util.Collections;
 import java.util.Arrays;
 
-/**
- * Reads one scenario file into a {@link JsonScenario}, refusing anything it does not fully
- * understand.
- *
- * <p>Validation is total rather than incremental: the scenario block and every step block are checked
- * before anything is returned, so a first run of a new file reports what is wrong with it rather than
- * one problem per attempt. Unknown keys are refused at both levels — at the top because a misspelled
- * {@code requiresWorld} would otherwise be a scenario that ran in the wrong session tier or without
- * the world it needs, and inside a step because {@link Args} owns that check.
- */
 public final class JsonScenarioReader {
 
     private static final Set<String> scenarioKeys = Collections.unmodifiableSet(new LinkedHashSet<>(Arrays.asList("name", "group", "tags", "requiresWorld", "guiScale", "hideGui", "settleMs", "timeoutMs", "scenarioTimeoutMs", "session", "steps")));
 
     private JsonScenarioReader() {}
 
-    /** Parses a scenario object; {@code source} names the file in every message. */
     public static JsonScenario parse(JsonObject root, String source) {
         Args args = new Args(source, root);
-        // Port note (1.20.1 → 1.16.5): JsonObject.keySet() arrives with Gson 2.8.2, and Minecraft
-        // 1.16.5 bundles 2.8.0 — whose JsonObject offers its keys through entrySet() alone.
         for (Map.Entry<String, JsonElement> entry : root.entrySet()) {
             if (!scenarioKeys.contains(entry.getKey())) {
                 throw new ScenarioJsonException(
@@ -75,7 +62,6 @@ public final class JsonScenarioReader {
         return options;
     }
 
-    /** The session tier a scenario names; an unknown spelling is refused rather than defaulted. */
     private static Session session(String raw) {
         for (Session tier : Session.values()) {
             if (tier.name().equalsIgnoreCase(raw.trim())) return tier;
@@ -90,7 +76,6 @@ public final class JsonScenarioReader {
     }
 
     private static List<JsonStep> steps(JsonArray array, String source) {
-        // Port note (1.20.1 → 1.16.5): JsonArray.isEmpty() arrives with Gson 2.8.2 (1.16.5: 2.8.0).
         if (array.size() == 0) {
             throw new ScenarioJsonException(source + ": 'steps' must not be empty");
         }

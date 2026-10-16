@@ -24,37 +24,8 @@ import java.util.Collections;
 import java.nio.file.Paths;
 import java.nio.charset.StandardCharsets;
 
-/**
- * Finding the JSON scenario files, and reading them.
- *
- * <p>Two channels, both of them fail-closed:
- *
- * <ol>
- *   <li><b>Inside a mod</b> — {@code uitest/scenarios/*.json} in any loaded mod's own resources, read
- *       through Fabric Loader's {@code ModContainer.findPath}, with the runtime class path as a
- *       second look so a dev run whose resources are served as plain directories still works. This is
- *       how the harness ships its scenarios in the repository, and how a downstream mod would ship
- *       its own.</li>
- *   <li><b>In the game directory</b> — {@code <game dir>/jech-scenarios/*.json}, re-read on every
- *       scan, so a scenario can be written and tried without touching a checkout.</li>
- * </ol>
- *
- * <p><b>Port note (NeoForge → Fabric).</b> The NeoForge copy walks each mod's contents through FML's
- * {@code IModFile.getContents().visitContent}, whose {@code JarResource} has to be read inside the
- * visit. Fabric Loader's {@code ModContainer.findPath} hands back a real {@link Path} into the mod —
- * a directory in a dev run, an entry of the mod jar's own file system otherwise — so the same folder
- * is reached with one call and read with the ordinary file reader below. Nothing else differs. The
- * nested {@code Loaded} record is a plain immutable class — Java 8 has no records, so the fields are
- * final, the accessors keep the record components' names and the constructor is the canonical one;
- * nothing else changes.
- *
- * <p>Nothing here throws. A file that cannot be read is returned as a {@link Loaded} failure and
- * becomes a scenario that fails when it runs, because a file that is present and unreadable is a
- * result, not an absence.
- */
 public final class JsonScenarioSources {
 
-    /** One file's outcome: the parsed scenario, or why it could not be read. */
     public static final class Loaded {
 
         private final String name;
@@ -83,32 +54,25 @@ public final class JsonScenarioSources {
             return source;
         }
 
-        /** The parsed scenario, or {@code null} when the file was rejected. */
         public JsonScenario scenario() {
             return scenario;
         }
 
-        /** Why the file was rejected, or {@code null} when it was read. */
         public String failure() {
             return failure;
         }
 
-        /** Whether this file was rejected. */
         public boolean failed() {
             return scenario == null;
         }
     }
 
-    // 1.16.5 ships log4j2 and no slf4j (slf4j-api entered the game with 1.17), so this
-    // line logs through Minecraft's own stack — the same substitution uitest/1.12.2-forge
-    // makes. Measured on the resolved compileClasspath; see build.gradle.
     private static final Logger log = LogManager.getLogger("jechtest-uitest");
 
     private static final String suffix = ".json";
 
     private JsonScenarioSources() {}
 
-    /** Every JSON scenario the two channels offer, in channel order. */
     public static List<Loaded> loadAll() {
         List<Loaded> loaded = new ArrayList<>();
         loaded.addAll(loadModResources());
@@ -131,15 +95,6 @@ public final class JsonScenarioSources {
         return new ArrayList<>(byName.values());
     }
 
-    /**
-     * The {@code uitest/scenarios} folder inside one mod, as {@code file name → outcome}.
-     *
-     * <p>{@code ModContainer.findPath} answers with the path of a file inside the mod — a directory in
-     * a dev run, an entry of the mod jar's own file system when the mod is a jar — and is empty when
-     * the mod does not carry the folder, which is the common case: only the harness mod and a mod that
-     * ships its own scenarios have one. Nothing here throws: a mod whose contents cannot be walked is
-     * logged and offers no scenarios.
-     */
     private static Map<String, Loaded> readInMod(ModContainer mod) {
         String modId = mod.getMetadata().getId();
         Map<String, Loaded> byName = new LinkedHashMap<>();
@@ -155,7 +110,6 @@ public final class JsonScenarioSources {
         return byName;
     }
 
-    /** The same folder seen through the runtime class path, for a dev run that serves it as a directory. */
     private static List<Path> findOnClassPath() {
         List<Path> found = new ArrayList<>();
         ClassLoader loader = Thread.currentThread().getContextClassLoader();
@@ -211,7 +165,6 @@ public final class JsonScenarioSources {
         }
     }
 
-    /** Reads one file, turning every failure into a {@link Loaded} the registry can register. */
     private static Loaded read(Path file, String source) {
         String label = source + ":" + file.getFileName();
         String text;
@@ -227,7 +180,6 @@ public final class JsonScenarioSources {
         return "could not be read (" + e.getClass().getSimpleName() + ": " + e.getMessage() + ")";
     }
 
-    /** Parses one scenario file's text, turning every failure into a {@link Loaded}. */
     private static Loaded parse(String text, String fallbackName, String label) {
         JsonElement parsed;
         try {

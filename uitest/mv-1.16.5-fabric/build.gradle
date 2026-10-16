@@ -1,46 +1,5 @@
-// The standalone in-client UI test harness for JECh 1.16.5 / Fabric — the
-// mv-lines sibling of uitest/1.21.1-fabric, one independent Gradle build per
-// version line. The engine is the 1.21.1 copy (the M11 shape: the input seams
-// of MC 1.16.5–1.20.1 are the same shape as 1.21.1's, see port-sheets/
-// mv-lines.md §1.1) with the 1.16.5 differences ported: world create/rejoin via
-// Minecraft.createLevel plus the WorldListEntry-join shape (§2), no
-// accessibility-onboarding screen, Options written through its 1.16.5 public
-// fields, and the whole source compiled as Java 8 (the version this line's
-// client runs). See each ported class's Port note.
-//
-// The build itself mirrors the multiple-version checkout's own 1.16.5 fabric
-// module: stock fabric-loom 1.10.5 + Gradle 9.5.0 + loader 0.14.9 + a Java 8
-// toolchain — the pins that checkout's dev run is green with — with the
-// harness as the one mod this build owns. (The row ran on architectury-loom
-// 1.1 + Gradle 8.1.1 for as long as the checkout did; the checkout then moved
-// all four of its 1.16.5–1.20.1 fabric modules to stock fabric-loom, and this
-// row followed. Nothing arch-specific was ever used here — no `architectury {}`
-// block, no remapArchitectury, no namedElements, no injectAccessWidener — so
-// the plugin swap is the whole of the change: the loom DSL below is stock
-// loom's.) This line is the smoke row: it carries no JEI at all (see the env),
-// so only the JECh jar rides the run.
-//
-// Like the 1.21.1 fabric build, the jar under test (JECh's built fabric jar)
-// is a production jar in intermediary names, so it cannot ride the run's
-// classpath: this build stages it into the run's game directory's mods/
-// folder, where fabric-loader's dev-mode remapper brings it into the run's
-// Mojang-mapped namespace.
-//
-// Properties every run understands (the jar is REQUIRED):
-//   -PjechTest=<selection>      the scenario selection; without it no run wiring
-//                               is active and the client boots as a plain client
-//   -PjechRunDir=<dir>          a game directory outside this project (jt's
-//                               redirect); the report follows the game into
-//                               <game dir>/uitest
-//   -PjechJar=<abs path>        the JECh fabric jar under test (REQUIRED)
-//   -PjechTestExclude / -PjechTestGuiScale / -PjechTestWindow=WxH /
-//   -PjechTestInputMode / -PjechTestWatchdogSec / -PjechTestKeepOpen /
-//   -PjechTestHeadless          the same dials the other line's run has
 
 plugins {
-    // The pin lives here rather than in settings.gradle because this row is a
-    // standalone build; it is the multiple-version checkout's pin (declared once
-    // in that repo's settings.gradle pluginManagement) that the row mirrors.
     id 'fabric-loom' version '1.10.5'
     id 'java-library'
     id 'idea'
@@ -49,9 +8,6 @@ plugins {
 version = mod_version
 group = 'me.towdium.jecharacters.uitest'
 
-// The output directory is captured as locals: inside a run or task closure the
-// script's own properties are not the closure's delegate, so a script-level name
-// would not resolve there.
 def jechUiTestRunDir = project.findProperty('jechRunDir')?.toString()
 def jechUiTestOutDir = jechUiTestRunDir == null
         ? new File(projectDir, 'runs/client-tests-fabric')
@@ -65,9 +21,6 @@ def jechUiTestWatchdogSec = project.findProperty('jechTestWatchdogSec')?.toStrin
 def jechUiTestKeepOpen = project.hasProperty('jechTestKeepOpen')
 def jechUiTestHeadless = project.hasProperty('jechTestHeadless')
 
-// The real input driver warps the OS cursor, which needs a visible, focused
-// window. Rejected at configuration time rather than quietly downgraded to the
-// synthetic driver.
 if (jechUiTestHeadless && jechUiTestInputMode != null && jechUiTestInputMode.equalsIgnoreCase('REAL')) {
     throw new GradleException(
         '-PjechTestHeadless cannot be combined with -PjechTestInputMode=REAL: the real input driver '
@@ -75,7 +28,6 @@ if (jechUiTestHeadless && jechUiTestInputMode != null && jechUiTestInputMode.equ
     )
 }
 
-// The window size is given as WxH; anything else is ignored rather than guessed at.
 def jechUiTestWindowWidth = null
 def jechUiTestWindowHeight = null
 if (jechUiTestWindow != null) {
@@ -86,10 +38,6 @@ if (jechUiTestWindow != null) {
     }
 }
 
-// The jar under test, passed in as an absolute path (jt resolves/builds it
-// and always spells the path, so a stale copy in this tree cannot be tested by
-// accident). Fail-closed at configuration time: a run without it would boot a
-// client with no mod under test and silently prove nothing.
 def jechJarProp = providers.gradleProperty('jechJar')
 def requireJar = { name, prop ->
     if (!prop.isPresent()) {
@@ -114,108 +62,31 @@ dependencies {
     minecraft "com.mojang:minecraft:${minecraft_version}"
     mappings loom.officialMojangMappings()
     modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
-    // The run's fabric-api: a remapped Gradle dependency is what a loom dev run
-    // natively loads, at the same version the env's pinned artifact names (the
-    // keybinding API the engine reads a bind through comes from here — the
-    // client-command v2 API the 1.21.1 harness also used is NOT in this version,
-    // see the UiTest port note). The jar under test does NOT come from here —
-    // see stageUiTestMods.
     modRuntimeOnly "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
     modCompileOnly "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
 
-    // Dev-launch only: the two loader libraries the 1.16.5 toolchain gets wrong.
-    // Loom injects a fabric-loader-0.10.5-era set for MC 1.16.5 (sponge-mixin
-    // 0.8.2+build.24, asm 9.0, no access-widener) while `modImplementation fabric-loader`
-    // puts 0.14.9 on the run classpath. 0.14.9's LoaderLibrary.<clinit> needs
-    // net.fabricmc.accesswidener.AccessWidener (KnotClient died with NoClassDefFoundError
-    // before any window), and 0.8.2+build.24 has no CompatibilityLevel.JAVA_17 (verified by
-    // adding only access-widener: mixin then failed with "No enum constant
-    // ...CompatibilityLevel.JAVA_17"). sponge-mixin 0.11.4+mixin.0.8.5 also brings asm 9.2,
-    // which supersedes the injected 9.0. These are the libraries the 1.18.2 module (same
-    // loader 0.14.9) already gets. Copied verbatim from
-    // multiple-version/1.16.5/fabric/build.gradle (port-sheets/mv-lines.md §4.1 pins).
     runtimeOnly "net.fabricmc:access-widener:2.1.0"
     runtimeOnly "net.fabricmc:sponge-mixin:0.11.4+mixin.0.8.5"
 
-    // The harness engine compiles against the mod under test's own classes (the
-    // Match tap targets them) and nothing else beyond Minecraft. The jar itself
-    // is staged into mods/ below, not classpathed: a production fabric jar is
-    // intermediary-named inside, and only the loader's mods-folder remapper
-    // brings it into this run's namespace. (Unlike the 1.21.1 copy there is no
-    // JechSearchStorage tap — the 1.16.5 sources of the jar under test have no
-    // such class — so no PinIn signature is compiled against either.)
     compileOnly files(jechJarFile)
-    // The nullness annotations the ported engine carries are CLASS-retention and
-    // compile-only: nothing at runtime reads them.
     compileOnly 'org.jspecify:jspecify:1.0.1'
 
-    // No logging dependency on purpose. MC 1.16.5's own library set is
-    // log4j-api/log4j-core 2.8.1 and carries no slf4j at all (slf4j-api entered
-    // the game with 1.17; measured against this project's resolved
-    // compileClasspath, 2026-10-16), so the engine logs through log4j2 exactly as
-    // uitest/1.12.2-forge does: the slf4j names the 1.18.2 copy of the engine can
-    // use do not exist on this line, at compile time *or* at run time. Declaring
-    // slf4j here would compile the engine and then log into a binding nothing
-    // installs.
 }
 
-// The harness *compiles* as Java 8 — the harness sources are the 1.21.1 engine
-// back-ported to Java 8 syntax, the same level the multiple-version checkout's
-// own 1.16.5 modules compile at (see each Port note) — but the *client* is not a
-// Java 8 JVM: it is the JDK the run is started with, which on this row is the
-// env's (envs/mv-1.16.5-fabric.json: java 17), i.e. the JDK running Gradle.
-//
-// The distinction is load-bearing, which is why the Java 8 toolchain is pinned on
-// the compile task instead of on the project:
-//
-//   * Stock fabric-loom launches its run task on the *project* Java toolchain.
-//     Declaring toolchain 8 project-wide therefore started the client on
-//     azul 1.8.0_492, and the run died in mod resolution before any window:
-//     fabric-loom-native-support 1.0.1 — the mod loom itself injects — declares
-//     ``depends java @ [>=17]``, and the loader answered "requires version 17 or
-//     later of 'OpenJDK 64-Bit Server VM' (java), but only the wrong version is
-//     present: 8" (measured 2026-10-17 on the swapped build,
-//     runs/mv-1.16.5-fabric-20261017-013345/game/logs/latest.log).
-//   * architectury-loom 1.1 had no such coupling: it launched the client on the
-//     Gradle JVM, and this row's own pre-swap harness report records the client
-//     as java 17.0.14 — runs/mv-1.16.5-fabric-20261016-121023/game/uitest/
-//     report.json, "environment": {"java": "17.0.14"}. Keeping the project
-//     toolchain-free is what preserves that client JDK under stock loom.
-//
-// Not declaring a project toolchain at all also means "the Java version being
-// used to run Gradle" is the run's JVM, which is exactly the env's 17.
 java {
     sourceCompatibility = JavaVersion.VERSION_1_8
     targetCompatibility = JavaVersion.VERSION_1_8
 }
 
-// The javac that produces this build's classes, pinned here because the project
-// carries no toolchain (see above): the Java 8 toolchain, the machine's
-// azul 1.8.0_492 — the compiler this row has always used, and the compiler its
-// Java 8 sources are written for. It needs a toolchain *repository* (fooJay) or a
-// locally installed JDK 8; both are present here.
 def jechUiTestJava8Compiler = javaToolchains.compilerFor {
     languageVersion = JavaLanguageVersion.of(8)
 }
 
 tasks.withType(JavaCompile).configureEach {
     javaCompiler = jechUiTestJava8Compiler
-    // No ``options.release`` here on purpose: the compiler is the JDK 8 toolchain
-    // javac (see above), and ``--release`` only exists from JDK 9
-    // on — javac 8 answers "invalid flag: --release" (measured 2026-10-15,
-    // /tmp/m4br3_1165_compile1.log). Gradle falls back to the toolchain's
-    // -source/-target from sourceCompatibility/targetCompatibility, which is the
-    // same Java 8 bytecode. The 1.18.2 sibling keeps release=17, whose toolchain
-    // javac has the flag.
     options.encoding = 'UTF-8'
 }
 
-// The harness mod's own fabric.mod.json, expanded the way a mod project's is.
-// The root-relative resources of the mod (fabric.mod.json, jechtest.mixins.json,
-// data/, the scenarios) all sit in this one source-set resource root on purpose:
-// Fabric Loader resolves a mod's own resources through the paths of the class
-// path entry that declares it, so a resource in a *different* directory of
-// the same mod would not be found.
 processResources {
     inputs.property "version", project.version
     filesMatching("fabric.mod.json") {
@@ -225,18 +96,10 @@ processResources {
 
 loom {
     runs {
-        // Loom's own client run is the only run this build has; the wiring below
-        // is what turns it into a harness run when -PjechTest is given.
         client {
-            // runDir is handed to loom as a path *relative to this project*: loom
-            // joins the setting onto the project directory with
-            // new File(projectDir, runDir), which concatenates rather than
-            // replaces, so an absolute path has to travel as a relative one.
             if (jechUiTestRunDir != null) {
                 runDir project.relativePath(new File(jechUiTestRunDir))
             } else if (jechUiTestSelection != null) {
-                // The harness's own game directory, so a harness boot never shares
-                // a latest.log or a world with an ordinary client.
                 runDir project.relativePath(jechUiTestOutDir)
             }
             if (jechUiTestSelection != null) {
@@ -255,20 +118,8 @@ loom {
     }
 }
 
-// The game directory the run actually uses: the harness's own when bare, the
-// launcher's (-PjechRunDir) when handed one. The out directory below is a
-// different thing — where the report lands — which under -PjechRunDir is a
-// subdirectory of the game directory.
 def jechUiTestGameDir = jechUiTestRunDir == null ? jechUiTestOutDir : new File(jechUiTestRunDir)
 
-// Stages the jar under test into the run's game directory mods/ folder, after
-// the clean task and before the run. The production fabric jar is
-// intermediary-named; the loader's dev-mode remapper (loom passes
-// -Dfabric.remapClasspathFile) brings it into this run's Mojang-mapped
-// namespace, which is why it rides mods/ instead of the classpath. The JECh
-// jar's jar-in-jar PinIn comes along with it. This line stages no JEI: the
-// 1.16.5 row is the no-JEI smoke row, and the JEI scenarios are not carried
-// by this build's resources at all.
 def stageUiTestMods = tasks.register('stageUiTestMods', Copy) {
     group = 'verification'
     description = 'Stages the JECh jar under test into the run game directory mods/.'
@@ -278,61 +129,19 @@ def stageUiTestMods = tasks.register('stageUiTestMods', Copy) {
     into new File(jechUiTestGameDir, 'mods')
 }
 
-// Deletes the previous run's output so the verification task can never read an
-// older verdict. A real task dependency, not a doFirst: Gradle snapshots a task's
-// inputs before running its actions, so a doFirst is never reached when the
-// runtime classpath fails to resolve - exactly the case the delete exists for.
 def jechUiTestCleanReport = tasks.register('jechCleanUiTestReport', Delete) {
     group = 'verification'
     description = 'Deletes the previous JECh UI test run output.'
     if (jechUiTestRunDir == null) {
-        // Why not `delete jechUiTestOutDir` here: in this form that directory is
-        // the run's whole game directory, and <game dir>/jech-scenarios inside it
-        // is an *input* - the hot folder a scenario is dropped into so it needs no
-        // rebuild. Removing the directory wholesale would take the hot channel
-        // with it and a dropped file would never be discovered, so enumerate the
-        // directory's own direct children and delete all of them except that hot
-        // folder (every bare run is still a clean, one-shot environment; the
-        // staged mods/ jars are re-staged by stageUiTestMods on every run). A
-        // Provider, not a File list, so the listing is taken when the task runs
-        // rather than while the script is configured.
         delete providers.provider {
             def children = jechUiTestOutDir.listFiles()
             children == null ? [] : children.findAll { it.name != 'jech-scenarios' }
         }
     } else {
-        // With -PjechRunDir the run borrows a game directory a launcher owns; only
-        // the harness's own output directory under it (<game dir>/uitest) is ours
-        // to clear. The staged mods live in that game directory's mods/, which the
-        // launcher owns and re-syncs itself.
         delete jechUiTestOutDir
     }
 }
 
-// The options.txt a bare run of this harness needs, written into the game
-// directory this build owns. The delete above takes the previous one with the
-// rest of the output, so without this a harness run boots on the client's fresh
-// defaults (en_us).
-//
-// One key beyond the base preset, and only that one:
-//
-//   version:2586 - 1.16.5's data version, FIRST IN THE FILE. Without it the
-//                client's Options.dataFix reads the file as data-version 0 and
-//                runs the legacy chain (the same fixer family the 1.18.2 copy
-//                documents; see uitest/mv-1.18.2-fabric's copy). This preset
-//                carries no key_* line (this line has no JEI bind to pin), so
-//                the legacy chain would be harmless here, but the line keeps
-//                the file the same shape a real 1.16.5 client writes and the
-//                fixer off the path entirely.
-//   lang:zh_cn / onboardAccessibility:true - the base preset (jt renders the
-//                same two for its runs; a 1.16.5 client ignores the onboarding
-//                key it does not know, which is harmless - the onboarding screen
-//                does not exist before 1.20.1).
-//
-// A run handed a game directory by a launcher (-PjechRunDir, as jt does) is NOT
-// preset from here: that directory belongs to the launcher, which stages its own
-// options.txt into it (jt's preset for this line carries the same keys - see
-// the env's uitest.options). Two writers of one file would only drift.
 def jechUiTestPresetOptions = tasks.register('jechPresetUiTestOptions') {
     group = 'verification'
     description = 'Writes the options.txt a bare harness run needs into the harness game directory.'
@@ -403,14 +212,9 @@ def jechUiTestVerify = tasks.register('verifyJechUiTest') {
     }
 }
 
-// The run task is created by loom while this script is evaluated, so the hook is
-// a configureEach rather than a direct reference. A missing report is itself a
-// failure, which is what makes a client that crashed before the runner started
-// show up as a red build.
 tasks.configureEach { task ->
     if (task.name != 'runClient' || jechUiTestSelection == null) return
     task.dependsOn jechUiTestCleanReport
-    // ordered after the delete, so the preset and the staged mods are not deleted
     task.dependsOn jechUiTestPresetOptions
     task.dependsOn stageUiTestMods
     task.finalizedBy jechUiTestVerify

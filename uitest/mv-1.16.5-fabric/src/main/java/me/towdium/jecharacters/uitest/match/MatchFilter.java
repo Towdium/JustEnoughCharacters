@@ -5,22 +5,6 @@ import org.jspecify.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Which recorded comparisons an assertion is about.
- *
- * <p>Every term is optional and all present terms must hold, so {@code MatchFilter(null, "shitou",
- * "石")} reads as "a comparison whose query contains {@code shitou} and whose candidate contains
- * {@code 石}". A {@code null} term is "anything", never "empty": an assertion cannot accidentally
- * pass because it forgot to name a term.
- *
- * <p><b>Port note.</b> The 1.21.1 record of the same name, as a plain immutable class: Java 8 has
- * no records, so the fields are final, the accessors are the record components' names and the
- * public constructor is the canonical one. Nothing else changes.
- *
- * @param method            the exact label of the tap, or {@code null} for any
- * @param queryContains     a substring the query must contain, or {@code null} for any
- * @param candidateContains a substring the candidate must contain, or {@code null} for any
- */
 public final class MatchFilter {
 
     @Nullable
@@ -51,18 +35,15 @@ public final class MatchFilter {
         return candidateContains;
     }
 
-    /** Whether a recorded comparison satisfies every term. */
     public boolean accepts(MatchRecorder.Record record) {
         if (method != null && !method.equals(record.method())) return false;
         return holds(record.query(), queryContains) && holds(record.candidate(), candidateContains);
     }
 
-    /** Whether any term is set. A filter with no terms matches everything, which is a scenario bug. */
     public boolean isEmpty() {
         return method == null && queryContains == null && candidateContains == null;
     }
 
-    /** The filter as a phrase, for step names and failure details. */
     public String describe() {
         List<String> parts = new ArrayList<>(3);
         if (method != null) parts.add("method=" + method);

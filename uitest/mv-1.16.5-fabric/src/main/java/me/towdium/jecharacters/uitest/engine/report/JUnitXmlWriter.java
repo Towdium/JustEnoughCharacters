@@ -5,24 +5,12 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.Locale;
 
-/**
- * Renders a run report as JUnit XML, so a CI job that already understands JUnit picks the failures
- * up without any harness-specific glue.
- *
- * <p>One {@code <testsuite>} per scenario, one {@code <testcase>} per step: a step whose checks
- * failed is a failure, a step that threw is an error, and a scenario that never ran is skipped.
- *
- * <p><b>Port note.</b> The 1.21.1 class's nested {@code Counts} record, as a plain immutable class:
- * Java 8 has no records, so its fields are final and its constructor is the canonical one, and the
- * enclosing class keeps reading those fields directly. Nothing else changes.
- */
 public final class JUnitXmlWriter {
 
     private static final String suitesName = "jechtest-uitest";
 
     private JUnitXmlWriter() {}
 
-    /** The whole run as one XML document. */
     public static String toXml(RunReport report) {
         StringBuilder xml = new StringBuilder(4096);
         xml.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
@@ -72,7 +60,6 @@ public final class JUnitXmlWriter {
 
     private static void appendOutcome(StringBuilder xml, String status, @Nullable String message, String fallback) {
         String text = message == null ? fallback : message;
-        // Port note (1.21.1 → 1.16.5, Java 8): the arrow switch expression is Java 14+.
         String tag;
         switch (Status.valueOf(status.toLowerCase(Locale.ROOT))) {
             case pass:
@@ -120,7 +107,6 @@ public final class JUnitXmlWriter {
         StringBuilder escaped = new StringBuilder(raw.length() + 16);
         for (int i = 0; i < raw.length(); i++) {
             char c = raw.charAt(i);
-            // Port note (1.21.1 → 1.16.5, Java 8): the arrow switch is Java 14+.
             switch (c) {
                 case '&':
                     escaped.append("&amp;");
@@ -154,7 +140,6 @@ public final class JUnitXmlWriter {
         return escaped.toString();
     }
 
-    /** One suite's or one run's test counters. */
     private static final class Counts {
 
         private final int tests;

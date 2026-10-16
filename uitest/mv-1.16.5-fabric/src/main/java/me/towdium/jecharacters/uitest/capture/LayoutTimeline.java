@@ -12,26 +12,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 
-/**
- * The file-backed {@link Timeline}: one JSON object per line under
- * {@code <outDir>/timeline/<scenario>.jsonl}, written next to the report.
- *
- * <p>A record is {@code {"frame":N,"t":<millis>,"name":"…","blob":"…"}} — the scenario's own frame
- * counter, the wall-clock timecode, the record's name and the blob verbatim. Each append opens,
- * writes and closes the file: the volume is a handful of lines per frame at most, and appending in
- * real time is what makes the log survive a run that dies mid-scenario.
- *
- * <p>Nothing here throws into a run — a log that cannot be written is warned about and dropped, the
- * same rule every other capture artifact follows.
- */
 public final class LayoutTimeline implements Timeline {
 
-    /** Directory under the run output root that holds the per-scenario logs. */
     public static final String timelineDirectory = "timeline";
 
-    // 1.16.5 ships log4j2 and no slf4j (slf4j-api entered the game with 1.17), so this
-    // line logs through Minecraft's own stack — the same substitution uitest/1.12.2-forge
-    // makes. Measured on the resolved compileClasspath; see build.gradle.
     private static final Logger logger = LogManager.getLogger("jechtest/uitest");
 
     private static final Gson gson = new Gson();
@@ -40,7 +24,6 @@ public final class LayoutTimeline implements Timeline {
     private final long startedAt = System.currentTimeMillis();
     private long frame;
 
-    /** A timeline for one scenario, replacing any log a previous run of it left behind. */
     public LayoutTimeline(Path outDir, String scenario) {
         this.file = outDir.resolve(relativePath(scenario));
         try {
@@ -51,12 +34,10 @@ public final class LayoutTimeline implements Timeline {
         }
     }
 
-    /** Where a scenario's log lands, relative to the run's output directory. */
     public static String relativePath(String scenario) {
         return timelineDirectory + "/" + FrameCapturePipeline.sanitize(scenario) + ".jsonl";
     }
 
-    /** How many records this timeline has taken. */
     public long records() {
         return frame;
     }
@@ -71,8 +52,6 @@ public final class LayoutTimeline implements Timeline {
         object.addProperty("blob", blob);
         String line = gson.toJson(object) + System.lineSeparator();
         try {
-            // Port note (1.21.1 → 1.16.5, Java 8): Files.writeString is Java 11+; the
-            // byte-write form with the same open options appends the same line.
             Files.write(
                 file,
                 line.getBytes(StandardCharsets.UTF_8),
@@ -85,7 +64,6 @@ public final class LayoutTimeline implements Timeline {
         }
     }
 
-    /** The log file, for a caller that wants to name it in a report. */
     public Path file() {
         return file;
     }

@@ -6,12 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Collections;
 
-/**
- * The whole run.
- *
- * <p>Written synchronously and atomically on purpose: an asynchronous write would race the process
- * exit and lose exactly the report a failure needs.
- */
 public final class RunReport {
 
     private final int schema = 1;
@@ -34,7 +28,6 @@ public final class RunReport {
 
     private final Totals totals = new Totals();
 
-    /** The run's restart schedule, one spelled-out line; set once the selection is known. */
     private String sessionPlan = "";
 
     public RunReport(String runId, String selection, Environment environment, String startedAt) {
@@ -80,15 +73,10 @@ public final class RunReport {
         return totals;
     }
 
-    /**
-     * The run's session plan: the tier order it ran in and the restarts it paid — the evidence that a
-     * run reused its client instead of restarting per scenario.
-     */
     public String sessionPlan() {
         return sessionPlan;
     }
 
-    /** Records the session plan, before the first scenario runs. */
     public void sessionPlan(String plan) {
         this.sessionPlan = plan;
     }
@@ -102,12 +90,10 @@ public final class RunReport {
         return scenario;
     }
 
-    /** Whether the whole run should fail. */
     public boolean failed() {
         return Status.fromWire(status).failed();
     }
 
-    /** Closes the run. */
     public void complete(Status result, String finished, long millis) {
         this.status = result.wire();
         this.finishedAt = finished;

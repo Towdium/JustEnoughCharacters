@@ -2,7 +2,6 @@ package me.towdium.jecharacters.uitest.engine.report;
 
 import me.towdium.jecharacters.uitest.api.Status;
 
-/** Run-wide counters, written into the report's {@code totals} block. */
 public final class Totals {
 
     private int scenarios;
@@ -23,10 +22,8 @@ public final class Totals {
 
     private int captures;
 
-    /** Counts one finished scenario and its outcome. */
     public void countScenario(Status status) {
         scenarios++;
-        // Port note (1.21.1 → 1.16.5, Java 8): the arrow switch is Java 14+.
         switch (status) {
             case pass:
                 passed++;
@@ -46,7 +43,6 @@ public final class Totals {
         }
     }
 
-    /** Counts one finished step and its outcome. */
     public void countStep(Status status, int checksInStep, int failedChecksInStep, int capturesInStep) {
         steps++;
         checks += checksInStep;
