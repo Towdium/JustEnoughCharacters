@@ -15,18 +15,6 @@ import java.util.List;
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.argument;
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal;
 
-/**
- * {@code /jechtest list|run <selection>}, the manual entry point of the harness.
- *
- * <p>It runs scenarios against the world the player already has loaded and leaves the client up
- * afterwards, which is what makes a scenario debuggable by hand. The upstream harness hung this under
- * a shared {@code /cloudlib} root next to the library's own commands; this mod owns its whole
- * {@code /jechtest} root, so there is nothing to merge with.
- *
- * <p><b>Port note (NeoForge → Fabric).</b> The NeoForge copy takes the dispatcher from
- * {@code RegisterClientCommandsEvent}; on fabric-api's client command API the callback hands the same
- * {@link CommandDispatcher} over, so only the entry method differs.
- */
 public final class UiTestCommands {
 
     private UiTestCommands() {}
@@ -56,7 +44,6 @@ public final class UiTestCommands {
         );
     }
 
-    /** The suggestion list: the {@code all} term plus every registered scenario name. */
     private static List<String> selections() {
         List<String> terms = new ArrayList<>();
         terms.add("all");

@@ -24,49 +24,24 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
 import java.util.stream.Stream;
 
-/**
- * Creates the throwaway world a run uses, and sweeps the ones earlier runs left behind.
- *
- * <p>The world is a fixed-seed superflat level in creative with cheats on, so two runs share a
- * backdrop and a scenario can place blocks without any setup of its own. Sweeping stale worlds is
- * not housekeeping: two runs of the same run id would otherwise collide on the save directory, and
- * a leftover locked world is the single biggest source of flakiness in this kind of harness.
- */
 public final class WorldBootstrap {
 
-    /**
-     * Every generated test world starts with this prefix, which is what the sweep matches. Renamed
-     * from the upstream harness's {@code cltest_}, so a JECh harness run never shares a save
-     * directory with a CloudLib one on the same machine.
-     */
     public static final String worldPrefix = "jechtest_";
 
-    /** The fixed seed, so the same world is generated every run. */
     private static final long seed = 4_948_311_507L;
 
     private static final Logger log = LoggerFactory.getLogger("jechtest-uitest");
 
     private WorldBootstrap() {}
 
-    /** The world name for a run id. */
     public static String worldName(String runId) {
         return worldPrefix + runId;
     }
 
-    /** Reports which save directories the sweep would remove, for the log. */
     public static List<String> staleWorlds(LevelStorageSource source) {
         return staleWorlds(source, List.of());
     }
 
-    /**
-     * Reports which save directories the sweep would remove, keeping the ones this run owns.
-     *
-     * <p>A run's own saves are the world it is in and the ones it has already created, and they are
-     * excluded because the sweep's job is the wrecks of earlier runs: a world this run just left is
-     * still being flushed to disk by its own server for a few ticks, and deleting it underneath that
-     * write is how a run loses its save — observed as {@code NoSuchFileException} for the temp files
-     * the save writes.
-     */
     public static List<String> staleWorlds(LevelStorageSource source, List<String> keep) {
         Path base = source.getBaseDir();
         if (!Files.isDirectory(base)) return List.of();
@@ -80,20 +55,14 @@ public final class WorldBootstrap {
         }
     }
 
-    /** Deletes every stale save directory, and reports how many went. */
     public static int deleteStaleWorlds(LevelStorageSource source) {
         return deleteStaleWorlds(source, List.of());
     }
 
-    /** Deletes every save directory named after the test prefix, keeping the ones this run owns. */
     public static int deleteStaleWorlds(LevelStorageSource source, List<String> keep) {
         List<String> stale = staleWorlds(source, keep);
         int removed = 0;
         for (String name : stale) {
-            // Port note (1.21.1 → 1.20.1): the 1.21.1 copy resolves the save
-            // directory through LevelStorageSource.getLevelPath, which is private
-            // on 1.20.1; getBaseDir().resolve(name) is the same child-of-saves
-            // path that method computes, spelled with the public accessor.
             Path directory = source.getBaseDir().resolve(name);
             try {
                 deleteRecursively(directory);
@@ -108,21 +77,6 @@ public final class WorldBootstrap {
         return removed;
     }
 
-    /**
-     * Reopens an existing save — the rejoin half of a {@code reenter} session.
-     *
-     * <p>The world is not regenerated and nothing about it is reset: the save is opened the way the
-     * single-player world list opens it, so blocks, block entities and the pinned rules placed by
-     * earlier scenarios are all still there. That is the difference this tier exists for.
-     *
-     * <p><b>Port note (1.21.1 → 1.20.1).</b> The 1.21.1 copy calls {@code openWorld(String, Runnable)};
-     * 1.20.1 has no such method — its WorldOpenFlows opens a save through
-     * {@code loadLevel(Screen, String)} (client mappings WorldOpenFlows.java:64), which takes the
-     * parent screen rather than a failure callback. The parent is the screen the caller is on, the
-     * way the world list passes its own; a save that cannot be read leads to a rejoin that never
-     * finishes either way, and the caller's own budget reports that as the fatal it is — the
-     * 1.21.1 copy's error callback only logged, so nothing is lost.
-     */
     public static void rejoinLevel(Minecraft minecraft, String worldName) {
         minecraft.createWorldOpenFlows().loadLevel(
             minecraft.screen,
@@ -130,19 +84,6 @@ public final class WorldBootstrap {
         );
     }
 
-    /**
-     * Creates and loads a fresh world.
-     *
-     * <p>This call pumps the render loop internally — it opens a loading screen, which fires frame
-     * events of its own — so the caller must set up its state before calling it, never after.
-     *
-     * <p><b>Port note (1.21.1 → 1.20.1).</b> 1.20.1's {@code createFreshLevel} takes the same
-     * four leading arguments (name, settings, options, dimensions factory — client mappings
-     * WorldOpenFlows.java:71) but not the trailing {@code Screen} the 1.21.1 overload carries; the
-     * flat dimensions factory below is byte-for-byte the 1.21.1 one, because 1.20.1 has the same
-     * {@code WorldPreset.createWorldDimensions()} and the same FLAT preset key
-     * (WorldPreset.java:46, WorldPresets.java:151).
-     */
     public static void createFreshLevel(Minecraft minecraft, String worldName) {
         LevelSettings settings = new LevelSettings(
             worldName,
@@ -158,7 +99,6 @@ public final class WorldBootstrap {
                 .createFreshLevel(worldName, settings, options, WorldBootstrap::flatDimensions);
     }
 
-    /** The flat world preset's dimensions, generated from the datapack registry. */
     private static WorldDimensions flatDimensions(RegistryAccess registry) {
         return registry.registryOrThrow(Registries.WORLD_PRESET).getHolderOrThrow(WorldPresets.FLAT).value()
                 .createWorldDimensions();
