@@ -93,6 +93,190 @@ def os_version():
 
 
 # ---------------------------------------------------------------------------
+# LWJGL a version older than 1.19 has to be handed on macOS arm64
+# ---------------------------------------------------------------------------
+
+# An Apple Silicon JVM cannot load the dylibs such a version's own metadata names:
+# up to roughly 1.18 the version json carries one native classifier per library
+# (``natives: {osx: natives-macos}``) and that jar holds **x86_64** dylibs — Mojang
+# only started publishing an arm64 one with 1.19's LWJGL 3.3.1. A *dev* run on this
+# machine is spared the problem because the build tool upgrades the version's
+# LWJGL out from under it (architectury-loom 1.1, measured in the mv-1.16.5-fabric
+# row's own baseline launcher log: "Loom is upgrading Minecraft's LWJGL version to
+# 3.3.1", after which its client logs "Backend library: LWJGL version 3.3.1
+# SNAPSHOT"), and a direct launch has to do the same, or the client dies inside
+# ``System.loadLibrary`` before its first frame.
+#
+# The seven modules below are the LWJGL 3.3.1 set Mojang's own 1.19.2 metadata
+# declares, with the sha1/size it declares for each jar and for the
+# ``natives-macos-arm64`` jar of the same module — that era of the metadata puts a
+# native on the **classpath** as an ordinary library (LWJGL extracts the dylib it
+# needs itself), which is also the shape added below, so nothing here goes through
+# the legacy extraction path.
+LWJGL_ARM64_VERSION = "3.3.1"
+LWJGL_LIBRARY_BASE_URL = "https://libraries.minecraft.net"
+# artifact: (jar sha1, jar size, arm64 natives sha1, arm64 natives size)
+LWJGL_MACOS_ARM64 = (
+    ("lwjgl", "ae58664f88e18a9bb2c77b063833ca7aaec484cb", 724243,
+     "71d0d5e469c9c95351eb949064497e3391616ac9", 42693),
+    ("lwjgl-glfw", "cbac1b8d30cb4795149c1ef540f912671a8616d0", 128801,
+     "cac0d3f712a3da7641fa174735a5f315de7ffe0a", 129077),
+    ("lwjgl-jemalloc", "a817bcf213db49f710603677457567c37d53e103", 36601,
+     "e577b87d8ad2ade361aaea2fcf226c660b15dee8", 103475),
+    ("lwjgl-openal", "2623a6b8ae1dfcd880738656a9f0243d2e6840bd", 88237,
+     "23d55e7490b57495320f6c9e1936d78fd72c4ef8", 346125),
+    ("lwjgl-opengl", "831a5533a21a5f4f81bbc51bb13e9899319b5411", 921563,
+     "eafe34b871d966292e8db0f1f3d6b8b110d4e91d", 41665),
+    ("lwjgl-stb", "b119297cf8ed01f247abe8685857f8e7fcf5980f", 112380,
+     "fcf073ed911752abdca5f0b00a53cfdf17ff8e8b", 178408),
+    ("lwjgl-tinyfd", "0ff1914111ef2e3e0110ef2dabc8d8cdaad82347", 6767,
+     "972ecc17bad3571e81162153077b4d47b7b9eaa9", 41380),
+)
+
+
+def lwjgl_for_this_machine(mc, entries, *, log=print):
+    """A version's own library entries, with the LWJGL this machine can load.
+
+    Two gates, both about the version rather than about a row, so a future row on an
+    old version inherits the fix and a version that needs nothing is untouched:
+
+    * only on **macOS arm64** (``osx-arm64``) — an x86_64 or Linux machine loads the
+      version's own natives happily, and replaces nothing;
+    * only when the version's own LWJGL publishes **no arm64 natives**. A version
+      that already carries them (1.19 on, whichever shape its metadata uses) is left
+      exactly as Mojang wrote it, rules and classifiers included.
+
+    When both hold, the version's ``org.lwjgl:*`` entries are dropped and the LWJGL
+    3.3.1 module set above takes their place — the same switch the row's Gradle
+    backend makes, and the one its baseline dev client is measured on. Every other
+    library, natives classifiers among them, is passed through untouched.
+
+    The substitution is logged: a run whose classpath silently carries a different
+    LWJGL than the version's metadata names is otherwise rediscovered as a native
+    load failure with no relation to the JSON a reader is looking at.
+    """
+    if not needs_arm64_native_support(entries):
+        return entries
+    own = [entry for entry in entries if _is_lwjgl_entry(entry)]
+    replaced = sorted({_lwjgl_version(entry) for entry in own})
+    kept = [entry for entry in entries if not _is_lwjgl_entry(entry)]
+    log(f"cache: mc {mc} lwjgl: {', '.join(replaced)} -> {LWJGL_ARM64_VERSION} for osx-arm64 "
+        f"({len(LWJGL_MACOS_ARM64)} module(s) plus their natives-macos-arm64 jars); the version's "
+        "own jars are x86_64-only, so this machine cannot load them")
+    return kept + _lwjgl_arm64_entries()
+
+
+def _is_lwjgl_entry(entry):
+    """Whether one library entry is one of the version's own LWJGL 3 modules."""
+    parts = str(entry.get("name") or "").split(":")
+    return len(parts) >= 3 and parts[0] == "org.lwjgl"
+
+
+def _lwjgl_version(entry):
+    return str(entry.get("name") or "").split(":")[2]
+
+
+def _lwjgl_has_arm64_natives(entry):
+    """Whether an entry already carries the natives an arm64 client needs.
+
+    Both eras of the metadata are read: the classic one names the classifier in its
+    ``natives`` map, the modern one spells it in the entry's own name.
+    """
+    natives = entry.get("natives")
+    if isinstance(natives, dict) and any("arm64" in str(name) for name in natives.values()):
+        return True
+    return "natives-macos-arm64" in str(entry.get("name") or "")
+
+
+def _lwjgl_arm64_entries():
+    """The LWJGL module set above, in the metadata shape the launcher already reads."""
+    entries = []
+    for artifact, jar_sha1, jar_size, native_sha1, native_size in LWJGL_MACOS_ARM64:
+        plain = f"org.lwjgl:{artifact}:{LWJGL_ARM64_VERSION}"
+        entries.append(_library_entry(plain, jar_sha1, jar_size))
+        entries.append(_library_entry(
+            f"{plain}:natives-macos-arm64", native_sha1, native_size,
+            rules=[{"action": "allow", "os": {"name": "osx"}}],
+        ))
+    return entries
+
+
+def _library_entry(name, sha1, size, *, rules=None):
+    """One synthesised library entry, with the url its own metadata would publish."""
+    path = maven_path(name)
+    entry = {
+        "name": name,
+        "downloads": {"artifact": {
+            "path": path,
+            "url": f"{LWJGL_LIBRARY_BASE_URL}/{path}",
+            "sha1": sha1,
+            "size": size,
+        }},
+    }
+    if rules:
+        entry["rules"] = rules
+    return entry
+
+
+# ---------------------------------------------------------------------------
+# the window shim a macOS arm64 client of that same era needs
+# ---------------------------------------------------------------------------
+
+# 1.16.5 sets its window icon through ``glfwSetWindowIcon`` from inside
+# ``Minecraft``'s own constructor, and GLFW's Cocoa backend answers with an error
+# ("Cocoa: Regular windows do not have icons on macOS"). Minecraft turns every GLFW
+# error into an exception, so the client dies in that constructor: measured on this
+# row's direct run, ``client.log`` ends with that stack
+# (``glfwSetWindowIcon`` -> ``Window.method_4491`` -> ``Minecraft.<init>`` ->
+# ``Main.main``), the process exits 0, and the harness never reaches its runner. A
+# loom dev run never sees it because loom injects ``fabric-loom-native-support``
+# into every macOS run, and the very same jar is what makes this run's *identical*
+# classpath boot (measured: the recorded command line, with only that jar added to
+# ``mods/``, runs the whole harness).
+#
+# So the launcher ships it too, on the same gate as the LWJGL substitution above
+# (:func:`needs_arm64_native_support`): it is the mod's own published artifact,
+# pinned by the checksum its repository serves.
+NATIVE_SUPPORT_FILENAME = "fabric-loom-native-support-1.0.1.jar"
+NATIVE_SUPPORT_URL = (
+    "https://maven.fabricmc.net/net/fabricmc/fabric-loom-native-support/1.0.1/"
+    + NATIVE_SUPPORT_FILENAME
+)
+NATIVE_SUPPORT_SHA1 = "fa285e15e860a868f97137322261cf6cdb3d5854"
+
+
+def needs_arm64_native_support(entries):
+    """Whether this version's own metadata is x86_64-only as far as macOS goes.
+
+    True for a version whose LWJGL publishes no arm64 natives: the same versions
+    :func:`lwjgl_for_this_machine` has to replace LWJGL for, and the versions whose
+    window shim the runner adds (see the block above). Everywhere else — another
+    platform, or a version that carries arm64 natives — both are off, so a modern
+    version's run is untouched.
+    """
+    if platform_tag() != "osx-arm64":
+        return False
+    own = [entry for entry in entries if _is_lwjgl_entry(entry)]
+    return bool(own) and not any(_lwjgl_has_arm64_natives(entry) for entry in own)
+
+
+def ensure_native_support(*, http=None, refresh=False, log=print):
+    """Fetch (or reuse) that shim; returns the jar the run's ``mods/`` wants.
+
+    Cached like every other jar this launcher downloads: under
+    ``<JT_HOME>/cache/mods``, sha1-verified, and reused when the bytes are already
+    the artifact.
+    """
+    client = http or HttpClient(refresh=refresh, log=log)
+    dest = paths.mods_cache_dir() / NATIVE_SUPPORT_FILENAME
+    existed = dest.is_file()
+    client.download(NATIVE_SUPPORT_URL, dest, headers={"User-Agent": BROWSER_USER_AGENT},
+                    sha1=NATIVE_SUPPORT_SHA1, what="macOS window shim", refresh=refresh)
+    cache.note("shim " + NATIVE_SUPPORT_FILENAME[:-len(".jar")], dest, log=log, cached=existed)
+    return dest
+
+
+# ---------------------------------------------------------------------------
 # rules and placeholders
 # ---------------------------------------------------------------------------
 
@@ -250,7 +434,10 @@ def ensure_client(mc, *, http=None, refresh=False, assets=True, log=print):
                     what=f"Minecraft {mc} client", refresh=refresh)
     cache.note(f"mc {mc} client.jar", jar, log=log, cached=existed)
 
-    libraries, natives, natives_dir = _libraries(mc, version_json, client, refresh=refresh, log=log)
+    libraries, natives, natives_dir = _libraries(
+        mc, lwjgl_for_this_machine(mc, version_json.get("libraries") or [], log=log),
+        client, refresh=refresh, log=log,
+    )
     asset_index_id, assets_dir = _assets(mc, version_json, client, refresh=refresh,
                                         download=assets, log=log)
     logging_argument = _logging(mc, version_json, client, refresh=refresh, log=log)
@@ -282,14 +469,14 @@ def ensure_client(mc, *, http=None, refresh=False, assets=True, log=print):
 # ---------------------------------------------------------------------------
 
 
-def _libraries(mc, version_json, http, *, refresh, log):
+def _libraries(mc, entries, http, *, refresh, log):
     libraries = []
     natives = []
     natives_root = cache.natives_dir(mc, platform_tag())
     natives_dir = cache.ensure_dir(natives_root)
     counts = {"hit": 0, "fetch": 0}
     native_hashes = []
-    for entry in version_json.get("libraries") or []:
+    for entry in entries:
         if not allowed(entry.get("rules")):
             continue
         lib = _library(mc, entry, http, refresh=refresh, log=log, counts=counts)

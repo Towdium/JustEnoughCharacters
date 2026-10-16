@@ -474,6 +474,19 @@ def _launch_direct(env, run_dir, entry, resolved, *, subject_spec, subject_jar, 
     client = vanilla_mod.ensure_client(env.mc, refresh=refresh, log=log)
     for note in client.notes:
         entry["notes"].append(note)
+    # A version of this era cannot open a window on macOS arm64 without the native
+    # support mod loom injects into its dev runs (see lib/launch/vanilla.py). It is a
+    # fabric mod, so only a fabric row takes it: another loader would ignore the jar,
+    # and a version that carries its own arm64 natives needs neither it nor the LWJGL
+    # substitution.
+    shim = None
+    if env.loader.type == "fabric" and vanilla_mod.needs_arm64_native_support(
+            client.version_json.get("libraries") or []):
+        shim = vanilla_mod.ensure_native_support(refresh=refresh, log=log)
+        entry["notes"].append(
+            f"shim: {shim.name} rides mods/ alongside the row's own jars — this version's window "
+            "code dies inside Minecraft's constructor on macOS arm64 without it"
+        )
     loader = loader_mod.ensure_loader(env.loader.type, env.loader.version, env.mc,
                                       refresh=refresh, log=log)
     entry["notes"].append(f"client: {client.describe()}")
@@ -482,7 +495,8 @@ def _launch_direct(env, run_dir, entry, resolved, *, subject_spec, subject_jar, 
     minecraft_dir = instance.run_game_dir(run_dir)
     game = assemble_mod.assemble(
         minecraft_dir, mc=env.mc,
-        mod_jars=[subject.path, *[artifact.path for artifact in resolved.mods], harness_jar],
+        mod_jars=[subject.path, *[artifact.path for artifact in resolved.mods], harness_jar,
+                  *([shim] if shim is not None else [])],
         options_extra=env.uitest.options, log=log,
     )
     entry["notes"].extend(game.notes)
