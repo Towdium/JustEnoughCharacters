@@ -10,16 +10,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-/**
- * Reads one scenario file into a {@link JsonScenario}, refusing anything it does not fully
- * understand.
- *
- * <p>Validation is total rather than incremental: the scenario block and every step block are checked
- * before anything is returned, so a first run of a new file reports what is wrong with it rather than
- * one problem per attempt. Unknown keys are refused at both levels — at the top because a misspelled
- * {@code requiresWorld} would otherwise be a scenario that ran in the wrong session tier or without
- * the world it needs, and inside a step because {@link Args} owns that check.
- */
 public final class JsonScenarioReader {
 
     private static final Set<String> scenarioKeys = Set.of(
@@ -29,7 +19,6 @@ public final class JsonScenarioReader {
 
     private JsonScenarioReader() {}
 
-    /** Parses a scenario object; {@code source} names the file in every message. */
     public static JsonScenario parse(JsonObject root, String source) {
         Args args = new Args(source, root);
         for (String key : root.keySet()) {
@@ -71,7 +60,6 @@ public final class JsonScenarioReader {
         return options;
     }
 
-    /** The session tier a scenario names; an unknown spelling is refused rather than defaulted. */
     private static Session session(String raw) {
         for (Session tier : Session.values()) {
             if (tier.name().equalsIgnoreCase(raw.trim())) return tier;

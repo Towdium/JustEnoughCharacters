@@ -19,26 +19,6 @@ import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Drives a live {@code Screen} with synthetic input, without moving the real pointer.
- *
- * <p>Every gesture is dispatched to the screen the harness is testing, in GUI-scaled space, after
- * aiming: {@link #placeCursor} stores the position and refreshes hover, because on a CloudLib
- * {@code BasicScreen} hover is event-driven — {@code Scene} recomputes {@code hovered} and fires
- * enter/leave only inside its {@code mouseMoved}, and vanilla only reaches that method when the
- * accumulated cursor delta is non-zero <em>and</em> the window is focused. A stationary synthetic
- * pointer would otherwise hover nothing at all.
- *
- * <p>This class is also the {@link KeyState} and {@link CursorState} source it installs, so both
- * seams can be cleared owner-safely: {@code clearSource(owner)} only clears when the owner is
- * still the installed one.
- *
- * <p>{@link #install()} registers the {@link KeyState} source (so held modifiers are visible to
- * CloudLib, which reads them through vanilla's GLFW-based {@code hasControlDown}), the
- * {@link CursorState} source (so {@code ScreenUtil}, the scene drag bookkeeping and the render
- * mouse arguments all agree), blocks {@link RawInputGate}, and drops any mouse grab left over
- * from the world — without warping the pointer to the window centre.
- */
 public class SyntheticInputDriver extends InputDriver implements KeyState.Source, CursorState.Source {
 
     private static final Logger logger = LoggerFactory.getLogger("jechtest/uitest");
@@ -68,8 +48,6 @@ public class SyntheticInputDriver extends InputDriver implements KeyState.Source
     @Override
     public void uninstall() {
         installed = false;
-        // every step below is unconditional and non-throwing, so a half-installed driver cannot
-        // leave the real keyboard or mouse dead
         try {
             playerInput.releaseAll();
         } catch (RuntimeException e) {
@@ -88,12 +66,10 @@ public class SyntheticInputDriver extends InputDriver implements KeyState.Source
         return playerInput;
     }
 
-    /** Records a held key without dispatching anything, for the in-world gesture path. */
     void markKeyHeld(int keyCode) {
         heldKeys.add(keyCode);
     }
 
-    /** Drops a recorded hold without dispatching anything. */
     void markKeyReleased(int keyCode) {
         heldKeys.remove(keyCode);
     }
@@ -169,43 +145,23 @@ public class SyntheticInputDriver extends InputDriver implements KeyState.Source
 
     @Override
     public void charTyped(Screen screen, int codePoint, int modifiers) {
-        // Port note (MC 26.1.2): CharacterEvent lost its modifiers component (the
-        // record is (codepoint) alone now and no longer implements
-        // InputWithModifiers), so the held modifier mask can no longer travel with
-        // a character event — vanilla dropped the read, and the mask still reaches
-        // the key/pointer events the way it always did.
         screen.charTyped(new CharacterEvent(codePoint));
     }
 
-    /**
-     * One pointer event at a GUI-scaled position, carrying the modifier mask of the keys the script
-     * is holding.
-     *
-     * <p>The mask is not decoration on MC 1.21.10: a screen reads its modifiers off the event
-     * ({@code InputWithModifiers.hasShiftDown()} and friends), not off the keyboard the way
-     * {@code Screen.hasControlDown()} did before, so a scripted shift-click is only a shift-click
-     * once the held mask travels with the event. The press/release pair is dispatched as a single
-     * click — {@code isDoubleClick} false — because the loop never went through
-     * {@code MouseHandler}'s own wall-clock pairing; {@code ScenarioBuilder.doubleClick} reproduces
-     * it the way it always did, as two clicks.
-     */
     protected MouseButtonEvent buttonEvent(float x, float y, int button) {
         return new MouseButtonEvent(x, y, new MouseButtonInfo(button, heldModifiers()));
     }
 
-    /** Whether {@link #install()} currently holds the seams. */
     @Override
     public boolean installed() {
         return installed;
     }
 
-    /** Stores a GUI-scaled pointer position without dispatching anything. */
     protected void setPointer(float xGui, float yGui) {
         pointerX = xGui;
         pointerY = yGui;
     }
 
-    /** Refreshes hover at the stored pointer position on the live screen. */
     protected void refreshHover() {
         Screen screen = Minecraft.getInstance().screen;
         if (screen != null) {
@@ -226,12 +182,6 @@ public class SyntheticInputDriver extends InputDriver implements KeyState.Source
         return scanCode > 0 ? scanCode : Keys.scanCodeOf(keyCode);
     }
 
-    /**
-     * Releases a grabbed mouse pointer without the warp {@code MouseHandler.releaseMouse} would
-     * perform, so the first screen of an interactive run does not yank the real pointer to the
-     * window centre. Vanilla's {@code releaseMouse} body is guarded by {@code mouseGrabbed}, so
-     * clearing the flag leaves the handler consistent.
-     */
     protected void dropMouseGrabWithoutWarping() {
         Minecraft minecraft = Minecraft.getInstance();
         MouseHandler mouseHandler = minecraft.mouseHandler;
@@ -239,8 +189,6 @@ public class SyntheticInputDriver extends InputDriver implements KeyState.Source
             return;
         }
         if (!(mouseHandler instanceof MouseHandlerAccessor accessor)) {
-            // a hard cast would throw out of install() and leave every seam installed, which is
-            // worse than a grabbed pointer: the real input would be dead for the rest of the run
             logger.warn("[uitest] MouseHandlerAccessor is not applied; the mouse grab stays in place");
             return;
         }

@@ -6,15 +6,6 @@ import java.util.List;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-/**
- * The scenario selection grammar: {@code all | name | a,b | group: | tag: | regex: | mod:}, with an
- * optional second expression that subtracts.
- *
- * <p>Terms inside one expression are OR-ed, so {@code a,b} selects both. A comma separates terms,
- * which means a regular expression may not contain one; put it in the {@code exclude} expression or
- * widen it. An empty selection matches nothing, and the runner reports that rather than passing
- * silently.
- */
 public final class ScenarioSelection {
 
     private final List<String> include;
@@ -25,29 +16,24 @@ public final class ScenarioSelection {
         this.exclude = List.copyOf(exclude);
     }
 
-    /** Parses two comma-separated expressions. */
     public static ScenarioSelection parse(String include, String exclude) {
         return new ScenarioSelection(split(include), split(exclude));
     }
 
-    /** Selects everything. */
     public static ScenarioSelection all() {
         return new ScenarioSelection(List.of("all"), List.of());
     }
 
-    /** Whether the selection names anything at all. */
     public boolean isEmpty() {
         return include.isEmpty();
     }
 
-    /** Whether a scenario matches. */
     public boolean matches(String name, Collection<String> tags, String group, Class<?> type) {
         if (include.isEmpty()) return false;
         if (!anyMatch(include, name, tags, group, type)) return false;
         return !anyMatch(exclude, name, tags, group, type);
     }
 
-    /** The include expression as it was written, for the report. */
     public String describe() {
         return String.join(",", include);
     }
