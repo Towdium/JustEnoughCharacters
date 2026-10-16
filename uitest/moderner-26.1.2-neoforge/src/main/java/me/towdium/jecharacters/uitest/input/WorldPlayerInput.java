@@ -34,43 +34,18 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
-/**
- * The in-world input driver: every gesture in {@link PlayerInput}, dispatched through vanilla's own
- * handlers with {@link RawInputGate} stepped aside.
- *
- * <p>Two pieces of arithmetic deserve to be stated here, because the whole turn API is built on them.
- *
- * <p><b>Turning.</b> A frame's turn is {@code MouseHandler.turnPlayer}, which reads the accumulated
- * pointer deltas and calls {@code player.turn(d0, d1 * invert)} where
- * {@code d0 = accumulatedDX * d4}, and {@code Entity.turn} then applies a further {@code 0.15} to both
- * axes. {@code d4} is {@code (sensitivity * 0.6 + 0.2)^3 * 8} — the non-cinematic, non-scoping branch
- * — and the cinematic branch is the one case this class refuses instead of approximating, because a
- * {@code SmoothDouble} filter has no exact inverse. {@link #turnBy} therefore inverts
- * {@code d4 * 0.15}, read from the live {@code Options} through the same NeoForge hook
- * {@code turnPlayer} consults, so a scenario asking for 10° gets 10° no matter what sensitivity the
- * client carries. The turn lands on the next frame: the pump runs before the harness's own frame
- * callback, so a delta written now is consumed at the start of the next frame and then zeroed.
- *
- * <p><b>Holding.</b> {@code KeyboardHandler.keyPress} is the only writer of the {@code KeyMapping}
- * that {@code KeyboardInput.tick} reads WASD, jump and sneak from, so a hold is a real press that is
- * simply never followed by a release. Vanilla drops every hold when a screen opens; a leak past the
- * end of a scenario is prevented by {@link #releaseAll}, which the DSL registers as teardown.
- */
 final class WorldPlayerInput implements PlayerInput {
 
     private static final Logger logger = LoggerFactory.getLogger("jechtest/uitest");
 
-    /** {@code Entity.turn} scales both axes by this before adding them to the rotation. */
     private static final double entityTurnScale = 0.15;
 
     private final SyntheticInputDriver driver;
 
     private final IntSet heldKeys = new IntOpenHashSet();
 
-    /** Binds held through {@link #holdBind}, mapped to the key this input pressed for them. */
     private final Map<KeyMapping, Integer> heldBinds = new LinkedHashMap<>();
 
-    /** Binds whose key cannot be pressed (unbound), held by writing their own state. */
     private final Set<KeyMapping> directBinds = new LinkedHashSet<>();
 
     private float sweepStartYaw;
@@ -81,12 +56,10 @@ final class WorldPlayerInput implements PlayerInput {
     private double sweepStartClock;
     private boolean sweepActive;
 
-    /** The client's tick counter, advanced once per tick by the run's tick hook. */
     private long clientTick;
 
     private @Nullable Boolean smoothCameraBefore;
 
-    /** Every frame's drawn camera angle while a trace is armed, capped so a long run cannot grow it. */
     private final List<CameraFrame> cameraTrace = new ArrayList<>();
 
     private static final int cameraTraceLimit = 20_000;
@@ -130,17 +103,9 @@ final class WorldPlayerInput implements PlayerInput {
         KeyMapping mapping = require(bind);
         int key = pressableKeyOf(mapping);
         if (key < 0) {
-            // An unbound bind has no key to press, and there is no public way to make the game
-            // consume a click on one. Saying so is better than clicking every UNKNOWN-keyed mapping.
             logger.warn("[uitest] bind {} is unbound; the press cannot go through the real path", mapping.getName());
             return;
         }
-        // A mapping a mod declared with a modifier (NeoForge's KeyModifier, written into
-        // options.txt as the ":CONTROL" suffix) only answers while that modifier counts as held.
-        // "Held" is read through Screen.hasControlDown() and friends, which the harness's virtual
-        // key state answers for — so the modifier is held as a real key for the press and released
-        // afterwards, exactly as a player's chord would be. A vanilla bind carries NONE and this
-        // loop is empty, which is why the plain binds behave as they always did.
         int[] modifiers = modifierKeysOf(mapping);
         int mask = modifierMaskOf(modifiers);
         for (int modifier : modifiers) {
@@ -213,27 +178,17 @@ final class WorldPlayerInput implements PlayerInput {
         long window = window();
         text.codePoints().forEach(codePoint -> {
             if (Keys.isPrintable(codePoint)) {
-                // Port note (MC 26.1.2): CharacterEvent lost its modifiers component — the
-                // record is (codepoint) alone now, vanilla no longer reads character-event
-                // modifiers — so the plain 0 this copy used to pass has nowhere to go.
                 RawInputGate.runSynthetic(() -> keyboard().invokeCharTyped(window, new CharacterEvent(codePoint)));
             }
         });
     }
 
-    /** Presses or releases a key through {@code KeyboardHandler.keyPress}, the real body. */
     private void key(int glfwKey, int action, int modifiers) {
         requirePlayer();
-        // a key hold is an embodiment act even with no camera involved: it is what makes the game's
-        // own raw key polls answer for this key, which is how a mod binding reads a hold through a
-        // capture screen that has released every key mapping
         ensureActive();
         long window = window();
         int scanCode = Keys.scanCodeOf(glfwKey);
         boolean pressed = action == GLFW.GLFW_PRESS;
-        // MC 1.21.10's handler takes the key event as a record (key, scan code, modifiers) and the
-        // action separately, where 1.21.1 passed all four as plain ints -- and it is private now, so
-        // the call goes through the harness's own invoker instead of the handler directly.
         KeyEvent event = new KeyEvent(glfwKey, scanCode, modifiers);
         RawInputGate.runSynthetic(() -> keyboard().invokeKeyPress(window, action, event));
         if (pressed) {
@@ -245,7 +200,6 @@ final class WorldPlayerInput implements PlayerInput {
         }
     }
 
-    /** The GLFW key a bind carries, or {@code -1} when it has none this input can press. */
     private static int pressableKeyOf(KeyMapping mapping) {
         InputConstants.Key key = mapping.getKey();
         if (key.getType() == InputConstants.Type.KEYSYM && key.getValue() != InputConstants.UNKNOWN.getValue()) {
@@ -257,13 +211,6 @@ final class WorldPlayerInput implements PlayerInput {
         return -1;
     }
 
-    /**
-     * The GLFW keys a mapping's own modifier spells.
-     *
-     * <p>NeoForge's {@code KeyModifier} is where a mod records "this bind needs Ctrl"; its
-     * {@code codes()} answers with the keys that count (Cmd on macOS, where the platform's control
-     * chord is the command key). A vanilla mapping has {@code NONE}, whose {@code codes()} is empty.
-     */
     private static int[] modifierKeysOf(KeyMapping mapping) {
         if (!(mapping instanceof IKeyMappingExtension extension)) {
             return new int[0];
@@ -283,7 +230,6 @@ final class WorldPlayerInput implements PlayerInput {
         return result;
     }
 
-    /** The GLFW modifier mask a set of held modifier keys contributes. */
     private static int modifierMaskOf(int[] keys) {
         int mask = 0;
         for (int key : keys) {
@@ -334,7 +280,6 @@ final class WorldPlayerInput implements PlayerInput {
     @Deprecated
     @Override
     public void lookSweepFrames(float toYaw, float toPitch, int frames) {
-        // a frame is read as one twentieth of a second, which at the 20 tps tick rate is one tick
         lookSweep(toYaw, toPitch, Math.max(1, frames));
     }
 
@@ -349,20 +294,15 @@ final class WorldPlayerInput implements PlayerInput {
         if (watched == null) {
             return;
         }
-        // before the write, so the sample is the angle this frame was drawn with: the write lands on
-        // the next frame, and the pump runs before anything else this frame does
         sampleCameraFrame();
         if (!sweepActive) {
             return;
         }
         float progress = sweepProgress();
         if (progress <= 0.0F) {
-            // the sweep was requested during this tick and its clock has not advanced yet: there is
-            // nothing to write, and a zero write would draw as a stall frame at the start
             return;
         }
         if (progress >= 1.0F) {
-            // the clock has run out: land the span exactly, whatever the frames before it managed
             turnBy(
                 (float) Mth.wrapDegrees((sweepStartYaw + sweepDeltaYaw) - watched.getYRot()),
                 (float) ((sweepStartPitch + sweepDeltaPitch) - watched.getXRot())
@@ -375,22 +315,6 @@ final class WorldPlayerInput implements PlayerInput {
         }
     }
 
-    /**
-     * How far the sweep has run, in {@code 0..1}, on the game's own clock.
-     *
-     * <p>The clock is {@code clientTick + partialTick}: the tick counter the run advances once per
-     * client tick plus the renderer's own fraction into the next tick. That is the clock the engine
-     * interpolates everything else with, so a sweep paced by it takes the same wall-clock time
-     * whatever the frame rate is — which is what makes the drawn trace uniform rather than tied to
-     * however fast frames happen to arrive. The start is taken as the same continuous reading, not as
-     * a tick number, so the sweep does not silently begin part-way through a tick.
-     *
-     * <p>The straight per-tick-boundary alternative was measured and rejected: the 1.21.1
-     * first-person camera is not interpolated ({@code LocalPlayer.getViewYRot} answers
-     * {@code getYRot()}), so an increment that only lands on a tick boundary draws as a staircase —
-     * a run of zero-delta frames and then a spike. Rendering the tick clock at frame resolution keeps
-     * the tick-defined duration and gives the renderer its smooth ramp.
-     */
     private float sweepProgress() {
         double elapsed = sweepClock() - sweepStartClock;
         if (elapsed >= sweepDurationTicks) {
@@ -402,7 +326,6 @@ final class WorldPlayerInput implements PlayerInput {
         return (float) (elapsed / sweepDurationTicks);
     }
 
-    /** The game clock a sweep is measured on, in ticks: the client tick plus the render fraction. */
     private double sweepClock() {
         return clientTick + Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(true);
     }
@@ -422,12 +345,6 @@ final class WorldPlayerInput implements PlayerInput {
         return PositionCorrections.count();
     }
 
-    /**
-     * One frame's drawn camera angle, read where the renderer left it.
-     *
-     * <p>The camera is posed from the player's view rotation every frame, so reading it here — after
-     * this frame's render, before this frame's sweep write — is exactly what that frame drew.
-     */
     private void sampleCameraFrame() {
         if (!cameraTraceArmed || cameraTrace.size() >= cameraTraceLimit) {
             return;
@@ -448,9 +365,6 @@ final class WorldPlayerInput implements PlayerInput {
                 player.getXRot(),
                 Mth.lerp(partialTick, player.yRotO, player.getYRot()),
                 Mth.lerp(partialTick, player.xRotO, player.getXRot()),
-                // Port note (MC 26.1.2): Camera's rotation reads are the record-style
-                // yRot()/xRot() now (getYRot/getXRot are gone from Camera; Entity
-                // keeps its own getYRot/getXRot untouched).
                 camera.yRot(),
                 camera.xRot()
             )
@@ -463,17 +377,10 @@ final class WorldPlayerInput implements PlayerInput {
         cameraTraceArmed = false;
     }
 
-    /**
-     * The {@code d4} factor {@code MouseHandler.turnPlayer} multiplies the raw deltas by, read from
-     * the live options through the same NeoForge hook — so a mod that rewrites the sensitivity is
-     * followed rather than guessed at.
-     */
     private static double turnScale() {
         Options options = Minecraft.getInstance().options;
         var event = ClientHooks.getTurnPlayerValues(options.sensitivity().get(), options.smoothCamera);
         if (event.getCinematicCameraEnabled()) {
-            // smoothTurnX/Y filter the delta over time: there is no delta that produces an exact
-            // rotation through it, so the harness refuses rather than returning an approximation
             throw new IllegalStateException("the cinematic camera is on; an exact scripted turn needs it off");
         }
         double base = event.getMouseSensitivity() * 0.6 + 0.2;
@@ -485,7 +392,6 @@ final class WorldPlayerInput implements PlayerInput {
         return cubed * 8.0;
     }
 
-    /** Clamps a pitch delta the way {@code Entity.turn} clamps the result, so the delta is exact. */
     private static float clampPitch(LocalPlayer player, float dPitch) {
         float wanted = Mth.clamp(player.getXRot() + dPitch, -90.0F, 90.0F);
         return wanted - player.getXRot();
@@ -573,7 +479,6 @@ final class WorldPlayerInput implements PlayerInput {
         return PlayerEmbodiment.isOwnedBy(this);
     }
 
-    /** Takes the seam on first use, and turns the cinematic camera off so a turn is exact. */
     private void ensureActive() {
         if (PlayerEmbodiment.isOwnedBy(this)) {
             return;
@@ -595,7 +500,6 @@ final class WorldPlayerInput implements PlayerInput {
         Minecraft.getInstance().options.smoothCamera = before;
     }
 
-    /** The player must exist: an in-world gesture with no world is a scenario bug, not a no-op. */
     private LocalPlayer requirePlayer() {
         LocalPlayer player = Minecraft.getInstance().player;
         if (player == null) {
@@ -604,10 +508,6 @@ final class WorldPlayerInput implements PlayerInput {
         return player;
     }
 
-    /**
-     * The camera must own the mouse: with a screen open vanilla would keep the camera still (the
-     * screen holds the pointer) and a turn written now would fire at whatever closed the screen next.
-     */
     private void requireWorldLook() {
         if (Minecraft.getInstance().screen != null) {
             throw new IllegalStateException(

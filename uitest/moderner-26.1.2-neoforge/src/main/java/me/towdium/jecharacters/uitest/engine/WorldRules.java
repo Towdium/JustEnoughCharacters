@@ -15,16 +15,6 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Pins the world so two runs of the same scenario see the same thing.
- *
- * <p>Every rule is applied through a suppressed-output command on the integrated server thread: the
- * commands keep the pinned state visible to anything that later reads it (a scenario may assert on
- * the time of day), and suppression keeps the test client's log readable.
- *
- * <p>Entities are removed directly rather than through {@code kill @e[type=!player]}, because a
- * selector needs a source position and this code has no reason to invent one.
- */
 public final class WorldRules {
 
     private static final Logger log = LoggerFactory.getLogger("jechtest-uitest");
@@ -47,12 +37,8 @@ public final class WorldRules {
 
     private WorldRules() {}
 
-    /** Applies every pin. Runs on the integrated server thread. */
     public static void pin(MinecraftServer server) {
         ServerLevel level = server.overworld();
-        // Port note (MC 26.1.2): withPermission takes a PermissionSet now, not an
-        // op-level int (ALL_PERMISSIONS is what level 4 used to mean), and the
-        // ResourceKey read is identifier() where 1.21.10 said location().
         CommandSourceStack source = server.createCommandSourceStack().withSuppressedOutput()
                 .withPermission(PermissionSet.ALL_PERMISSIONS)
                 .withLevel(level).withPosition(Vec3.atCenterOf(BlockPos.ZERO)).withRotation(new Vec2(0f, 0f));
@@ -64,7 +50,6 @@ public final class WorldRules {
         if (removed > 0) log.info("removed {} non-player entities", removed);
     }
 
-    /** Discards every entity in the overworld that is not a player. */
     public static int killNonPlayers(MinecraftServer server) {
         List<Entity> doomed = new ArrayList<>();
         for (Entity entity : server.overworld().getAllEntities()) {

@@ -13,25 +13,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-/**
- * The step vocabulary: which step names a JSON scenario may use, and what each one does.
- *
- * <p>One step name, one handler, and the handler is nothing but a guarded call into
- * {@link ScenarioBuilder} — the same verbs the Java scenarios use, so the two layers cannot drift
- * into meaning different things. Adding a step is adding a line here; a step name that is not here is
- * refused while the scenario is read, naming the name and the whole vocabulary, which is what keeps a
- * typo from becoming a no-op.
- *
- * <p>Every handler reads all of its parameters through {@link Args}, so a key that is missing, of the
- * wrong type, or not a parameter of this step at all fails with a message naming the step and the
- * key. There is deliberately no "ignore what you do not understand" path.
- *
- * <p>The vocabulary is documented for authors in
- * {@code src/uitest/resources/uitest/scenarios/README.md}.
- */
 final class ScenarioSteps {
 
-    /** What a step does to a scenario. */
     @FunctionalInterface
     private interface Handler {
 
@@ -184,7 +167,6 @@ final class ScenarioSteps {
 
     private ScenarioSteps() {}
 
-    /** Runs one declared step, or throws naming it. */
     static void apply(ScenarioBuilder builder, JsonStep step) {
         Handler handler = handlers.get(step.action());
         if (handler == null) {
@@ -199,28 +181,18 @@ final class ScenarioSteps {
         args.done();
     }
 
-    /** Whether a step name is part of the vocabulary. */
     static boolean isKnown(String action) {
         return handlers.containsKey(action);
     }
 
-    /** The whole vocabulary, for a message or a log line. */
     static String describeVocabulary() {
         return String.join(", ", handlers.keySet());
     }
 
-    /** The step names, in declaration order. */
     static List<String> names() {
         return List.copyOf(handlers.keySet());
     }
 
-    /**
-     * How many times a gesture step runs.
-     *
-     * <p>Some gestures are one verb repeated rather than a verb of their own — pressing backspace
-     * four times to clear a field, for instance — so the repeat is a parameter instead of a step name
-     * per count.
-     */
     private static int times(Args args, String context) {
         int times = args.integerOr("times", 1);
         if (times < 1 || times > 64) {

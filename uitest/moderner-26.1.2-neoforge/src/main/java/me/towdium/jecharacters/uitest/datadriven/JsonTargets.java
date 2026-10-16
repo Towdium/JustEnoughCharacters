@@ -13,30 +13,10 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.function.Function;
 
-/**
- * Turning the names a JSON step uses into the things the engine presses.
- *
- * <p>Three kinds of name are resolved here, all of them at define time so a bad name is a reported
- * failure rather than a step that quietly does nothing:
- *
- * <ul>
- *   <li><b>a GLFW key</b> — {@code "F"}, {@code "ESCAPE"}, {@code "LEFT_CONTROL"} — read off
- *       {@link GLFW}'s own {@code GLFW_KEY_*} constants, so the vocabulary is the platform's and
- *       every key GLFW names is available;</li>
- *   <li><b>a modifier mask</b> — {@code "CTRL"}, {@code "SHIFT"}, {@code "ALT"}, {@code "SUPER"} —
- *       mapped to the GLFW modifier bits a real keystroke would carry;</li>
- *   <li><b>a key bind</b> — either a friendly name for one of vanilla's own ({@code "inventory"},
- *       {@code "chat"}, …) or the mapping's own name as the game spells it
- *       ({@code "key.jei.focusSearch"}), looked up in the registry every registered mapping lives in.
- *       The second form is what lets a scenario drive a mod's bind without the harness knowing the
- *       mod.</li>
- * </ul>
- */
 final class JsonTargets {
 
     private JsonTargets() {}
 
-    /** The GLFW key code a name stands for; {@code "key.keyboard.f"} and {@code "F"} both work. */
     static int glfwKey(String name) {
         String bare = name.trim();
         if (bare.startsWith("key.keyboard.")) {
@@ -59,7 +39,6 @@ final class JsonTargets {
         }
     }
 
-    /** The GLFW modifier mask a list of modifier names contributes. */
     static int modifierMask(List<String> names) {
         int mask = 0;
         for (String name : names) {
@@ -76,7 +55,6 @@ final class JsonTargets {
         return mask;
     }
 
-    /** The bind a name stands for, as the options-shaped lookup the builder takes. */
     static Function<Options, KeyMapping> bind(String name) {
         Function<Options, KeyMapping> vanilla = vanillaBind(name.trim().toLowerCase(Locale.ROOT));
         if (vanilla != null) {
@@ -104,7 +82,6 @@ final class JsonTargets {
         return mapping;
     }
 
-    /** A friendly name for one of vanilla's own binds, or {@code null} for anything else. */
     private static Function<Options, KeyMapping> vanillaBind(String name) {
         return switch (name) {
             case "chat" -> options -> options.keyChat;
@@ -131,7 +108,6 @@ final class JsonTargets {
         };
     }
 
-    /** {@code "hotbar.1"} … {@code "hotbar.9"}. */
     private static Function<Options, KeyMapping> hotbar(String name) {
         if (!name.startsWith("hotbar.")) return null;
         int slot;
@@ -147,12 +123,6 @@ final class JsonTargets {
         return options -> options.keyHotbarSlots[index];
     }
 
-    /**
-     * The screen class a name stands for.
-     *
-     * <p>A fully qualified name is taken as it is; a bare one is looked for in the two packages the
-     * game's own screens live in, which is what lets a scenario say {@code "InventoryScreen"}.
-     */
     static Class<? extends Screen> screenClass(String name) {
         String bare = name.trim();
         List<String> candidates = new ArrayList<>();
@@ -169,7 +139,6 @@ final class JsonTargets {
                 }
                 throw new ScenarioJsonException(candidate + " is not a Screen");
             } catch (ClassNotFoundException ignored) {
-                // try the next package
             }
         }
         throw new ScenarioJsonException(
