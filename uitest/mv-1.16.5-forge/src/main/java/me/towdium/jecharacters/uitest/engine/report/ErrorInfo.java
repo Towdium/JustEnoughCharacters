@@ -6,13 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Collections;
 
-/**
- * A thrown failure, flattened for the report.
- *
- * @param type       the throwable's class name
- * @param message    its message, or the empty string
- * @param stackTrace one entry per stack frame
- */
 public final class ErrorInfo {
 
     private final String type;
@@ -38,7 +31,6 @@ public final class ErrorInfo {
     }
 
 
-    /** Flattens a throwable, keeping its whole chain's text in the stack trace. */
     public static ErrorInfo of(Throwable thrown) {
         StringWriter writer = new StringWriter();
         thrown.printStackTrace(new PrintWriter(writer));
@@ -53,12 +45,6 @@ public final class ErrorInfo {
         );
     }
 
-    /**
-     * The line without its trailing whitespace.
-     *
-     * <p><b>Port note (1.20.1 → 1.16.5).</b> {@code String.stripTrailing()} is Java 11 and this
-     * harness is compiled by a Java 8 javac; this is the same thing without it.
-     */
     private static String stripTrailing(String line) {
         int end = line.length();
         while (end > 0 && Character.isWhitespace(line.charAt(end - 1))) {

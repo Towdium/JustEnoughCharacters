@@ -27,27 +27,8 @@ import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.stream.Collectors;
 
-/**
- * Finding the JSON scenario files, and reading them.
- *
- * <p>Two channels, both of them fail-closed:
- *
- * <ol>
- *   <li><b>Inside a mod</b> — {@code uitest/scenarios/*.json} in any loaded mod's own resources, read
- *       through FML's {@code IModFile.findResource}, with the runtime class path as a second look so a
- *       dev run whose resources are served as plain directories still works. This is how the harness
- *       ships its scenarios in the repository, and how a downstream mod would ship its own.</li>
- *   <li><b>In the game directory</b> — {@code <game dir>/jech-scenarios/*.json}, re-read on every
- *       scan, so a scenario can be written and tried without touching a checkout.</li>
- * </ol>
- *
- * <p>Nothing here throws. A file that cannot be read is returned as a {@link Loaded} failure and
- * becomes a scenario that fails when it runs, because a file that is present and unreadable is a
- * result, not an absence.
- */
 public final class JsonScenarioSources {
 
-    /** One file's outcome: the parsed scenario, or why it could not be read. */
     public static final class Loaded {
 
         private final String name;
@@ -83,7 +64,6 @@ public final class JsonScenarioSources {
         }
 
 
-        /** Whether this file was rejected. */
         public boolean failed() {
             return scenario == null;
         }
@@ -97,7 +77,6 @@ public final class JsonScenarioSources {
 
     private JsonScenarioSources() {}
 
-    /** Every JSON scenario the two channels offer, in channel order. */
     public static List<Loaded> loadAll() {
         List<Loaded> loaded = new ArrayList<>();
         loaded.addAll(loadModResources());
@@ -127,7 +106,6 @@ public final class JsonScenarioSources {
         return new ArrayList<>(byName.values());
     }
 
-    /** The harness's own {@code uitest/scenarios} folder inside one mod, or {@code null}. */
     private static @Nullable Path findInMod(String modId) {
         ModFileInfo fileInfo = ModList.get().getModFileById(modId);
         if (fileInfo == null) return null;
@@ -140,7 +118,6 @@ public final class JsonScenarioSources {
         }
     }
 
-    /** The same folder seen through the runtime class path, for a dev run that serves it as a directory. */
     private static List<Path> findOnClassPath() {
         List<Path> found = new ArrayList<>();
         ClassLoader loader = Thread.currentThread().getContextClassLoader();
@@ -196,7 +173,6 @@ public final class JsonScenarioSources {
         }
     }
 
-    /** Reads one file, turning every failure into a {@link Loaded} the registry can register. */
     private static Loaded read(Path file, String source) {
         String label = source + ":" + file.getFileName();
         String text;

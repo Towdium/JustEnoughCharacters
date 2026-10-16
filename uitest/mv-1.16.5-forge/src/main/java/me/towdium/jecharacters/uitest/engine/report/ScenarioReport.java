@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Collections;
 
-/** One scenario's outcome and the steps that produced it. */
 public final class ScenarioReport {
 
     private final String name;
@@ -34,10 +33,6 @@ public final class ScenarioReport {
         this.session = session;
     }
 
-    /**
-     * A scenario whose tier is not meaningful to the caller — an MP segment report, or a report a test
-     * builds by hand. The tier a client scenario declared comes through the four-argument form.
-     */
     public ScenarioReport(String name, @Nullable String group, List<String> tags) {
         this(name, group, tags, "shared");
     }
@@ -50,7 +45,6 @@ public final class ScenarioReport {
         return group;
     }
 
-    /** The client-session tier this scenario declared: {@code shared}, {@code reenter} or {@code fresh}. */
     public String session() {
         return session;
     }
@@ -75,7 +69,6 @@ public final class ScenarioReport {
         return Collections.unmodifiableList(new ArrayList<>(steps));
     }
 
-    /** Records the scenario's outcome. */
     public void complete(Status result, long millis, @Nullable String note) {
         this.status = result.wire();
         this.durationMs = millis;
@@ -87,7 +80,6 @@ public final class ScenarioReport {
         return step;
     }
 
-    /** Every capture the scenario produced, gathered from its steps. */
     public List<CaptureRef> captures() {
         List<CaptureRef> all = new ArrayList<>();
         for (StepReport step : steps) {

@@ -15,26 +15,8 @@ import java.util.Deque;
 import java.util.function.Supplier;
 import java.nio.file.Paths;
 
-/**
- * The frame-service implementation of {@link CapturePipeline}: a queue drained one request per
- * frame, writing PNGs under {@code <outDir>/screenshots/<scenario>/}.
- *
- * <p>The readback is of the render target's colour texture, so whether the window is focused,
- * occluded or hidden never matters. Nothing here throws out into a run — a capture that cannot be
- * taken or written is logged and dropped — and every image is held in a try-with-resources
- * statement, so a failed run cannot leak off-heap memory either.
- *
- * <p>The queue carries full frames, arbitrary colour surfaces ({@link SurfaceCapture}) and labelled
- * frame sequences ({@link FrameSequenceCapture}), and each scenario gets a {@link LayoutTimeline}
- * written beside the report.
- *
- * <p><b>Port note.</b> The upstream pipeline's element crop, its tree-snapshot store and its
- * golden-image comparator are gone: they all need the CloudLib widget tree or the golden baselines
- * this batch does not port.
- */
 public final class FrameCapturePipeline implements CapturePipeline {
 
-    /** Directory under the run output root that holds every screenshot, one subdirectory per scenario. */
     public static final String screenshotsDirectory = "screenshots";
 
     private static final Logger logger = LoggerFactory.getLogger("jechtest/uitest");
@@ -43,7 +25,6 @@ public final class FrameCapturePipeline implements CapturePipeline {
     private final Deque<CaptureRequest> pending = new ArrayDeque<>();
     private @Nullable CaptureSink sink;
 
-    /** Uses the default run output directory, {@code jech-uitest}. */
     public FrameCapturePipeline() {
         this(Paths.get("jech-uitest"));
     }
@@ -95,7 +76,6 @@ public final class FrameCapturePipeline implements CapturePipeline {
         return new LayoutTimeline(outDir, scenario);
     }
 
-    /** How many requests are still queued. */
     public int pendingCount() {
         return pending.size();
     }
@@ -116,10 +96,6 @@ public final class FrameCapturePipeline implements CapturePipeline {
         }
     }
 
-    /**
-     * Reads the request's surface and writes it; a surface that cannot be resolved, or that has
-     * nothing on it yet, is logged and dropped like every other skipped capture.
-     */
     private void serviceSurface(CaptureRequest request) {
         Supplier<?> supplier = request.surface();
         Object surface = supplier == null ? null : supplier.get();
@@ -164,7 +140,6 @@ public final class FrameCapturePipeline implements CapturePipeline {
         }
     }
 
-    /** The report spelling of a capture kind, matching {@link me.towdium.jecharacters.uitest.api.CaptureRef}. */
     static String kindOf(CaptureRequest.Kind kind) {
         switch (kind) {
             case surface:
@@ -177,12 +152,6 @@ public final class FrameCapturePipeline implements CapturePipeline {
         throw new IllegalStateException("unreachable capture kind " + kind);
     }
 
-    /**
-     * {@code <scenario>/<step index zero padded>_<label>.png}.
-     *
-     * <p>A sequence frame carries no step prefix: its label already ends in the frame's index, and the
-     * whole run has to be listable as one glob.
-     */
     private static String relativePath(CaptureRequest request) {
         String directory = screenshotsDirectory + "/" + sanitize(request.scenario()) + "/";
         if (request.kind() == CaptureRequest.Kind.sequence) {

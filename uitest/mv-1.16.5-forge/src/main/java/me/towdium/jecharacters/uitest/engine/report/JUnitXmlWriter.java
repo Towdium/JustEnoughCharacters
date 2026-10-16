@@ -5,20 +5,12 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.Locale;
 
-/**
- * Renders a run report as JUnit XML, so a CI job that already understands JUnit picks the failures
- * up without any harness-specific glue.
- *
- * <p>One {@code <testsuite>} per scenario, one {@code <testcase>} per step: a step whose checks
- * failed is a failure, a step that threw is an error, and a scenario that never ran is skipped.
- */
 public final class JUnitXmlWriter {
 
     private static final String suitesName = "jechtest-uitest";
 
     private JUnitXmlWriter() {}
 
-    /** The whole run as one XML document. */
     public static String toXml(RunReport report) {
         StringBuilder xml = new StringBuilder(4096);
         xml.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");

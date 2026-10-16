@@ -5,28 +5,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.gen.Invoker;
 
-/**
- * The harness's writes into {@code MouseHelper}: the grabbed flag, the accumulated turn deltas, and
- * the two handler bodies a scripted in-world gesture has to reach.
- *
- * <p>{@code mouseGrabbed} is written directly rather than through {@code grabMouse()}, whose body
- * warps the real pointer to the window centre and captures the OS cursor
- * ({@code MouseHelper.java:369-385}). {@code xpos/ypos} are deliberately absent: the virtual-cursor
- * seam covers reads of them with a {@code @Inject} at RETURN, so they are never written.
- *
- * <p>{@code accumulatedDX/DY} are what vanilla itself turns with. {@code onMove} adds the per-frame
- * pointer delta to them ({@code MouseHelper.java:252-253}), {@code handleAccumulatedMovement}
- * consumes them once per frame and zeroes them ({@code :262-296}), and {@code turnPlayer} scales
- * them into {@code player.turn} ({@code :298-331}). Writing them therefore turns the player through
- * the true mouse-look path — window-focus gate, inversion, cinematic branch and all.
- *
- * <p>{@code onPress} is the whole in-world click path: NeoForge's {@code InputEvent.MouseButton.Pre}
- * (which is where Nimbus's crosshair routing consumes a click on a pointed panel), then the
- * {@code KeyBinding} the attack/use/pick binds are read from
- * ({@code MouseHelper.java:87-137}). {@code onScroll} is the hotbar wheel. Both are private, and
- * both are reached through {@link me.towdium.jecharacters.uitest.input.RawInputGate}'s synthetic
- * bypass, because the harness's own gate cancels them at HEAD when raw input is blocked.
- */
 @Mixin(MouseHelper.class)
 public interface MouseHandlerAccessor {
 

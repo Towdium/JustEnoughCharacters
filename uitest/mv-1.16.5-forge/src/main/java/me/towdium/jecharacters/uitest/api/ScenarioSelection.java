@@ -8,21 +8,6 @@ import java.util.List;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-/**
- * The scenario selection grammar: {@code all | name | a,b | group: | tag: | regex: | mod:}, with an
- * optional second expression that subtracts.
- *
- * <p>Terms inside one expression are OR-ed, so {@code a,b} selects both. A comma separates terms,
- * which means a regular expression may not contain one; put it in the {@code exclude} expression or
- * widen it. An empty selection matches nothing, and the runner reports that rather than passing
- * silently.
- *
- * <p><b>Port note.</b> The 1.21.1 class with four Java 8 substitutions: {@code Collections.unmodifiableList(new ArrayList<>(x))} is
- * {@link Collections#unmodifiableList} over a copied {@link ArrayList}, {@code Collections.unmodifiableList(Arrays.asList("all"))} is
- * an unmodifiable one-element {@link Arrays#asList}, {@code Collections.emptyList()} is
- * {@link Collections#emptyList}, and {@code String.trim().isEmpty()} is {@code trim().isEmpty()}. The
- * copies are still copies, so the same argument list is never aliased into the selection.
- */
 public final class ScenarioSelection {
 
     private final List<String> include;
@@ -33,29 +18,24 @@ public final class ScenarioSelection {
         this.exclude = Collections.unmodifiableList(new ArrayList<String>(exclude));
     }
 
-    /** Parses two comma-separated expressions. */
     public static ScenarioSelection parse(String include, String exclude) {
         return new ScenarioSelection(split(include), split(exclude));
     }
 
-    /** Selects everything. */
     public static ScenarioSelection all() {
         return new ScenarioSelection(Collections.unmodifiableList(Arrays.asList("all")), Collections.<String>emptyList());
     }
 
-    /** Whether the selection names anything at all. */
     public boolean isEmpty() {
         return include.isEmpty();
     }
 
-    /** Whether a scenario matches. */
     public boolean matches(String name, Collection<String> tags, String group, Class<?> type) {
         if (include.isEmpty()) return false;
         if (!anyMatch(include, name, tags, group, type)) return false;
         return !anyMatch(exclude, name, tags, group, type);
     }
 
-    /** The include expression as it was written, for the report. */
     public String describe() {
         return String.join(",", include);
     }

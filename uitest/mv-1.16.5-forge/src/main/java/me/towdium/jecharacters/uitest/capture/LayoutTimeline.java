@@ -12,21 +12,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 
-/**
- * The file-backed {@link Timeline}: one JSON object per line under
- * {@code <outDir>/timeline/<scenario>.jsonl}, written next to the report.
- *
- * <p>A record is {@code {"frame":N,"t":<millis>,"name":"…","blob":"…"}} — the scenario's own frame
- * counter, the wall-clock timecode, the record's name and the blob verbatim. Each append opens,
- * writes and closes the file: the volume is a handful of lines per frame at most, and appending in
- * real time is what makes the log survive a run that dies mid-scenario.
- *
- * <p>Nothing here throws into a run — a log that cannot be written is warned about and dropped, the
- * same rule every other capture artifact follows.
- */
 public final class LayoutTimeline implements Timeline {
 
-    /** Directory under the run output root that holds the per-scenario logs. */
     public static final String timelineDirectory = "timeline";
 
     private static final Logger logger = LoggerFactory.getLogger("jechtest/uitest");
@@ -37,7 +24,6 @@ public final class LayoutTimeline implements Timeline {
     private final long startedAt = System.currentTimeMillis();
     private long frame;
 
-    /** A timeline for one scenario, replacing any log a previous run of it left behind. */
     public LayoutTimeline(Path outDir, String scenario) {
         this.file = outDir.resolve(relativePath(scenario));
         try {
@@ -48,12 +34,10 @@ public final class LayoutTimeline implements Timeline {
         }
     }
 
-    /** Where a scenario's log lands, relative to the run's output directory. */
     public static String relativePath(String scenario) {
         return timelineDirectory + "/" + FrameCapturePipeline.sanitize(scenario) + ".jsonl";
     }
 
-    /** How many records this timeline has taken. */
     public long records() {
         return frame;
     }
@@ -74,7 +58,6 @@ public final class LayoutTimeline implements Timeline {
         }
     }
 
-    /** The log file, for a caller that wants to name it in a report. */
     public Path file() {
         return file;
     }
