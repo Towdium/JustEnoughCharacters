@@ -1,37 +1,3 @@
-// The standalone in-client UI test harness for JECh mv 1.19.2 / Forge — one
-// independent Gradle build per version line, living in compat-tests/uitest/.
-//
-// The engine is the copy this repository owns (ported from the embedded 1.21.1
-// NeoForge harness; see each copy's Port notes for this line's deltas). The
-// whole `main` source set is the jechtest mod — engine, @Mod entry point and
-// scenarios together — and the run loads it as the one local mod while the two
-// jars under test (JECh's built jar and the pinned JEI jar) travel in as
-// project properties.
-//
-// Toolchain: ModDevGradle *legacyforge* (Forge 1.17–1.20.1 support window) on
-// Gradle 8.10 — the same pair the local JEI 1.20.1 copy runs. The dev run is
-// mojmap-named, so the two production (SRG-named) jars under test MUST ride a
-// remapping configuration: `modRuntimeOnly` remaps SRG->official at resolve
-// time and MDG applies the remap to plain file dependencies too (its
-// ObfuscationExtension constrains FileCollectionDependencies onto the named
-// mappings attribute). Dropping the SRG jars into a mods/ directory instead is
-// the documented dead end (envs/README.md, "Forge rows").
-//
-// Properties every run understands (all of them optional except the two jars):
-//   -PjechTest=<selection>      the scenario selection; without it no run wiring
-//                               is active and the client boots as a plain client
-//   -PjechRunDir=<dir>          a game directory outside this project (jt's
-//                               redirect); the report follows the game into
-//                               <game dir>/uitest
-//   -PjechJar=<abs path>        the JECh forge jar under test (REQUIRED)
-//   -PjeiJar=<abs path>         the pinned JEI jar (REQUIRED)
-//   -PjechTestExclude / -PjechTestGuiScale / -PjechTestWindow=WxH /
-//   -PjechTestInputMode / -PjechTestWatchdogSec / -PjechTestKeepOpen /
-//   -PjechTestHeadless          the same dials the checkout's harness run had
-//
-// The properties travel to the client as system properties, not program
-// arguments, because Minecraft's own argument parser rejects arguments it does
-// not know.
 
 plugins {
     id 'java-library'
@@ -43,10 +9,6 @@ plugins {
 version = mod_version
 group = 'me.towdium.jecharacters.uitest'
 
-// The two jars under test, passed in as absolute paths (jt resolves/builds them
-// and always spells the path, so a stale copy in this tree cannot be tested by
-// accident). Fail-closed at configuration time: a run without them would boot a
-// client with no mod under test and silently prove nothing.
 def jechJarProp = providers.gradleProperty('jechJar')
 def jeiJarProp = providers.gradleProperty('jeiJar')
 def requireJar = { name, prop ->
@@ -65,11 +27,7 @@ def requireJar = { name, prop ->
 def jechJarFile = requireJar('jechJar', jechJarProp)
 def jeiJarFile = requireJar('jeiJar', jeiJarProp)
 
-// --- the run wiring the checkout's gradle/jech-uitest.gradle carried ---
 
-// The output directory is captured as locals: inside a run or task closure the
-// script's own properties are not the closure's delegate, so a script-level name
-// would not resolve there.
 def jechUiTestRunDir = project.findProperty('jechRunDir')?.toString()
 def jechUiTestOutDir = jechUiTestRunDir == null
         ? new File(projectDir, 'runs/client-tests')
@@ -83,9 +41,6 @@ def jechUiTestWatchdogSec = project.findProperty('jechTestWatchdogSec')?.toStrin
 def jechUiTestKeepOpen = project.hasProperty('jechTestKeepOpen')
 def jechUiTestHeadless = project.hasProperty('jechTestHeadless')
 
-// The real input driver warps the OS cursor, which needs a visible, focused
-// window. Rejected at configuration time rather than quietly downgraded to the
-// synthetic driver.
 if (jechUiTestHeadless && jechUiTestInputMode != null && jechUiTestInputMode.equalsIgnoreCase('REAL')) {
     throw new GradleException(
         '-PjechTestHeadless cannot be combined with -PjechTestInputMode=REAL: the real input driver '
@@ -93,7 +48,6 @@ if (jechUiTestHeadless && jechUiTestInputMode != null && jechUiTestInputMode.equ
     )
 }
 
-// The window size is given as WxH; anything else is ignored rather than guessed at.
 def jechUiTestWindowWidth = null
 def jechUiTestWindowHeight = null
 if (jechUiTestWindow != null) {
@@ -114,17 +68,6 @@ java {
     }
 }
 
-// The two jars under test cannot ride `files()` into the remapping
-// configurations: MDG legacyforge's obfuscation machinery mirrors every
-// dependency of a mod* configuration into the remapped variant space as a
-// module constraint, and that conversion has no notation for a
-// FileCollectionDependency - resolution dies with "Cannot convert the provided
-// notation to an object of type DependencyConstraint: file collection"
-// (measured 2026-10-15; LEGACY.md documents module-form dependencies only).
-// They are therefore staged into a flatDir repository inside this build's own
-// build directory under content-derived versions: the jars stay the exact ones
-// jt handed in (the copy is verified by length), and a changed jar resolves as
-// new coordinates - a stale Gradle cache can never test an old build.
 def underTestFlatDir = new File(projectDir, 'build/under-test-flat')
 def stageUnderTestJar = { File jar, String name ->
     def digest = java.security.MessageDigest.getInstance('SHA-1')
@@ -137,8 +80,6 @@ def stageUnderTestJar = { File jar, String name ->
         java.nio.file.Files.copy(jar.toPath(), target.toPath(),
             java.nio.file.StandardCopyOption.REPLACE_EXISTING)
     }
-    // flatDir matches on name:version and ignores the group; the group is
-    // cosmetic namespace for the constraint notation.
     return "local.under-test:${name}:${version}"
 }
 def jechUnderTest = stageUnderTestJar(jechJarFile, 'jech')
@@ -148,23 +89,11 @@ repositories {
     flatDir { dir underTestFlatDir }
 }
 
-// The harness engine compiles against the mod under test's own classes (the
-// Match/JechSearchStorage mixins target them; PinIn is *shaded into* the mv
-// jars, so the jar itself is the compile classpath for those types too) and
-// nothing else beyond Minecraft.
 dependencies {
     compileOnly files(jechJarFile)
-    // The two jars under test, as remapped mods of the run: modRuntimeOnly is
-    // MDG legacyforge's SRG->official remapping configuration (not transitive
-    // by design - LEGACY.md - and each jar here is self-contained anyway:
-    // JECh shades PinIn in, and the pinned JEI jar is the full forge build).
     modRuntimeOnly jechUnderTest
     modRuntimeOnly jeiUnderTest
-    // The refmap generator for the mixins (LEGACY.md §Mixins); it also needs
-    // the mixin { add sourceSets.main, ... } wiring further down.
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
-    // The nullness annotations the ported engine carries are CLASS-retention and
-    // compile-only: nothing at runtime reads them.
     compileOnly 'org.jspecify:jspecify:1.0.1'
 }
 
@@ -174,29 +103,14 @@ legacyForge {
     }
 
     mods {
-        // The harness mod, and the only local mod this project declares: the mod
-        // under test reaches the run as a jar (above), not as a source set.
         jechtest {
             sourceSet(sourceSets.main)
         }
     }
 
     runs {
-        // The harness's one run, named so the task Gradle derives is
-        // `runClient` — the name jt's pipeline derives for every non-NeoForge
-        // loader. Its own game directory keeps a harness boot from ever sharing
-        // a latest.log or a world with an ordinary client, and the -PjechTest
-        // wiring lives here.
         client {
             client()
-            // -PjechRunDir is jt's redirect: the harness run gets that game
-            // directory instead of its own, and the run's output follows the game
-            // into <game dir>/uitest. That keeps a jt run's report, screenshots
-            // and junit.xml inside the run directory jt builds, archives and
-            // cleans. -PjechQuickPlayWorld is deliberately *not* honoured here:
-            // the runner stands up its own flat level (WorldBootstrap) and quits
-            // the client when it is done, so joining a world on launch would only
-            // race the world the scenarios are actually asserted against.
             if (jechUiTestRunDir != null) {
                 gameDirectory = layout.dir(providers.provider { new File(jechUiTestRunDir) })
             } else {
@@ -218,26 +132,17 @@ legacyForge {
     }
 }
 
-// The mixin wiring LEGACY.md §Mixins prescribes: the annotation processor (the
-// dependency above) writes jechtest.refmap.json for this source set, and every
-// run gets `--mixin.config jechtest.mixins.json` appended from the `config`
-// entries — which is how the harness mixins are applied in a dev run, where no
-// jar manifest is read.
 mixin {
     add sourceSets.main, 'jechtest.refmap.json'
     config 'jechtest.mixins.json'
 }
 
-// The manifest attribute is the production load path for the same config
-// (LEGACY.md §Mixins); this jar is dev-only, but the attribute keeps the build
-// honest about what it carries.
 tasks.named('jar') {
     manifest {
         attributes 'MixinConfigs': 'jechtest.mixins.json'
     }
 }
 
-// The harness mod's own mods.toml, expanded the way a mod project's is.
 def generateModMetadata = tasks.register('generateModMetadata', ProcessResources) {
     def replaceProperties = [
             minecraft_version_range: "[${minecraft_version},)",
@@ -260,62 +165,19 @@ idea {
     }
 }
 
-// Deletes the previous run's output so the verification task can never read an
-// older verdict. A real task dependency, not a doFirst: Gradle snapshots a task's
-// inputs before running its actions, so a doFirst is never reached when the
-// runtime classpath fails to resolve - exactly the case the delete exists for.
 def jechUiTestCleanReport = tasks.register('jechCleanUiTestReport', Delete) {
     group = 'verification'
     description = 'Deletes the previous JECh UI test run output.'
     if (jechUiTestRunDir == null) {
-        // Why not `delete jechUiTestOutDir` here: in this form that directory is
-        // the run's whole game directory, and <game dir>/jech-scenarios inside it
-        // is an *input* - the hot folder a scenario is dropped into so it needs no
-        // rebuild. Removing the directory wholesale would take the hot channel
-        // with it and a dropped file would never be discovered, so enumerate the
-        // directory's own direct children and delete all of them except that hot
-        // folder (every bare run is still a clean, one-shot environment). A
-        // Provider, not a File list, so the listing is taken when the task runs
-        // rather than while the script is configured.
         delete providers.provider {
             def children = jechUiTestOutDir.listFiles()
             children == null ? [] : children.findAll { it.name != 'jech-scenarios' }
         }
     } else {
-        // With -PjechRunDir the run borrows a game directory a launcher owns; only
-        // the harness's own output directory under it (<game dir>/uitest) is ours
-        // to clear.
         delete jechUiTestOutDir
     }
 }
 
-// The options.txt a bare run of this harness needs, written into the game
-// directory this build owns. The delete above takes the previous one with the
-// rest of the output, so without this a harness run boots on the client's fresh
-// defaults (en_us, onboarding not done).
-//
-// Two keys, and only those (the same fixture lib/options.py stages for a jt run):
-//
-//   lang:zh_cn - the JEI scenarios assert that a pinyin query reaches a Chinese
-//                item name (石头). A client in en_us has no such names, so those
-//                scenarios would fail on a correct build. This is a fixture of
-//                the scenario, not a preference.
-//   onboardAccessibility:true - the "Welcome to Minecraft!" page is shown while
-//                this is false, and nothing in a run can press its Continue
-//                button (the key is a no-op on a version without the screen —
-//                Options.load ignores unknown keys — but harmless to keep, and
-//                lib/options.py stages it for every version anyway).
-//
-// A key_* line must never be added here. This file carries no "version:" line,
-// so the client's Options.dataFix reads it as data-version 0 and runs the legacy
-// chain, where the key fixer parses every key_* value as a number; a binding
-// with a modifier is not a number, the fixer throws, Options.load() catches it,
-// and EVERY option - lang included - stays at its default (measured 2026-10-14).
-//
-// A run handed a game directory by a launcher (-PjechRunDir, as jt does) is NOT
-// preset from here: that directory belongs to the launcher, which stages its own
-// options.txt into it (jt's preset carries the same two keys). Two writers of one
-// file would only drift.
 def jechUiTestPresetOptions = tasks.register('jechPresetUiTestOptions') {
     group = 'verification'
     description = 'Writes the options.txt a bare harness run needs into the harness game directory.'
@@ -332,24 +194,6 @@ def jechUiTestPresetOptions = tasks.register('jechPresetUiTestOptions') {
     }
 }
 
-// The config/forge-client.toml a harness run needs — same discipline as the
-// options.txt above, but written for BOTH the bare and the -PjechRunDir run:
-// unlike options.txt (which the launcher owns when it hands us a game
-// directory), no layer stages this file, and its one key is a property of this
-// build's own classpath rather than of any launcher.
-//
-// MDG legacyforge's dev run carries the FML language-provider jars
-// (fmlcore/javafmllanguage/lowcodelanguage/mclanguage) on the legacy classpath
-// instead of the module path, so FML's scanner reports every one of them as
-// "Mod file ... is missing mods.toml file" — four load WARNINGS. Forge's
-// client config (client.showLoadWarnings, default true) then *displays* those
-// warnings on the LoadingErrorScreen, which replaces the title screen; a
-// harness run waits for the title screen and dies on its game-ready budget
-// with no error anywhere in the log (measured 2026-10-15 on the 1.20.1 line:
-// three identical stops, the screen named by a diagnostic log of
-// minecraft.screen). The key is the same one Forge 40/43/47 define
-// (MinecraftForge ForgeConfig.java, branches 1.18.x/1.19.x/1.20.x:
-// define("showLoadWarnings", true)).
 def jechUiTestGameDir = jechUiTestRunDir == null ? jechUiTestOutDir : new File(jechUiTestRunDir)
 def jechUiTestPresetForgeClientConfig = tasks.register('jechPresetUiTestForgeClientConfig') {
     group = 'verification'
@@ -418,13 +262,9 @@ def jechUiTestVerify = tasks.register('verifyJechUiTest') {
     }
 }
 
-// The run task's hook is a configureEach: the task is created by MDG after this
-// script is evaluated. A missing report is itself a failure, which is what makes
-// a client that crashed before the runner started show up as a red build.
 tasks.configureEach { task ->
     if (task.name != 'runClient' || jechUiTestSelection == null) return
     task.dependsOn jechUiTestCleanReport
-    // ordered after the delete, so the presets are not deleted with the rest of the output
     task.dependsOn jechUiTestPresetOptions
     task.dependsOn jechUiTestPresetForgeClientConfig
     task.finalizedBy jechUiTestVerify
@@ -434,13 +274,6 @@ tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
 }
 
-// The stock `test` task this java-library build would otherwise carry is
-// unwired: MDG legacyforge's remap machinery constrains every runtime-shaped
-// configuration onto the named-mappings attribute, and that constraint
-// conversion cannot express a plain file dependency — exactly what this
-// build's two jars under test are. The project ships no unit tests (the
-// harness's verdicts ride the run tasks), so the task's own classpath is
-// emptied rather than left as an edge `build` dies on.
 tasks.named('test') {
     testClassesDirs = files()
     classpath = files()
