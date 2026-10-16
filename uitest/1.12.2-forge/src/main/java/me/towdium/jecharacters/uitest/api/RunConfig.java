@@ -2,24 +2,8 @@ package me.towdium.jecharacters.uitest.api;
 
 import java.io.File;
 
-/**
- * Everything a run needs that is not a scenario: what to select, where to write, and the budgets the
- * scenarios inherit.
- *
- * <p>Read from system properties rather than program arguments, because Minecraft's own argument
- * parser rejects arguments it does not know. {@link #requested()} is the single switch that decides
- * whether the harness does anything at all: without {@code -Djech.uitest.run} the frame pump returns
- * immediately and an ordinary client run is untouched.
- *
- * <p><b>Port note.</b> The property prefix is {@code jech.uitest.}, the same one every other checkout
- * uses, because the jt gradle backend spells the switches the same way for every line
- * (compat-tests/lib/instance.py, {@code gradle_command}). The upstream multi-process block and the
- * golden-image switches are not here: neither the MP orchestrator nor the golden comparators are
- * ported.
- */
 public final class RunConfig {
 
-    /** The prefix every harness system property carries. */
     public static final String prefix = "jech.uitest.";
 
     private final String selection;
@@ -59,12 +43,10 @@ public final class RunConfig {
         this.inputMode = inputMode;
     }
 
-    /** Whether a harness run was requested. */
     public static boolean requested() {
         return System.getProperty(prefix + "run") != null;
     }
 
-    /** Reads the whole configuration from system properties. */
     public static RunConfig fromSystemProperties() {
         File outDir = new File(stringProperty("out", "jech-uitest"));
         return new RunConfig(

@@ -1,12 +1,5 @@
 package me.towdium.jecharacters.uitest.api;
 
-/**
- * One assertion outcome recorded by a scenario step.
- *
- * <p><b>Port note.</b> The 1.21.1 record of the same name as a plain immutable class: Java 8 has no
- * records, so the fields are final, the accessors are the record components' names, and the public
- * constructor is the canonical one. Nothing else changes.
- */
 public final class CheckResult {
 
     private final String label;
@@ -19,7 +12,6 @@ public final class CheckResult {
         this.detail = detail;
     }
 
-    /** A result without a detail string. */
     public static CheckResult of(String label, boolean passed) {
         return new CheckResult(label, passed, null);
     }

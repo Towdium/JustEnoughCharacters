@@ -4,24 +4,12 @@ import me.towdium.jecharacters.uitest.api.Status;
 
 import java.util.Locale;
 
-/**
- * Renders a run report as JUnit XML, so a CI job that already understands JUnit picks the failures
- * up without any harness-specific glue.
- *
- * <p>One {@code <testsuite>} per scenario, one {@code <testcase>} per step: a step whose checks
- * failed is a failure, a step that threw is an error, and a scenario that never ran is skipped.
- *
- * <p><b>Port note.</b> The 1.21.1 class with the Java 14 switch expressions rewritten as statements
- * and the two records replaced by a small static nested class. The element names, the counts and the
- * escaping table are unchanged, so a CI reader (and jt) sees the same document from either line.
- */
 public final class JUnitXmlWriter {
 
     private static final String suitesName = "jechtest-uitest";
 
     private JUnitXmlWriter() {}
 
-    /** The whole run as one XML document. */
     public static String toXml(RunReport report) {
         StringBuilder xml = new StringBuilder(4096);
         xml.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
@@ -159,7 +147,6 @@ public final class JUnitXmlWriter {
         return escaped.toString();
     }
 
-    /** One suite's or one run's test counters. */
     private static final class Counts {
 
         private final int tests;

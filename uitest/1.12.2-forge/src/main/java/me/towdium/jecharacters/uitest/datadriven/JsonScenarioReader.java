@@ -12,21 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * Reads one scenario file into a {@link JsonScenario}, refusing anything it does not fully
- * understand.
- *
- * <p>Validation is total rather than incremental: the scenario block and every step block are checked
- * before anything is returned, so a first run of a new file reports what is wrong with it rather than
- * one problem per attempt. Unknown keys are refused at both levels — at the top because a misspelled
- * {@code requiresWorld} would otherwise be a scenario that ran without the world it needs, and inside
- * a step because {@link Args} owns that check.
- *
- * <p><b>Port note.</b> The 1.21.1 class of the same name with one key removed: {@code session} is not
- * in the allowed set, because this checkout's {@link ScenarioOptions} has no session tier (the run
- * always uses the one world it created). A file that writes {@code session} is refused by name, which
- * is the fail-closed form of "this line cannot honour it yet".
- */
 public final class JsonScenarioReader {
 
     private static final Set<String> scenarioKeys = new LinkedHashSet<String>(Arrays.asList(
@@ -36,7 +21,6 @@ public final class JsonScenarioReader {
 
     private JsonScenarioReader() {}
 
-    /** Parses a scenario object; {@code source} names the file in every message. */
     public static JsonScenario parse(JsonObject root, String source) {
         Args args = new Args(source, root);
         for (Map.Entry<String, JsonElement> entry : root.entrySet()) {

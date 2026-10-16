@@ -2,17 +2,10 @@ package me.towdium.jecharacters.uitest.input;
 
 import org.lwjgl.input.Mouse;
 
-/**
- * The pointer half of the input seam: one static method per {@code org.lwjgl.input.Mouse} read,
- * with the same descriptor, answered from {@link CursorState} and forwarded to the real LWJGL read
- * whenever the harness is not driving. See {@link LwjglKeyboardSeam} for the rewrite shape and the
- * port note; this is the {@code MouseHandlerMixin} equivalent.
- */
 public final class LwjglMouseSeam {
 
     private LwjglMouseSeam() {}
 
-    /** Whether the harness owns pointer input: the guard every read below tests. */
     public static boolean controls() {
         return CursorState.isControlling();
     }

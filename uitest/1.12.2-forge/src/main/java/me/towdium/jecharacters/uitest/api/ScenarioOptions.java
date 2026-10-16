@@ -1,14 +1,5 @@
 package me.towdium.jecharacters.uitest.api;
 
-/**
- * The per-scenario tuning a scenario inherits from its {@link ClientScenario} annotation and may
- * override while it is built.
- *
- * <p><b>Port note.</b> This is the 1.12.2 subset of the 1.21.1 record of the same name: the fields
- * the smoke path needs (GUI scale, HUD visibility, the two wait budgets and the settle) are here,
- * and the session tier is not yet, because the 1.12.2 runner in this wave always uses the world it
- * created for the whole run. Immutable, with {@code with*} copies, exactly like the original.
- */
 public final class ScenarioOptions {
 
     private final int guiScale;
@@ -25,7 +16,6 @@ public final class ScenarioOptions {
         this.scenarioTimeoutMs = scenarioTimeoutMs;
     }
 
-    /** The defaults every scenario starts from. */
     public static ScenarioOptions defaults() {
         return new ScenarioOptions(2, false, 60, 5_000, 120_000);
     }

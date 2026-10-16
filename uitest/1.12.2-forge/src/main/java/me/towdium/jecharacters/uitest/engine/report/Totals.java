@@ -2,13 +2,6 @@ package me.towdium.jecharacters.uitest.engine.report;
 
 import me.towdium.jecharacters.uitest.api.Status;
 
-/**
- * Run-wide counters, written into the report's {@code totals} block.
- *
- * <p><b>Port note.</b> The 1.21.1 class of the same name with its switch expressions rewritten as
- * statements; the counters and the JSON field names are identical, which is what lets the 1.12.2
- * {@code verifyJechUiTest} read {@code run.totals.*} the same way the other checkouts' does.
- */
 public final class Totals {
 
     private int scenarios;
@@ -21,7 +14,6 @@ public final class Totals {
     private int checksFailed;
     private int captures;
 
-    /** Counts one finished scenario and its outcome. */
     public void countScenario(Status status) {
         scenarios++;
         switch (status) {
@@ -40,7 +32,6 @@ public final class Totals {
         }
     }
 
-    /** Counts one finished step and its outcome. */
     public void countStep(Status status, int checksInStep, int failedChecksInStep, int capturesInStep) {
         steps++;
         checks += checksInStep;

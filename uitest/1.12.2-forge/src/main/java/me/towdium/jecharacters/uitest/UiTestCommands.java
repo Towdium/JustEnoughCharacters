@@ -12,15 +12,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * {@code /jechtest list|run <selection>}, the manual entry point of the harness.
- *
- * <p><b>Port note.</b> 1.21.1 registers through Brigadier on
- * {@code RegisterClientCommandsEvent}; 1.12.2 has no Brigadier, and the client-side command root is
- * {@code net.minecraftforge.client.ClientCommandHandler}, registered once at init. The verb set and
- * the return shape (list the registered scenarios, run a selection against the world the player
- * already has loaded) are the same.
- */
 public final class UiTestCommands extends CommandBase {
 
     @Override

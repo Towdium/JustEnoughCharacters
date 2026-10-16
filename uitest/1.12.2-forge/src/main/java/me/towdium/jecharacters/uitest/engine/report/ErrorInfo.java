@@ -1,12 +1,5 @@
 package me.towdium.jecharacters.uitest.engine.report;
 
-/**
- * A thrown failure, flattened for the report.
- *
- * <p><b>Port note.</b> The 1.21.1 record as a plain immutable class; the {@code of} factory and the
- * stack-trace flattening are unchanged. Java 8 has no {@code String.stripTrailing()}, so the
- * trailing whitespace is stripped with a small helper instead.
- */
 public final class ErrorInfo {
 
     private final String type;
@@ -20,7 +13,6 @@ public final class ErrorInfo {
                 new java.util.ArrayList<String>(stackTrace));
     }
 
-    /** Flattens a throwable, keeping its whole chain's text in the stack trace. */
     public static ErrorInfo of(Throwable thrown) {
         java.io.StringWriter writer = new java.io.StringWriter();
         thrown.printStackTrace(new java.io.PrintWriter(writer));

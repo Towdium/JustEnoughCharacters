@@ -13,29 +13,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 
-/**
- * Writes the run's artifacts: {@code report.json}, {@code report.txt} and {@code junit.xml}.
- *
- * <p>Every file is written to a temporary sibling and then moved into place, so a reader never sees
- * a half-written report, and the writes are synchronous because the process may shut down the moment
- * the run finishes.
- *
- * <p><b>Port note.</b> The 1.21.1 writer with three Java 8 substitutions: {@code Path} out of a
- * {@link File} instead of any {@code Path.of}, {@code Files.write} with an encoded byte array instead
- * of {@code Files.writeString}, and Gson from Minecraft's own bundled copy (1.12.2 ships
- * {@code com.google.gson}, exactly as NeoForge does) rather than a declared dependency. The file
- * names, the atomic-move shape and the text layout are unchanged, because {@code verifyJechUiTest}
- * and jt read them by the same names.
- */
 public final class ReportWriter {
 
-    /** The machine-readable report. */
     public static final String jsonFile = "report.json";
 
-    /** The same report as text, for a human reading a log. */
     public static final String textFile = "report.txt";
 
-    /** The report as JUnit XML, for a CI job that already understands it. */
     public static final String junitFile = "junit.xml";
 
     private static final Logger log = LogManager.getLogger("jechtest-uitest");
@@ -44,7 +27,6 @@ public final class ReportWriter {
 
     private ReportWriter() {}
 
-    /** Writes every artifact of a finished run into the output directory. */
     public static void write(RunReport report, File outDir) throws IOException {
         Path dir = outDir.toPath();
         Files.createDirectories(dir);
@@ -54,7 +36,6 @@ public final class ReportWriter {
         logSummary(report);
     }
 
-    /** The text rendering of a report. */
     public static String summaryOf(RunReport report) {
         StringBuilder text = new StringBuilder(1024);
         Environment environment = report.environment();
@@ -88,7 +69,6 @@ public final class ReportWriter {
         return text.toString();
     }
 
-    /** Logs the one-line verdict a Gradle run shows. */
     public static void logSummary(RunReport report) {
         Totals totals = report.totals();
         log.info(
