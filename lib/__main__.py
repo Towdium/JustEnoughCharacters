@@ -55,6 +55,17 @@ def build_parser():
     running.add_argument("selection", help="env name or expression: all | name | a,b | tag:x | regex:x")
     running.add_argument("--exclude", default=None, help="a second expression subtracting from the first")
     running.add_argument("--refresh", action="store_true", help="re-fetch API responses and downloads")
+    running.add_argument(
+        "--subject", default=None, metavar="CHECKOUT:GLOB",
+        help="the mod under test, as a checkout directory under $JT_JECH_ROOT plus a "
+             "glob relative to it (e.g. 1.21.1:fabric/build/libs/jecharacters-*.jar). jt uses the "
+             "single jar the glob selects, or builds the module it names first. A run named this "
+             "way is assembled and launched directly, with no Gradle at run time.",
+    )
+    running.add_argument(
+        "--subject-jar", default=None, metavar="PATH",
+        help="the mod under test, as an already-built jar; the same direct launch --subject gives",
+    )
     running.set_defaults(func=cmd_run)
 
     verifying = sub.add_parser("verify", help="read a run report and fail unless every check passed")
@@ -179,7 +190,8 @@ def cmd_resolve(args, log=print):
 
 
 def cmd_run(args, log=print):
-    return runner.run_selection(args.selection, args.exclude, refresh=args.refresh, log=log)
+    return runner.run_selection(args.selection, args.exclude, refresh=args.refresh, log=log,
+                                subject_spec=args.subject, subject_jar=args.subject_jar)
 
 
 def cmd_verify(args, log=print):

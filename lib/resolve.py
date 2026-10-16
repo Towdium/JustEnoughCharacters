@@ -109,8 +109,16 @@ class ResolvedEnv:
 # ---------------------------------------------------------------------------
 
 
-def resolve_env(env, *, refresh=False, download=True, list_only=False, log=print):
-    """Resolve (and optionally download) every artifact of one env."""
+def resolve_env(env, *, refresh=False, download=True, list_only=False, log=print,
+                include_jech=True):
+    """Resolve (and optionally download) every artifact of one env.
+
+    ``include_jech=False`` leaves the mod under test out: a run whose subject is
+    named on the command line (``--subject``) must not also glob the checkout's
+    build output, because the jar it tests is exactly the one the command line
+    named — and because that glob would fail the run before the subject is even
+    looked at when the checkout has not been built yet.
+    """
     http = HttpClient(refresh=refresh)
     cf_client = None
     mr_client = None
@@ -119,8 +127,11 @@ def resolve_env(env, *, refresh=False, download=True, list_only=False, log=print
     artifacts = []
 
     # 1. the mod under test
-    jech = env.jech
-    if jech.source == LOCAL_BUILD_TAG:
+    jech = env.jech if include_jech else None
+    if jech is None:
+        notes.append("no jar under test is declared here: this run takes it from the command line "
+                     "(--subject/--subject-jar), which is the only thing that decides it")
+    elif jech.source == LOCAL_BUILD_TAG:
         jar = local_build_jar(env)
         ids = jar_mod_ids(jar)
         if ids and jech.expect_mod_id and jech.expect_mod_id not in ids:
@@ -266,7 +277,7 @@ def local_build_jar(env):
         first_match_wins = False
     files = []
     for base in roots:
-        group = _jars_under(base, pattern)
+        group = jars_under(base, pattern)
         if not group:
             continue
         if first_match_wins:
@@ -289,7 +300,7 @@ def local_build_jar(env):
     return files[0]
 
 
-def _jars_under(base, pattern):
+def jars_under(base, pattern):
     """The runtime jars one root contributes: build output, never sources/javadoc."""
     group = [c for c in sorted(Path(base).glob(pattern)) if c.is_file() and c.suffix == ".jar"]
     runtime = [c for c in group if not fold(c.name).endswith(NON_RUNTIME_SUFFIXES)]

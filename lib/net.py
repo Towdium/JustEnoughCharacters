@@ -83,6 +83,16 @@ class HttpClient:
         return parsed
 
     # -- downloads ---------------------------------------------------------
+    def get_text(self, url, *, headers=None, what=None):
+        """A response body as text, with no cache entry.
+
+        Only maven ``.sha1`` sidecars use this: they are tiny, they are read once
+        to verify a download that is then cached by hash, and caching them by url
+        would add a cache layer nothing benefits from.
+        """
+        body = self._request(url, headers, what=what or url)
+        return body.decode("utf-8", errors="replace").strip()
+
     def download(self, url, dest, *, headers=None, sha1=None, what=None, refresh=False):
         """Fetch ``url`` into ``dest``; reuse the existing file when it still verifies."""
         dest = Path(dest)

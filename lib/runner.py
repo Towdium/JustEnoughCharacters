@@ -30,9 +30,14 @@ from pathlib import Path
 
 from . import checks as checks_mod
 from . import envs as envs_mod
-from . import instance, options, pack as pack_mod, paths, report as report_mod, resolve, worlds
-from . import uitest_pipeline
+from . import harness, instance, options, pack as pack_mod, paths, report as report_mod, resolve
+from . import subject as subject_mod
+from . import uitest_pipeline, worlds
 from .errors import EXIT_FAIL, EXIT_OK, EXIT_USAGE, EXIT_WATCHDOG, ConfigError, JtError
+from .launch import assemble as assemble_mod
+from .launch import launch as launch_mod
+from .launch import loader as loader_mod
+from .launch import vanilla as vanilla_mod
 from .select import Selection
 from .util import atomic_write_json, atomic_write_text, now_iso, now_stamp, sanitize_name
 
@@ -76,7 +81,8 @@ class RunOutcome:
 # ---------------------------------------------------------------------------
 
 
-def run_selection(expression, exclude=None, *, envs=None, refresh=False, log=print):
+def run_selection(expression, exclude=None, *, envs=None, refresh=False, log=print,
+                  subject_spec=None, subject_jar=None):
     """Run every env the selection matches; returns the process exit code."""
     paths.ensure_data_dirs()
     selection = Selection.parse(expression, exclude)
@@ -103,7 +109,8 @@ def run_selection(expression, exclude=None, *, envs=None, refresh=False, log=pri
         return EXIT_FAIL
 
     for env in matched:
-        entry, code = run_env(env, refresh=refresh, log=log)
+        entry, code = run_env(env, refresh=refresh, log=log,
+                              subject_spec=subject_spec, subject_jar=subject_jar)
         report["envs"].append(entry)
         results.append((entry, code))
 
@@ -114,7 +121,8 @@ def run_selection(expression, exclude=None, *, envs=None, refresh=False, log=pri
     return RunOutcome(report, agg_dir, results).exit_code
 
 
-def run_env(env, *, refresh=False, log=print, selection_label=None):
+def run_env(env, *, refresh=False, log=print, selection_label=None, subject_spec=None,
+            subject_jar=None):
     """Run one env end to end; returns ``(report entry, exit code)``."""
     paths.ensure_data_dirs()
     run_id = f"{sanitize_name(env.name)}-{now_stamp()}"
@@ -176,7 +184,8 @@ def run_env(env, *, refresh=False, log=print, selection_label=None):
         log(f"SKIP {env.name}: {env.skip}")
     else:
         try:
-            _execute(env, run_dir, entry, started_wall=started_wall, refresh=refresh, log=log)
+            _execute(env, run_dir, entry, started_wall=started_wall, refresh=refresh, log=log,
+                     subject_spec=subject_spec, subject_jar=subject_jar)
         except JtError as exc:
             entry[CONFIG_ERROR] = True
             entry["notes"].append(f"{type(exc).__name__}: {exc}")
@@ -250,14 +259,41 @@ def _env_report(run_id, env, entry, started_iso, duration_ms, *, selection_label
 # ---------------------------------------------------------------------------
 
 
-def _execute(env, run_dir, entry, *, started_wall, refresh, log):
+def _execute(env, run_dir, entry, *, started_wall, refresh, log, subject_spec=None,
+             subject_jar=None):
+    """Resolve the env, hand it to one launch layer, then watch and judge the run.
+
+    Two launch layers exist side by side while the matrix moves over:
+
+    * the **direct** one (``lib.launch``) assembles a real client environment from
+      the env's description plus the ``--subject`` jar and starts the client
+      itself — no Gradle, nothing built at run time;
+    * the **Gradle** one (the checkout's own run task, or a standalone ``uitest``
+      build's) is the backend every row used until the direct one existed.
+
+    Which one runs is decided by the command line, not by the env file: a subject
+    was named, or it was not. Once every row is ported, the second layer and that
+    choice both go away, and a harness row without a subject becomes an error.
+    """
+    source = env.jech.source if env.jech is not None else "the command line"
     log(f"{uitest_pipeline.STAGE_PREFIX} config: resolving {env.name} "
-        f"(jech {env.jech.source}, {len(env.mods)} target mod(s), {len(env.checks)} check(s))")
-    resolved = resolve.resolve_env(env, refresh=refresh, download=True, log=log)
+        f"(jech {source}, {len(env.mods)} target mod(s), {len(env.checks)} check(s))")
+    resolved = resolve.resolve_env(env, refresh=refresh, download=True, log=log,
+                                  include_jech=not (subject_spec or subject_jar))
     entry["mods"] = [artifact.to_json() for artifact in resolved.artifacts]
     for note in resolved.notes:
         entry["notes"].append(note)
 
+    if subject_spec or subject_jar:
+        handle = _launch_direct(env, run_dir, entry, resolved, refresh=refresh, log=log,
+                                subject_spec=subject_spec, subject_jar=subject_jar)
+    else:
+        handle = _launch_gradle_backend(env, run_dir, entry, resolved, refresh=refresh, log=log)
+    _watch_and_judge(env, entry, run_dir, handle, started_wall, log=log)
+
+
+def _launch_gradle_backend(env, run_dir, entry, resolved, *, refresh, log):
+    """The Gradle backends: a run task in a checkout or a standalone ``uitest`` build."""
     # The world seed is built before the pack, because the pack carries it: an env
     # that declares a world is launched into it, and a missing seed is built here
     # (once — every later run, and every env naming the same pair, reuses it).
@@ -281,7 +317,6 @@ def _execute(env, run_dir, entry, *, started_wall, refresh, log):
         + ", ".join(f"{key}={value}" for key, value, _why in options.explain(env.mc))
         + " (see lib/options.py)"
     )
-    ready_values, markers = readiness_rule(env)
 
     # The pack is the run's written-down input set: what isolation stages into the
     # game directory from, and what the report keeps next to the evidence.
@@ -388,10 +423,131 @@ def _execute(env, run_dir, entry, *, started_wall, refresh, log):
     # The game is a java process under this launcher whose working directory is
     # this run's game directory. The tracker searches until it has found the client
     # and re-checks it by signal afterwards (see the class).
-    tracker = instance.GradleGameTracker(proc.pid, minecraft_dir)
+    return LaunchHandle(
+        minecraft_dir=minecraft_dir, launcher_log=launcher_log, proc=proc,
+        pids_fn=instance.GradleGameTracker(proc.pid, minecraft_dir).pids,
+        crash_before=crash_before,
+    )
+
+
+def _launch_direct(env, run_dir, entry, resolved, *, subject_spec, subject_jar, refresh, log):
+    """Assemble a real client environment from the env's description and start it.
+
+    The order is the one the design puts on paper — subject, harness, client,
+    loader, game directory, command line — and every step is cached separately
+    (``cache/subject``, ``cache/harness``, ``cache/mc``, ``cache/loader``), so a
+    second run of the same row re-downloads nothing and a second run of another
+    row of the same Minecraft version reuses the client, its libraries and its
+    assets.
+
+    The world seed and the pack the Gradle backend still builds have no place
+    here: the harness creates and pins its own level, and the input set of a run
+    is a game directory of symlinks plus the ``options.txt`` fixture.
+    """
+    if env.uitest is None:
+        raise ConfigError(
+            f"{env.name}: --subject was given, but the row declares no uitest block, so there is "
+            "nothing for the subject to be loaded into. Either run the row without a subject (its "
+            "checkout backend) or declare what it runs."
+        )
+    if env.world is not None:
+        raise ConfigError(
+            f"{env.name}: the direct backend does not seed a world (env.world is declared); run "
+            "this row through its checkout backend until the harness creates its own level there"
+        )
+    java_home = instance.java_home_for(env.java_version)
+    log(f"{env.name}: direct launch on java {env.java_version} ({paths.display(java_home)})")
+
+    subject = subject_mod.resolve(spec=subject_spec, jar=subject_jar, java_home=java_home, log=log)
+    entry["subject"] = subject.to_json()
+    entry["notes"].extend(subject.notes)
+
+    harness_jar = harness.ensure_jar(env, subject_jar=subject.path,
+                                     target_mod_jar=harness.target_mod_of(env, resolved),
+                                     java_home=java_home, log=log)
+    entry["harness"] = {
+        "project": env.uitest.project,
+        "jar": paths.display(harness_jar),
+        "selection": env.uitest.selection,
+    }
+
+    client = vanilla_mod.ensure_client(env.mc, refresh=refresh, log=log)
+    for note in client.notes:
+        entry["notes"].append(note)
+    loader = loader_mod.ensure_loader(env.loader.type, env.loader.version, env.mc,
+                                      refresh=refresh, log=log)
+    entry["notes"].append(f"client: {client.describe()}")
+    entry["notes"].append(f"loader: {loader.describe()}")
+
+    minecraft_dir = instance.run_game_dir(run_dir)
+    game = assemble_mod.assemble(
+        minecraft_dir, mc=env.mc,
+        mod_jars=[subject.path, *[artifact.path for artifact in resolved.mods], harness_jar],
+        options_extra=env.uitest.options, log=log,
+    )
+    entry["notes"].extend(game.notes)
+    entry["notes"].append(
+        f"assemble: {paths.display(game.path)} — mods/ holds {', '.join(game.mods)}; every jar and "
+        "every asset library stays in the shared cache and is linked or passed by path, so this "
+        "directory is the run's own state and nothing else"
+    )
+    entry["launcherLog"] = paths.display(run_dir / "client.log")
+    entry["log"] = paths.display(instance.log_path_in(minecraft_dir))
+    command, _values = launch_mod.build_command(
+        java=java_home / "bin" / "java", client=client, loader=loader, game_dir=minecraft_dir,
+        natives_dir=client.natives_dir, extra_jvm=harness.jvm_args(env, minecraft_dir), log=log,
+    )
+    entry["launch"] = {
+        "backend": "direct",
+        "java": paths.display(java_home),
+        "mainClass": loader.main_class,
+        "nativesDir": paths.display(client.natives_dir),
+        "assetsDir": paths.display(client.assets_dir),
+        "classpathEntries": len(client.classpath) + len(loader.classpath),
+    }
+    entry["notes"].append(
+        f"uitest: scenarios selected by {env.uitest.selection!r}; the harness writes "
+        f"{checks_mod.UITEST_REPORT_DEFAULT} and its captures under "
+        f"{checks_mod.UITEST_CAPTURES_DIR}/ inside the game directory, and quits the client "
+        "itself once the selection is done"
+    )
+
+    crash_before = crash_report_snapshot(minecraft_dir)
+    proc = launch_mod.launch(command, cwd=minecraft_dir, log_path=run_dir / "client.log", log=log)
+
+    def pids():
+        # The client *is* this process: nothing has to be searched for, and its
+        # exit is the run's exit code.
+        return [] if proc.poll() is not None else [proc.pid]
+
+    return LaunchHandle(minecraft_dir=minecraft_dir, launcher_log=run_dir / "client.log", proc=proc,
+                        pids_fn=pids, crash_before=crash_before)
+
+
+class LaunchHandle:
+    """What a launch layer hands the shared watch/judge half of a run."""
+
+    def __init__(self, *, minecraft_dir, launcher_log, proc, pids_fn, crash_before):
+        self.minecraft_dir = Path(minecraft_dir)
+        self.launcher_log = Path(launcher_log)
+        self.proc = proc
+        self.pids_fn = pids_fn
+        self.crash_before = crash_before
+
+
+def _watch_and_judge(env, entry, run_dir, handle, started_wall, *, log):
+    """Follow the session to its end, then evaluate every check and write evidence.
+
+    Identical for both launch layers: what a check reads (the game log, the game
+    directory, the harness's report, exit code and crash reports) does not depend
+    on how the client was started.
+    """
+    minecraft_dir = handle.minecraft_dir
+    log_path = instance.log_path_in(minecraft_dir)
+    ready_values, markers = readiness_rule(env)
     follower = instance.LogFollower(log_path, started_wall, poll=POLL_SEC)
-    watch = _watch(env, proc, follower, started_wall, log=log,
-                   ready_values=ready_values, markers=markers, pids_fn=tracker.pids)
+    watch = _watch(env, handle.proc, follower, started_wall, log=log,
+                   ready_values=ready_values, markers=markers, pids_fn=handle.pids_fn)
 
     entry["timedOut"] = watch["timed_out"]
     entry["watchdog"] = watch["timed_out"]
@@ -421,7 +577,7 @@ def _execute(env, run_dir, entry, *, started_wall, refresh, log):
         atomic_write_text(run_dir / "game.log", follower.text)
 
     crash_after = crash_report_snapshot(minecraft_dir)
-    new_crashes = sorted(crash_after - crash_before)
+    new_crashes = sorted(crash_after - handle.crash_before)
     if new_crashes:
         log(f"{env.name}: crash report(s) during the run: {', '.join(new_crashes)}")
 
@@ -447,7 +603,7 @@ def _execute(env, run_dir, entry, *, started_wall, refresh, log):
         if item["status"] != checks_mod.PASS:
             log(f"{env.name}: {item['status']} {item['name']}: {item['detail']}")
     if not follower.session_started:
-        tail = tail_of(launcher_log)
+        tail = tail_of(handle.launcher_log)
         if tail:
             entry["notes"].append("launcher.log tail:\n" + tail)
             log(f"{env.name}: launcher.log tail:\n{tail}")

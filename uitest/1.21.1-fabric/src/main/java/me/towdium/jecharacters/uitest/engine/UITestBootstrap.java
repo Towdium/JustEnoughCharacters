@@ -1,7 +1,6 @@
 package me.towdium.jecharacters.uitest.engine;
 
 import me.towdium.jecharacters.uitest.api.RunConfig;
-import net.fabricmc.loader.api.FabricLoader;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -23,9 +22,16 @@ import org.jspecify.annotations.Nullable;
  * itself, through the harness's own mixin config. Everything below that seam is identical.
  *
  * <p>The mixin belongs to {@code jechtest}, so it is only ever applied when the harness mod is
- * loaded — a plain dev client never reaches this class at all, and the shipped jar carries neither
- * the mixin nor this class. On top of that the class returns immediately outside a dev environment,
- * and a run only starts when {@code -Djech.uitest.run} was set.
+ * loaded — a plain client never reaches this class at all, and the shipped jar carries neither the
+ * mixin nor this class. On top of that a run only starts when {@code -Djech.uitest.run} was set.
+ *
+ * <p><b>Why {@code -Djech.uitest.run} is the whole gate.</b> It used to be that plus "the loader
+ * says this is a development environment", because the harness was loaded onto a Gradle dev run's
+ * class path. The harness is now a production artifact loaded through the game's own {@code mods/}
+ * directory — that is the point of the direct launcher — so there is no development environment to
+ * detect, and the dev check did not merely become redundant, it made every scenario silently
+ * unattended: the mod loaded, the property was set, and this method returned before starting
+ * anything.
  */
 public final class UITestBootstrap {
 
@@ -49,7 +55,6 @@ public final class UITestBootstrap {
 
     /** One rendered frame, called by the harness's own mixin on {@code Minecraft}'s render tick. */
     public static void onFrame() {
-        if (!FabricLoader.getInstance().isDevelopmentEnvironment()) return;
         UITestRunner current = runner;
         if (current == null) {
             if (!RunConfig.requested()) return;
@@ -66,7 +71,6 @@ public final class UITestBootstrap {
      * whatever the frame rate is doing.
      */
     public static void onTick() {
-        if (!FabricLoader.getInstance().isDevelopmentEnvironment()) return;
         UITestRunner current = runner;
         if (current == null) return;
         current.onTick();

@@ -5,7 +5,6 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import me.towdium.jecharacters.uitest.engine.UITestRunner;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.network.chat.Component;
 
@@ -32,7 +31,6 @@ public final class UiTestCommands {
     private UiTestCommands() {}
 
     public static void register(CommandDispatcher<FabricClientCommandSource> dispatcher) {
-        if (!FabricLoader.getInstance().isDevelopmentEnvironment()) return;
         dispatcher.register(uiTest());
     }
 
