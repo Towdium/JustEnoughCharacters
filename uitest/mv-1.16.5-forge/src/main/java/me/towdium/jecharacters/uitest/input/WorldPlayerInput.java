@@ -239,7 +239,7 @@ final class WorldPlayerInput implements PlayerInput {
 
     /** The GLFW key a bind carries, or {@code -1} when it has none this input can press. */
     private static int pressableKeyOf(KeyBinding mapping) {
-        InputMappings.Key key = mapping.getKey();
+        InputMappings.Input key = mapping.getKey();
         if (key.getType() == InputMappings.Type.KEYSYM && key.getValue() != InputMappings.UNKNOWN.getValue()) {
             return key.getValue();
         }
@@ -273,7 +273,7 @@ final class WorldPlayerInput implements PlayerInput {
         if (modifier == null) return new int[0];
         List<Integer> keys = new ArrayList<>(2);
         for (int keyCode : MODIFIER_KEY_CANDIDATES) {
-            InputMappings.Key key = InputMappings.Type.KEYSYM.getOrCreate(keyCode);
+            InputMappings.Input key = InputMappings.Type.KEYSYM.getOrCreate(keyCode);
             if (modifier.matches(key) && keyCode != InputMappings.UNKNOWN.getValue()) {
                 keys.add(keyCode);
             }
@@ -311,7 +311,7 @@ final class WorldPlayerInput implements PlayerInput {
         ClientPlayerEntity player = requirePlayer();
         requireWorldLook();
         MouseHandlerAccessor mouse = mouse();
-        int invert = Minecraft.getInstance().options.invertYMouse().get() ? -1 : 1;
+        int invert = Minecraft.getInstance().options.invertYMouse ? -1 : 1;
         double scale = turnScale() * entityTurnScale;
         double pitch = clampPitch(player, dPitch);
         mouse.setAccumulatedDx(mouse.getAccumulatedDx() + (dYaw / scale));
@@ -322,8 +322,8 @@ final class WorldPlayerInput implements PlayerInput {
     public void lookSweep(float toYaw, float toPitch, int durationTicks) {
         ClientPlayerEntity player = requirePlayer();
         requireWorldLook();
-        sweepStartYaw = player.getYRot();
-        sweepStartPitch = player.getXRot();
+        sweepStartYaw = player.yRot;
+        sweepStartPitch = player.xRot;
         sweepDeltaYaw = MathHelper.wrapDegrees(toYaw - sweepStartYaw);
         sweepDeltaPitch = toPitch - sweepStartPitch;
         sweepDurationTicks = Math.max(1, durationTicks);
@@ -366,14 +366,14 @@ final class WorldPlayerInput implements PlayerInput {
         if (progress >= 1.0F) {
             // the clock has run out: land the span exactly, whatever the frames before it managed
             turnBy(
-                (float) MathHelper.wrapDegrees((sweepStartYaw + sweepDeltaYaw) - watched.getYRot()),
-                (float) ((sweepStartPitch + sweepDeltaPitch) - watched.getXRot())
+                (float) MathHelper.wrapDegrees((sweepStartYaw + sweepDeltaYaw) - watched.yRot),
+                (float) ((sweepStartPitch + sweepDeltaPitch) - watched.xRot)
             );
             sweepActive = false;
         } else {
             float targetYaw = sweepStartYaw + (float) (sweepDeltaYaw * progress);
             float targetPitch = sweepStartPitch + (float) (sweepDeltaPitch * progress);
-            turnBy((float) MathHelper.wrapDegrees(targetYaw - watched.getYRot()), targetPitch - watched.getXRot());
+            turnBy((float) MathHelper.wrapDegrees(targetYaw - watched.yRot), targetPitch - watched.xRot);
         }
     }
 
@@ -446,10 +446,10 @@ final class WorldPlayerInput implements PlayerInput {
                 System.nanoTime(),
                 clientTick,
                 partialTick,
-                player.getYRot(),
-                player.getXRot(),
-                MathHelper.lerp(partialTick, player.yRotO, player.getYRot()),
-                MathHelper.lerp(partialTick, player.xRotO, player.getXRot()),
+                player.yRot,
+                player.xRot,
+                MathHelper.lerp(partialTick, player.yRotO, player.yRot),
+                MathHelper.lerp(partialTick, player.xRotO, player.xRot),
                 camera.getYRot(),
                 camera.getXRot()
             )
@@ -479,19 +479,15 @@ final class WorldPlayerInput implements PlayerInput {
             // rotation through it, so the harness refuses rather than returning an approximation
             throw new IllegalStateException("the cinematic camera is on; an exact scripted turn needs it off");
         }
-        double base = options.sensitivity().get() * 0.6 + 0.2;
+        double base = options.sensitivity * 0.6 + 0.2;
         double cubed = base * base * base;
-        ClientPlayerEntity player = Minecraft.getInstance().player;
-        if (player != null && Minecraft.getInstance().options.getCameraType().isFirstPerson() && player.isScoping()) {
-            return cubed;
-        }
         return cubed * 8.0;
     }
 
     /** Clamps a pitch delta the way {@code Entity.turn} clamps the result, so the delta is exact. */
     private static float clampPitch(ClientPlayerEntity player, float dPitch) {
-        float wanted = MathHelper.clamp(player.getXRot() + dPitch, -90.0F, 90.0F);
-        return wanted - player.getXRot();
+        float wanted = MathHelper.clamp(player.xRot + dPitch, -90.0F, 90.0F);
+        return wanted - player.xRot;
     }
 
     // endregion
@@ -545,7 +541,7 @@ final class WorldPlayerInput implements PlayerInput {
     public void releaseAll() {
         cancelSweep();
         List<Integer> held = new ArrayList<>();
-        for (IntIterator iterator = heldKeys.intIterator(); iterator.hasNext();) {
+        for (IntIterator iterator = heldKeys.iterator(); iterator.hasNext();) {
             held.add(iterator.nextInt());
         }
         heldKeys.clear();

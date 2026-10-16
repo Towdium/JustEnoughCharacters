@@ -192,8 +192,8 @@ final class JsonTargets {
         String bare = name.trim();
         List<String> candidates = new ArrayList<>();
         candidates.add(bare);
-        candidates.add("net.minecraft.client.gui.screens." + bare);
-        candidates.add("net.minecraft.client.gui.screens.inventory." + bare);
+        candidates.add("net.minecraft.client.gui.screen." + bare);
+        candidates.add("net.minecraft.client.gui.screen.inventory." + bare);
         for (String candidate : candidates) {
             try {
                 Class<?> type = Class.forName(candidate);

@@ -1,6 +1,6 @@
 package me.towdium.jecharacters.uitest.api;
 
-import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.command.CommandSource;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.ResourceLocation;
@@ -103,7 +103,7 @@ public final class ServerContext {
     /** Fills an inclusive box with one block. */
     public void fill(TestContext context, BlockPos from, BlockPos to, BlockState state) {
         run(context, "fill " + from.toShortString() + ".." + to.toShortString(), () -> {
-            BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
+            BlockPos.Mutable cursor = new BlockPos.Mutable();
             for (int x = from.getX(); x <= to.getX(); x++) {
                 for (int y = from.getY(); y <= to.getY(); y++) {
                     for (int z = from.getZ(); z <= to.getZ(); z++) {
@@ -120,9 +120,9 @@ public final class ServerContext {
     }
 
     /** Hands a block entity to an action, on the server thread. */
-    public void withBlockEntity(TestContext context, BlockPos pos, Consumer<BlockEntity> action) {
+    public void withBlockEntity(TestContext context, BlockPos pos, Consumer<TileEntity> action) {
         run(context, "withBlockEntity " + pos.toShortString(), () -> {
-            BlockEntity blockEntity = overworld().getBlockEntity(pos);
+            TileEntity blockEntity = overworld().getBlockEntity(pos);
             if (blockEntity == null) {
                 throw new IllegalStateException("no block entity at " + pos.toShortString());
             }
@@ -134,7 +134,7 @@ public final class ServerContext {
     public void teleportPlayer(TestContext context, double x, double y, double z) {
         run(context, "teleportPlayer", () -> {
             ServerPlayerEntity player = requirePlayer();
-            player.teleportTo(overworld(), x, y, z, player.getYRot(), player.getXRot());
+            player.teleportTo(overworld(), x, y, z, player.yRot, player.xRot);
         });
     }
 
@@ -153,15 +153,16 @@ public final class ServerContext {
             if (resolved == Items.AIR) {
                 throw new IllegalStateException("unknown item " + item);
             }
-            requirePlayer().getInventory().add(new ItemStack(resolved, count));
+            requirePlayer().inventory.add(new ItemStack(resolved, count));
         });
     }
 
     /** Runs a server command with its output suppressed. */
     public void runCommand(TestContext context, String command) {
         run(context, "command " + command, () -> {
-            CommandSourceStack source = server.createCommandSourceStack().withSuppressedOutput().withPermission(4);
-            server.getCommands().performPrefixedCommand(source, command);
+            CommandSource source = server.createCommandSourceStack().withSuppressedOutput().withPermission(4);
+            server.getCommands().performCommand(source,
+                command.startsWith("/") ? command.substring(1) : command);
         });
     }
 

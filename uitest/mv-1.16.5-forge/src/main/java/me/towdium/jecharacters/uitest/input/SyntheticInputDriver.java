@@ -191,7 +191,7 @@ public class SyntheticInputDriver extends InputDriver implements KeyState.Source
 
     private int heldModifiers() {
         int modifiers = 0;
-        IntIterator iterator = heldKeys.intIterator();
+        IntIterator iterator = heldKeys.iterator();
         while (iterator.hasNext()) {
             modifiers |= Keys.modifierMaskOf(iterator.nextInt());
         }

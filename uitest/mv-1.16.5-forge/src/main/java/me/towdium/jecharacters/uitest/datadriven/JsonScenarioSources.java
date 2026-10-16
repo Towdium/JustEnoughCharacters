@@ -7,6 +7,7 @@ import net.minecraftforge.fml.ModList;
 import net.minecraftforge.forgespi.language.IModFileInfo;
 import net.minecraftforge.forgespi.language.IModInfo;
 import net.minecraftforge.forgespi.locating.IModFile;
+import net.minecraftforge.fml.loading.moddiscovery.ModFileInfo;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -128,11 +129,11 @@ public final class JsonScenarioSources {
 
     /** The harness's own {@code uitest/scenarios} folder inside one mod, or {@code null}. */
     private static @Nullable Path findInMod(String modId) {
-        IModFileInfo fileInfo = ModList.get().getModFileById(modId);
+        ModFileInfo fileInfo = ModList.get().getModFileById(modId);
         if (fileInfo == null) return null;
         IModFile file = fileInfo.getFile();
         try {
-            return file.findResource("uitest", "scenarios");
+            return file.findResource("uitest/scenarios");
         } catch (RuntimeException e) {
             log.warn("could not look for JSON scenarios inside mod {} ({})", modId, file.getFileName(), e);
             return null;
@@ -188,7 +189,7 @@ public final class JsonScenarioSources {
                     .filter(Files::isRegularFile)
                     .filter(path -> path.getFileName().toString().endsWith(suffix))
                     .sorted()
-                    .collect(Collectors.collect(Collectors.toList()));
+                    .collect(Collectors.toList());
         } catch (IOException | RuntimeException e) {
             log.warn("could not list the JSON scenarios in {} ({})", directory, source, e);
             return Collections.emptyList();
@@ -207,7 +208,7 @@ public final class JsonScenarioSources {
         }
         JsonElement parsed;
         try {
-            parsed = JsonParser.parseString(text);
+            parsed = new JsonParser().parse(text);
         } catch (RuntimeException e) {
             return new Loaded(DataDrivenScenario.fallbackName(file), label, null,
                     "is not valid JSON (" + e.getMessage() + ")");

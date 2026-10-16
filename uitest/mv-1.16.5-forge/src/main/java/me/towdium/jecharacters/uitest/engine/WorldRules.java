@@ -1,6 +1,6 @@
 package me.towdium.jecharacters.uitest.engine;
 
-import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.command.CommandSource;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.server.ServerWorld;
@@ -51,10 +51,10 @@ public final class WorldRules {
     /** Applies every pin. Runs on the integrated server thread. */
     public static void pin(MinecraftServer server) {
         ServerWorld level = server.overworld();
-        CommandSourceStack source = server.createCommandSourceStack().withSuppressedOutput().withPermission(4)
+        CommandSource source = server.createCommandSourceStack().withSuppressedOutput().withPermission(4)
                 .withLevel(level).withPosition(Vector3d.atCenterOf(BlockPos.ZERO)).withRotation(new Vector2f(0f, 0f));
         for (String command : commands) {
-            server.getCommands().performPrefixedCommand(source, command);
+            server.getCommands().performCommand(source, command);
         }
         int removed = killNonPlayers(server);
         log.info("pinned {} world rules on {}", commands.size(), level.dimension().location());
@@ -65,11 +65,11 @@ public final class WorldRules {
     public static int killNonPlayers(MinecraftServer server) {
         List<Entity> doomed = new ArrayList<>();
         for (Entity entity : server.overworld().getAllEntities()) {
-            if (!(entity instanceof Player)) {
+            if (!(entity instanceof PlayerEntity)) {
                 doomed.add(entity);
             }
         }
-        doomed.forEach(Entity::discard);
+        doomed.forEach(Entity::remove);
         return doomed.size();
     }
 }

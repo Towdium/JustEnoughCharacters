@@ -179,8 +179,8 @@ public final class ScenarioRegistry {
         Map<String, Entry> byName = new LinkedHashMap<>();
         for (ModFileScanData scanData : ModList.get().getAllScanData()) {
             for (ModFileScanData.AnnotationData annotation : scanData.getAnnotations()) {
-                if (!annotation.annotationType().equals(annotationType)) continue;
-                Entry entry = read(annotation.memberName());
+                if (!annotation.getAnnotationType().equals(annotationType)) continue;
+                Entry entry = read(annotation.getMemberName());
                 if (entry == null) continue;
                 keep(byName, entry);
             }
@@ -218,7 +218,7 @@ public final class ScenarioRegistry {
 
     /** The registered scenario names, sorted. */
     public static List<String> names() {
-        return scan().stream().map(Entry::name).collect(Collectors.collect(Collectors.toList()));
+        return scan().stream().map(Entry::name).collect(Collectors.toList());
     }
 
     private static void keep(Map<String, Entry> byName, Entry entry) {

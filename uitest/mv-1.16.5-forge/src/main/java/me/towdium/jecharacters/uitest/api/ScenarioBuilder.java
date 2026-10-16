@@ -257,7 +257,7 @@ public final class ScenarioBuilder {
     }
 
     /** Mutates a block entity on the server thread. */
-    public ScenarioBuilder withBlockEntity(int x, int y, int z, Consumer<BlockEntity> action) {
+    public ScenarioBuilder withBlockEntity(int x, int y, int z, Consumer<TileEntity> action) {
         addServer(
             StepKind.withBlockEntity,
             "withBlockEntity " + x + "," + y + "," + z,
@@ -1161,7 +1161,7 @@ public final class ScenarioBuilder {
     }
 
     private Step add(StepKind kind, String name, StepBody body, int settleMs, int timeoutMs) {
-        List<Step> target = targets.get(targets.size() - 1);
+        List<Step> target = targets.getLast();
         int index = target == steps ? target.size() : indexBase(target) + target.size();
         Step step = new Step(index, kind, name, currentGroup(), settleMs, timeoutMs, body);
         target.add(step);

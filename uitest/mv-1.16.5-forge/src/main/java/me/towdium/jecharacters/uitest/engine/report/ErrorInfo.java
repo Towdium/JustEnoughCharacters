@@ -44,13 +44,27 @@ public final class ErrorInfo {
         thrown.printStackTrace(new PrintWriter(writer));
         List<String> frames = new ArrayList<>();
         for (String line : writer.toString().split("\n")) {
-            frames.add(line.stripTrailing());
+            frames.add(stripTrailing(line));
         }
         return new ErrorInfo(
             thrown.getClass().getName(),
             thrown.getMessage() == null ? "" : thrown.getMessage(),
             Collections.unmodifiableList(new ArrayList<>(frames))
         );
+    }
+
+    /**
+     * The line without its trailing whitespace.
+     *
+     * <p><b>Port note (1.20.1 → 1.16.5).</b> {@code String.stripTrailing()} is Java 11 and this
+     * harness is compiled by a Java 8 javac; this is the same thing without it.
+     */
+    private static String stripTrailing(String line) {
+        int end = line.length();
+        while (end > 0 && Character.isWhitespace(line.charAt(end - 1))) {
+            end--;
+        }
+        return line.substring(0, end);
     }
 }
 

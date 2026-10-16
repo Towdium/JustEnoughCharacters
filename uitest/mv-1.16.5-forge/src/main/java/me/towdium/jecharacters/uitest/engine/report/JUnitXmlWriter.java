@@ -105,7 +105,7 @@ public final class JUnitXmlWriter {
             check -> message.append(check.label()).append(check.detail() == null ? "" : " (" + check.detail() + ")")
                     .append("; ")
         );
-        return message.isEmpty() ? null : message.toString();
+        return message.length() == 0 ? null : message.toString();
     }
 
     private static String seconds(long millis) {

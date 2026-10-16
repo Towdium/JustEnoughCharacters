@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.Collections;
 
@@ -151,8 +152,8 @@ final class Args {
     /** Refuses the step when it carries a key no accessor read. */
     void done() {
         List<String> unknown = new ArrayList<>();
-        for (String key : raw.keySet()) {
-            if (!read.contains(key)) unknown.add(key);
+        for (Map.Entry<String, JsonElement> entry : raw.entrySet()) {
+            if (!read.contains(entry.getKey())) unknown.add(entry.getKey());
         }
         if (!unknown.isEmpty()) {
             throw new ScenarioJsonException(

@@ -8,6 +8,7 @@ import me.towdium.jecharacters.uitest.api.Session;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.Arrays;
 import java.util.Collections;
@@ -36,11 +37,11 @@ public final class JsonScenarioReader {
     /** Parses a scenario object; {@code source} names the file in every message. */
     public static JsonScenario parse(JsonObject root, String source) {
         Args args = new Args(source, root);
-        for (String key : root.keySet()) {
-            if (!scenarioKeys.contains(key)) {
+        for (Map.Entry<String, JsonElement> entry : root.entrySet()) {
+            if (!scenarioKeys.contains(entry.getKey())) {
                 throw new ScenarioJsonException(
-                    source + ": unknown scenario key '" + key + "'; allowed: "
-                            + String.join(", ", scenarioKeys.stream().sorted().collect(Collectors.collect(Collectors.toList())))
+                    source + ": unknown scenario key '" + entry.getKey() + "'; allowed: "
+                            + String.join(", ", scenarioKeys.stream().sorted().collect(Collectors.toList()))
                 );
             }
         }
@@ -90,7 +91,7 @@ public final class JsonScenarioReader {
     }
 
     private static List<JsonStep> steps(JsonArray array, String source) {
-        if (array.isEmpty()) {
+        if (array.size() == 0) {
             throw new ScenarioJsonException(source + ": 'steps' must not be empty");
         }
         List<JsonStep> steps = new ArrayList<>(array.size());
@@ -118,9 +119,9 @@ public final class JsonScenarioReader {
             );
         }
         JsonObject args = new JsonObject();
-        for (String key : declaration.keySet()) {
-            if (!"do".equals(key)) {
-                args.add(key, declaration.get(key));
+        for (Map.Entry<String, JsonElement> entry : declaration.entrySet()) {
+            if (!"do".equals(entry.getKey())) {
+                args.add(entry.getKey(), entry.getValue());
             }
         }
         return new JsonStep(index, action, args);

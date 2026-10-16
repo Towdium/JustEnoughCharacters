@@ -1,16 +1,21 @@
 package me.towdium.jecharacters.uitest.engine;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.util.datafix.codec.DatapackCodec;
 import net.minecraft.util.registry.DynamicRegistries;
-import net.minecraft.core.registries.Registries;
+import net.minecraft.util.registry.Registry;
+import net.minecraft.util.registry.SimpleRegistry;
 import net.minecraft.world.Difficulty;
+import net.minecraft.world.Dimension;
+import net.minecraft.world.DimensionType;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.GameType;
 import net.minecraft.world.WorldSettings;
-import net.minecraft.world.storage.DataPackConfig;
-import net.minecraft.world.level.levelgen.WorldDimensions;
-import net.minecraft.world.level.levelgen.WorldOptions;
-import net.minecraft.world.level.levelgen.presets.WorldPresets;
+import net.minecraft.world.biome.Biome;
+import net.minecraft.world.gen.DimensionSettings;
+import net.minecraft.world.gen.FlatChunkGenerator;
+import net.minecraft.world.gen.FlatGenerationSettings;
+import net.minecraft.world.gen.settings.DimensionGeneratorSettings;
 import net.minecraft.world.storage.SaveFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +38,19 @@ import java.util.stream.Collectors;
  * backdrop and a scenario can place blocks without any setup of its own. Sweeping stale worlds is
  * not housekeeping: two runs of the same run id would otherwise collide on the save directory, and
  * a leftover locked world is the single biggest source of flakiness in this kind of harness.
+ *
+ * <p><b>Port note (1.21.1 → 1.16.5).</b> The 1.21.1 copy creates a level through
+ * {@code Minecraft.createWorldOpenFlows()} and reopens one through {@code openWorld(name,
+ * onFailure)}; neither exists in 1.16.5 — the whole single-player flow lives on {@link Minecraft}
+ * itself here. Creation is {@code Minecraft.createLevel(String, WorldSettings,
+ * DynamicRegistries.Impl, DimensionGeneratorSettings)} and rejoin is
+ * {@code Minecraft.loadLevel(String)}, the call the world list's own
+ * {@code WorldSelectionList.WorldListEntry.joinWorld()} tail makes. The names are the MCP ones
+ * this line is mapped to (see build.gradle): {@code LevelSettings} is {@link WorldSettings},
+ * {@code WorldGenSettings} is {@link DimensionGeneratorSettings}, {@code RegistryAccess.builtin()}
+ * is {@code DynamicRegistries.builtin()}, {@code LevelStem} is {@link Dimension} and
+ * {@code FlatLevelSource}/{@code FlatLevelGeneratorSettings} are
+ * {@link FlatChunkGenerator}/{@link FlatGenerationSettings}.
  */
 public final class WorldBootstrap {
 
@@ -75,7 +93,7 @@ public final class WorldBootstrap {
         try (Stream<Path> entries = Files.list(base)) {
             return entries.filter(Files::isDirectory).map(path -> path.getFileName().toString())
                     .filter(name -> name.startsWith(worldPrefix))
-                    .filter(name -> keep.stream().noneMatch(name::startsWith)).sorted().collect(Collectors.collect(Collectors.toList()));
+                    .filter(name -> keep.stream().noneMatch(name::startsWith)).sorted().collect(Collectors.toList());
         } catch (IOException e) {
             log.warn("could not list save directories under {}", base, e);
             return Collections.emptyList();
@@ -92,8 +110,9 @@ public final class WorldBootstrap {
         List<String> stale = staleWorlds(source, keep);
         int removed = 0;
         for (String name : stale) {
-            // Port note (1.20.1): SaveFormat.getLevelPath(String) is private here
-            // (it becomes public in 1.21.x); its whole body is baseDir.resolve(name).
+            // Port note (1.21.1 → 1.16.5): the getLevelPath(String) overload does not exist here;
+            // getBaseDir().resolve(name) is the same child-of-saves path the world list itself
+            // computes for a save named `name`.
             Path directory = source.getBaseDir().resolve(name);
             try {
                 deleteRecursively(directory);
@@ -113,18 +132,13 @@ public final class WorldBootstrap {
      *
      * <p>The world is not regenerated and nothing about it is reset: the save is opened the way the
      * single-player world list opens it, so blocks, block entities and the pinned rules placed by
-     * earlier scenarios are all still there. That is the difference this tier exists for.
-     *
-     * <p><b>Port note (NeoForge 1.21.1 → Forge 1.20.1).</b> This generation's {@code WorldOpenFlows}
-     * has no {@code openWorld(String, Runnable)}; the world-list's own path is
-     * {@code loadLevel(Screen, String)}, which reports failures through the error screen it opens
-     * rather than through a callback, so the world-name log line below is the only report this side
-     * can add. A save that cannot be read leads to a rejoin that never finishes, and the caller's
-     * own budget reports that as the fatal it is.
+     * earlier scenarios are all still there. That is the difference this tier exists for. A save
+     * that cannot be read leads to a rejoin that never finishes, and the caller's own budget reports
+     * that as the fatal it is — {@code loadLevel(String)} takes no failure callback.
      */
     public static void rejoinLevel(Minecraft minecraft, String worldName) {
-        log.info("rejoining the test world {} through loadLevel", worldName);
-        minecraft.createWorldOpenFlows().loadLevel(null, worldName);
+        log.info("reopening the test world {} through loadLevel", worldName);
+        minecraft.loadLevel(worldName);
     }
 
     /**
@@ -132,12 +146,6 @@ public final class WorldBootstrap {
      *
      * <p>This call pumps the render loop internally — it opens a loading screen, which fires frame
      * events of its own — so the caller must set up its state before calling it, never after.
-     *
-     * <p><b>Port note (NeoForge 1.21.1 → Forge 1.20.1).</b> The 4-argument
-     * {@code createFreshLevel(String, WorldSettings, WorldOptions, Function)} — no trailing
-     * {@code Screen}, and the dimensions function's return type is {@code WorldDimensions} as
-     * before (piston mappings, WorldOpenFlows.createFreshLevel 71:96). The {@code WorldSettings}
-     * tail argument stays {@code WorldDataConfiguration.DEFAULT} on this generation.
      */
     public static void createFreshLevel(Minecraft minecraft, String worldName) {
         WorldSettings settings = new WorldSettings(
@@ -147,17 +155,33 @@ public final class WorldBootstrap {
             Difficulty.PEACEFUL,
             true,
             new GameRules(),
-            WorldDataConfiguration.DEFAULT
+            DatapackCodec.DEFAULT
         );
-        WorldOptions options = new WorldOptions(seed, false, false);
-        minecraft.createWorldOpenFlows()
-                .createFreshLevel(worldName, settings, options, WorldBootstrap::flatDimensions);
-    }
-
-    /** The flat world preset's dimensions, generated from the datapack registry. */
-    private static WorldDimensions flatDimensions(DynamicRegistries registry) {
-        return registry.registryOrThrow(Registries.WORLD_PRESET).getHolderOrThrow(WorldPresets.FLAT).value()
-                .createWorldDimensions();
+        // The registries the level's generators are built from: DynamicRegistries.builtin() is this
+        // version's RegistryAccess.builtin() (the 1.18.2-era builtinCopy() does not exist yet).
+        DynamicRegistries.Impl registries = DynamicRegistries.builtin();
+        Registry<DimensionType> dimensionTypes = registries.registryOrThrow(Registry.DIMENSION_TYPE_REGISTRY);
+        Registry<Biome> biomes = registries.registryOrThrow(Registry.BIOME_REGISTRY);
+        Registry<DimensionSettings> noiseSettings = registries.registryOrThrow(Registry.NOISE_GENERATOR_SETTINGS_REGISTRY);
+        FlatGenerationSettings flatSettings = FlatGenerationSettings.getDefault(biomes);
+        FlatChunkGenerator flatSource = new FlatChunkGenerator(flatSettings);
+        // Port note (1.18.2 → 1.16.5): the level-stem registry has to come from
+        // DimensionType.defaultDimensions(..., seed) — the shape the vanilla superflat preset uses
+        // itself — and not from DimensionGeneratorSettings.makeDefault(...).dimensions(). makeDefault
+        // invents a seed of its own (1.16.5 bytecode: `new Random().nextLong()`, feeding both
+        // defaultDimensions and makeDefaultOverworld) and wraps those stems in a settings object
+        // carrying *that* seed; keeping those stems while the settings below carry this copy's fixed
+        // seed leaves the nether/end stems disagreeing with the world seed, so the run creates the
+        // save, brings the integrated server up and never completes the join — no
+        // "Time elapsed" / "Preparing spawn area" marker anywhere. defaultDimensions takes this
+        // copy's seed, so both halves agree.
+        SimpleRegistry<Dimension> dimensions = DimensionGeneratorSettings.withOverworld(
+            dimensionTypes,
+            DimensionType.defaultDimensions(dimensionTypes, biomes, noiseSettings, seed),
+            flatSource
+        );
+        DimensionGeneratorSettings worldGenSettings = new DimensionGeneratorSettings(seed, false, false, dimensions);
+        minecraft.createLevel(worldName, settings, registries, worldGenSettings);
     }
 
     private static void deleteRecursively(Path root) throws IOException {

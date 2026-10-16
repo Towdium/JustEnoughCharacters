@@ -3,6 +3,7 @@ package me.towdium.jecharacters.uitest.engine;
 import net.minecraft.client.MainWindow;
 import me.towdium.jecharacters.uitest.ScenarioRegistry;
 import me.towdium.jecharacters.uitest.api.CapturePipeline;
+import me.towdium.jecharacters.uitest.api.CheckResult;
 import me.towdium.jecharacters.uitest.api.CaptureRef;
 import me.towdium.jecharacters.uitest.api.ErrorPolicy;
 import me.towdium.jecharacters.uitest.api.InputDriver;
@@ -34,6 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.time.Instant;
@@ -148,7 +150,7 @@ public final class UITestRunner {
     private UITestRunner(Minecraft minecraft, RunConfig config) {
         this.minecraft = minecraft;
         this.config = config;
-        this.runId = ProcessHandle.current().pid() + "_" + Integer.toHexString(System.identityHashCode(config));
+        this.runId = processId() + "_" + Integer.toHexString(System.identityHashCode(config));
         this.driver = HarnessFactory.driver(config.inputMode());
         this.pipeline = HarnessFactory.pipeline(config);
         this.report = new RunReport(
@@ -248,7 +250,7 @@ public final class UITestRunner {
 
     /** The names of the queued scenarios, in run order. */
     public List<String> queueNames() {
-        return queue.stream().map(Queued::name).collect(Collectors.collect(Collectors.toList()));
+        return queue.stream().map(Queued::name).collect(Collectors.toList());
     }
 
     /** One frame of the run. */
@@ -587,7 +589,7 @@ public final class UITestRunner {
         Reenter state = reenter;
         if (state == null) return true;
         switch (state.step) {
-            case 0: { break;
+            case 0: {
                 log.info("session: leaving {}", worldName);
                 // The clean leave, in the order that cannot deadlock: clear the screen first (a screen
                 // pauses the integrated server, and a paused server never reaches the end of
@@ -608,8 +610,7 @@ public final class UITestRunner {
                 state.startedAt = now();
                 return false;
             }
-            break;
-            case 1: { break;
+            case 1: {
                 if (minecraft.level == null && minecraft.player == null && minecraft.getSingleplayerServer() == null) {
                     state.step = 2;
                     return false;
@@ -619,8 +620,7 @@ public final class UITestRunner {
                 }
                 return false;
             }
-            break;
-            case 2: { break;
+            case 2: {
                 if (state.createFresh) {
                     // the old world is gone; the creation phases take it from here and come back to
                     // nextScenario once the new one is pinned
@@ -634,8 +634,7 @@ public final class UITestRunner {
                 state.startedAt = now();
                 return false;
             }
-            break;
-            default: { break;
+            default: {
                 if (minecraft.level != null && minecraft.player != null) {
                     MinecraftServer server = minecraft.getSingleplayerServer();
                     if (server == null) return false;
@@ -649,7 +648,6 @@ public final class UITestRunner {
                 }
                 return false;
             }
-            break;
         }
     }
 
@@ -709,7 +707,7 @@ public final class UITestRunner {
         // about a match an earlier scenario happened to leave behind
         MatchRecorder.clear();
         ScenarioOptions options = queued.options();
-        minecraft.options.guiScale().set(options.guiScale(config.guiScale()));
+        minecraft.options.guiScale = options.guiScale(config.guiScale());
         minecraft.options.hideGui = options.hideGui();
         minecraft.resizeDisplay();
 
@@ -873,10 +871,10 @@ public final class UITestRunner {
             GLFW.glfwHideWindow(handle);
         }
         GLFW.glfwSetWindowSize(handle, config.windowWidthOrDefault(), config.windowHeightOrDefault());
-        minecraft.options.guiScale().set(config.guiScale());
+        minecraft.options.guiScale = config.guiScale();
         minecraft.options.pauseOnLostFocus = false;
-        minecraft.options.renderDistance().set(4);
-        minecraft.options.enableVsync().set(false);
+        minecraft.options.renderDistance = 4;
+        minecraft.options.enableVsync = false;
         minecraft.options.save();
         minecraft.resizeDisplay();
         log.info(
@@ -985,7 +983,7 @@ public final class UITestRunner {
         // Port note (forge 1.20.1): the loader-version slot of the report schema is the
         // Environment record's `neoforge` component (kept schema-stable across lines); on
         // this line it carries the Forge container's version instead.
-        List<String> mods = ModList.get().getMods().stream().map(IModInfo::getModId).sorted().collect(Collectors.collect(Collectors.toList()));
+        List<String> mods = ModList.get().getMods().stream().map(IModInfo::getModId).sorted().collect(Collectors.toList());
         String neoforge = ModList.get().getModContainerById("forge")
                 .map(container -> container.getModInfo().getVersion().toString()).orElse("unknown");
         return new Environment(
@@ -1024,6 +1022,20 @@ public final class UITestRunner {
 
     private static long now() {
         return System.currentTimeMillis();
+    }
+
+    /**
+     * This JVM's own process id, as a string.
+     *
+     * <p><b>Port note (1.20.1 → 1.16.5).</b> {@code ProcessHandle.current().pid()} is Java 9 and
+     * this harness is compiled by a Java 8 javac; the runtime name of the MX bean
+     * ({@code <pid>@<host>}) is the pre-9 reading of the same thing, and the id only has to be a
+     * stable label in a run id.
+     */
+    private static String processId() {
+        String name = ManagementFactory.getRuntimeMXBean().getName();
+        int at = name.indexOf('@');
+        return at < 0 ? name : name.substring(0, at);
     }
 
     private static int failedChecks(TestContext context) {

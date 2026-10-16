@@ -42,7 +42,7 @@ public abstract class MinecraftMixin {
         }
     }
 
-    @Inject(method = "setScreen(Lnet/minecraft/client/gui/screens/Screen;)V", at = @At("HEAD"))
+    @Inject(method = "setScreen(Lnet/minecraft/client/gui/screen/Screen;)V", at = @At("HEAD"))
     private void jechtestReleaseLookOnScreen(Screen guiScreen, CallbackInfo info) {
         if (guiScreen != null) {
             PlayerEmbodiment.releaseLook();
