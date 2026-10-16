@@ -15,10 +15,15 @@
 // 1.19.2 as on 1.21.1 (verified against Mojang's client mappings for both
 // versions).
 //
-// Toolchain: architectury-loom 1.1 on Gradle 8.1.1, the same pairing the
-// multiple-version checkout uses for this line. The wrapper therefore starts on
-// JDK 17 (8.1.1 cannot run on the machine's default JDK 25), which is also the
-// toolchain MC 1.19.2 compiles for.
+// Toolchain: stock fabric-loom 1.10.5 on Gradle 9.5.0 — the pairing the
+// multiple-version checkout uses for this line (it pins the plugin version once
+// in its settings.gradle pluginManagement; this standalone build declares its
+// own). The row ran architectury-loom 1.1 on Gradle 8.1.1 until that pairing
+// was retired: it used nothing arch-specific (no architectury {} block, no
+// remapArchitectury, no namedElements, no injectAccessWidener), so plain loom
+// takes its place with no change to what the build does. Gradle 9 needs a JDK
+// 17+ to start — the machine's default JBR 25 serves, and JDK 17 is what MC
+// 1.19.2 compiles for anyway.
 //
 // This is a loom mod project whose whole `main` source set is the jechtest mod.
 // The two jars under test (JECh's built fabric jar and the pinned JEI jar) are
@@ -27,8 +32,11 @@
 // directory's mods/ folder, where fabric-loader's dev-mode remapper brings them
 // into the run's Mojang-mapped namespace (the same road the matrix's
 // multiple-version fabric rows take for JEI). fabric-api is a plain remapped
-// Gradle dependency here — 0.77.0+1.19.2 predates the manifest key that stops
-// loom 1.1 from reading the newer 1.20.1 api.
+// Gradle dependency here at the pinned 0.77.0+1.19.2 — the last api build for
+// MC 1.19.2. (The pin used to be justified by architectury-loom 1.1, which
+// could not read the newer 1.20.1 api line; stock loom 1.10.5 reads any of
+// them, so nothing here is capped by the plugin any more. The pin stays: it
+// names the last api that exists for this MC version.)
 //
 // Properties every run understands (the two jars are REQUIRED):
 //   -PjechTest=<selection>      the scenario selection; without it no run wiring
@@ -43,7 +51,10 @@
 //   -PjechTestHeadless          the same dials the other line's run has
 
 plugins {
-    id 'dev.architectury.loom' version '1.1-SNAPSHOT'
+    // The checkout pins this plugin once, in its root settings.gradle
+    // pluginManagement (id 'fabric-loom' version '1.10.5'); a standalone build
+    // resolves its own, so the same version is spelled here.
+    id 'fabric-loom' version '1.10.5'
     id 'java-library'
     id 'idea'
 }
@@ -180,9 +191,15 @@ processResources {
 }
 
 loom {
-    // The checkout's own build silences the Mojang-mappings licence prompt the
-    // same way; a headless configure must not block on it.
-    silentMojangMappingsLicense()
+    // No silentMojangMappingsLicense() any more: the switch went with
+    // architectury-loom 1.1, and stock loom 1.10.5 does not carry it at all —
+    // calling it fails configuration with "Could not find method
+    // silentMojangMappingsLicense() for arguments [] on extension 'loom' of type
+    // net.fabricmc.loom.extension.LoomGradleExtensionImpl" (measured 2026-10-17 on
+    // this row). Nothing is lost: officialMojangMappings() resolves without a
+    // prompt in a non-interactive configure, which is how every other plain-loom
+    // build in this repository (and the checkout that built the jar under test)
+    // resolves it.
     runs {
         // Loom's own client run is the only run this build has; the wiring below
         // is what turns it into a harness run when -PjechTest is given.
