@@ -338,10 +338,10 @@ class SeedWorldCliTest(unittest.TestCase):
         """``skip`` stops execution, not cache maintenance.
 
         The subject is built rather than taken from the matrix: no shipped env is
-        both skipped and world-carrying any more — the three multiple-version
-        forge rows that were are harness rows now, with the harness's own level,
-        and the one row still skipped declares no world. ``jt seed-world`` never
-        consults ``skip``, which is the property under test.
+        both skipped and world-carrying any more — the matrix declares neither a
+        skip nor a world at all, every row running its own harness build against
+        the level that harness creates. ``jt seed-world`` never consults ``skip``,
+        which is the property under test.
         """
         with support.temp_home():
             env = support.mk_env(name="skipped-row", world={"name": "jechworld"},
@@ -352,20 +352,17 @@ class SeedWorldCliTest(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertIn(seed.digest[:16], output)
 
-    def test_envs_lists_the_skip_and_names_no_world(self):
+    def test_envs_names_no_world_and_no_skip(self):
         with support.temp_home():
             code, output = self.cli(["envs"])
         self.assertEqual(code, 0)
-        # No shipped row declares a world any more — every row owns the level it
-        # is asserted against — so the listing names none; a row that reclaimed
-        # one would surface here.
+        # No shipped row declares a world or a skip any more — every row owns the
+        # level it is asserted against and every row has a launch layer of its
+        # own — so the listing names neither; a row that reclaimed one would
+        # surface here.
         self.assertNotIn("world:", output)
         self.assertIn("uitest: tag:smoke,tag:jei", output)
-        # `mv-1.16.5-forge` is the one row still skipped (the instance launcher
-        # that staged its production jar is gone and its own FG6 build is a
-        # separate wave), and a skip is a first-class result, so `jt envs`
-        # prints it.
-        self.assertIn("skip:", output)
+        self.assertNotIn("skip:", output)
 
     def test_envs_json_carries_the_skip_and_no_world(self):
         with support.temp_home():
@@ -402,20 +399,26 @@ class SeedWorldCliTest(unittest.TestCase):
                           "project": "uitest/1.21.1-neoforge"})
         # The four multiple-version forge rows lost their only launch path when
         # the instance launcher was removed (2026-10-14; see the matrix test in
-        # test_envs.py), and three of them have been revived onto standalone
-        # harness builds since (2026-10-16), so mv-1.16.5-forge — whose own FG6
-        # build is a separate wave — is the only row still skipped. A skip is a
-        # first-class result, so `jt envs` prints it.
+        # test_envs.py), so `jt envs --json` reported four skipped rows. It
+        # reports none now: all four have been revived onto standalone harness
+        # builds, the last of them — mv-1.16.5-forge, whose own FG6 build was a
+        # separate wave — on 2026-10-16. The two 1.12.2 rows used to be in this
+        # list too and are not any more: the checkout now boots a 1.12.2 client
+        # on this arm64 machine and runs the harness on it — see envs/README.md,
+        # "The 1.12.2 rows and the gradle launch".
         self.assertEqual(
             sorted(name for name, item in listed.items() if item["skip"]),
-            ["mv-1.16.5-forge"])
-        # The three revived rows say what they are: a harness row with the
+            [])
+        # The four revived rows say what they are: a harness row with the
         # harness's own level, its scenario selection and its own build.
-        for name in ("mv-1.18.2-forge", "mv-1.19.2-forge", "mv-1.20.1-forge"):
+        for name, selection in (("mv-1.16.5-forge", "tag:smoke"),
+                                ("mv-1.18.2-forge", "tag:smoke,tag:jei"),
+                                ("mv-1.19.2-forge", "tag:smoke,tag:jei"),
+                                ("mv-1.20.1-forge", "tag:smoke,tag:jei")):
             self.assertIsNone(listed[name]["skip"], name)
             self.assertIsNone(listed[name]["world"], "the harness's own level is the world")
             self.assertEqual(listed[name]["uitest"],
-                             {"selection": "tag:smoke,tag:jei",
+                             {"selection": selection,
                               "project": f"uitest/{name}"})
         # The 1.19.2 row is the one whose storage marker is unreachable before
         # 1.20; the skip that used to carry that reason is gone, so what has to
@@ -434,6 +437,13 @@ class SeedWorldCliTest(unittest.TestCase):
         for name in ("1.12.2-forge-jei-legacy", "1.12.2-forge-hei"):
             self.assertIsNone(listed[name]["skip"])
             self.assertIsNone(listed[name]["world"], "the harness's own level is the world")
+        # mv-1.16.5-forge is the same shape since 2026-10-16: its own standalone
+        # build is the launch layer, its level is the harness's.
+        self.assertEqual(listed["mv-1.16.5-forge"]["uitest"],
+                         {"selection": "tag:smoke", "project": "uitest/mv-1.16.5-forge"})
+        self.assertIsNone(listed["mv-1.16.5-forge"]["skip"])
+        self.assertIsNone(listed["mv-1.16.5-forge"]["world"],
+                          "the harness's own level is the world")
         self.assertIsNone(listed["mv-1.19.2-forge"]["world"])
         self.assertIsNone(listed["mv-1.19.2-fabric"]["skip"])
         self.assertIsNone(listed["mv-1.19.2-fabric"]["world"])
