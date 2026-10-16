@@ -148,7 +148,7 @@ class PipelineHelpersTest(unittest.TestCase):
         args = uitest_pipeline.jar_arguments(Path("/checkouts/jech.jar"), resolved)
         self.assertEqual(args, ["-PjechJar=/checkouts/jech.jar", "-PjeiJar=/cache/jei.jar"])
 
-    def test_jar_arguments_fail_without_a_jei_mod(self):
+    def test_jar_arguments_name_only_the_jech_jar_without_a_jei_mod(self):
         from lib.resolve import ResolvedArtifact, ResolvedEnv
         from pathlib import Path
 
@@ -156,9 +156,21 @@ class PipelineHelpersTest(unittest.TestCase):
                                     filename="fabric-api.jar", source_path=None,
                                     path=Path("/cache/fabric-api.jar"),
                                     sha1="x", size=1, detail="", via="dev-classpath")
+        args = uitest_pipeline.jar_arguments(
+            Path("/checkouts/jech.jar"), ResolvedEnv(env=None, artifacts=[artifact]))
+        self.assertEqual(args, ["-PjechJar=/checkouts/jech.jar"])
+
+    def test_jar_arguments_reject_a_jei_mod_without_a_jar(self):
+        from lib.resolve import ResolvedArtifact, ResolvedEnv
+        from pathlib import Path
+
+        artifact = ResolvedArtifact(role="mod", name="jei", source="curseforge",
+                                    filename="jei.jar", source_path=None, path=None,
+                                    sha1="x", size=1, detail="", via="dev-classpath")
         with self.assertRaises(ConfigError) as caught:
-            uitest_pipeline.jar_arguments(Path("/checkouts/jech.jar"), ResolvedEnv(env=None, artifacts=[artifact]))
-        self.assertIn("named 'jei'", str(caught.exception))
+            uitest_pipeline.jar_arguments(
+                Path("/checkouts/jech.jar"), ResolvedEnv(env=None, artifacts=[artifact]))
+        self.assertIn("without a jar path", str(caught.exception))
 
 
 if __name__ == "__main__":

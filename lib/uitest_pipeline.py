@@ -143,24 +143,31 @@ def jar_arguments(jech_jar, resolved):
     """The ``-P`` arguments that hand the jars under test to the harness build.
 
     ``jechJar`` is always the JECh jar; ``jeiJar`` is the env's target mod — the
-    pinned JEI jar, found among the env's mods by its name. An env without a
-    mod named ``jei`` cannot name its jar and is rejected here — fail-closed,
-    with what the env declared in the message.
+    pinned JEI jar, found among the env's mods by its name — and it travels only
+    when the env declares one. A line whose tested jar carries no integration for
+    a target mod (the MV 1.16.5 fabric row, whose JECh jar holds no JEI code)
+    declares none, and its harness build takes ``jechJar`` alone. An env that
+    declares the mod but leaves its jar unresolved is still rejected here, and a
+    line that does need the target mod says so in its own build
+    (``requireJar('jeiJar', ...)``), so a forgotten mod entry fails in that build
+    rather than silently losing the mod through this function.
     """
     jei = next((artifact for artifact in resolved.mods if artifact.name == JEI_MOD_NAME), None)
-    if jei is None or jei.path is None:
-        names = ", ".join(artifact.name for artifact in resolved.mods) or "(none)"
+    arguments = [f"-PjechJar={jech_jar}"]
+    if jei is None:
+        return arguments
+    if jei.path is None:
         raise ConfigError(
-            f"a standalone uitest env needs a target mod named {JEI_MOD_NAME!r} to pass as "
-            f"-PjeiJar (the env's mods are: {names})"
+            f"the env's {JEI_MOD_NAME!r} mod resolved without a jar path, so there is "
+            f"nothing to pass as -PjeiJar"
         )
-    return [f"-PjechJar={jech_jar}", f"-PjeiJar={jei.path}"]
+    return arguments + [f"-PjeiJar={jei.path}"]
 
 
 # The name of the env's mod entry the harness build receives as ``-PjeiJar``.
-# The pinned JEI jar is the target mod of every uitest line; the property name
-# keeps the "jei" spelling the builds' scripts document, whatever jar a future
-# line pins under this name (a HEI jar travels the same slot).
+# The pinned JEI jar is the target mod of every uitest line that has one; the
+# property name keeps the "jei" spelling the builds' scripts document, whatever
+# jar a future line pins under this name (a HEI jar travels the same slot).
 JEI_MOD_NAME = "jei"
 
 
