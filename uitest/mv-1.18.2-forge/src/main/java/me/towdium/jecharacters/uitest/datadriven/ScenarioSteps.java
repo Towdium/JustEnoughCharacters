@@ -122,6 +122,20 @@ final class ScenarioSteps {
             }
         });
 
+        register("click_mouse", (builder, args, context) -> {
+            double x = args.number("x");
+            double y = args.number("y");
+            String button = args.stringOr("button", "left").toLowerCase(Locale.ROOT);
+            switch (button) {
+                case "left" -> builder.clickMouse(x, y);
+                case "right" -> builder.clickMouse(x, y, 1);
+                case "middle" -> builder.clickMouse(x, y, 2);
+                default -> throw new ScenarioJsonException(
+                    context + ": button '" + button + "' is not left, right or middle"
+                );
+            }
+        });
+
         register("command", (builder, args, context) -> {
             String text = args.string("text");
             builder.pressBind(options -> options.keyChat);
