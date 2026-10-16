@@ -45,21 +45,8 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-/**
- * Drives one harness run: one phase transition and one step per rendered frame.
- *
- * <p>The clock is the frame itself. Nothing here sleeps and nothing blocks; world creation pumps the
- * render loop internally, so the whole body sits behind a re-entrancy guard that turns those nested
- * frames into no-ops. A step that is not finished calls {@link TestContext#repeat(String)} and is
- * called again next frame, with no settle in between, until its wait budget runs out.
- *
- * <p>Nothing here may kill the client from inside a frame event: {@code Minecraft#stop} ends the
- * main loop, a shutdown hook carries the exit code out, and the {@code exiting} phase keeps frames
- * turning so that shutdown finds a live render thread.
- */
 public final class UITestRunner {
 
-    /** Where the run is in its lifecycle. At most one transition happens per frame. */
     enum Phase {
         waitGameReady, pinOptions, createWorld, awaitWorld, pinWorld, nextScenario, runScenario, finish, exiting
     }
@@ -108,7 +95,6 @@ public final class UITestRunner {
 
     private @Nullable ScenarioRun current;
 
-    /** The restart schedule the selection resolved to: tiers in run order, cheapest first. */
     private final List<SessionGroup> sessionPlan = new ArrayList<>();
 
     private int groupCursor;
@@ -119,7 +105,6 @@ public final class UITestRunner {
 
     private @Nullable Reenter reenter;
 
-    /** The save the current world lives in; a fresh group gets one of its own. */
     private @Nullable String worldName;
 
     private int freshWorlds;
@@ -159,7 +144,6 @@ public final class UITestRunner {
         this.pipeline.setSink(this::onCaptureWritten);
     }
 
-    /** The runner for this client, created on the first frame of a requested run. */
     public static UITestRunner bootstrap() {
         RunConfig config = RunConfig.fromSystemProperties();
         UITestRunner runner = new UITestRunner(Minecraft.getInstance(), config);
@@ -175,17 +159,6 @@ public final class UITestRunner {
         return runner;
     }
 
-    /**
-     * Starts a keep-open run from inside the game, against the world the player already has loaded.
-     *
-     * <p>Nothing here creates a world or touches the window: the prologue only scans scenarios,
-     * installs the driver and jumps straight to the scenario queue. The returned message is what
-     * the command reports back to the player, so a refusal explains itself instead of leaving a
-     * half-started run behind.
-     *
-     * @return a message describing what happened; the run is installed when it names a scenario
-     *         count
-     */
     public static String runInteractive(String selection) {
         UITestRunner active = UITestBootstrap.runner();
         if (active != null && !active.shuttingDown()) {
@@ -202,12 +175,6 @@ public final class UITestRunner {
                 + " (report in " + runner.config.outDir() + ")";
     }
 
-    /**
-     * The interactive prologue: select scenarios, check the world can serve them, install the
-     * driver, and enter the queue. No window pinning, no world creation.
-     *
-     * @return the reason the run cannot start, or {@code null} once it has
-     */
     private @Nullable String interactivePrologue() {
         queue.clear();
         List<ScenarioRegistry.Entry> registered = ScenarioRegistry.scan();
@@ -235,27 +202,21 @@ public final class UITestRunner {
         return null;
     }
 
-    /** The identifier this run's world and report are named after. */
     public String runId() {
         return runId;
     }
 
-    /** Whether the run is over and the client is only being kept alive to be looked at. */
     public boolean shuttingDown() {
         return shuttingDown;
     }
 
-    /** The names of the queued scenarios, in run order. */
     public List<String> queueNames() {
         return queue.stream().map(Queued::name).toList();
     }
 
-    /** One frame of the run. */
     public void onFrame() {
         lastFrameAt = now();
         if (minecraft.getOverlay() == null) {
-            // the embodiment's own per-frame pump, before anything else this frame does: a scripted
-            // sweep turns once per rendered frame, no matter where the step clock happens to be
             driver.playerInput().pumpFrame();
         }
         if (inStep) return;
@@ -271,12 +232,10 @@ public final class UITestRunner {
         }
     }
 
-    /** One tick of the game's own clock, which the run's sweeps are measured in. */
     public void onTick() {
         driver.playerInput().pumpTick();
     }
 
-    /** Starts the daemon thread that turns a stalled client into a report instead of a hang. */
     public void startWatchdog() {
         Thread watchdog = new Thread(this::watch, "jechtest-uitest-watchdog");
         watchdog.setDaemon(true);
@@ -345,7 +304,6 @@ public final class UITestRunner {
         needsWorld = queue.stream().anyMatch(Queued::requiresWorld);
         buildSessionPlan();
         if (needsWorld) {
-            // the world the run creates up front IS the first group's session: nothing has run in it
             groupSessionStarted = true;
         }
         startRecording();
@@ -354,13 +312,6 @@ public final class UITestRunner {
         settle(resizeSettleMs);
     }
 
-    /**
-     * Turns the match recorder on and reports any JSON scenario the scan could not read.
-     *
-     * <p>Recording is on for the whole of a run rather than per step, because a scenario's assertion
-     * is about what happened <em>before</em> it ran; the buffer is cleared as each scenario starts so
-     * one scenario's matches can never satisfy the next one's assertion.
-     */
     private void startRecording() {
         MatchRecorder.setEnabled(true);
         for (String problem : ScenarioRegistry.registrationProblems()) {
@@ -369,28 +320,6 @@ public final class UITestRunner {
         log.info(MatchRecorder.stats());
     }
 
-    /**
-     * Turns the selection into the smallest restart schedule that satisfies every scenario in it.
-     *
-     * <p>Cheapest tier first, because a stronger session satisfies a weaker one: every {@code shared}
-     * scenario runs in the world the run already has, then the {@code reenter} scenarios run in one
-     * rejoined session, then each {@code fresh} scenario gets a world of its own. Within a tier the
-     * registration order is kept, so a run's order is predictable from the registry.
-     *
-     * <p><b>Why one rejoin can serve a whole block of {@code reenter} scenarios.</b> The tier means
-     * "not the previous session" — the client state a join resets has to be new, and the world has to
-     * be the same one — and that is exactly what one leave-and-rejoin gives every scenario that runs
-     * after it. The classification is what makes the batch honest: a scenario that needed a session
-     * of its own *relative to its predecessors in the block* would have to say so, and the only tiers
-     * that say so are {@code fresh} (a world of its own) — a scenario cannot currently demand "a
-     * session nobody else has used". {@code fresh} groups therefore stay one scenario each, and
-     * {@code shared} runs get no restart at all.
-     *
-     * <p>The group at the head of the schedule never pays a transition of its own: the world the run
-     * creates (or the title screen a world-less run starts on) has had no scenario in it yet, so it
-     * already is the session that group asked for.
-     *
-     */
     private void buildSessionPlan() {
         sessionPlan.clear();
         List<Queued> shared = new ArrayList<>();
@@ -423,7 +352,6 @@ public final class UITestRunner {
         );
     }
 
-    /** The plan as one line, for a report reader. */
     private String sessionPlanLine() {
         return report.sessionPlan();
     }
@@ -432,7 +360,6 @@ public final class UITestRunner {
         if (worldName == null) {
             worldName = WorldBootstrap.worldName(runId);
         }
-        // keep this run's own saves: the world it just left is still being flushed by its server
         WorldBootstrap.deleteStaleWorlds(minecraft.getLevelSource(), ownedWorlds());
         enter(Phase.awaitWorld);
         log.info("creating throwaway world {}", worldName);
@@ -519,14 +446,6 @@ public final class UITestRunner {
         settle(resizeSettleMs);
     }
 
-    /**
-     * Gives {@code group} the session it declared, and reports whether it is ready to run in it.
-     *
-     * <p>A {@code reenter} group starts a leave-and-rejoin, which the following frames carry through
-     * {@link #advanceReenter}; a {@code fresh} group hands the work to the world-creation phases, which
-     * return to {@code nextScenario} once the new world is pinned. The head of the schedule never gets
-     * here at all — the run's own initial world is its session.
-     */
     private boolean startGroupSession(SessionGroup group) {
         boolean head = groupCursor == 0;
         return switch (group.tier()) {
@@ -545,8 +464,6 @@ public final class UITestRunner {
                 }
                 prepareFreshWorld();
                 if (minecraft.level != null) {
-                    // a world is up: leave it before creating the next one, or two servers would own
-                    // this client's saves at once
                     reenter = new Reenter(true);
                     yield false;
                 }
@@ -557,7 +474,6 @@ public final class UITestRunner {
         };
     }
 
-    /** Names the next world of this run and re-arms the rule pinning for it. */
     private void prepareFreshWorld() {
         worldName = WorldBootstrap.worldName(runId + "_w" + (++freshWorlds));
         worldRulesSubmitted = false;
@@ -565,7 +481,6 @@ public final class UITestRunner {
         worldRulesFailure = null;
     }
 
-    /** The save directories this run owns, which the stale-world sweep must not touch. */
     private List<String> ownedWorlds() {
         List<String> owned = new ArrayList<>();
         owned.add(WorldBootstrap.worldName(runId));
@@ -575,30 +490,15 @@ public final class UITestRunner {
         return owned;
     }
 
-    /**
-     * One step of a leave-and-rejoin, one per frame: leave the world, wait for the client to be out of
-     * it, reopen the same save, wait for it to load. The world is not re-pinned — its rules were pinned
-     * into the save when it was created, and the point of the tier is that nothing about the world
-     * changed.
-     */
     private boolean advanceReenter() {
         Reenter state = reenter;
         if (state == null) return true;
         switch (state.step) {
             case 0 -> {
                 log.info("session: leaving {}", worldName);
-                // The clean leave, in the order that cannot deadlock: clear the screen first (a screen
-                // pauses the integrated server, and a paused server never reaches the end of
-                // Minecraft.disconnect's own wait loop — that wait is why this does not call it), tell
-                // the server the client is leaving, then stop the server. Stopping a single-player
-                // world's server IS leaving it: the client's connection closes with it and the client
-                // tears its level down on the next tick, exactly as it would after a normal quit.
                 minecraft.setScreen(null);
                 ClientLevel level = minecraft.level;
                 if (level != null) {
-                    // MC 1.21.10's ClientLevel.disconnect takes the reason it disconnects with, and
-                    // the ordinary "quit this world" one is the level's own DEFAULT_QUIT_MESSAGE --
-                    // the same reason Minecraft.disconnect uses when the player leaves a world.
                     level.disconnect(ClientLevel.DEFAULT_QUIT_MESSAGE);
                 }
                 MinecraftServer server = minecraft.getSingleplayerServer();
@@ -621,8 +521,6 @@ public final class UITestRunner {
             }
             case 2 -> {
                 if (state.createFresh) {
-                    // the old world is gone; the creation phases take it from here and come back to
-                    // nextScenario once the new one is pinned
                     log.info("session: creating {} (no world was up)", worldName);
                     enter(Phase.createWorld);
                     return true;
@@ -702,8 +600,6 @@ public final class UITestRunner {
             minecraft.player.closeContainer();
         }
         minecraft.setScreen(null);
-        // the buffer is per scenario: an assertion is about the input this scenario just made, never
-        // about a match an earlier scenario happened to leave behind
         MatchRecorder.clear();
         ScenarioOptions options = queued.options();
         minecraft.options.guiScale().set(options.guiScale(config.guiScale()));
@@ -813,8 +709,6 @@ public final class UITestRunner {
         stepReport.setSettleMs(settle);
         stepReport.complete(status, now - run.stepStartedAt, run.attempts);
         if (status.failed()) {
-            // the failure capture belongs to this step, so it has to be recorded before the step is
-            // rolled into the run totals, not after
             run.note = "step " + stepReport.index() + " " + stepReport.name() + " " + status.wire();
             captureOnFailure(run, stepReport);
         }
@@ -953,8 +847,6 @@ public final class UITestRunner {
         }
         run.context.recordWrittenCapture(label, path);
         run.context.markWritten(kind, path, suspect);
-        // the step that queued it finished in an earlier frame, so its published report needs the
-        // same correction or it would name the guessed path
         StepReport published = run.lastStepReport;
         if (published != null) {
             published.markWritten(kind, path, suspect);
@@ -1038,19 +930,10 @@ public final class UITestRunner {
         return thrown.getClass().getSimpleName() + ": " + thrown.getMessage();
     }
 
-    /**
-     * One session's worth of scenarios: everything that can run back to back after a single session
-     * transition. The tier is what the group needs; the members are the scenarios that share it.
-     */
     private record SessionGroup(Session tier, List<Queued> members) {}
 
-    /**
-     * A leave-and-rejoin in flight. The phases of a world creation already run through the phase
-     * machine; a rejoin is three steps that belong to no phase of their own, so they live here.
-     */
     private static final class Reenter {
 
-        /** Whether the leave ends in a world creation rather than a rejoin of the same save. */
         private final boolean createFresh;
 
         private int step;
@@ -1062,19 +945,6 @@ public final class UITestRunner {
         private long startedAt = System.currentTimeMillis();
     }
 
-    /**
-     * One scenario waiting its turn.
-     *
-     * <p>The queue holds the closure that produces the steps rather than the annotation behind it,
-     * so everything downstream of it is the same however a scenario's steps were produced.
-     *
-     * @param name          the registered name
-     * @param group         the annotation's group label, empty when unset
-     * @param tags          the annotation's tags
-     * @param options       the per-scenario tuning, already resolved
-     * @param requiresWorld whether the scenario needs a loaded world
-     * @param define        hands the scenario's steps to a builder
-     */
     private record Queued(
         String name,
         String group,
@@ -1097,7 +967,6 @@ public final class UITestRunner {
 
     }
 
-    /** One scenario in flight. */
     private static final class ScenarioRun {
 
         private final Queued queued;
@@ -1134,7 +1003,6 @@ public final class UITestRunner {
 
         private @Nullable StepReport stepReport;
 
-        /** The step report that just completed, for capture corrections that arrive a frame later. */
         private @Nullable StepReport lastStepReport;
 
         private Status status = Status.pass;
