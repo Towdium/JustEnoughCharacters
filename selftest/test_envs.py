@@ -257,6 +257,14 @@ class EnvParsingTest(unittest.TestCase):
         The two 1.21.1 rows are the standalone backend's rows (since 2026-10-15):
         their ``uitest`` block names the harness build it runs, so the row
         carries its own launch layer and declares no ``gradle`` block at all.
+        The two multiple-version fabric rows joined them on the same day: the
+        1.18.2 row runs the three scenarios its build carries
+        (``uitest/mv-1.18.2-fabric``), while the 1.16.5 row is the matrix's one
+        row with no target mod at all — its harness build carries a single
+        scenario and no JEI reaches the run — so it claims the smoke tag alone,
+        and claiming ``tag:jei`` there would name scenarios the build does not
+        have. Both selections name scenarios rather than every scenario the
+        build carries for the same reason a world is written down.
         """
         expected = {
             "1.12.2-forge-hei": "tag:smoke",
@@ -265,10 +273,14 @@ class EnvParsingTest(unittest.TestCase):
             "1.21.1-fabric": "tag:smoke,tag:jei",
             "moderner-1.21.10-fabric": "tag:smoke,tag:jei",
             "moderner-1.21.10-neoforge": "tag:smoke,tag:jei",
+            "mv-1.16.5-fabric": "tag:smoke",
+            "mv-1.18.2-fabric": "tag:smoke,tag:jei",
         }
         standalone = {
             "1.21.1-neoforge": "uitest/1.21.1-neoforge",
             "1.21.1-fabric": "uitest/1.21.1-fabric",
+            "mv-1.16.5-fabric": "uitest/mv-1.16.5-fabric",
+            "mv-1.18.2-fabric": "uitest/mv-1.18.2-fabric",
         }
         rows = {env.name: env for env in envs.load_all() if env.uitest is not None}
         self.assertEqual(sorted(rows), sorted(expected),
@@ -647,29 +659,32 @@ class ViaTest(unittest.TestCase):
 
         There is no other launch layer (the Prism instance launcher was removed on
         2026-10-14), so a row that declares none of the three would be an env that
-        cannot run and does not say why. Ten rows declare a run task — the four
-        moderner rows, the four multiple-version *fabric* rows, and the two 1.12.2
-        rows — the 1.21.1 pair moved to the standalone backend on 2026-10-15
-        (their ``uitest`` block names ``uitest/1.21.1-{neoforge,fabric}``, an
-        independent Gradle build in this repository that carries its own run
-        task), and the other four multiple-version *forge* rows declare `skip`
-        (the checkout's Forge dev run cannot host the mod: a JPMS split package on
-        1.18.2/1.19.2/1.20.1, a self-contradicting merged dev jar on 1.16.5 — see
-        envs/README.md, "Forge rows and the gradle launch"). The rows are named
-        here rather than counted, so a row that silently loses its launch layer
-        cannot pass this test.
+        cannot run and does not say why. Nine rows declare a run task — the four
+        moderner rows, the two remaining multiple-version *fabric* rows (1.19.2,
+        1.20.1) and the two 1.12.2 rows — while the 1.21.1 pair led the move to
+        the standalone backend on 2026-10-15 (their ``uitest`` block names
+        ``uitest/1.21.1-{neoforge,fabric}``, an independent Gradle build in this
+        repository that carries its own run task), and the two 1.18.2/1.16.5
+        multiple-version fabric rows followed to ``uitest/mv-1.18.2-fabric`` and
+        ``uitest/mv-1.16.5-fabric`` the same day. The other four multiple-version
+        *forge* rows declare `skip` (the checkout's Forge dev run cannot host the
+        mod: a JPMS split package on 1.18.2/1.19.2/1.20.1, a self-contradicting
+        merged dev jar on 1.16.5 — see envs/README.md, "Forge rows and the gradle
+        launch"). The rows are named here rather than counted, so a row that
+        silently loses its launch layer cannot pass this test.
         """
         loaded = {env.name: env for env in envs.load_all()}
         gradle_rows = {
             "1.12.2-forge-hei", "1.12.2-forge-jei-legacy",
             "moderner-1.21.10-neoforge", "moderner-1.21.10-fabric",
             "moderner-26.1.2-neoforge", "moderner-26.1.2-fabric",
-            "mv-1.16.5-fabric", "mv-1.18.2-fabric",
             "mv-1.19.2-fabric", "mv-1.20.1-fabric",
         }
         standalone_rows = {
             "1.21.1-neoforge": "uitest/1.21.1-neoforge",
             "1.21.1-fabric": "uitest/1.21.1-fabric",
+            "mv-1.16.5-fabric": "uitest/mv-1.16.5-fabric",
+            "mv-1.18.2-fabric": "uitest/mv-1.18.2-fabric",
         }
         self.assertFalse(gradle_rows - set(loaded), "a named gradle row does not exist")
         for env in loaded.values():
@@ -688,23 +703,22 @@ class ViaTest(unittest.TestCase):
                          sorted(gradle_rows))
 
     def test_the_shipped_mv_fabric_rows_stage_only_what_the_checkout_lacks(self):
-        """The four multiple-version fabric rows are the same contract, written down.
+        """The two multiple-version fabric rows still launched by the checkout, written down.
 
-        All four run ``:<mc>:fabric:runClient`` in the ``multiple-version``
-        checkout, whose fabric modules register their own sources as the mod under
-        test — so JECh is always ``dev-classpath``. JEI is ``compileOnly`` in the
-        version-level build files, so it is staged (except in the 1.16.5 smoke row,
-        which carries no JEI at all), and fabric-api rides the checkout's classpath
+        The 1.18.2 and 1.16.5 rows left this table on 2026-10-15 for the standalone
+        harness backend (their env stages nothing: the harness build loads every
+        jar itself), so the 1.19.2 and 1.20.1 rows are what is left here. Both run
+        ``:<mc>:fabric:runClient`` in the ``multiple-version`` checkout, whose
+        fabric modules register their own sources as the mod under test — so JECh
+        is always ``dev-classpath``. JEI is ``compileOnly`` in the version-level
+        build files, so it is staged, and fabric-api rides the checkout's classpath
         as a ``modApi``/``modCompileOnly`` dependency — except in 1.20.1, whose
         module deliberately takes it ``modCompileOnly`` (the checkout's loom 1.1
         cannot read a MC 1.20.1 fabric-api from 0.91.1 on) and so stages the run's
-        api jar instead. See that row's env comment.
+        api jar instead. See each row's env comment.
         """
         loaded = {env.name: env for env in envs.load_all()}
         expected = {
-            "mv-1.16.5-fabric": {"jech": "dev-classpath", "fabric-api": "dev-classpath"},
-            "mv-1.18.2-fabric": {"jech": "dev-classpath", "jei": "game-dir",
-                                 "fabric-api": "dev-classpath"},
             "mv-1.19.2-fabric": {"jech": "dev-classpath", "jei": "game-dir",
                                  "fabric-api": "dev-classpath"},
             "mv-1.20.1-fabric": {"jech": "dev-classpath", "jei": "game-dir",
@@ -791,13 +805,21 @@ class CheckoutWiringTest(unittest.TestCase):
         self.assertTrue(checked, "no checkout found; the wiring contract was not verified")
 
     def test_the_multiple_version_fabric_modules_read_the_harness_properties(self):
-        """The same contract inside the ``multiple-version`` checkout.
+        """The same contract inside the ``multiple-version`` checkout, for the rows
+        that still launch through it.
 
-        Its four fabric modules each carry the wiring, so every one of them reads
-        both properties and only adds them when they are present: a plain
+        Its fabric modules carry the wiring, so every one of them reads both
+        properties and only adds them when they are present: a plain
         ``./gradlew :1.16.5:fabric:runClient`` keeps the module's own run directory
         and joins nothing. The module directory comes from the task's own path, not
         from the version-level build file, which holds no run configuration.
+
+        A row that has left the gradle backend has no run task to take that path
+        from — the 1.18.2 and 1.16.5 rows moved to their standalone harness builds
+        on 2026-10-15 — so it is skipped instead of being asserted against a launch
+        layer it no longer has. That narrows the test rather than deleting it: the
+        wiring is still the contract for whatever still runs in this checkout, and
+        the trailing ``checked`` assertion keeps it honest if the table empties.
         """
         from lib import instance, resolve
         loaded = {env.name: env for env in envs.load_all()}
@@ -805,6 +827,8 @@ class CheckoutWiringTest(unittest.TestCase):
         for name in ("mv-1.16.5-fabric", "mv-1.18.2-fabric",
                      "mv-1.19.2-fabric", "mv-1.20.1-fabric"):
             env = loaded[name]
+            if env.gradle is None:
+                continue  # this row launches through its own standalone build
             module = "/".join(env.gradle.task.lstrip(":").split(":")[:-1])
             path = resolve.jech_base_root() / env.gradle.project_dir / module / "build.gradle"
             if not path.is_file():

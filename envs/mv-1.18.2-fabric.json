@@ -1,5 +1,5 @@
 {
-  "_comment": "multiple-version line, MC 1.18.2 fabric; fabric-api version from 1.18.2/gradle.properties. Launched through the checkout's own Gradle run task (gradle launch): architectury-loom's `:1.18.2:fabric:runClient` registers the module's own sources as the mod under test and carries fabric-api (0.67.0+1.18.2, the version this module compiles against) through `modApi`, so both ride the run's classpath (via=dev-classpath); JEI is `compileOnly` in `1.18.2/build.gradle`, so it has no place on that classpath and its jar is the one jar staged into mods/. daemon_java is 17 because the wrapper is Gradle 8.1.1, which cannot run on the machine's default JDK (JBR 25).",
+  "_comment": "multiple-version line, MC 1.18.2 fabric. Runs the standalone in-client UI test harness (uitest/mv-1.18.2-fabric, an independent architectury-loom build in this repository) through the three-stage pipeline config->build->test. The harness build stages the two jars under test into the run's mods/ folder itself (production fabric jars are intermediary-named; fabric-loader's dev-mode remapper brings them into the run's namespace) and takes fabric-api as its own remapped Gradle dependency at exactly the pinned version, so jech, jei and fabric-api all carry via=dev-classpath: there is nothing for jt to stage. The row is a harness row since this move (2026-10-15): it declares no ready_when and no world, because the harness's own runner creates and pins its flat level and quits the client when the selection is done. That is what makes the JEI scenarios reachable at all: before this move the row was a gradle launch that could only assert the startup markers, because --quickPlaySingleplayer is 1.20+ and no non-interactive way to load a level existed. This line carries no jei-storage marker check: neither the 1.18.2 sources nor the 4.6.12 jar under test have a JechSearchStorage class (measured: grep -rln JechSearchStorage multiple-version/1.18.2/ is empty; the harness build carries no such tap either), so the marker its 1.19.2/1.20.1 siblings assert cannot be emitted here. daemon_java is 17 because the harness wrapper is Gradle 8.1.1, which cannot run on the machine's default JDK (JBR 25). Upstream's two fabric pins stay as the checkout corrected them: loader 0.14.9 and api 0.67.0+1.18.2, the versions that checkout's own dev run is green with.",
   "name": "mv-1.18.2-fabric",
   "tags": [
     "mv",
@@ -14,10 +14,13 @@
   "java": {
     "version": 17
   },
-  "gradle": {
-    "task": ":1.18.2:fabric:runClient",
-    "project_dir": "multiple-version",
-    "daemon_java": 17
+  "uitest": {
+    "selection": "tag:smoke,tag:jei",
+    "project": "uitest/mv-1.18.2-fabric",
+    "options": {
+      "version": "2975",
+      "key_key.jei.focusSearch": "key.keyboard.f"
+    }
   },
   "jech": {
     "source": "local-build",
@@ -31,6 +34,7 @@
       "name": "jei",
       "source": "curseforge",
       "slug": "jei",
+      "via": "dev-classpath",
       "describe": {
         "version": "10.2.1.1005"
       },
@@ -63,7 +67,11 @@
     {
       "type": "log_not_contains",
       "value": "Could not find targets.json. JechTransformer will not be loaded.",
-      "name": "no-transformer-failure"
+      "name": "transformer-loaded"
+    },
+    {
+      "type": "uitest_report",
+      "name": "uitest-report"
     },
     {
       "type": "no_crash_reports",
@@ -74,8 +82,6 @@
       "name": "exit-code"
     }
   ],
-  "ready_when": {
-    "value": "Sound engine started"
-  },
+  "world": null,
   "timeout_sec": 600
 }
