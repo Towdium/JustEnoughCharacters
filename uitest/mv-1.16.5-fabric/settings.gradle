@@ -1,14 +1,15 @@
 pluginManagement {
     repositories {
-        // Architectury Loom — the plugin the multiple-version checkout itself uses for
-        // these lines, which is why it resolves from the Architectury maven rather
-        // than the fabric one (fabric-loom proper has no 1.1 line to offer).
-        maven { url = 'https://maven.architectury.dev/' }
-        maven { url "https://maven.fabricmc.net/" }
-        // loom 1.1's own toolchain deps (installertools, mcinjector, DiffPatch) live
-        // on the Forge maven — the same repo list the multiple-version checkout's
-        // settings.gradle carries for this plugin.
-        maven { url = 'https://maven.minecraftforge.net/' }
+        // Stock fabric-loom, the plugin the multiple-version checkout itself pins
+        // for these lines (id 'fabric-loom' version '1.10.5' in that repo's
+        // pluginManagement). The architectury maven that used to sit here was what
+        // architectury-loom 1.1 resolved from, and it went with that plugin; the
+        // Forge maven beside it carried loom 1.1's ForgeGradle toolchain deps
+        // (installertools, mcinjector, DiffPatch) and went the same way. What is
+        // left is the repository list the already-converted uitest/1.21.1-fabric
+        // row resolves stock fabric-loom from.
+        maven { url = "https://maven.fabricmc.net/" }
+        maven { url = 'https://maven.neoforged.net/releases' }
         mavenCentral()
         gradlePluginPortal()
     }

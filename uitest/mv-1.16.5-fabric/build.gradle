@@ -9,10 +9,16 @@
 // client runs). See each ported class's Port note.
 //
 // The build itself mirrors the multiple-version checkout's own 1.16.5 fabric
-// module: architectury-loom 1.1 + Gradle 8.1.1 + loader 0.14.9 + a Java 8
+// module: stock fabric-loom 1.10.5 + Gradle 9.5.0 + loader 0.14.9 + a Java 8
 // toolchain — the pins that checkout's dev run is green with — with the
-// harness as the one mod this build owns. This line is the smoke row: it
-// carries no JEI at all (see the env), so only the JECh jar rides the run.
+// harness as the one mod this build owns. (The row ran on architectury-loom
+// 1.1 + Gradle 8.1.1 for as long as the checkout did; the checkout then moved
+// all four of its 1.16.5–1.20.1 fabric modules to stock fabric-loom, and this
+// row followed. Nothing arch-specific was ever used here — no `architectury {}`
+// block, no remapArchitectury, no namedElements, no injectAccessWidener — so
+// the plugin swap is the whole of the change: the loom DSL below is stock
+// loom's.) This line is the smoke row: it carries no JEI at all (see the env),
+// so only the JECh jar rides the run.
 //
 // Like the 1.21.1 fabric build, the jar under test (JECh's built fabric jar)
 // is a production jar in intermediary names, so it cannot ride the run's
@@ -32,7 +38,10 @@
 //   -PjechTestHeadless          the same dials the other line's run has
 
 plugins {
-    id 'dev.architectury.loom' version '1.1-SNAPSHOT'
+    // The pin lives here rather than in settings.gradle because this row is a
+    // standalone build; it is the multiple-version checkout's pin (declared once
+    // in that repo's settings.gradle pluginManagement) that the row mirrors.
+    id 'fabric-loom' version '1.10.5'
     id 'java-library'
     id 'idea'
 }
@@ -115,7 +124,7 @@ dependencies {
     modCompileOnly "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
 
     // Dev-launch only: the two loader libraries the 1.16.5 toolchain gets wrong.
-    // Loom/architectury injects a fabric-loader-0.10.5-era set for MC 1.16.5 (sponge-mixin
+    // Loom injects a fabric-loader-0.10.5-era set for MC 1.16.5 (sponge-mixin
     // 0.8.2+build.24, asm 9.0, no access-widener) while `modImplementation fabric-loader`
     // puts 0.14.9 on the run classpath. 0.14.9's LoaderLibrary.<clinit> needs
     // net.fabricmc.accesswidener.AccessWidener (KnotClient died with NoClassDefFoundError
@@ -150,21 +159,49 @@ dependencies {
     // installs.
 }
 
-// Java 8 across the board: this line's client runs on a Java 8 toolchain (the
-// machine's azul 1.8.0_492), matching the multiple-version checkout's own
-// 1.16.5 modules, and the harness sources are the 1.21.1 engine back-ported
-// to Java 8 syntax (see each Port note).
+// The harness *compiles* as Java 8 — the harness sources are the 1.21.1 engine
+// back-ported to Java 8 syntax, the same level the multiple-version checkout's
+// own 1.16.5 modules compile at (see each Port note) — but the *client* is not a
+// Java 8 JVM: it is the JDK the run is started with, which on this row is the
+// env's (envs/mv-1.16.5-fabric.json: java 17), i.e. the JDK running Gradle.
+//
+// The distinction is load-bearing, which is why the Java 8 toolchain is pinned on
+// the compile task instead of on the project:
+//
+//   * Stock fabric-loom launches its run task on the *project* Java toolchain.
+//     Declaring toolchain 8 project-wide therefore started the client on
+//     azul 1.8.0_492, and the run died in mod resolution before any window:
+//     fabric-loom-native-support 1.0.1 — the mod loom itself injects — declares
+//     ``depends java @ [>=17]``, and the loader answered "requires version 17 or
+//     later of 'OpenJDK 64-Bit Server VM' (java), but only the wrong version is
+//     present: 8" (measured 2026-10-17 on the swapped build,
+//     runs/mv-1.16.5-fabric-20261017-013345/game/logs/latest.log).
+//   * architectury-loom 1.1 had no such coupling: it launched the client on the
+//     Gradle JVM, and this row's own pre-swap harness report records the client
+//     as java 17.0.14 — runs/mv-1.16.5-fabric-20261016-121023/game/uitest/
+//     report.json, "environment": {"java": "17.0.14"}. Keeping the project
+//     toolchain-free is what preserves that client JDK under stock loom.
+//
+// Not declaring a project toolchain at all also means "the Java version being
+// used to run Gradle" is the run's JVM, which is exactly the env's 17.
 java {
     sourceCompatibility = JavaVersion.VERSION_1_8
     targetCompatibility = JavaVersion.VERSION_1_8
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(8)
-    }
+}
+
+// The javac that produces this build's classes, pinned here because the project
+// carries no toolchain (see above): the Java 8 toolchain, the machine's
+// azul 1.8.0_492 — the compiler this row has always used, and the compiler its
+// Java 8 sources are written for. It needs a toolchain *repository* (fooJay) or a
+// locally installed JDK 8; both are present here.
+def jechUiTestJava8Compiler = javaToolchains.compilerFor {
+    languageVersion = JavaLanguageVersion.of(8)
 }
 
 tasks.withType(JavaCompile).configureEach {
+    javaCompiler = jechUiTestJava8Compiler
     // No ``options.release`` here on purpose: the compiler is the JDK 8 toolchain
-    // javac (see the java block above), and ``--release`` only exists from JDK 9
+    // javac (see above), and ``--release`` only exists from JDK 9
     // on — javac 8 answers "invalid flag: --release" (measured 2026-10-15,
     // /tmp/m4br3_1165_compile1.log). Gradle falls back to the toolchain's
     // -source/-target from sourceCompatibility/targetCompatibility, which is the
