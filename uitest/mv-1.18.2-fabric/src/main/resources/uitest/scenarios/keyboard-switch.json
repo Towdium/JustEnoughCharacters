@@ -1,0 +1,39 @@
+{
+  "name": "keyboard-switch",
+  "group": "jei",
+  "tags": ["jei"],
+  "requiresWorld": true,
+  "scenarioTimeoutMs": 120000,
+  "steps": [
+    {"do": "log", "text": "keyboard-switch: put JECh on 小鹤双拼 through JECh's own chat command"},
+    {"do": "command", "text": "/jech keyboard xiaohe"},
+    {"do": "record_matches", "clear": true},
+
+    {"do": "log", "text": "keyboard-switch: open the inventory and focus JEI's search bar with a mouse click (the harness's level is creative, so this is the creative inventory). JEI's field is not a widget of the open screen (measured 2026-10-16; JEI's GuiTextFieldFilter is a private field of its overlay and is never added to the screen), so the click goes through the client's own mouse handler - the body a real pointer goes through - at 1181,704, the bar's centre read off this row's own capture (runs/mv-1.18.2-fabric-20261016-121122): the pinned GUI space is 1280x720 at GUI scale 2, so a 2560x1440 framebuffer pixel is GUI(pixel/2); a measured value, re-measure it if JEI's layout changes"},
+    {"do": "press_bind", "bind": "inventory"},
+    {"do": "wait_until_screen", "screen": "CreativeModeInventoryScreen"},
+    {"do": "wait_ms", "ms": 500},
+    {"do": "click_mouse", "x": 1181, "y": 704},
+    {"do": "wait_ms", "ms": 300},
+
+    {"do": "log", "text": "keyboard-switch: the bar is JEI's own field, so clear it the way a player would"},
+    {"do": "press_key", "key": "backspace", "times": 24},
+
+    {"do": "log", "text": "keyboard-switch: 石头 is ui+tz on 小鹤双拼, so this key order must reach 石"},
+    {"do": "type_text", "text": "uitz"},
+    {"do": "assert_match_recorded", "query_contains": "uitz", "candidate_contains": "石", "expect": true, "within_ms": 4000},
+    {"do": "screenshot", "label": "xiaohe-uitz"},
+
+    {"do": "record_matches", "clear": true},
+    {"do": "press_key", "key": "backspace", "times": 24},
+    {"do": "log", "text": "keyboard-switch: 全拼's own key order is the negative control"},
+    {"do": "type_text", "text": "shitou"},
+    {"do": "assert_match_recorded", "query_contains": "shitou", "candidate_contains": "石", "expect": false, "within_ms": 2000},
+    {"do": "screenshot", "label": "xiaohe-shitou"},
+
+    {"do": "close_screen"},
+    {"do": "wait_until_screen", "screen": null},
+    {"do": "command", "text": "/jech keyboard quanpin"},
+    {"do": "log", "text": "keyboard-switch: back on 全拼, so nothing after this scenario depends on the switch"}
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "name": "jei-pinyin-search",
+  "group": "jei",
+  "tags": ["jei"],
+  "requiresWorld": true,
+  "scenarioTimeoutMs": 120000,
+  "steps": [
+    {"do": "log", "text": "jei-pinyin-search: open the inventory so JEI's ingredient overlay is up (the harness's throwaway level is creative, so the inventory bind opens the creative inventory)"},
+    {"do": "press_bind", "bind": "inventory"},
+    {"do": "wait_until_screen", "screen": "CreativeModeInventoryScreen"},
+    {"do": "wait_ms", "ms": 500},
+    {"do": "log", "text": "jei-pinyin-search: focus JEI's search bar with a mouse click. JEI's field is not a widget of the open screen (measured 2026-10-16: the live widget tree of CreativeModeInventoryScreen carries the screen's own widgets and no JEI field - JEI's GuiTextFieldFilter is a private field of its overlay, never added to the screen), so a click dispatched at the screen does not reach it; click_mouse presses and releases through the client's own mouse handler, the body a real pointer goes through. 1181,704 is the bar's centre, read off this row's own capture (runs/mv-1.18.2-fabric-20261016-121122, screenshots/jei-pinyin-search/16_error.png): the pinned GUI space is 1280x720 at GUI scale 2, so a 2560x1440 framebuffer pixel is GUI(pixel/2) - a measured value, re-measure it if JEI's layout changes"},
+    {"do": "click_mouse", "x": 1181, "y": 704},
+    {"do": "wait_ms", "ms": 300},
+    {"do": "log", "text": "jei-pinyin-search: type the pinyin of 石头 (shi tou) one character at a time"},
+    {"do": "type_text", "text": "shitou"},
+    {"do": "assert_match_recorded", "candidate_contains": "石", "expect": true, "within_ms": 4000},
+    {"do": "screenshot", "label": "filtered"},
+    {"do": "close_screen"},
+    {"do": "wait_until_screen", "screen": null}
+  ]
+}
