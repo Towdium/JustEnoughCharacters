@@ -77,6 +77,9 @@ sourceSets.main.java.srcDir '../../engine/legacy/groups/forge-1.19.2-plus/src/ma
 sourceSets.main.java.srcDir '../../engine/legacy/groups/mc-1.20.1/src/main/java'
 sourceSets.main.java.srcDir '../../engine/legacy/groups/forge/src/main/java'
 sourceSets.main.java.srcDir '../../engine/legacy/groups/mc-1.19.2-plus/src/main/java'
+sourceSets.main.java.srcDir '../../engine/legacy/groups/mixin-fabric-1.16.5-or-mc-1.18.2-plus/src/main/java'
+sourceSets.main.java.srcDir '../../engine/legacy/groups/mixin-mc-1.18.2-or-forge-1.19.2-plus/src/main/java'
+sourceSets.main.java.srcDir '../../engine/legacy/groups/mixin-mc-1.19.2-plus/src/main/java'
 
 def underTestFlatDir = new File(projectDir, 'build/under-test-flat')
 def stageUnderTestJar = { File jar, String name ->

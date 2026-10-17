@@ -13,3 +13,8 @@ fabric-1.16.5-or-1.19.2-plus → mv-1.16.5-fabric, mv-1.19.2-fabric, mv-1.20.1-f
 mc-1.19.2 → mv-1.19.2-fabric, mv-1.19.2-forge
 mc-1.19.2-plus → mv-1.19.2-fabric, mv-1.19.2-forge, mv-1.20.1-fabric, mv-1.20.1-forge
 fabric → mv-1.16.5-fabric, mv-1.18.2-fabric, mv-1.19.2-fabric, mv-1.20.1-fabric
+mixin-fabric-1.16.5-or-mc-1.18.2-plus → mv-1.16.5-fabric, mv-1.18.2-fabric, mv-1.18.2-forge, mv-1.19.2-fabric, mv-1.19.2-forge, mv-1.20.1-fabric, mv-1.20.1-forge
+mixin-mc-1.18.2-or-forge-1.19.2-plus → mv-1.18.2-fabric, mv-1.18.2-forge, mv-1.19.2-forge, mv-1.20.1-forge
+mixin-mc-1.19.2-plus → mv-1.19.2-fabric, mv-1.19.2-forge, mv-1.20.1-fabric, mv-1.20.1-forge
+mixin-fabric-1.16.5-or-1.19.2-plus → mv-1.16.5-fabric, mv-1.19.2-fabric, mv-1.20.1-fabric
+mixin-mc-1.18.2 → mv-1.18.2-fabric, mv-1.18.2-forge
