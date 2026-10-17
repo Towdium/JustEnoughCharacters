@@ -286,11 +286,11 @@ Everything jt writes lives under **`JT_HOME`**, resolved in this order:
   secrets.env    machine-local secrets, see below
 ```
 
-Repository layout: `jt` is the entry point, `lib/` the implementation (paths,
-envs, resolve, pack, options, worlds, mojang, instance, runner, checks, report,
-cfapi, mrapi, net, secrets, select, modmatch, util, errors), `envs/` the test
-matrix ([envs/README.md](envs/README.md) is the schema), `selftest/` the offline
-tests.
+Repository layout: `jt` is the entry point, `lib/` the implementation (__init__,
+__main__, cache, cfapi, checks, envs, errors, harness, instance, launch/ (a package),
+modmatch, mojang, mrapi, net, options, pack, paths, report, resolve, runner, secrets,
+select, subject, uitest_pipeline, util, worlds), `envs/` the test matrix
+([envs/README.md](envs/README.md) is the schema), `selftest/` the offline tests.
 
 ## Secrets
 
