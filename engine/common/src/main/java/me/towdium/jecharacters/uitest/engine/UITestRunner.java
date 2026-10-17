@@ -634,15 +634,12 @@ public final class UITestRunner {
         List<Step> steps = new ArrayList<>(builder.steps());
         int teardownStart = steps.size();
         steps.addAll(builder.teardownSteps());
-        int clientTeardownCount = steps.size() - teardownStart;
-        steps.addAll(builder.serverTeardownSteps());
         return new ScenarioRun(
             queued,
             context,
             scenario,
             steps,
             teardownStart,
-            clientTeardownCount,
             options.scenarioTimeoutMs(config.scenarioTimeoutMs()),
             options.settleMs(config.defaultSettleMs()),
             options.defaultTimeoutMs(config.defaultTimeoutMs()),
@@ -653,7 +650,7 @@ public final class UITestRunner {
     private void tickStep(ScenarioRun run, Step step, long now) {
         if (run.stepReport == null) {
             run.stepReport = run.scenario.addStep(
-                new StepReport(step.index(), step.name(), step.kind().name(), roleOf(run, run.cursor), step.group())
+                new StepReport(step.index(), step.name(), step.kind().name(), roleOf(run, run.cursor))
             );
             run.stepStartedAt = now;
             run.attempts = 0;
@@ -925,9 +922,7 @@ public final class UITestRunner {
     }
 
     private static String roleOf(ScenarioRun run, int cursor) {
-        if (cursor >= run.teardownStart + run.clientTeardownCount) return "teardownServer";
-        if (cursor >= run.teardownStart) return "teardown";
-        return "step";
+        return cursor >= run.teardownStart ? "teardown" : "step";
     }
 
     private static String describe(Throwable thrown) {
@@ -1038,8 +1033,6 @@ public final class UITestRunner {
 
         private final int teardownStart;
 
-        private final int clientTeardownCount;
-
         private final long scenarioTimeoutMs;
 
         private final int settleMs;
@@ -1074,7 +1067,6 @@ public final class UITestRunner {
             ScenarioReport scenario,
             List<Step> steps,
             int teardownStart,
-            int clientTeardownCount,
             int scenarioTimeoutMs,
             int settleMs,
             int defaultTimeoutMs,
@@ -1085,7 +1077,6 @@ public final class UITestRunner {
             this.scenario = scenario;
             this.steps = steps;
             this.teardownStart = teardownStart;
-            this.clientTeardownCount = clientTeardownCount;
             this.scenarioTimeoutMs = scenarioTimeoutMs;
             this.settleMs = settleMs;
             this.defaultTimeoutMs = defaultTimeoutMs;

@@ -6,9 +6,6 @@ import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.state.BlockState;
 import org.jspecify.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
@@ -18,7 +15,6 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BooleanSupplier;
@@ -29,8 +25,6 @@ import java.util.function.Supplier;
 public final class ScenarioBuilder {
 
     private static final int teardownIndexBase = 1_000;
-
-    private static final int serverTeardownIndexBase = 2_000;
 
     private static final int serverStepTimeoutMs = 60_000;
 
@@ -47,10 +41,6 @@ public final class ScenarioBuilder {
     private final List<Step> steps = new ArrayList<>();
 
     private final List<Step> teardownSteps = new ArrayList<>();
-
-    private final List<Step> serverTeardownSteps = new ArrayList<>();
-
-    private final Deque<String> groups = new ArrayDeque<>();
 
     private ScenarioOptions options = ScenarioOptions.defaults();
 
@@ -72,22 +62,8 @@ public final class ScenarioBuilder {
         return List.copyOf(teardownSteps);
     }
 
-    public List<Step> serverTeardownSteps() {
-        return List.copyOf(serverTeardownSteps);
-    }
-
     public ScenarioOptions options() {
         return options;
-    }
-
-    public ScenarioBuilder guiScale(int scale) {
-        options = options.withGuiScale(scale);
-        return this;
-    }
-
-    public ScenarioBuilder hideGui(boolean hide) {
-        options = options.withHideGui(hide);
-        return this;
     }
 
     public ScenarioBuilder settleMs(int ms) {
@@ -95,33 +71,11 @@ public final class ScenarioBuilder {
         return this;
     }
 
-    public ScenarioBuilder timeoutMs(int ms) {
-        pendingTimeoutMs = ms;
-        return this;
-    }
-
-    public ScenarioBuilder group(String name, Runnable body) {
-        groups.addLast(name);
-        try {
-            body.run();
-        } finally {
-            groups.removeLast();
-        }
-        return this;
-    }
-
-    public ScenarioBuilder repeat(int times, Runnable body) {
-        for (int i = 0; i < times; i++) {
-            group("repeat " + (i + 1), body);
-        }
-        return this;
-    }
-
     public ScenarioBuilder teardown(Runnable body) {
         addTo(teardownSteps, StepKind.teardown, "teardown", context -> {
-            int registered = steps.size() + teardownSteps.size() + serverTeardownSteps.size();
+            int registered = steps.size() + teardownSteps.size();
             body.run();
-            if (steps.size() + teardownSteps.size() + serverTeardownSteps.size() != registered) {
+            if (steps.size() + teardownSteps.size() != registered) {
                 throw new IllegalStateException(
                     "a teardown body runs at teardown time, so it must be plain statements; "
                             + "a builder call in it registers a step that never runs"
@@ -129,10 +83,6 @@ public final class ScenarioBuilder {
             }
         });
         return this;
-    }
-
-    public ScenarioBuilder teardownServer(Runnable body) {
-        return inList(serverTeardownSteps, "teardownServer", body);
     }
 
     public ScenarioBuilder step(StepKind kind, String name, StepBody body) {
@@ -154,53 +104,12 @@ public final class ScenarioBuilder {
 
     // region world and server
 
-    public ScenarioBuilder setBlock(int x, int y, int z, BlockState state) {
-        addServer(
-            StepKind.setBlock,
-            "setBlock " + x + "," + y + "," + z,
-            context -> context.serverOrThrow().setBlock(context, new BlockPos(x, y, z), state)
-        );
-        return this;
-    }
-
-    public ScenarioBuilder fill(int x1, int y1, int z1, int x2, int y2, int z2, BlockState state) {
-        addServer(
-            StepKind.fill,
-            "fill",
-            context -> context.serverOrThrow().fill(context, new BlockPos(x1, y1, z1), new BlockPos(x2, y2, z2), state)
-        );
-        return this;
-    }
-
-    public ScenarioBuilder clearArea(int x1, int y1, int z1, int x2, int y2, int z2) {
-        addServer(
-            StepKind.clearArea,
-            "clearArea",
-            context -> context.serverOrThrow().clearArea(context, new BlockPos(x1, y1, z1), new BlockPos(x2, y2, z2))
-        );
-        return this;
-    }
-
-    public ScenarioBuilder withBlockEntity(int x, int y, int z, Consumer<BlockEntity> action) {
-        addServer(
-            StepKind.withBlockEntity,
-            "withBlockEntity " + x + "," + y + "," + z,
-            context -> context.serverOrThrow().withBlockEntity(context, new BlockPos(x, y, z), action)
-        );
-        return this;
-    }
-
     public ScenarioBuilder teleportPlayer(double x, double y, double z) {
         addServer(
             StepKind.teleportPlayer,
             "teleportPlayer",
             context -> context.serverOrThrow().teleportPlayer(context, x, y, z)
         );
-        return this;
-    }
-
-    public ScenarioBuilder yawPitch(float yaw, float pitch) {
-        addServer(StepKind.yawPitch, "yawPitch", context -> context.serverOrThrow().yawPitch(context, yaw, pitch));
         return this;
     }
 
@@ -237,15 +146,6 @@ public final class ScenarioBuilder {
         add(StepKind.awaitClientChunk, "awaitClientChunk " + x + "," + z, context -> {
             if (!context.clientChunkLoaded(x, z)) {
                 context.repeat("waiting for chunk " + x + "," + z);
-            }
-        }, 0, serverStepTimeoutMs);
-        return this;
-    }
-
-    public ScenarioBuilder awaitClientBlockEntity(int x, int y, int z) {
-        add(StepKind.awaitClientBlockEntity, "awaitClientBlockEntity " + x + "," + y + "," + z, context -> {
-            if (!context.clientBlockEntityLoaded(x, y, z)) {
-                context.repeat("waiting for the client block entity " + x + "," + y + "," + z);
             }
         }, 0, serverStepTimeoutMs);
         return this;
@@ -412,60 +312,6 @@ public final class ScenarioBuilder {
 
     // region in-world player input
 
-    public ScenarioBuilder turn(float dYaw, float dPitch) {
-        embody();
-        add(StepKind.embodyTurn, "turn " + dYaw + "/" + dPitch, context -> context.playerInput().turnBy(dYaw, dPitch));
-        return this;
-    }
-
-    public ScenarioBuilder lookSweep(float toYaw, float toPitch, int durationTicks) {
-        return lookSweep(toYaw, toPitch, durationTicks, null);
-    }
-
-    public ScenarioBuilder lookSweep(float toYaw, float toPitch, int durationTicks, @Nullable StepBody perFrame) {
-        return lookSweep(() -> new float[]{toYaw, toPitch}, durationTicks, perFrame);
-    }
-
-    public ScenarioBuilder lookSweep(Supplier<float[]> target, int durationTicks, @Nullable StepBody perFrame) {
-        embody();
-        int ticks = Math.max(1, durationTicks);
-        AtomicBoolean started = new AtomicBoolean();
-        AtomicBoolean finished = new AtomicBoolean();
-        add(StepKind.embodyTurn, "lookSweep (" + ticks + " ticks)", context -> {
-            PlayerInput player = context.playerInput();
-            if (!started.getAndSet(true)) {
-                float[] wanted = target.get();
-                player.lookSweep(wanted[0], wanted[1], ticks);
-            }
-            if (perFrame != null) {
-                perFrame.run(context);
-            }
-            if (player.sweeping()) {
-                context.repeat("sweep tick " + ticks + " pending");
-                return;
-            }
-            if (!finished.getAndSet(true)) {
-                context.repeat("one frame for the sweep's last write");
-            }
-        }, 0, (ticks * 100) + 10_000);
-        return this;
-    }
-
-    @Deprecated
-    public ScenarioBuilder lookSweepFrames(float toYaw, float toPitch, int frames) {
-        return lookSweepFrames(() -> new float[]{toYaw, toPitch}, frames, null);
-    }
-
-    @Deprecated
-    public ScenarioBuilder lookSweepFrames(float toYaw, float toPitch, int frames, @Nullable StepBody perFrame) {
-        return lookSweepFrames(() -> new float[]{toYaw, toPitch}, frames, perFrame);
-    }
-
-    @Deprecated
-    public ScenarioBuilder lookSweepFrames(Supplier<float[]> target, int frames, @Nullable StepBody perFrame) {
-        return lookSweep(target, frames, perFrame);
-    }
-
     public ScenarioBuilder pressKey(int glfwKey) {
         embody();
         add(StepKind.embodyKey, "pressKey " + keyName(glfwKey), context -> context.playerInput().pressKey(glfwKey));
@@ -519,12 +365,6 @@ public final class ScenarioBuilder {
         return this;
     }
 
-    public ScenarioBuilder hotbarSlot(int slot) {
-        embody();
-        add(StepKind.embodyKey, "hotbarSlot " + slot, context -> context.playerInput().hotbarSlot(slot));
-        return this;
-    }
-
     public ScenarioBuilder typeText(String text) {
         embody();
         text.codePoints().forEach(
@@ -534,64 +374,6 @@ public final class ScenarioBuilder {
                 context -> context.playerInput().typeText(new String(Character.toChars(codePoint)))
             )
         );
-        return this;
-    }
-
-    public ScenarioBuilder jump(int ticks) {
-        holdBind(options -> options.keyJump);
-        ticks(ticks);
-        releaseBind(options -> options.keyJump);
-        return this;
-    }
-
-    public ScenarioBuilder sneak(boolean on) {
-        if (on) {
-            holdBind(options -> options.keyShift);
-        } else {
-            releaseBind(options -> options.keyShift);
-        }
-        return this;
-    }
-
-    public ScenarioBuilder attack() {
-        embody();
-        add(StepKind.embodyClick, "attack", context -> context.playerInput().attack());
-        return this;
-    }
-
-    public ScenarioBuilder useItem() {
-        embody();
-        add(StepKind.embodyClick, "useItem", context -> context.playerInput().useItem());
-        return this;
-    }
-
-    public ScenarioBuilder pickBlock() {
-        embody();
-        add(StepKind.embodyClick, "pickBlock", context -> context.playerInput().pickBlock());
-        return this;
-    }
-
-    public ScenarioBuilder mouseDown(int button) {
-        embody();
-        add(StepKind.embodyClick, "mouseDown " + button, context -> context.playerInput().mouseDown(button));
-        return this;
-    }
-
-    public ScenarioBuilder mouseUp(int button) {
-        embody();
-        add(StepKind.embodyClick, "mouseUp " + button, context -> context.playerInput().mouseUp(button));
-        return this;
-    }
-
-    public ScenarioBuilder scrollWorld(double amount) {
-        embody();
-        add(StepKind.embodyClick, "scroll " + amount, context -> context.playerInput().scroll(amount));
-        return this;
-    }
-
-    public ScenarioBuilder releasePlayerInput() {
-        embody();
-        add(StepKind.embodyRelease, "release the embodied player input", context -> context.playerInput().releaseAll());
         return this;
     }
 
@@ -671,15 +453,6 @@ public final class ScenarioBuilder {
         return this;
     }
 
-    public ScenarioBuilder waitUntilServer(String reason, BooleanSupplier condition) {
-        add(
-            StepKind.waitUntilServer,
-            "waitUntilServer " + reason,
-            context -> context.serverOrThrow().poll(context, reason, condition::getAsBoolean)
-        );
-        return this;
-    }
-
     // endregion
 
     // region assertions
@@ -699,28 +472,6 @@ public final class ScenarioBuilder {
             StepKind.checkEquals,
             "checkEquals " + label,
             context -> context.checkEquals(label, expected, actual.get())
-        );
-        return this;
-    }
-
-    public ScenarioBuilder checkStatePresent(String label, String stateKey) {
-        add(
-            StepKind.check,
-            "checkStatePresent " + label,
-            context -> context.check(
-                label,
-                context.state().containsKey(stateKey),
-                "state." + stateKey + "=" + context.state().get(stateKey)
-            )
-        );
-        return this;
-    }
-
-    public ScenarioBuilder checkEqualsState(String label, String stateKey, Supplier<Object> expected) {
-        add(
-            StepKind.checkEquals,
-            "checkEqualsState " + label,
-            context -> context.checkEquals(label, expected.get(), context.state().get(stateKey))
         );
         return this;
     }
@@ -755,32 +506,6 @@ public final class ScenarioBuilder {
 
     public ScenarioBuilder screenshot(String label) {
         add(StepKind.screenshot, "screenshot " + label, context -> context.screenshot(label));
-        return this;
-    }
-
-    public ScenarioBuilder screenshotSurface(String label, Supplier<?> surface) {
-        add(
-            StepKind.screenshotSurface,
-            "screenshotSurface " + label,
-            context -> context.screenshotSurface(label, surface)
-        );
-        return this;
-    }
-
-    public ScenarioBuilder screenshotSequence(String label, int frames) {
-        add(
-            StepKind.screenshotSequence,
-            "screenshotSequence " + label + "(" + frames + ")",
-            context -> context.screenshotSequence(label, frames)
-        );
-        frames(frames + 2);
-        return this;
-    }
-
-    public ScenarioBuilder checkCapturedSequence(String label, int frames) {
-        for (int frame = 0; frame < frames; frame++) {
-            checkCaptured(TestContext.sequenceFrameLabel(label, frame));
-        }
         return this;
     }
 
@@ -843,56 +568,23 @@ public final class ScenarioBuilder {
 
     // endregion
 
-    // region timeline
-
-    public ScenarioBuilder timelineRecord(String name, Supplier<String> blob) {
-        add(StepKind.timelineRecord, "timelineRecord " + name, context -> context.recordTimeline(name, blob.get()));
-        return this;
-    }
-
-    public ScenarioBuilder timelineFrames(String name, int frames, Supplier<String> blob) {
-        AtomicInteger remaining = new AtomicInteger(frames);
-        add(StepKind.timelineRecord, "timelineFrames " + name + "(" + frames + ")", context -> {
-            if (remaining.getAndDecrement() <= 0) return;
-            context.recordTimeline(name, blob.get());
-            if (remaining.get() > 0) {
-                context.repeat("timeline " + (frames - remaining.get()) + "/" + frames);
-            }
-        }, 0, (frames * 250) + 10_000);
-        return this;
-    }
-
-    // endregion
-
     // region internals
-
-    private ScenarioBuilder inList(List<Step> target, String groupName, Runnable body) {
-        groups.addLast(groupName);
-        targets.addLast(target);
-        try {
-            body.run();
-        } finally {
-            groups.removeLast();
-            targets.removeLast();
-        }
-        return this;
-    }
 
     private Step add(StepKind kind, String name, StepBody body) {
         return add(kind, name, body, pendingSettleMs, pendingTimeoutMs);
     }
 
     private Step addTo(List<Step> target, StepKind kind, String name, StepBody body) {
-        int index = target == steps ? target.size() : indexBase(target) + target.size();
-        Step step = new Step(index, kind, name, currentGroup(), pendingSettleMs, pendingTimeoutMs, body);
+        int index = target == steps ? target.size() : teardownIndexBase + target.size();
+        Step step = new Step(index, kind, name, pendingSettleMs, pendingTimeoutMs, body);
         target.add(step);
         return step;
     }
 
     private Step add(StepKind kind, String name, StepBody body, int settleMs, int timeoutMs) {
         List<Step> target = targets.getLast();
-        int index = target == steps ? target.size() : indexBase(target) + target.size();
-        Step step = new Step(index, kind, name, currentGroup(), settleMs, timeoutMs, body);
+        int index = target == steps ? target.size() : teardownIndexBase + target.size();
+        Step step = new Step(index, kind, name, settleMs, timeoutMs, body);
         target.add(step);
         return step;
     }
@@ -903,14 +595,6 @@ public final class ScenarioBuilder {
 
     private void addServer(StepKind kind, String name, StepBody body, int settleMs, int timeoutMs) {
         add(kind, name, body, settleMs, timeoutMs);
-    }
-
-    private int indexBase(List<Step> target) {
-        return target == teardownSteps ? teardownIndexBase : serverTeardownIndexBase;
-    }
-
-    private @Nullable String currentGroup() {
-        return groups.isEmpty() ? null : String.join("/", groups);
     }
 
     private void clickGesture(double x, double y, int button, String label) {

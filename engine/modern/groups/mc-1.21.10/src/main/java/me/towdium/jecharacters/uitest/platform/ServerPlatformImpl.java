@@ -12,16 +12,12 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Consumer;
 
 public final class ServerPlatformImpl implements ServerPlatform {
 
@@ -37,57 +33,10 @@ public final class ServerPlatformImpl implements ServerPlatform {
     }
 
     @Override
-    public String shortPos(Object pos) {
-        return ((BlockPos) pos).toShortString();
-    }
-
-    @Override
-    public void setBlock(Object level, Object pos, Object state) {
-        ((ServerLevel) level).setBlock((BlockPos) pos, (BlockState) state, 3);
-    }
-
-    @Override
-    public void fill(Object level, Object from, Object to, Object state) {
-        BlockPos start = (BlockPos) from;
-        BlockPos end = (BlockPos) to;
-        BlockState blockState = (BlockState) state;
-        BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
-        for (int x = start.getX(); x <= end.getX(); x++) {
-            for (int y = start.getY(); y <= end.getY(); y++) {
-                for (int z = start.getZ(); z <= end.getZ(); z++) {
-                    ((ServerLevel) level).setBlock(cursor.set(x, y, z), blockState, 3);
-                }
-            }
-        }
-    }
-
-    @Override
-    public Object airState() {
-        return Blocks.AIR.defaultBlockState();
-    }
-
-    @Override
-    public Object blockEntity(Object level, Object pos) {
-        return ((ServerLevel) level).getBlockEntity((BlockPos) pos);
-    }
-
-    @Override
-    public void acceptBlockEntity(Object action, Object blockEntity) {
-        ((Consumer<BlockEntity>) action).accept((BlockEntity) blockEntity);
-    }
-
-    @Override
     public void teleport(Object player, Object level, double x, double y, double z) {
         ServerPlayer serverPlayer = (ServerPlayer) player;
         serverPlayer.teleportTo((ServerLevel) level, x, y, z, Set.of(),
                 serverPlayer.getYRot(), serverPlayer.getXRot(), true);
-    }
-
-    @Override
-    public void look(Object player, Object level, float yaw, float pitch) {
-        ServerPlayer serverPlayer = (ServerPlayer) player;
-        serverPlayer.teleportTo((ServerLevel) level, serverPlayer.getX(), serverPlayer.getY(),
-                serverPlayer.getZ(), Set.of(), yaw, pitch, true);
     }
 
     @Override

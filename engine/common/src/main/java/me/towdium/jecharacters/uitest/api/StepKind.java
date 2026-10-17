@@ -3,17 +3,11 @@ package me.towdium.jecharacters.uitest.api;
 public enum StepKind {
 
     // region world and server
-    setBlock,
-    fill,
-    clearArea,
-    withBlockEntity,
     teleportPlayer,
-    yawPitch,
     giveItem,
     runCommand,
     serverTicks,
     awaitClientChunk,
-    awaitClientBlockEntity,
     // endregion
 
     // region screens
@@ -36,10 +30,8 @@ public enum StepKind {
     keyUp,
     type,
     typeInto,
-    embodyTurn,
     embodyKey,
     embodyType,
-    embodyClick,
     embodyRelease,
     // endregion
 
@@ -48,7 +40,6 @@ public enum StepKind {
     waitTicks,
     waitMs,
     waitUntil,
-    waitUntilServer,
     // endregion
 
     // region assertions
@@ -59,15 +50,9 @@ public enum StepKind {
     // endregion
 
     // region structure and tooling
-    group,
-    repeat,
     log,
     action,
     screenshot,
-    screenshotSurface,
-    screenshotSequence,
-    timelineRecord,
-    teardown,
-    teardownServer
+    teardown
     // endregion
 }

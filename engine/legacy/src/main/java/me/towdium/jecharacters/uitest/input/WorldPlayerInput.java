@@ -27,8 +27,6 @@ final class WorldPlayerInput implements PlayerInput {
 
     private static final Logger logger = LogManager.getLogger("jechtest/uitest");
 
-    private static final double entityTurnScale = 0.15;
-
     private final SyntheticInputDriver driver;
 
     private final IntSet heldKeys = new IntOpenHashSet();
@@ -36,14 +34,6 @@ final class WorldPlayerInput implements PlayerInput {
     private final Map<Object, Integer> heldBinds = new LinkedHashMap<>();
 
     private final Set<Object> directBinds = new LinkedHashSet<>();
-
-    private float sweepStartYaw;
-    private float sweepStartPitch;
-    private float sweepDeltaYaw;
-    private float sweepDeltaPitch;
-    private int sweepDurationTicks;
-    private double sweepStartClock;
-    private boolean sweepActive;
 
     private long clientTick;
 
@@ -159,15 +149,6 @@ final class WorldPlayerInput implements PlayerInput {
     }
 
     @Override
-    public void hotbarSlot(int slot) {
-        int count = Minecraft.getInstance().options.keyHotbarSlots.length;
-        if (slot < 0 || slot >= count) {
-            throw new IllegalStateException("hotbar slot " + slot + " is outside 0.." + (count - 1));
-        }
-        pressBind(input().hotbarSlotBind(slot));
-    }
-
-    @Override
     public void typeText(String text) {
         requirePlayer();
         ensureActive();
@@ -218,39 +199,6 @@ final class WorldPlayerInput implements PlayerInput {
     // region the camera
 
     @Override
-    public void turnBy(float dYaw, float dPitch) {
-        requirePlayer();
-        requireWorldLook();
-        MouseHandlerAccessor mouse = mouse();
-        int invert = input().invertYMouse() ? -1 : 1;
-        double scale = turnScale() * entityTurnScale;
-        double pitch = clampPitch(dPitch);
-        mouse.setAccumulatedDx(mouse.getAccumulatedDx() + (dYaw / scale));
-        mouse.setAccumulatedDy(mouse.getAccumulatedDy() + (pitch / (invert * scale)));
-    }
-
-    @Override
-    public void lookSweep(float toYaw, float toPitch, int durationTicks) {
-        requirePlayer();
-        requireWorldLook();
-        sweepStartYaw = input().playerYaw();
-        sweepStartPitch = input().playerPitch();
-        sweepDeltaYaw = input().wrapDegrees(toYaw - sweepStartYaw);
-        sweepDeltaPitch = toPitch - sweepStartPitch;
-        sweepDurationTicks = Math.max(1, durationTicks);
-        sweepStartClock = sweepClock();
-        sweepActive = true;
-        cameraTrace.clear();
-        cameraTraceArmed = true;
-    }
-
-    @Deprecated
-    @Override
-    public void lookSweepFrames(float toYaw, float toPitch, int frames) {
-        lookSweep(toYaw, toPitch, Math.max(1, frames));
-    }
-
-    @Override
     public void pumpTick() {
         clientTick++;
     }
@@ -261,47 +209,6 @@ final class WorldPlayerInput implements PlayerInput {
             return;
         }
         sampleCameraFrame();
-        if (!sweepActive) {
-            return;
-        }
-        float progress = sweepProgress();
-        if (progress <= 0.0F) {
-            return;
-        }
-        if (progress >= 1.0F) {
-            turnBy(
-                (float) input().wrapDegrees((sweepStartYaw + sweepDeltaYaw) - input().playerYaw()),
-                (float) ((sweepStartPitch + sweepDeltaPitch) - input().playerPitch())
-            );
-            sweepActive = false;
-        } else {
-            float targetYaw = sweepStartYaw + (float) (sweepDeltaYaw * progress);
-            float targetPitch = sweepStartPitch + (float) (sweepDeltaPitch * progress);
-            turnBy(
-                (float) input().wrapDegrees(targetYaw - input().playerYaw()),
-                targetPitch - input().playerPitch()
-            );
-        }
-    }
-
-    private float sweepProgress() {
-        double elapsed = sweepClock() - sweepStartClock;
-        if (elapsed >= sweepDurationTicks) {
-            return 1.0F;
-        }
-        if (elapsed <= 0.0D) {
-            return 0.0F;
-        }
-        return (float) (elapsed / sweepDurationTicks);
-    }
-
-    private double sweepClock() {
-        return clientTick + Minecraft.getInstance().getFrameTime();
-    }
-
-    @Override
-    public boolean sweeping() {
-        return sweepActive;
     }
 
     @Override
@@ -340,68 +247,25 @@ final class WorldPlayerInput implements PlayerInput {
 
     @Override
     public void cancelSweep() {
-        sweepActive = false;
         cameraTraceArmed = false;
-    }
-
-    private static double turnScale() {
-        double base = input().turnSensitivity();
-        double cubed = base * base * base;
-        if (input().firstPersonScoping()) {
-            return cubed;
-        }
-        return cubed * 8.0;
-    }
-
-    private static float clampPitch(float dPitch) {
-        float pitch = input().playerPitch();
-        float wanted = input().clamp(pitch + dPitch, -90.0F, 90.0F);
-        return wanted - pitch;
     }
 
     // endregion
 
     // region the mouse buttons
 
-    @Override
-    public void attack() {
-        mouseDown(GLFW.GLFW_MOUSE_BUTTON_LEFT);
-        mouseUp(GLFW.GLFW_MOUSE_BUTTON_LEFT);
-    }
-
-    @Override
-    public void useItem() {
-        mouseDown(GLFW.GLFW_MOUSE_BUTTON_RIGHT);
-        mouseUp(GLFW.GLFW_MOUSE_BUTTON_RIGHT);
-    }
-
-    @Override
-    public void pickBlock() {
-        mouseDown(GLFW.GLFW_MOUSE_BUTTON_MIDDLE);
-        mouseUp(GLFW.GLFW_MOUSE_BUTTON_MIDDLE);
-    }
-
-    @Override
-    public void mouseDown(int button) {
+    private void mouseDown(int button) {
         requirePlayer();
         requireWorldLook();
         long window = window();
         RawInputGate.runSynthetic(() -> mouse().invokeOnPress(window, button, GLFW.GLFW_PRESS, 0));
     }
 
-    @Override
-    public void mouseUp(int button) {
+    private void mouseUp(int button) {
         requirePlayer();
         requireWorldLook();
         long window = window();
         RawInputGate.runSynthetic(() -> mouse().invokeOnPress(window, button, GLFW.GLFW_RELEASE, 0));
-    }
-
-    @Override
-    public void scroll(double amount) {
-        requirePlayer();
-        long window = window();
-        RawInputGate.runSynthetic(() -> mouse().invokeOnScroll(window, 0.0, amount));
     }
 
     // endregion

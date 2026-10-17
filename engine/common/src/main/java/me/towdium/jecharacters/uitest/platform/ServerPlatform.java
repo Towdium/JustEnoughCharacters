@@ -6,21 +6,7 @@ public interface ServerPlatform {
 
     Object localPlayer(Object server);
 
-    String shortPos(Object pos);
-
-    void setBlock(Object level, Object pos, Object state);
-
-    void fill(Object level, Object from, Object to, Object state);
-
-    Object airState();
-
-    Object blockEntity(Object level, Object pos);
-
-    void acceptBlockEntity(Object action, Object blockEntity);
-
     void teleport(Object player, Object level, double x, double y, double z);
-
-    void look(Object player, Object level, float yaw, float pitch);
 
     Object itemByName(String id);
 

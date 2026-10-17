@@ -2,7 +2,6 @@ package me.towdium.jecharacters.uitest.api;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.core.BlockPos;
 import org.jspecify.annotations.Nullable;
 
 import java.nio.file.Path;
@@ -12,7 +11,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Supplier;
 
 public final class TestContext {
 
@@ -20,7 +18,6 @@ public final class TestContext {
     private final InputDriver driver;
     private final CapturePipeline pipeline;
     private final @Nullable ServerContext server;
-    private final @Nullable Timeline timeline;
     private final String scenarioName;
     private final Path outDir;
     private final Map<String, Object> state = new HashMap<>();
@@ -46,7 +43,6 @@ public final class TestContext {
         this.driver = driver;
         this.pipeline = pipeline;
         this.server = server;
-        this.timeline = pipeline.timeline(scenarioName);
         this.scenarioName = scenarioName;
         this.outDir = outDir;
     }
@@ -139,10 +135,6 @@ public final class TestContext {
         return server;
     }
 
-    public @Nullable Timeline timeline() {
-        return timeline;
-    }
-
     public void recordWrittenCapture(String label, String path) {
         writtenCaptures.put(label, path);
     }
@@ -209,37 +201,9 @@ public final class TestContext {
         pipeline.queueFull(scenarioName, label, stepIndex);
     }
 
-    public void screenshotSurface(String label, Supplier<?> surface) {
-        captures.add(new CaptureRef("SURFACE", screenshotPath(scenarioName, label, stepIndex), false));
-        pipeline.queueSurface(scenarioName, label, stepIndex, surface);
-    }
-
-    public void screenshotSequence(String label, int frames) {
-        if (frames <= 0) return;
-        for (int frame = 0; frame < frames; frame++) {
-            captures.add(new CaptureRef("SEQUENCE", sequencePath(scenarioName, label, frame), false));
-        }
-        pipeline.queueSequence(scenarioName, label, frames, stepIndex);
-    }
-
-    public void recordTimeline(String name, String blob) {
-        Timeline log = timeline;
-        if (log == null) return;
-        log.record(name, blob);
-        log("timeline " + name + ": " + blob);
-    }
-
     public static String screenshotPath(String scenario, String label, int stepIndex) {
         return "screenshots/" + sanitize(scenario) + "/" + String.format(Locale.ROOT, "%02d_", stepIndex)
                 + sanitize(label) + ".png";
-    }
-
-    public static String sequenceFrameLabel(String label, int frame) {
-        return sanitize(label) + "_" + String.format(Locale.ROOT, "%04d", frame);
-    }
-
-    public static String sequencePath(String scenario, String label, int frame) {
-        return "screenshots/" + sanitize(scenario) + "/" + sequenceFrameLabel(label, frame) + ".png";
     }
 
     public static String sanitize(String raw) {
@@ -254,11 +218,6 @@ public final class TestContext {
     public boolean clientChunkLoaded(int chunkX, int chunkZ) {
         var level = minecraft.level;
         return level != null && level.hasChunk(chunkX, chunkZ);
-    }
-
-    public boolean clientBlockEntityLoaded(int x, int y, int z) {
-        var level = minecraft.level;
-        return level != null && level.getBlockEntity(new BlockPos(x, y, z)) != null;
     }
 
     // endregion

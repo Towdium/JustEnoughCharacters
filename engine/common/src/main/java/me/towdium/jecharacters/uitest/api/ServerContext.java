@@ -66,36 +66,8 @@ public final class ServerContext {
         }
     }
 
-    public void setBlock(TestContext context, Object pos, Object state) {
-        run(context, "setBlock " + platform().shortPos(pos),
-            () -> platform().setBlock(overworld(), pos, state));
-    }
-
-    public void fill(TestContext context, Object from, Object to, Object state) {
-        run(context, "fill " + platform().shortPos(from) + ".." + platform().shortPos(to),
-            () -> platform().fill(overworld(), from, to, state));
-    }
-
-    public void clearArea(TestContext context, Object from, Object to) {
-        fill(context, from, to, platform().airState());
-    }
-
-    public void withBlockEntity(TestContext context, Object pos, Object action) {
-        run(context, "withBlockEntity " + platform().shortPos(pos), () -> {
-            Object blockEntity = platform().blockEntity(overworld(), pos);
-            if (blockEntity == null) {
-                throw new IllegalStateException("no block entity at " + platform().shortPos(pos));
-            }
-            platform().acceptBlockEntity(action, blockEntity);
-        });
-    }
-
     public void teleportPlayer(TestContext context, double x, double y, double z) {
         run(context, "teleportPlayer", () -> platform().teleport(requirePlayer(), overworld(), x, y, z));
-    }
-
-    public void yawPitch(TestContext context, float yaw, float pitch) {
-        run(context, "yawPitch", () -> platform().look(requirePlayer(), overworld(), yaw, pitch));
     }
 
     public static String canonicalItemId(String item) {

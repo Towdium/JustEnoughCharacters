@@ -19,8 +19,6 @@ public final class StepReport {
 
     private final String role;
 
-    private final @Nullable String group;
-
     private String status = Status.pass.wire();
 
     private long durationMs;
@@ -39,12 +37,11 @@ public final class StepReport {
 
     private final List<String> log = new ArrayList<>();
 
-    public StepReport(int index, String name, String kind, String role, @Nullable String group) {
+    public StepReport(int index, String name, String kind, String role) {
         this.index = index;
         this.name = name;
         this.kind = kind;
         this.role = role;
-        this.group = group;
     }
 
     public int index() {
@@ -61,10 +58,6 @@ public final class StepReport {
 
     public String role() {
         return role;
-    }
-
-    public @Nullable String group() {
-        return group;
     }
 
     public String status() {

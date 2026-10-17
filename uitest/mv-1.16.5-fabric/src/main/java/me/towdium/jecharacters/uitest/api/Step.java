@@ -1,14 +1,10 @@
 package me.towdium.jecharacters.uitest.api;
 
-import org.jspecify.annotations.Nullable;
-
 public final class Step {
 
     private final int index;
     private final StepKind kind;
     private final String name;
-    @Nullable
-    private final String group;
     private final int settleMs;
     private final int timeoutMs;
     private final StepBody body;
@@ -17,14 +13,12 @@ public final class Step {
         int index,
         StepKind kind,
         String name,
-        @Nullable String group,
         int settleMs,
         int timeoutMs,
         StepBody body) {
         this.index = index;
         this.kind = kind;
         this.name = name;
-        this.group = group;
         this.settleMs = settleMs;
         this.timeoutMs = timeoutMs;
         this.body = body;
@@ -40,11 +34,6 @@ public final class Step {
 
     public String name() {
         return name;
-    }
-
-    @Nullable
-    public String group() {
-        return group;
     }
 
     public int settleMs() {
@@ -65,7 +54,6 @@ public final class Step {
             case waitTicks:
             case waitMs:
             case waitUntil:
-            case waitUntilServer:
             case awaitScreen:
             case awaitClientChunk:
             case serverTicks:
