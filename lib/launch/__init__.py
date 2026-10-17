@@ -14,10 +14,13 @@ The three layers an env's configuration is turned into:
     the run's own game directory (its ``mods/``, its ``options.txt``) and the
     JVM command line that starts the client inside it, tracked by the pid of the
     process this harness itself started rather than by a launcher's tree.
+``forgefamily`` / ``description``
+    the Forge family's *development* launch: the row's own build publishes the
+    description (entry class, module path, legacy classpath, mixin properties,
+    harness mod folder), ``forgefamily`` imports it into the cache, and
+    ``description`` composes argv from it.
 
-The point of the split is that a config describes *what the environment is* and
-nothing else: no Gradle project, no run task, no development-run workarounds.
-A production launch loads production jars, so the flatDir remapping, the LWJGL
-force, ``--add-opens`` and the ``pack.mcmeta`` workaround that only exist because
-a *dev* run uses different namespaces than production simply do not come up.
+The vanilla/loader split describes a production launch: no Gradle project, no
+run task, production jars. A Forge-family row is a development launch and gets
+its whole description from its build instead of deriving one here.
 """

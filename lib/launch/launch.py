@@ -88,18 +88,20 @@ def build_command(*, java, client, loader, game_dir, natives_dir, extra_jvm=(),
     return [str(java), *jvm, main_class, *game], filled
 
 
-def launch(command, *, cwd, log_path, log=print):
+def launch(command, *, cwd, log_path, env_extra=None, log=print):
     """Start the client in ``cwd``, its output appended to ``log_path``.
 
     The child is its own session on POSIX so the watchdog's SIGTERM/SIGKILL reach
     the client and anything it forked, and not this harness. ``JAVA_HOME`` is
     exported to point at the JDK the client runs on, because a mod (or a
     patched game) that shells out to ``java`` should get the same one.
+    ``env_extra`` is the run's own environment as its build declared it.
     """
     cwd = Path(cwd)
     log_path = Path(log_path)
     log_path.parent.mkdir(parents=True, exist_ok=True)
     env = dict(os.environ)
+    env.update({str(key): str(value) for key, value in (env_extra or {}).items()})
     env["JAVA_HOME"] = str(Path(command[0]).parent.parent)
     handle = open(log_path, "ab", buffering=0)
     kwargs = {"start_new_session": True} if os.name == "posix" else {}

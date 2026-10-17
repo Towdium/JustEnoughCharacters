@@ -1,0 +1,55 @@
+import groovy.json.JsonOutput
+
+gradle.projectsEvaluated {
+    def project = gradle.rootProject
+    def runName = ['runClient', 'runClientTests'].find { project.tasks.findByName(it) != null }
+    if (runName == null) {
+        throw new GradleException('jtDescribe: this project has neither a runClient nor a runClientTests task')
+    }
+    def run = project.tasks.getByName(runName)
+    def output = new File(project.buildDir, 'moddev/jt-description.json')
+
+    project.tasks.register('jtDescribe') { task ->
+        task.group = 'jt'
+        task.description = 'Writes the launch description jt starts this row with.'
+        def prepare = project.tasks.findByName('prepare' + runName.capitalize())
+        if (prepare != null) {
+            task.dependsOn(prepare)
+        }
+        def classes = project.tasks.findByName('classes')
+        if (classes != null) {
+            task.dependsOn(classes)
+        }
+        project.tasks.matching { it.name.startsWith('jechPreset') || it.name == 'jechCleanUiTestReport' }.each { preset ->
+            task.dependsOn(preset)
+        }
+        task.doLast {
+            def jvm = new ArrayList<String>(run.jvmArgs)
+            run.allJvmArgs.each { argument ->
+                if (!jvm.contains(argument)) {
+                    jvm.add(argument)
+                }
+            }
+            def sensitive = ~/(?i)(key|token|secret|password|auth|credential)/
+            def declared = run.inputs.properties['environmentProperty']
+            def environment = (declared instanceof Map ? declared : [:])
+                .findAll { key, value -> !key.toString().find(sensitive) }
+                .collectEntries { key, value -> [key.toString(), value.toString()] }
+            def payload = [
+                schema     : 1,
+                row        : project.projectDir.absolutePath,
+                task       : runName,
+                javaMajor  : run.javaVersion == null ? null : run.javaVersion.majorVersion,
+                mainClass  : run.mainClass.getOrNull(),
+                jvmArgs    : jvm,
+                programArgs: run.args,
+                classpath  : project.sourceSets.main.runtimeClasspath.files.collect { it.absolutePath },
+                environment: environment,
+                cwd        : run.workingDir.absolutePath,
+            ]
+            output.parentFile.mkdirs()
+            output.text = JsonOutput.prettyPrint(JsonOutput.toJson(payload))
+            println "jt-describe: wrote ${output}"
+        }
+    }
+}

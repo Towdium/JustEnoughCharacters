@@ -66,6 +66,13 @@ def build_parser():
         "--subject-jar", default=None, metavar="PATH",
         help="the mod under test, as an already-built jar; the same direct launch --subject gives",
     )
+    running.add_argument(
+        "--launch-backend", choices=list(runner.LAUNCH_BACKENDS),
+        default=runner.DEFAULT_LAUNCH_BACKEND, metavar="BACKEND",
+        help="how a row without --subject reaches its client: gradle (the row build's own run "
+             "task, the default) or description (the dev client the row build describes, started "
+             "by jt from a cached description)",
+    )
     running.set_defaults(func=cmd_run)
 
     verifying = sub.add_parser("verify", help="read a run report and fail unless every check passed")
@@ -188,7 +195,8 @@ def cmd_resolve(args, log=print):
 
 def cmd_run(args, log=print):
     return runner.run_selection(args.selection, args.exclude, refresh=args.refresh, log=log,
-                                subject_spec=args.subject, subject_jar=args.subject_jar)
+                                subject_spec=args.subject, subject_jar=args.subject_jar,
+                                launch_backend=args.launch_backend)
 
 
 def cmd_verify(args, log=print):

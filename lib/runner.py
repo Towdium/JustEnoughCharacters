@@ -11,10 +11,10 @@ The sequence per env, all of it fail-closed:
    ``overrides/mods``) — the run's written-down input set;
 3. isolate the run's game directory (``runs/<id>/game``): re-sync ``mods/``,
    archive then clear ``config/``, clear ``saves/`` and ``logs/``;
-4. launch with ``./gradlew <task> --no-daemon -PjechRunDir=<game dir>`` in the
-   background, then follow ``<game dir>/logs/latest.log`` — only accepting a file
-   that is newer than the run start, since ``latest.log`` can still be the
-   previous session's;
+4. launch the client — the row build's own run task, or an argv jt composes from
+   a cached launch description, or a directly assembled environment — then follow
+   ``<game dir>/logs/latest.log`` — only accepting a file that is newer than the
+   run start, since ``latest.log`` can still be the previous session's;
 5. a watchdog on ``timeout_sec`` kills the process tree and yields exit code 3;
 6. evaluate the env's checks plus the always-present ``internal:`` checks, and
    write report.json / report.txt / junit.xml.
@@ -35,17 +35,20 @@ from . import subject as subject_mod
 from . import uitest_pipeline, worlds
 from .errors import EXIT_FAIL, EXIT_OK, EXIT_USAGE, EXIT_WATCHDOG, ConfigError, JtError
 from .launch import assemble as assemble_mod
+from .launch import forgefamily
 from .launch import launch as launch_mod
 from .launch import loader as loader_mod
 from .launch import vanilla as vanilla_mod
 from .select import Selection
-from .util import atomic_write_json, atomic_write_text, now_iso, now_stamp, sanitize_name
+from .util import atomic_write_json, atomic_write_text, now_iso, now_stamp, sanitize_name, sha1_file
 
 POLL_SEC = 0.5
 LAUNCHER_EXIT_GRACE_SEC = 60
 READY_GRACE_SEC = 120
 SETTLE_GRACE_SEC = 3
 CONFIG_ERROR = "configError"
+LAUNCH_BACKENDS = ("gradle", "description")
+DEFAULT_LAUNCH_BACKEND = "gradle"
 
 
 class RunOutcome:
@@ -63,7 +66,7 @@ class RunOutcome:
 
 
 def run_selection(expression, exclude=None, *, envs=None, refresh=False, log=print,
-                  subject_spec=None, subject_jar=None):
+                  subject_spec=None, subject_jar=None, launch_backend=DEFAULT_LAUNCH_BACKEND):
     """Run every env the selection matches; returns the process exit code."""
     paths.ensure_data_dirs()
     selection = Selection.parse(expression, exclude)
@@ -91,7 +94,8 @@ def run_selection(expression, exclude=None, *, envs=None, refresh=False, log=pri
 
     for env in matched:
         entry, code = run_env(env, refresh=refresh, log=log,
-                              subject_spec=subject_spec, subject_jar=subject_jar)
+                              subject_spec=subject_spec, subject_jar=subject_jar,
+                              launch_backend=launch_backend)
         report["envs"].append(entry)
         results.append((entry, code))
 
@@ -103,8 +107,11 @@ def run_selection(expression, exclude=None, *, envs=None, refresh=False, log=pri
 
 
 def run_env(env, *, refresh=False, log=print, selection_label=None, subject_spec=None,
-            subject_jar=None):
+            subject_jar=None, launch_backend=DEFAULT_LAUNCH_BACKEND):
     """Run one env end to end; returns ``(report entry, exit code)``."""
+    if launch_backend not in LAUNCH_BACKENDS:
+        raise ConfigError(
+            f"unknown launch backend {launch_backend!r}; this jt knows {', '.join(LAUNCH_BACKENDS)}")
     paths.ensure_data_dirs()
     run_id = f"{sanitize_name(env.name)}-{now_stamp()}"
     run_dir = paths.runs_dir() / run_id
@@ -163,7 +170,8 @@ def run_env(env, *, refresh=False, log=print, selection_label=None, subject_spec
     else:
         try:
             _execute(env, run_dir, entry, started_wall=started_wall, refresh=refresh, log=log,
-                     subject_spec=subject_spec, subject_jar=subject_jar)
+                     subject_spec=subject_spec, subject_jar=subject_jar,
+                     launch_backend=launch_backend)
         except JtError as exc:
             entry[CONFIG_ERROR] = True
             entry["notes"].append(f"{type(exc).__name__}: {exc}")
@@ -235,20 +243,12 @@ def _env_report(run_id, env, entry, started_iso, duration_ms, *, selection_label
 
 
 def _execute(env, run_dir, entry, *, started_wall, refresh, log, subject_spec=None,
-             subject_jar=None):
+             subject_jar=None, launch_backend=DEFAULT_LAUNCH_BACKEND):
     """Resolve the env, hand it to one launch layer, then watch and judge the run.
 
-    Two launch layers exist side by side while the matrix moves over:
-
-    * the **direct** one (``lib.launch``) assembles a real client environment from
-      the env's description plus the ``--subject`` jar and starts the client
-      itself — no Gradle, nothing built at run time;
-    * the **Gradle** one (the checkout's own run task, or a standalone ``uitest``
-      build's) is the backend every row used until the direct one existed.
-
-    Which one runs is decided by the command line, not by the env file: a subject
-    was named, or it was not. Once every row is ported, the second layer and that
-    choice both go away, and a harness row without a subject becomes an error.
+    A subject on the command line selects the direct layer; otherwise
+    ``--launch-backend`` decides, and ``gradle`` is what it decides when the flag
+    is absent.
     """
     source = env.jech.source if env.jech is not None else "the command line"
     log(f"{uitest_pipeline.STAGE_PREFIX} config: resolving {env.name} "
@@ -262,6 +262,8 @@ def _execute(env, run_dir, entry, *, started_wall, refresh, log, subject_spec=No
     if subject_spec or subject_jar:
         handle = _launch_direct(env, run_dir, entry, resolved, refresh=refresh, log=log,
                                 subject_spec=subject_spec, subject_jar=subject_jar)
+    elif launch_backend == "description":
+        handle = _launch_description(env, run_dir, entry, resolved, refresh=refresh, log=log)
     else:
         handle = _launch_gradle_backend(env, run_dir, entry, resolved, refresh=refresh, log=log)
     _watch_and_judge(env, entry, run_dir, handle, started_wall, log=log)
@@ -474,6 +476,86 @@ def _launch_direct(env, run_dir, entry, resolved, *, subject_spec, subject_jar, 
 
     def pids():
         return [] if proc.poll() is not None else [proc.pid]
+
+    return LaunchHandle(minecraft_dir=minecraft_dir, launcher_log=run_dir / "client.log", proc=proc,
+                        pids_fn=pids, crash_before=crash_before)
+
+
+def _launch_description(env, run_dir, entry, resolved, *, refresh, log):
+    """Start the dev client a Forge-family row's build describes.
+
+    The build stage is the row's own Gradle build: it compiles the harness and
+    writes the description jt then imports and caches. A warm cache skips it
+    entirely, so the run stage is this process and nothing else. The game
+    directory is the client's working directory — the description's program
+    arguments carry ``--gameDir .``.
+    """
+    if env.uitest is None or env.uitest.project is None:
+        raise ConfigError(
+            f"{env.name}: --launch-backend=description needs a standalone harness build "
+            "(env.uitest.project); this row declares none"
+        )
+    if env.world is not None:
+        raise ConfigError(
+            f"{env.name}: the description backend does not seed a world (env.world is declared); "
+            "run this row through its Gradle backend"
+        )
+    java_home = instance.java_home_for(env.java_version)
+    log(f"{env.name}: description launch on java {env.java_version} "
+        f"({paths.display(java_home)})")
+
+    harness_dir = uitest_pipeline.harness_build_dir(env, log=log)
+    jech_jar = uitest_pipeline.ensure_jech_jar(env, resolved, java_home=java_home, log=log)
+    jar_args = uitest_pipeline.jar_arguments(jech_jar, resolved)
+    jar_sha1s = {"jech": sha1_file(jech_jar)}
+    for artifact in resolved.mods:
+        if artifact.path is not None:
+            jar_sha1s[artifact.name] = sha1_file(artifact.path)
+
+    description, info = forgefamily.ensure_launch(
+        env, row_dir=harness_dir, jar_args=jar_args, jar_sha1s=jar_sha1s,
+        java_home=java_home, refresh=refresh, log=log,
+    )
+    entry["notes"].append(f"description: {description.describe()}")
+    entry["harness"] = {"project": env.uitest.project, "selection": env.uitest.selection}
+
+    minecraft_dir = instance.run_game_dir(run_dir)
+    game = assemble_mod.assemble(minecraft_dir, mc=env.mc, mod_jars=[],
+                                 options_extra=env.uitest.options, log=log)
+    entry["notes"].extend(game.notes)
+    forgefamily.stage_presets(info, minecraft_dir, log=log)
+
+    entry["launcherLog"] = paths.display(run_dir / "client.log")
+    entry["log"] = paths.display(instance.log_path_in(minecraft_dir))
+    entry["launch"] = {
+        "backend": "description",
+        "java": paths.display(java_home),
+        "mainClass": description.main_class,
+        "classpathEntries": len(description.classpath),
+        "files": dict(description.files),
+        "description": paths.display(info["path"]),
+        "cacheHit": info["cacheHit"],
+        "libraries": info["libraries"],
+        "environment": sorted(description.environment),
+    }
+    entry["notes"].append(
+        f"uitest: scenarios selected by {env.uitest.selection!r}; the harness writes "
+        f"{checks_mod.UITEST_REPORT_DEFAULT} and its captures under "
+        f"{checks_mod.UITEST_CAPTURES_DIR}/ inside the game directory, and quits the client "
+        "itself once the selection is done"
+    )
+
+    command = description.compose(java=java_home / "bin" / "java",
+                                  extra_jvm=harness.jvm_args(env, minecraft_dir))
+    crash_before = crash_report_snapshot(minecraft_dir)
+    proc = launch_mod.launch(command, cwd=minecraft_dir, log_path=run_dir / "client.log",
+                             env_extra=description.environment, log=log)
+
+    tracker = instance.GradleGameTracker(proc.pid, minecraft_dir)
+
+    def pids():
+        alive = [proc.pid] if proc.poll() is None else []
+        return sorted(set(alive) | set(tracker.pids()))
 
     return LaunchHandle(minecraft_dir=minecraft_dir, launcher_log=run_dir / "client.log", proc=proc,
                         pids_fn=pids, crash_before=crash_before)

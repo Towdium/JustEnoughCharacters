@@ -5,7 +5,10 @@ version) — ``uitest/<mc>-<loader>``. Two halves of its contract live here:
 
 **its jar.** ``build`` produces the artifact a *production* loader loads (for a
 loom line, the remapped jar), which is what the direct launcher puts in the
-game directory's ``mods/``. The build is handed the jars under test as project
+game directory's ``mods/``. A Forge-family row loads the harness as a *dev* mod
+instead — ``build/classes/java/main`` plus ``build/resources/main``, named by
+``-Dfml.modFolders`` in the description its build publishes — so that backend
+never uses this jar. The build is handed the jars under test as project
 properties (``-PjechJar`` and, where the row has one, ``-PjeiJar``) because its
 scripts fail closed without them: the harness compiles against the subject's
 classes, and a harness built against a stale copy would be testing something
@@ -72,10 +75,10 @@ def jvm_args(env, game_dir):
 def ensure_jar(env, *, subject_jar, target_mod_jar=None, java_home=None, log=print):
     """Build (or reuse) the harness jar an env runs; returns its path.
 
-    ``build`` is asked for rather than ``classes``: this run loads the harness the
-    way a player would, from the game directory's ``mods/``, so the artifact has
-    to be the production one (remapped, refmap and access transformer included).
-    Gradle itself decides whether anything has to be recompiled.
+    ``build`` is asked for rather than ``classes``: this is the artifact a
+    production loader loads from the game directory's ``mods/`` (remapped, refmap
+    and access transformer included). The Forge-family description backend does
+    not call this: it runs the harness as a dev mod directory.
     """
     directory = project_dir(env)
     arguments = ["build", "--no-daemon", f"-PjechJar={Path(subject_jar)}"]
