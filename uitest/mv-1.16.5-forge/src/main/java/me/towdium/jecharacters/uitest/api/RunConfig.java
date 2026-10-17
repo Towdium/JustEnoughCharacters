@@ -39,6 +39,10 @@ public final class RunConfig {
 
     private final ErrorPolicy errorPolicy;
 
+    private final String worldGenerator;
+
+    private final int platformLayers;
+
     public RunConfig(
         String selection,
         String exclude,
@@ -54,8 +58,18 @@ public final class RunConfig {
         int defaultSettleMs,
         int defaultTimeoutMs,
         boolean captureOnFailure,
-        ErrorPolicy errorPolicy
+        ErrorPolicy errorPolicy,
+        String worldGenerator,
+        int platformLayers
     ) {
+        if (!"void".equals(worldGenerator) && !"flat".equals(worldGenerator)) {
+            throw new IllegalArgumentException(
+                "bad harness property " + prefix + "worldGenerator='" + worldGenerator + "'");
+        }
+        if (platformLayers < 1) {
+            throw new IllegalArgumentException(
+                "bad harness property " + prefix + "platformLayers='" + platformLayers + "'");
+        }
         this.selection = selection;
         this.exclude = exclude;
         this.outDir = outDir;
@@ -71,6 +85,8 @@ public final class RunConfig {
         this.defaultTimeoutMs = defaultTimeoutMs;
         this.captureOnFailure = captureOnFailure;
         this.errorPolicy = errorPolicy;
+        this.worldGenerator = worldGenerator;
+        this.platformLayers = platformLayers;
     }
 
     public static boolean requested() {
@@ -94,7 +110,9 @@ public final class RunConfig {
             intProperty("settleMs", 60),
             intProperty("timeoutMs", 5_000),
             !"false".equalsIgnoreCase(stringProperty("captureOnFailure", "true")),
-            ErrorPolicy.fromString(stringProperty("errorPolicy", "ABORT_SCENARIO"))
+            ErrorPolicy.fromString(stringProperty("errorPolicy", "ABORT_SCENARIO")),
+            stringProperty("worldGenerator", "void"),
+            intProperty("platformLayers", 1)
         );
     }
 
@@ -114,7 +132,9 @@ public final class RunConfig {
             60,
             5_000,
             true,
-            ErrorPolicy.abortScenario
+            ErrorPolicy.abortScenario,
+            "void",
+            1
         );
     }
 
@@ -178,6 +198,14 @@ public final class RunConfig {
         return errorPolicy;
     }
 
+    public String worldGenerator() {
+        return worldGenerator;
+    }
+
+    public int platformLayers() {
+        return platformLayers;
+    }
+
     public ScenarioSelection selectionMatcher() {
         return ScenarioSelection.parse(selection, exclude);
     }
@@ -224,11 +252,13 @@ public final class RunConfig {
             && defaultSettleMs == that.defaultSettleMs
             && defaultTimeoutMs == that.defaultTimeoutMs
             && captureOnFailure == that.captureOnFailure
+            && platformLayers == that.platformLayers
             && Objects.equals(selection, that.selection)
             && Objects.equals(exclude, that.exclude)
             && Objects.equals(outDir, that.outDir)
             && inputMode == that.inputMode
-            && errorPolicy == that.errorPolicy;
+            && errorPolicy == that.errorPolicy
+            && Objects.equals(worldGenerator, that.worldGenerator);
     }
 
     @Override
@@ -248,7 +278,9 @@ public final class RunConfig {
             defaultSettleMs,
             defaultTimeoutMs,
             captureOnFailure,
-            errorPolicy);
+            errorPolicy,
+            worldGenerator,
+            platformLayers);
     }
 
     @Override
@@ -268,6 +300,8 @@ public final class RunConfig {
             + ", defaultTimeoutMs=" + defaultTimeoutMs
             + ", captureOnFailure=" + captureOnFailure
             + ", errorPolicy=" + errorPolicy
+            + ", worldGenerator=" + worldGenerator
+            + ", platformLayers=" + platformLayers
             + "]";
     }
 }

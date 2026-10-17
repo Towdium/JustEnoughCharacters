@@ -1,5 +1,6 @@
 package me.towdium.jecharacters.uitest.engine;
 
+import me.towdium.jecharacters.uitest.api.RunConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
@@ -9,8 +10,11 @@ import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.LevelSettings;
 import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.biome.Biomes;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.levelgen.FlatLevelSource;
 import net.minecraft.world.level.levelgen.WorldGenSettings;
+import net.minecraft.world.level.levelgen.flat.FlatLayerInfo;
 import net.minecraft.world.level.levelgen.flat.FlatLevelGeneratorSettings;
 import net.minecraft.world.level.levelgen.presets.WorldPresets;
 import net.minecraft.world.level.levelgen.structure.StructureSet;
@@ -25,6 +29,7 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 public final class WorldBootstrap {
@@ -85,7 +90,7 @@ public final class WorldBootstrap {
         minecraft.createWorldOpenFlows().loadLevel(null, worldName);
     }
 
-    public static void createFreshLevel(Minecraft minecraft, String worldName) {
+    public static void createFreshLevel(Minecraft minecraft, String worldName, RunConfig config) {
         LevelSettings settings = new LevelSettings(
             worldName,
             GameType.CREATIVE,
@@ -99,6 +104,13 @@ public final class WorldBootstrap {
         Registry<StructureSet> structureSets = registryAccess.registryOrThrow(Registry.STRUCTURE_SET_REGISTRY);
         Registry<Biome> biomes = registryAccess.registryOrThrow(Registry.BIOME_REGISTRY);
         FlatLevelGeneratorSettings flatSettings = FlatLevelGeneratorSettings.getDefault(biomes, structureSets);
+        if (!"flat".equals(config.worldGenerator())) {
+            flatSettings = new FlatLevelGeneratorSettings(Optional.empty(), biomes);
+            flatSettings.getLayersInfo().clear();
+            flatSettings.getLayersInfo().add(new FlatLayerInfo(config.platformLayers(), Blocks.STONE));
+            flatSettings.setBiome(biomes.getHolderOrThrow(Biomes.THE_VOID));
+            flatSettings.updateLayers();
+        }
         FlatLevelSource flatSource = new FlatLevelSource(structureSets, flatSettings);
         WorldGenSettings normal = WorldPresets.createNormalWorldFromPreset(registryAccess, seed, false, false);
         WorldGenSettings worldGenSettings = WorldGenSettings.replaceOverworldGenerator(registryAccess, normal, flatSource);

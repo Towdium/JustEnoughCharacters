@@ -1,5 +1,6 @@
 package me.towdium.jecharacters.uitest.engine;
 
+import me.towdium.jecharacters.uitest.api.RunConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
@@ -9,6 +10,7 @@ import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.LevelSettings;
 import net.minecraft.world.level.levelgen.FlatLevelSource;
 import net.minecraft.world.level.levelgen.WorldGenSettings;
+import net.minecraft.world.level.levelgen.flat.FlatLayerInfo;
 import net.minecraft.world.level.levelgen.flat.FlatLevelGeneratorSettings;
 import net.minecraft.world.level.storage.LevelStorageSource;
 import net.minecraft.world.level.DataPackConfig;
@@ -16,7 +18,10 @@ import net.minecraft.core.MappedRegistry;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.biome.Biomes;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
+import net.minecraft.world.level.levelgen.StructureSettings;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
@@ -27,6 +32,8 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
+import java.util.ArrayList;
+import java.util.Optional;
 import java.util.stream.Stream;
 import java.util.stream.Collectors;
 import java.util.Collections;
@@ -88,7 +95,7 @@ public final class WorldBootstrap {
         minecraft.loadLevel(worldName);
     }
 
-    public static void createFreshLevel(Minecraft minecraft, String worldName) {
+    public static void createFreshLevel(Minecraft minecraft, String worldName, RunConfig config) {
         LevelSettings settings = new LevelSettings(
             worldName,
             GameType.CREATIVE,
@@ -103,6 +110,18 @@ public final class WorldBootstrap {
         Registry<Biome> biomes = registryHolder.registryOrThrow(Registry.BIOME_REGISTRY);
         Registry<NoiseGeneratorSettings> noiseSettings = registryHolder.registryOrThrow(Registry.NOISE_GENERATOR_SETTINGS_REGISTRY);
         FlatLevelGeneratorSettings flatSettings = FlatLevelGeneratorSettings.getDefault(biomes);
+        if (!"flat".equals(config.worldGenerator())) {
+            List<FlatLayerInfo> layers = new ArrayList<>();
+            layers.add(new FlatLayerInfo(config.platformLayers(), Blocks.STONE));
+            flatSettings = new FlatLevelGeneratorSettings(
+                biomes,
+                new StructureSettings(Optional.empty(), Collections.emptyMap()),
+                layers,
+                false,
+                false,
+                Optional.of(() -> biomes.getOrThrow(Biomes.THE_VOID))
+            );
+        }
         FlatLevelSource flatSource = new FlatLevelSource(flatSettings);
         MappedRegistry<LevelStem> dimensions = WorldGenSettings.withOverworld(
             dimensionTypes,

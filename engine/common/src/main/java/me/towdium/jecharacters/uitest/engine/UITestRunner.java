@@ -359,7 +359,7 @@ public final class UITestRunner {
         WorldBootstrap.deleteStaleWorlds(minecraft.getLevelSource(), ownedWorlds());
         enter(Phase.awaitWorld);
         log.info("creating throwaway world {}", worldName);
-        WorldBootstrap.createFreshLevel(minecraft, worldName);
+        WorldBootstrap.createFreshLevel(minecraft, worldName, config);
     }
 
     private void awaitWorld() {

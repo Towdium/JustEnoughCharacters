@@ -1,5 +1,6 @@
 package me.towdium.jecharacters.uitest.engine;
 
+import me.towdium.jecharacters.uitest.api.RunConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.Registries;
@@ -8,8 +9,13 @@ import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.LevelSettings;
 import net.minecraft.world.level.WorldDataConfiguration;
+import net.minecraft.world.level.biome.Biomes;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.levelgen.FlatLevelSource;
 import net.minecraft.world.level.levelgen.WorldDimensions;
 import net.minecraft.world.level.levelgen.WorldOptions;
+import net.minecraft.world.level.levelgen.flat.FlatLayerInfo;
+import net.minecraft.world.level.levelgen.flat.FlatLevelGeneratorSettings;
 import net.minecraft.world.level.levelgen.presets.WorldPresets;
 import net.minecraft.world.level.storage.LevelStorageSource;
 import org.slf4j.Logger;
@@ -22,6 +28,7 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 public final class WorldBootstrap {
@@ -82,7 +89,7 @@ public final class WorldBootstrap {
         minecraft.createWorldOpenFlows().loadLevel(null, worldName);
     }
 
-    public static void createFreshLevel(Minecraft minecraft, String worldName) {
+    public static void createFreshLevel(Minecraft minecraft, String worldName, RunConfig config) {
         LevelSettings settings = new LevelSettings(
             worldName,
             GameType.CREATIVE,
@@ -94,7 +101,23 @@ public final class WorldBootstrap {
         );
         WorldOptions options = new WorldOptions(seed, false, false);
         minecraft.createWorldOpenFlows()
-                .createFreshLevel(worldName, settings, options, WorldBootstrap::flatDimensions);
+                .createFreshLevel(worldName, settings, options, registry -> dimensions(registry, config));
+    }
+
+    private static WorldDimensions dimensions(RegistryAccess registry, RunConfig config) {
+        if ("flat".equals(config.worldGenerator())) return flatDimensions(registry);
+        return flatDimensions(registry)
+                .replaceOverworldGenerator(registry, new FlatLevelSource(voidSettings(registry, config)));
+    }
+
+    private static FlatLevelGeneratorSettings voidSettings(RegistryAccess registry, RunConfig config) {
+        FlatLevelGeneratorSettings settings = new FlatLevelGeneratorSettings(
+                Optional.empty(),
+                registry.registryOrThrow(Registries.BIOME).getHolderOrThrow(Biomes.THE_VOID),
+                List.of());
+        settings.getLayersInfo().add(new FlatLayerInfo(config.platformLayers(), Blocks.STONE));
+        settings.updateLayers();
+        return settings;
     }
 
     private static WorldDimensions flatDimensions(RegistryAccess registry) {

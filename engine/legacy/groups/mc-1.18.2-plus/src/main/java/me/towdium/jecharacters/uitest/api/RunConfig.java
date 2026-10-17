@@ -18,10 +18,23 @@ public record RunConfig(
     int defaultSettleMs,
     int defaultTimeoutMs,
     boolean captureOnFailure,
-    ErrorPolicy errorPolicy
+    ErrorPolicy errorPolicy,
+    String worldGenerator,
+    int platformLayers
 ) {
 
     public static final String prefix = "jech.uitest.";
+
+    public RunConfig {
+        if (!"void".equals(worldGenerator) && !"flat".equals(worldGenerator)) {
+            throw new IllegalArgumentException(
+                "bad harness property " + prefix + "worldGenerator='" + worldGenerator + "'");
+        }
+        if (platformLayers < 1) {
+            throw new IllegalArgumentException(
+                "bad harness property " + prefix + "platformLayers='" + platformLayers + "'");
+        }
+    }
 
     public static boolean requested() {
         return System.getProperty(prefix + "run") != null;
@@ -44,7 +57,9 @@ public record RunConfig(
             intProperty("settleMs", 60),
             intProperty("timeoutMs", 5_000),
             !"false".equalsIgnoreCase(stringProperty("captureOnFailure", "true")),
-            ErrorPolicy.fromString(stringProperty("errorPolicy", "ABORT_SCENARIO"))
+            ErrorPolicy.fromString(stringProperty("errorPolicy", "ABORT_SCENARIO")),
+            stringProperty("worldGenerator", "void"),
+            intProperty("platformLayers", 1)
         );
     }
 
@@ -64,7 +79,9 @@ public record RunConfig(
             60,
             5_000,
             true,
-            ErrorPolicy.abortScenario
+            ErrorPolicy.abortScenario,
+            "void",
+            1
         );
     }
 

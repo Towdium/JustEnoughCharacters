@@ -1,5 +1,6 @@
 package me.towdium.jecharacters.uitest.engine;
 
+import me.towdium.jecharacters.uitest.api.RunConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.datafix.codec.DatapackCodec;
 import net.minecraft.util.registry.DynamicRegistries;
@@ -12,10 +13,14 @@ import net.minecraft.world.GameRules;
 import net.minecraft.world.GameType;
 import net.minecraft.world.WorldSettings;
 import net.minecraft.world.biome.Biome;
+import net.minecraft.world.biome.Biomes;
+import net.minecraft.block.Blocks;
 import net.minecraft.world.gen.DimensionSettings;
 import net.minecraft.world.gen.FlatChunkGenerator;
 import net.minecraft.world.gen.FlatGenerationSettings;
+import net.minecraft.world.gen.FlatLayerInfo;
 import net.minecraft.world.gen.settings.DimensionGeneratorSettings;
+import net.minecraft.world.gen.settings.DimensionStructuresSettings;
 import net.minecraft.world.storage.SaveFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +32,8 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
+import java.util.ArrayList;
+import java.util.Optional;
 import java.util.stream.Stream;
 import java.util.Collections;
 import java.util.stream.Collectors;
@@ -89,7 +96,7 @@ public final class WorldBootstrap {
         minecraft.loadLevel(worldName);
     }
 
-    public static void createFreshLevel(Minecraft minecraft, String worldName) {
+    public static void createFreshLevel(Minecraft minecraft, String worldName, RunConfig config) {
         WorldSettings settings = new WorldSettings(
             worldName,
             GameType.CREATIVE,
@@ -104,6 +111,18 @@ public final class WorldBootstrap {
         Registry<Biome> biomes = registries.registryOrThrow(Registry.BIOME_REGISTRY);
         Registry<DimensionSettings> noiseSettings = registries.registryOrThrow(Registry.NOISE_GENERATOR_SETTINGS_REGISTRY);
         FlatGenerationSettings flatSettings = FlatGenerationSettings.getDefault(biomes);
+        if (!"flat".equals(config.worldGenerator())) {
+            List<FlatLayerInfo> layers = new ArrayList<>();
+            layers.add(new FlatLayerInfo(config.platformLayers(), Blocks.STONE));
+            flatSettings = new FlatGenerationSettings(
+                biomes,
+                new DimensionStructuresSettings(Optional.empty(), Collections.emptyMap()),
+                layers,
+                false,
+                false,
+                Optional.of(() -> biomes.getOrThrow(Biomes.THE_VOID))
+            );
+        }
         FlatChunkGenerator flatSource = new FlatChunkGenerator(flatSettings);
         SimpleRegistry<Dimension> dimensions = DimensionGeneratorSettings.withOverworld(
             dimensionTypes,
