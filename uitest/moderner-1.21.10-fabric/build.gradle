@@ -83,6 +83,10 @@ java {
     }
 }
 
+// The engine's row-independent sources live in one shared tree at the repository root
+// (engine/modern/src/main/java); this build compiles them alongside its own sources.
+sourceSets.main.java.srcDir '../../engine/modern/src/main/java'
+
 tasks.withType(JavaCompile).configureEach {
     it.options.release = 21
     options.encoding = 'UTF-8'
