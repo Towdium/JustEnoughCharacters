@@ -3,6 +3,7 @@ package me.towdium.jecharacters.uitest.platform;
 import net.fabricmc.loader.api.FabricLoader;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public final class FabricPlatform implements Platform {
 
@@ -23,6 +24,6 @@ public final class FabricPlatform implements Platform {
         return FabricLoader.getInstance().getAllMods().stream()
                 .map(mod -> mod.getMetadata().getId())
                 .sorted()
-                .toList();
+                .collect(Collectors.toList());
     }
 }
