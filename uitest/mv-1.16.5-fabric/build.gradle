@@ -78,6 +78,8 @@ java {
     targetCompatibility = JavaVersion.VERSION_1_8
 }
 
+sourceSets.main.java.srcDir '../../engine/legacy/src/main/java'
+
 def jechUiTestJava8Compiler = javaToolchains.compilerFor {
     languageVersion = JavaLanguageVersion.of(8)
 }
