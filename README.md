@@ -448,15 +448,14 @@ Two things to know before dispatching:
   Six rows declare `world` and join one on a real run — `1.21.1-fabric`, the four
   `moderner` rows and `mv-1.20.1-fabric` — and their world travels to the
   checkout as `-PjechQuickPlayWorld` (six and not seven: `mv-1.20.1-forge`
-  declares one too, but it is skipped). `1.21.1-neoforge` declares no
+  declared one too, and it was skipped then). `1.21.1-neoforge` declares no
   world and no `ready_when`: it runs the checkout's in-client UI test harness,
   whose own runner creates the level the scenarios are asserted against and quits
   the client when they are done (see "The in-client UI test harness" above).
-  `mv-1.19.2-forge` cannot join one: quick play needs 1.20+, so it carries `skip`
-  and a CI selection must decide explicitly whether to exclude it
-  (`--exclude tag:skip`) or accept exit code 1 with the skip named. Its fabric
-  sibling runs the same MC version and needs no world of its own: it is a
-  menu-level smoke row that claims no marker (see
+  `mv-1.19.2-forge` could not join one either: quick play needs 1.20+, which is
+  why it carried `skip` until it got its own harness build, whose runner creates
+  the level instead. Its fabric sibling runs the same MC version and needs no
+  world of its own: it is a menu-level smoke row that claims no marker (see
   [envs/README.md](envs/README.md)). The two `1.12.2-*` rows are **harness rows
   too**, not skipped ones: their checkout boots a 1.12.2 client on this machine
   once it has its conditional arm64 LWJGL 2 natives repository, and the harness
@@ -479,10 +478,11 @@ Two things to know before dispatching:
   `--quickPlaySingleplayer` through the row's own run task, so the whole "JEI
   plugin present" family is assertable: every row of that family that claims the
   marker and can run passes on a real run (`stopReason: goal-reached`) —
-  `mv-1.19.2-forge` is skipped (no quick play before 1.20; re-measured
-  2026-10-14 on the since-removed instance launcher, whose metadata gains the
-  quick-play trait only at 1.20, and a world target has no fallback argument) and
-  `mv-1.19.2-fabric`, the menu-level row, claims no marker at all. See
+  `mv-1.19.2-forge` needed a level quick play cannot give it before 1.20
+  (re-measured 2026-10-14 on the since-removed instance launcher, whose metadata
+  gains the quick-play trait only at 1.20, and a world target has no fallback
+  argument), and it left `skip` when its own harness build began creating that
+  level; `mv-1.19.2-fabric`, the menu-level row, claims no marker at all. See
   [envs/README.md](envs/README.md) for the rejected launch paths and the seed
   recipe.
 
@@ -491,9 +491,8 @@ Two things to know before dispatching:
 16 envs: every (version line, loader) pair, all tagged `smoke`. Twelve of them —
 the `1.21.1` pair, the four `moderner` rows, the four `multiple-version` *fabric*
 rows and the two `1.12.2` rows — run through a checkout's Gradle run task. The
-other four — the `multiple-version` *forge* rows — are declared `skip`, so they
-are never executed (the `skip` section below says why). The
-`experimental` rows have
+other four — the `multiple-version` *forge* rows — were the last to leave `skip`,
+and they are executed today. The `experimental` rows have
 doubtful upstream version pins, `legacy` marks the 1.12.2 JEI row, and any env
 that declares `skip` is also tagged `skip`. Per-env loader/java/target versions,
 the check families and the resolution rules are in
@@ -514,29 +513,33 @@ the check families and the resolution rules are in
 python3 jt resolve all --exclude tag:experimental && python3 jt run all --exclude tag:experimental
 ```
 
-The four `mv` forge rows are the rows with **no launch layer at all**: they were
+The four `mv` forge rows were the rows with **no launch layer at all**: they were
 the last rows on the instance launcher, which was removed on 2026-10-14, and the
 same checkout's Forge dev runs cannot host the mod under test — a JPMS split
 package kills 1.18.2/1.19.2/1.20.1 before Minecraft starts, and 1.16.5's merged
 dev jar contradicts itself (`BlockMath` calls an SRG name the
 `com.mojang.math.Transformation` on its own classpath does not carry). Both were
 measured on 2026-10-14 while the launcher still existed, with the no-mod control
-runs, so neither is a harness defect. The version line's fabric half runs on
-Gradle and is unaffected; details and the wiring recipe are in
+runs, so neither is a harness defect. Each row now runs on its own standalone
+harness build, which loads the mod under test without a Forge dev run and creates
+its own level; the version line's fabric half is unaffected. Details and the
+wiring recipe are in
 [envs/README.md](envs/README.md), "Forge rows and the gradle launch".
 
-Six rows are expected to keep the matrix red, and none of them is a harness
-failure — each names a capability that is gone, not a JECh regression:
+Six rows have been parked over this matrix's history, and none of them was a
+harness failure — each names a capability that was gone, not a JECh regression.
+All six run today; **no env carries `skip`**:
 
 * `mv-1.20.1-forge`, `mv-1.18.2-forge` and `mv-1.16.5-forge` — declared `skip` on
   2026-10-14, when the instance launcher was removed: their checkout's Forge dev
-  runs cannot host the mod under test (see the paragraph above). `mv-1.16.5-forge`
-  had been green *on the launcher*, and its published jar is unaffected; only its
-  development run is broken.
+  runs cannot host the mod under test (see the paragraph above). Each now runs on
+  its own standalone harness build, which loads the mod under test itself.
+  `mv-1.16.5-forge` had been green *on the launcher*, and its published jar is
+  unaffected; only its development run is broken.
 * `mv-1.19.2-forge` — declared `skip` (no quick-play world
-  join before 1.20; re-measured 2026-10-14), so a selection without
-  `--exclude tag:skip` exits 1 with the skip named. Its fabric sibling no longer
-  skips: it is a menu-level row with no marker to reach.
+  join before 1.20; re-measured 2026-10-14), and revived when its own harness
+  build created the level that join could not reach. Its fabric sibling never
+  skipped: it is a menu-level row with no marker to reach.
 * `1.12.2-forge-jei-legacy` and `1.12.2-forge-hei` — declared `skip` on
   2026-10-14 and **revived the same day**. The skip's reason was the launch: the
   `1.12.0` checkout's Gradle dev run could not boot a 1.12.2 client on this arm64
@@ -560,7 +563,8 @@ crash report. The checkout was fixed (`forge_version=36.2.42`, satisfying the
 jar's own requirement) and the row re-measured on 2026-10-14 on the then-live
 instance launcher: `[PASS]` in 48s with every check green. The env's
 `loader.version` moved with the fix — the mismatch was never in the env, and the
-fix is a checkout fact that outlives the row's `skip`. Details in
+fix is a checkout fact that outlives the row's `skip`, which the row has since
+left in favour of its own harness build. Details in
 [envs/README.md](envs/README.md).
 
 ## Requirements

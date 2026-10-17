@@ -173,11 +173,13 @@ the same mod id twice *and* lose the remap.
 
 ### Forge rows and the gradle launch
 
-The four `multiple-version` forge rows are the rows that have **no launch path**.
+The four `multiple-version` forge rows were the rows that had **no launch path**.
 They were the only rows still launched by Prism — the fabric half of the same
 checkout runs the checkout's own Gradle task — and the Prism instance launcher was
-removed on 2026-10-14, which leaves all four with nothing to launch them. The
-measurement below is why they cannot simply move to the checkout's task; it was
+removed on 2026-10-14, which left all four with nothing to launch them until each
+row got its own standalone harness build (`uitest/<row>`, an independent Gradle
+build in this repository — see `uitest` below). The measurement below is why they
+cannot simply move to the checkout's task; it was
 taken on 2026-10-14, while the launcher still existed, by wiring the four modules
 the same way the fabric ones were (property guards in the client run,
 `targets.json` through `processResources`, JEI as a dev-only mod dependency,
@@ -245,9 +247,13 @@ Both blockers belong to the checkout, so the probe's module edits were reverted
 were left on the launcher until it was removed. The three rows that still had a
 working launch path then declared `skip` — `mv-1.16.5-forge`, `mv-1.18.2-forge`
 and `mv-1.20.1-forge`; `mv-1.19.2-forge` already carried one — and their checks
-stay written down. The recipe below is recorded so a future pass can re-apply it
-in one step; what removing those four `skip`s needs is the split package (or the
-broken dev artifact) dealt with *and* a launch layer for the row:
+stay written down. They were the last rows to leave that list: what revived them
+is the standalone harness build each row now owns (`uitest/<row>`), which closes
+both gaps the other way — the checkout's dev run is not the launch path at all,
+and JECh rides that build as one jar — so **no env carries `skip` today**. The
+recipe below is recorded so a future pass can re-apply it in one step; it was the
+route to removing those four `skip`s, needing the split package (or the broken
+dev artifact) dealt with *and* a launch layer for the row:
 
 * in each module's client run, guard the two properties this way — loom joins
   `runDir` onto the module directory with `new File(projectDir, runDir)`, so an
@@ -605,21 +611,27 @@ pins and downloads it, `jt seed-world` still maintains its world cache, and the
 env keeps its `checks` as the written-down statement of what it would assert
 (the reason string is what points at the missing capability).
 
-Four rows carry `skip` today, and each reason is a launch-layer one:
+**No env carries `skip` today.** The four `multiple-version` *forge* rows were the
+last to leave that list, and each reason had been a launch-layer one:
 
-* the four `multiple-version` *forge* rows have **no launch layer at all**: they
+* the four `multiple-version` *forge* rows had **no launch layer at all**: they
   were the last rows on the instance launcher, removed on 2026-10-14, and that
   checkout's Forge dev runs cannot host the mod under test either ("Forge rows and
-  the gradle launch");
-* `mv-1.19.2-forge` is the one whose *marker* is unreachable rather than whose
-  launch is gone: its row needs a loaded level and quick play only exists from
-  1.20 on.
+  the gradle launch") — each row now runs on its own standalone harness build
+  (`uitest/<row>`), which launches it and creates the level it is judged in;
+* `mv-1.19.2-forge` was the one whose *marker* looked unreachable rather than whose
+  launch was gone: its row needs a loaded level and quick play only exists from
+  1.20 on — the harness build creates the level itself
+  (`WorldOpenFlows.createFreshLevel`, the row's env comment names it), so the
+  marker is reached without quick play.
 
-The two `1.12.2` rows left this list on 2026-10-14, the same day they joined it:
+The two `1.12.2` rows left the list on 2026-10-14, the same day they joined it:
 they were skipped because no path booted a 1.12.2 client on this arm64 machine,
 and the checkout now boots one itself and runs the harness on it ("The 1.12.2
 rows and the gradle launch"). Their checks were never weakened while they were
-skipped, so nothing had to be restored but the launch.
+skipped, so nothing had to be restored but the launch. With the four forge rows
+back, that list is empty: `jt envs` prints no `skip:` line for any of the 16 envs,
+and every row is executed when it is selected.
 
 The `mv-1.19.2-forge` skip was re-measured on
 2026-10-14 rather than inherited: the row was run on the then-live
@@ -636,11 +648,17 @@ trait from 1.20 on (`net.minecraft/1.19.2.json` `+traits`:
 `["XR:Initial","FirstThreadOnMacOS"]`; `1.20.1`/`1.21.1` add both quick-play
 traits), while a world target has no fallback argument (the server case falls
 back to `--server`/`--port`; a world does not). The env was restored to `skip`
-with its checks intact after the probe.
+with its checks intact after the probe — a verdict the launcher earned, not one
+the row is stuck with: the row needs no launcher at all now, because its own
+standalone harness build's runner creates the level the marker needs itself
+(`WorldOpenFlows.createFreshLevel`, the row's env comment names it). That is how
+the row runs and passes today
+(`Data/jech-compat/runs/mv-1.19.2-forge-20261017-142743`).
 
-Its fabric sibling sits in the same position — MC 1.19.2 offers no
-non-interactive way to load a level at all — but it does not skip,
-because it does not have to claim a level at all.
+Its fabric sibling sits in the same position — MC 1.19.2 offers no command-line
+way to load a level at all (the forge sibling's harness has to create one
+in-client) — but it does not skip, because it does not have to claim a level at
+all.
 `mv-1.19.2-fabric` is a **menu-level smoke row**: it declares no `world` and no
 storage-marker check, and asserts what a client that stops at the title screen
 can show (the transformer loaded, the config was written, no crash report). Its
@@ -679,7 +697,7 @@ so nobody re-treads them:
 
 Which rows declare it, as measured on 2026-10-14: `1.21.1-fabric`, the two
 `moderner-26.1.2` rows and `mv-1.20.1-fabric` — four of the five rows that carry
-a `world` block, the fifth being the `skip`ped `mv-1.20.1-forge` — all run to
+a `world` block, the fifth being `mv-1.20.1-forge`, skipped then — all run to
 `stopReason: goal-reached` on a real join (`vfyjxf_ joined the game`, then
 JECh's `Registering JEI pinyin search storage` a second later).
 The three harness rows (`1.21.1-neoforge` and both `moderner-1.21.10` rows) left
@@ -687,10 +705,11 @@ the list when they moved to the in-client harness (2026-10-14): the level they
 are asserted against is the one the harness's own runner creates, so those rows
 declare no `world` (see `uitest` above) — the marker still arrives, because the
 level does. The `mv-1.16.5` and `mv-1.18.2` rows
-keep no world either — of their four files only the two fabric halves run, since
-both forge halves are `skip`ped: their markers are emitted at startup (and the
+keep no world either — their markers are emitted at startup (and the
 1.16.5/1.18.2 jars carry no JEI plugin at all), so a world would only add a level
-load to what they assert. `mv-1.19.2-forge` cannot join one — see the `skip`
+load to what they assert; both forge halves have left `skip` and get their level
+from their own harness build. `mv-1.19.2-forge` does not join one either — its
+harness build creates the level instead, see the `skip`
 section above — while `mv-1.19.2-fabric` is the same MC version but a gradle row
 that claims no marker, so it is a menu-level row by design: no world, no marker.
 
@@ -762,9 +781,10 @@ run played in is replaced, never merged).
 An env without `world` stops at the title screen. The preset `options.txt`
 (below) is still staged, so the client reaches the menu; that is the right shape
 for envs whose markers are emitted during startup (the three `mv-*-fabric` rows
-of 1.16.5/1.18.2/1.19.2) and for the five harness rows, whose level the harness
-creates itself. The two Forge halves of 1.16.5/1.18.2 are the rows still in the
-menu-level position *and* still `skip`ped.
+of 1.16.5/1.18.2/1.19.2) and for the harness rows, whose level the harness
+creates itself. The two Forge halves of 1.16.5/1.18.2 were the rows still in the
+menu-level position *and* still `skip`ped; both now run their own harness build,
+which creates the level for them.
 
 ## The preset `options.txt`
 
@@ -1026,21 +1046,21 @@ and says so in the report.
 | `moderner-26.1.2-fabric` | 26.1.2 / fabric 0.19.2 | 25 | `moderner` (fabric-unobfuscated) | jei 29.16.0.46, fabric-api 0.146.1+26.1.2 |
 | `1.21.1-neoforge` | 1.21.1 / neoforge 21.1.215 | 21 | `1.21.1` | jei 19.37.0.362 |
 | `1.21.1-fabric` | 1.21.1 / fabric 0.16.14 | 21 | `1.21.1` | jei 19.37.0.362, fabric-api 0.116.1+1.21.1 |
-| `mv-1.20.1-forge` | 1.20.1 / forge 1.20.1-47.0.35 | 17 | `multiple-version` | jei 15.48.0.179 — **skipped**, see below |
+| `mv-1.20.1-forge` | 1.20.1 / forge 1.20.1-47.0.35 | 17 | `multiple-version` | jei 15.48.0.179 — `uitest: tag:smoke,tag:jei` |
 | `mv-1.20.1-fabric` | 1.20.1 / fabric 0.16.14 (see below) | 17 | `multiple-version` (gradle) | jei 15.48.0.179, fabric-api (see below) |
-| `mv-1.19.2-forge` | 1.19.2 / forge 1.19.2-43.2.3 | 17 | `multiple-version` | jei 11.30.3.1056 — **skipped**, see below |
+| `mv-1.19.2-forge` | 1.19.2 / forge 1.19.2-43.2.3 | 17 | `multiple-version` | jei 11.30.3.1056 — `uitest: tag:smoke,tag:jei` |
 | `mv-1.19.2-fabric` | 1.19.2 / fabric 0.16.14 (see below) | 17 | `multiple-version` (gradle) | jei 11.30.3.1056, fabric-api 0.77.0+1.19.2 |
-| `mv-1.18.2-forge` | 1.18.2 / forge 1.18.2-40.2.1 | 17 | `multiple-version` | jei 10.2.1.1005 — **skipped**, see below |
+| `mv-1.18.2-forge` | 1.18.2 / forge 1.18.2-40.2.1 | 17 | `multiple-version` | jei 10.2.1.1005 — `uitest: tag:smoke,tag:jei` |
 | `mv-1.18.2-fabric` | 1.18.2 / fabric 0.14.9 | 17 | `multiple-version` (gradle) | jei 10.2.1.1005, fabric-api 0.67.0+1.18.2 |
-| `mv-1.16.5-forge` | 1.16.5 / forge 1.16.5-36.2.42 | 8 | `multiple-version` | jei 7.8.0.1009 (pinned by file id) — **skipped**, see below |
+| `mv-1.16.5-forge` | 1.16.5 / forge 1.16.5-36.2.42 | 8 | `multiple-version` | jei 7.8.0.1009 (pinned by file id) — `uitest: tag:smoke` |
 | `mv-1.16.5-fabric` | 1.16.5 / fabric 0.14.9 | 8 | `multiple-version` (gradle) | fabric-api 0.42.0+1.16 (smoke) |
 | `1.12.2-forge-hei` | 1.12.2 / forge 1.12.2-14.23.5.2864 | 8 | `1.12.0` (srg jar) | had-enough-items 4.34.0 (dev-classpath) — `uitest: tag:smoke` |
 | `1.12.2-forge-jei-legacy` | 1.12.2 / forge 1.12.2-14.23.5.2864 | 8 | `1.12.0` (srg jar) | jei 4.16.1.301 (dev-classpath) — `uitest: tag:smoke,tag:jei` |
 
-Every row also stages the preset `options.txt`. The four envs that are
-*launched into a world*, the five rows that load their own level (`uitest`), the
-rows that claim no level at all, and the four that are *skipped*, are called out
-below and in the table above:
+Every row also stages the preset `options.txt`. The rows that were launched into
+a world, the rows that load their own level (`uitest`), the rows that claim no
+level at all, and the rows that were *skipped*, are called out below and in the
+table above:
 
 | env | runs? | world | why |
 | --- | --- | --- | --- |
@@ -1049,9 +1069,9 @@ below and in the table above:
 | `1.21.1-fabric` | yes | `world: {name: jechworld}` | the JEI plugin marker needs a loaded level |
 | `moderner-26.1.2` ×2, `mv-1.20.1-fabric` | yes | `world: {name: jechworld}` | same marker, same level-load phase (measured 2026-10-14) |
 | `mv-1.19.2-fabric`, `mv-1.16.5-fabric`, `mv-1.18.2-fabric` | yes | none | the menu-level rows: no marker claimed at all, or one emitted at startup |
-| `mv-1.20.1-forge` | **no** — `skip` | `world: {name: jechworld}` | its checkout's Forge dev run cannot host the mod under test and the instance launcher is gone (2026-10-14) |
-| `mv-1.18.2-forge`, `mv-1.16.5-forge` | **no** — `skip` | none | same reason: no launch layer, and the checkout's Forge dev run cannot host the mod (2026-10-14) |
-| `mv-1.19.2-forge` | **no** — `skip` | none | the marker needs a loaded level, but quick play needs 1.20+ (re-measured 2026-10-14) |
+| `mv-1.20.1-forge` | yes | none | it runs its own standalone harness build (`uitest/mv-1.20.1-forge`), which creates the level; its checkout's Forge dev run cannot host the mod under test and the instance launcher is gone (2026-10-14) |
+| `mv-1.18.2-forge`, `mv-1.16.5-forge` | yes | none | same history, same answer: the checkout's Forge dev run cannot host the mod, so each runs its own standalone harness build (`uitest/<row>`), which creates the level |
+| `mv-1.19.2-forge` | yes | none | the marker needs a loaded level, and the harness build creates one itself (`WorldOpenFlows.createFreshLevel`); quick play needs 1.20+ and was never the path (re-measured 2026-10-14) |
 
 Every env but the five harness rows (`1.21.1-neoforge`,
 `moderner-1.21.10-neoforge`, `moderner-1.21.10-fabric`, and both `1.12.2` rows)
@@ -1061,7 +1081,7 @@ screen runs until the watchdog (see "Omitting it"). The harness rows omit it on
 purpose: their own runner quits the client, so a stopping rule would end the run
 mid-scenario (see `uitest`).
 
-`mv-1.19.2-forge` is the row with no path to its marker: JEI 11.x's
+`mv-1.19.2-forge` was the row with no path to its marker: JEI 11.x's
 `registerAdvancedSearch` (the phase that logs JECh's storage marker) runs at
 level load, and the only non-interactive way to load a level —
 `--quickPlaySingleplayer` — does not exist before 1.20. That was re-measured on
@@ -1071,12 +1091,12 @@ level, because the then-live launcher only passed the quick-play argument to
 versions whose
 profile carries the `feature:is_quick_play_singleplayer` trait (its
 `net.minecraft/1.19.2.json` had no such trait; 1.20.1 does). So the env stays in
-the matrix with its checks written down, and `skip` names exactly what is
-missing. Removing the `skip` is a follow-up that needs one of: a 1.19.2-era way
-to join a world from the command line, or an in-game runner (a test mod that
-loads a world and quits). Neither is in place; a weaker assertion is not an
-option. `mv-1.19.2-fabric` faces the same missing capability but is not in this
-position: it claims no marker, so there is nothing it can fail to
+the matrix with its checks written down, and `skip` named exactly what was
+missing. The row has since left `skip` by the other route: its own harness build
+creates the level the marker needs (`WorldOpenFlows.createFreshLevel`, the row's
+env comment names it), so no 1.19.2-era command-line world join was needed after
+all — and none exists. `mv-1.19.2-fabric` faces the same command-line gap but is
+not in this position: it claims no marker, so there is nothing it can fail to
 reach and nothing to skip (see the `skip` section above).
 
 The version strings above are not invented: they mirror each checkout's
@@ -1155,9 +1175,10 @@ has a JEI plugin and can be asserted on its registration marker.
   keeps the two config checks and the failure/exit checks only (see the `skip`
   section above).
 
-  Those nine rows load a level when they run, except the two that carry `skip` —
-  `mv-1.19.2-forge`, whose marker needs a level the row cannot reach, and
-  `mv-1.20.1-forge`, whose launch layer is gone (re-measured 2026-10-14). Five
+  Those nine rows load a level when they run — the two `mv` forge rows among them
+  get it from their own harness build, which creates it: `mv-1.19.2-forge`, whose
+  marker needs a level the row could not otherwise reach, and
+  `mv-1.20.1-forge` (re-measured 2026-10-14). Five
   env files declare `world` — the quick-play rows — and four of them run; the
   three harness rows (`1.21.1-neoforge`, `moderner-1.21.10-neoforge`,
   `moderner-1.21.10-fabric`) get their level from the in-client harness
@@ -1194,16 +1215,18 @@ has a JEI plugin and can be asserted on its registration marker.
   checks green — `[PASS] mv-1.16.5-forge in 48.0s`
   (`Data/jech-compat/runs/mv-1.16.5-forge-20261014-145306`). The env's
   `loader.version` moved with it (`1.16.5-36.2.42`); nothing else about the row
-  changed, and it still stages the **production** jar into `mods/`, because the
-  checkout's Forge dev run cannot host that jar (see "Forge rows and the gradle
-  backend"). The first attempt at this verification never ran: the two runs
+  changed at that point. It stages nothing today: both jars ride its own harness
+  build (`via: dev-classpath`), because the
+  checkout's Forge dev run cannot host them (see "Forge rows and the gradle
+  launch"). The first attempt at this verification never ran: the two runs
   recorded on 2026-10-14 08:13/08:16 died in the launcher's `AuthFlow`
   (`令牌刷新失败`),
   which is why this section still described the pre-fix state until the
   2026-10-14 afternoon run above. The rest of this family is green where it runs
   — `mv-1.16.5-fabric` and `mv-1.18.2-fabric` today, `mv-1.16.5-forge` on the
-  launcher before it was removed (both forge rows are now `skip`ped, see "Forge
-  rows and the gradle launch"); `mv-1.16.5-fabric` has no Forge at all, and
+  launcher before it was removed (both forge rows have since left `skip` and run
+  their own harness builds, see "Forge rows and the gradle launch");
+  `mv-1.16.5-fabric` has no Forge at all, and
   neither 1.18.2 jar declares any dependency block.
 * **C — 1.12.2** (both rows):
   `log_contains "Transforming class mezz/jei/ingredients/IngredientFilter for JEI integration."`,
