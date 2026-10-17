@@ -77,7 +77,7 @@ it used (`gradle.task`, `gradle.projectDir`). See [README.md](../README.md), "Th
 | --- | --- | --- |
 | `task` | yes | the Gradle task, spelled from the build root (`:neoforge:runClient`) |
 | `project_dir` | no | the checkout to run in, relative to `$JT_JECH_ROOT`; defaults to the env's `jech.project`, so the task always runs where the artifact under test was built |
-| `daemon_java` | no | the major version of the JDK that runs **Gradle** (its `JAVA_HOME`), e.g. `21` for a Gradle 8.13 wrapper on a Java 25 machine; absent/`null` keeps the ambient `JAVA_HOME`. This is not the client's JDK: that comes from the checkout's own toolchain. Only a `gradle` row reads this key; a standalone harness row starts its Gradle on the env's `java` version |
+| `daemon_java` | no | the major version of the JDK that runs **Gradle** (its `JAVA_HOME`); absent/`null` keeps the ambient `JAVA_HOME`. This is not the client's JDK: that comes from the checkout's own toolchain. Only a `gradle` row reads this key; a standalone harness row starts its Gradle on the env's `java` version |
 | `args` | no | extra arguments appended to the Gradle command line **verbatim**, after the ones `jt` spells itself (`-PjechRunDir`, `-PjechQuickPlayWorld`, `-PjechTest`). For a checkout property that varies per row and that only the row can name — the one property it was written for is `-PdevMod=jei\|hei`, which picks the JEI-line dev mod the `1.12.0` checkout stages, and no row passes args today. A list of plain strings; `jt` never interprets them, and they are recorded in the run report (`gradle.args`) so a reader can reproduce the exact command line |
 
 `env.jech` and each `mods[]` entry take one more optional key:
@@ -240,9 +240,6 @@ never had to be dealt with at all:
   false` matters: `jei-<mc>-forge` already carries the `mezz/jei/common` classes,
   and letting its `-common` sibling in produced
   `duplicate input class mezz/jei/common/...` during the run.
-* `daemon_java: 17` for all four: the wrapper is Gradle 8.1.1, which cannot start
-  on the machine's default JDK. The client's own JDK still comes from the module's
-  toolchain (8 for 1.16.5, 17 for the rest).
 
 ### The 1.12.2 rows and the gradle launch
 
