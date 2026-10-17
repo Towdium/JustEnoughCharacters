@@ -1,10 +1,9 @@
-
 plugins {
     id 'java-library'
     id 'eclipse'
     id 'idea'
-    id 'net.minecraftforge.gradle' version '[6.0,6.2)'
-    id 'org.spongepowered.mixin' version '0.7.+'
+    id 'net.minecraftforge.gradle' version "${gradle_version}"
+    id 'net.minecraftforge.renamer' version "${renamer_version}"
 }
 
 version = mod_version
@@ -94,6 +93,13 @@ if (jechUiTestWindow != null) {
 }
 
 repositories {
+    maven {
+        url = 'https://libraries.minecraft.net/'
+        content { includeGroup 'ca.weblite' }
+    }
+    maven fg.forgeMaven
+    maven fg.minecraftLibsMaven
+    minecraft.mavenizer(it)
     mavenCentral()
     flatDir { dir underTestFlatDir }
 }
@@ -102,23 +108,28 @@ minecraft {
     mappings channel: 'official', version: minecraft_version
 
     runs {
-        client {
-            workingDirectory = project.file('runs/client-tests')
-            if (jechUiTestSelection != null) {
-                if (jechUiTestRunDir != null) {
-                    workingDirectory = project.file(jechUiTestRunDir)
-                }
-                jvmArgs "-Djech.uitest.run=${jechUiTestSelection}"
-                jvmArgs "-Djech.uitest.out=${jechUiTestOutDir.absolutePath}"
-                jvmArgs "-Djech.uitest.exclude=${jechUiTestExclude}"
-                if (jechUiTestGuiScale != null) jvmArgs "-Djech.uitest.guiScale=${jechUiTestGuiScale}"
-                if (jechUiTestWindowWidth != null) jvmArgs "-Djech.uitest.windowWidth=${jechUiTestWindowWidth}"
-                if (jechUiTestWindowHeight != null) jvmArgs "-Djech.uitest.windowHeight=${jechUiTestWindowHeight}"
-                if (jechUiTestInputMode != null) jvmArgs "-Djech.uitest.inputMode=${jechUiTestInputMode}"
-                if (jechUiTestWatchdogSec != null) jvmArgs "-Djech.uitest.watchdogSec=${jechUiTestWatchdogSec}"
-                if (jechUiTestKeepOpen) jvmArgs '-Djech.uitest.keepOpen=true'
+        register('client') {
+            workingDir = new File(projectDir, 'runs/client-tests')
+            if (jechUiTestSelection != null && jechUiTestRunDir != null) {
+                workingDir = new File(jechUiTestRunDir)
             }
-            if (jechUiTestHeadless) jvmArgs '-Djech.uitest.headless=true'
+            environment 'assetDirectory', providers.gradleProperty('jechAssetsDir')
+                    .getOrElse(new File(gradle.gradleUserHomeDir, 'caches/forge_gradle/assets').absolutePath)
+            environment 'assetIndex', '1.16'
+            systemProperty 'net.minecraftforge.launcher.skip.assets', 'true'
+            jvmArgs '-XstartOnFirstThread'
+            if (jechUiTestSelection != null) {
+                systemProperty 'jech.uitest.run', jechUiTestSelection
+                systemProperty 'jech.uitest.out', jechUiTestOutDir.absolutePath
+                systemProperty 'jech.uitest.exclude', jechUiTestExclude
+                if (jechUiTestGuiScale != null) systemProperty 'jech.uitest.guiScale', jechUiTestGuiScale
+                if (jechUiTestWindowWidth != null) systemProperty 'jech.uitest.windowWidth', jechUiTestWindowWidth
+                if (jechUiTestWindowHeight != null) systemProperty 'jech.uitest.windowHeight', jechUiTestWindowHeight
+                if (jechUiTestInputMode != null) systemProperty 'jech.uitest.inputMode', jechUiTestInputMode
+                if (jechUiTestWatchdogSec != null) systemProperty 'jech.uitest.watchdogSec', jechUiTestWatchdogSec
+                if (jechUiTestKeepOpen) systemProperty 'jech.uitest.keepOpen', 'true'
+            }
+            if (jechUiTestHeadless) systemProperty 'jech.uitest.headless', 'true'
         }
     }
 }
@@ -138,23 +149,30 @@ configurations.all {
 }
 
 dependencies {
-    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+    implementation minecraft.dependency("net.minecraftforge:forge:${minecraft_version}-${forge_version}")
 
     if (jechJarFile != null) {
         compileOnly files(jechJarFile)
     }
     if (jechUnderTest != null) {
-        implementation fg.deobf(jechUnderTest)
+        implementation renamer.dependency(jechUnderTest)
     }
     if (jeiUnderTest != null) {
-        implementation fg.deobf(jeiUnderTest)
+        implementation renamer.dependency(jeiUnderTest)
     }
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
     compileOnly 'org.jspecify:jspecify:1.0.1'
 
     lwjglModules.each { module ->
+        compileOnly "org.lwjgl:${module}:${lwjglVersion}"
         runtimeOnly "org.lwjgl:${module}:${lwjglVersion}:natives-macos-arm64"
     }
+}
+
+renamer.mappings.from minecraft.dependency.toSrgFile
+
+renamer.enableMixinRefmaps {
+    config 'jechtest.mixins.json'
 }
 
 tasks.matching { it.name == 'runClient' }.configureEach {
@@ -162,11 +180,6 @@ tasks.matching { it.name == 'runClient' }.configureEach {
         requireJar('jechJar', jechJarProp, true)
         requireJar('jeiJar', jeiJarProp, true)
     }
-}
-
-mixin {
-    add sourceSets.main, 'jechtest.refmap.json'
-    config 'jechtest.mixins.json'
 }
 
 tasks.withType(JavaCompile).configureEach {
