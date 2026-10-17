@@ -68,6 +68,8 @@ java {
     }
 }
 
+sourceSets.main.java.srcDir '../../engine/legacy/src/main/java'
+
 def underTestFlatDir = new File(projectDir, 'build/under-test-flat')
 def stageUnderTestJar = { File jar, String name ->
     def digest = java.security.MessageDigest.getInstance('SHA-1')
