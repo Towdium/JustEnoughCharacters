@@ -7,7 +7,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.GameSettings;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.block.BlockState;
 import org.jspecify.annotations.Nullable;
@@ -207,10 +206,10 @@ public final class ScenarioBuilder {
         return this;
     }
 
-    public ScenarioBuilder giveItem(ResourceLocation item, int count) {
+    public ScenarioBuilder giveItem(String item, int count) {
         addServer(
             StepKind.giveItem,
-            "giveItem " + item,
+            "giveItem " + ServerContext.canonicalItemId(item),
             context -> context.serverOrThrow().giveItem(context, item, count)
         );
         return this;

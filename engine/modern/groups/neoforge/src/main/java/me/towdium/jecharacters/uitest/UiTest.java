@@ -10,6 +10,8 @@ import me.towdium.jecharacters.uitest.platform.InputPlatform;
 import me.towdium.jecharacters.uitest.platform.NeoForgeInputPlatform;
 import me.towdium.jecharacters.uitest.platform.NeoForgePlatform;
 import me.towdium.jecharacters.uitest.platform.Platform;
+import me.towdium.jecharacters.uitest.platform.ServerPlatform;
+import me.towdium.jecharacters.uitest.platform.ServerPlatformImpl;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.common.NeoForge;
@@ -24,6 +26,7 @@ public final class UiTest {
             ClientPlatform.register(new ClientPlatformImpl());
             CapturePlatform.register(new CapturePlatformImpl());
             ScreenInput.register(new ScreenInputImpl());
+            ServerPlatform.register(new ServerPlatformImpl());
             NeoForge.EVENT_BUS.addListener(UiTestCommands::register);
         }
     }

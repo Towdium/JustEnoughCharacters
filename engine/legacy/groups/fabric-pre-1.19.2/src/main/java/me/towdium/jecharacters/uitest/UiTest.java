@@ -10,6 +10,8 @@ import me.towdium.jecharacters.uitest.platform.FabricInputPlatform;
 import me.towdium.jecharacters.uitest.platform.FabricPlatform;
 import me.towdium.jecharacters.uitest.platform.InputPlatform;
 import me.towdium.jecharacters.uitest.platform.Platform;
+import me.towdium.jecharacters.uitest.platform.ServerPlatform;
+import me.towdium.jecharacters.uitest.platform.ServerPlatformImpl;
 import net.fabricmc.api.ClientModInitializer;
 
 public final class UiTest implements ClientModInitializer {
@@ -21,5 +23,6 @@ public final class UiTest implements ClientModInitializer {
         ClientPlatform.register(new ClientPlatformImpl());
         CapturePlatform.register(new CapturePlatformImpl());
         ScreenInput.register(new ScreenInputImpl());
+        ServerPlatform.register(new ServerPlatformImpl());
     }
 }

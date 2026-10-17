@@ -1,24 +1,18 @@
 package me.towdium.jecharacters.uitest.engine;
 
-import net.minecraft.command.CommandSource;
-import net.minecraft.util.math.BlockPos;
+import me.towdium.jecharacters.uitest.platform.ServerPlatform;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.world.server.ServerWorld;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.math.vector.Vector2f;
-import net.minecraft.util.math.vector.Vector3d;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 public final class WorldRules {
 
-    private static final Logger log = LoggerFactory.getLogger("jechtest-uitest");
+    private static final Logger log = LogManager.getLogger("jechtest-uitest");
 
     private static final List<String> commands = Collections.unmodifiableList(Arrays.asList(
         "gamerule doDaylightCycle false",
@@ -39,25 +33,26 @@ public final class WorldRules {
     private WorldRules() {}
 
     public static void pin(MinecraftServer server) {
-        ServerWorld level = server.overworld();
-        CommandSource source = server.createCommandSourceStack().withSuppressedOutput().withPermission(4)
-                .withLevel(level).withPosition(Vector3d.atCenterOf(BlockPos.ZERO)).withRotation(new Vector2f(0f, 0f));
+        ServerPlatform platform = ServerPlatform.current();
+        Object level = platform.overworld(server);
+        Object source = platform.worldRuleSource(server, level);
         for (String command : commands) {
-            server.getCommands().performCommand(source, command);
+            platform.perform(server, source, command);
         }
         int removed = killNonPlayers(server);
-        log.info("pinned {} world rules on {}", commands.size(), level.dimension().location());
+        log.info("pinned {} world rules on {}", commands.size(), platform.dimensionId(level));
         if (removed > 0) log.info("removed {} non-player entities", removed);
     }
 
     public static int killNonPlayers(MinecraftServer server) {
-        List<Entity> doomed = new ArrayList<>();
-        for (Entity entity : server.overworld().getAllEntities()) {
-            if (!(entity instanceof PlayerEntity)) {
-                doomed.add(entity);
-            }
+        ServerPlatform platform = ServerPlatform.current();
+        List<Object> doomed = new ArrayList<>();
+        for (Object entity : platform.nonPlayerEntities(server)) {
+            doomed.add(entity);
         }
-        doomed.forEach(Entity::remove);
+        for (Object entity : doomed) {
+            platform.discard(entity);
+        }
         return doomed.size();
     }
 }
