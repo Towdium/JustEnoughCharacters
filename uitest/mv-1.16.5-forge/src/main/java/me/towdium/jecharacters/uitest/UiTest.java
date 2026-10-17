@@ -1,6 +1,8 @@
 package me.towdium.jecharacters.uitest;
 
+import me.towdium.jecharacters.uitest.platform.ForgeInputPlatform;
 import me.towdium.jecharacters.uitest.platform.ForgePlatform;
+import me.towdium.jecharacters.uitest.platform.InputPlatform;
 import me.towdium.jecharacters.uitest.platform.Platform;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import org.slf4j.Logger;
@@ -14,6 +16,7 @@ public final class UiTest {
     public UiTest() {
         if (FMLEnvironment.dist.isClient()) {
             Platform.register(new ForgePlatform());
+            InputPlatform.register(new ForgeInputPlatform());
             log.info("jechtest harness loaded on the client");
         }
     }

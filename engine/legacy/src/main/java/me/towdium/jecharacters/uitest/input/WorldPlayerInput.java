@@ -1,27 +1,21 @@
 package me.towdium.jecharacters.uitest.input;
 
-import com.mojang.blaze3d.platform.InputConstants;
 import me.towdium.jecharacters.mixin.uitest.KeyboardHandlerAccessor;
 import me.towdium.jecharacters.mixin.uitest.MouseHandlerAccessor;
 import me.towdium.jecharacters.uitest.api.CameraFrame;
 import me.towdium.jecharacters.uitest.api.PlayerInput;
+import me.towdium.jecharacters.uitest.platform.InputPlatform;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
-import net.minecraft.client.KeyMapping;
-import net.minecraft.client.KeyboardHandler;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.MouseHandler;
-import net.minecraft.client.Options;
-import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.util.Mth;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jspecify.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -31,7 +25,7 @@ import java.util.function.Function;
 
 final class WorldPlayerInput implements PlayerInput {
 
-    private static final Logger logger = LoggerFactory.getLogger("jechtest/uitest");
+    private static final Logger logger = LogManager.getLogger("jechtest/uitest");
 
     private static final double entityTurnScale = 0.15;
 
@@ -39,9 +33,9 @@ final class WorldPlayerInput implements PlayerInput {
 
     private final IntSet heldKeys = new IntOpenHashSet();
 
-    private final Map<KeyMapping, Integer> heldBinds = new LinkedHashMap<>();
+    private final Map<Object, Integer> heldBinds = new LinkedHashMap<>();
 
-    private final Set<KeyMapping> directBinds = new LinkedHashSet<>();
+    private final Set<Object> directBinds = new LinkedHashSet<>();
 
     private float sweepStartYaw;
     private float sweepStartPitch;
@@ -94,24 +88,24 @@ final class WorldPlayerInput implements PlayerInput {
     }
 
     @Override
-    public void pressBind(Function<Options, KeyMapping> bind) {
-        KeyMapping mapping = require(bind);
-        int key = pressableKeyOf(mapping);
+    public void pressBind(Function bind) {
+        Object mapping = require(bind);
+        int key = input().pressableKeyOf(mapping);
         if (key < 0) {
             logger.warn(
                 "[uitest] bind {} carries no pressable key (bound to {}); the press cannot go "
                     + "through the real path",
-                mapping.getName(), keyOf(mapping)
+                input().bindName(mapping), input().bindKey(mapping)
             );
             return;
         }
-        int[] modifiers = modifierKeysOf(mapping);
+        int[] modifiers = input().modifierKeysOf(mapping);
         int mask = modifierMaskOf(modifiers);
         for (int modifier : modifiers) {
             holdKey(modifier);
         }
         try {
-            if (InputConstants.Type.MOUSE == keyOf(mapping).getType()) {
+            if (input().mouseBind(mapping)) {
                 mouseDown(key);
                 mouseUp(key);
             } else {
@@ -125,19 +119,19 @@ final class WorldPlayerInput implements PlayerInput {
     }
 
     @Override
-    public void holdBind(Function<Options, KeyMapping> bind) {
-        KeyMapping mapping = require(bind);
-        int key = pressableKeyOf(mapping);
+    public void holdBind(Function bind) {
+        Object mapping = require(bind);
+        int key = input().pressableKeyOf(mapping);
         if (key < 0) {
             logger.warn(
                 "[uitest] bind {} carries no pressable key (bound to {}); holding its own state instead",
-                mapping.getName(), keyOf(mapping)
+                input().bindName(mapping), input().bindKey(mapping)
             );
             directBinds.add(mapping);
-            mapping.setDown(true);
+            input().setBindDown(mapping, true);
             return;
         }
-        if (InputConstants.Type.MOUSE == keyOf(mapping).getType()) {
+        if (input().mouseBind(mapping)) {
             heldBinds.put(mapping, key);
             mouseDown(key);
             return;
@@ -147,17 +141,17 @@ final class WorldPlayerInput implements PlayerInput {
     }
 
     @Override
-    public void releaseBind(Function<Options, KeyMapping> bind) {
-        KeyMapping mapping = require(bind);
+    public void releaseBind(Function bind) {
+        Object mapping = require(bind);
         if (directBinds.remove(mapping)) {
-            mapping.setDown(false);
+            input().setBindDown(mapping, false);
             return;
         }
         Integer key = heldBinds.remove(mapping);
         if (key == null) {
             return;
         }
-        if (InputConstants.Type.MOUSE == keyOf(mapping).getType()) {
+        if (input().mouseBind(mapping)) {
             mouseUp(key);
         } else {
             releaseKey(key);
@@ -166,11 +160,11 @@ final class WorldPlayerInput implements PlayerInput {
 
     @Override
     public void hotbarSlot(int slot) {
-        KeyMapping[] slots = Minecraft.getInstance().options.keyHotbarSlots;
-        if (slot < 0 || slot >= slots.length) {
-            throw new IllegalStateException("hotbar slot " + slot + " is outside 0.." + (slots.length - 1));
+        int count = Minecraft.getInstance().options.keyHotbarSlots.length;
+        if (slot < 0 || slot >= count) {
+            throw new IllegalStateException("hotbar slot " + slot + " is outside 0.." + (count - 1));
         }
-        pressBind(options -> options.keyHotbarSlots[slot]);
+        pressBind(input().hotbarSlotBind(slot));
     }
 
     @Override
@@ -203,23 +197,12 @@ final class WorldPlayerInput implements PlayerInput {
         }
     }
 
-    private static int pressableKeyOf(KeyMapping mapping) {
-        InputConstants.Key key = keyOf(mapping);
-        if (key.getType() == InputConstants.Type.KEYSYM && key.getValue() != InputConstants.UNKNOWN.getValue()) {
-            return key.getValue();
+    private static Object require(Function bind) {
+        Object mapping = bind.apply(input().options());
+        if (mapping == null) {
+            throw new IllegalStateException("a bind lookup returned null");
         }
-        if (key.getType() == InputConstants.Type.MOUSE) {
-            return key.getValue();
-        }
-        return -1;
-    }
-
-    private static InputConstants.Key keyOf(KeyMapping mapping) {
-        return KeyBindingHelper.getBoundKeyOf(mapping);
-    }
-
-    private static int[] modifierKeysOf(KeyMapping mapping) {
-        return new int[0];
+        return mapping;
     }
 
     private static int modifierMaskOf(int[] keys) {
@@ -230,37 +213,29 @@ final class WorldPlayerInput implements PlayerInput {
         return mask;
     }
 
-    private static KeyMapping require(Function<Options, KeyMapping> bind) {
-        KeyMapping mapping = bind.apply(Minecraft.getInstance().options);
-        if (mapping == null) {
-            throw new IllegalStateException("a bind lookup returned null");
-        }
-        return mapping;
-    }
-
     // endregion
 
     // region the camera
 
     @Override
     public void turnBy(float dYaw, float dPitch) {
-        LocalPlayer player = requirePlayer();
+        requirePlayer();
         requireWorldLook();
         MouseHandlerAccessor mouse = mouse();
-        int invert = Minecraft.getInstance().options.invertYMouse ? -1 : 1;
+        int invert = input().invertYMouse() ? -1 : 1;
         double scale = turnScale() * entityTurnScale;
-        double pitch = clampPitch(player, dPitch);
+        double pitch = clampPitch(dPitch);
         mouse.setAccumulatedDx(mouse.getAccumulatedDx() + (dYaw / scale));
         mouse.setAccumulatedDy(mouse.getAccumulatedDy() + (pitch / (invert * scale)));
     }
 
     @Override
     public void lookSweep(float toYaw, float toPitch, int durationTicks) {
-        LocalPlayer player = requirePlayer();
+        requirePlayer();
         requireWorldLook();
-        sweepStartYaw = player.getYRot();
-        sweepStartPitch = player.getXRot();
-        sweepDeltaYaw = Mth.wrapDegrees(toYaw - sweepStartYaw);
+        sweepStartYaw = input().playerYaw();
+        sweepStartPitch = input().playerPitch();
+        sweepDeltaYaw = input().wrapDegrees(toYaw - sweepStartYaw);
         sweepDeltaPitch = toPitch - sweepStartPitch;
         sweepDurationTicks = Math.max(1, durationTicks);
         sweepStartClock = sweepClock();
@@ -282,8 +257,7 @@ final class WorldPlayerInput implements PlayerInput {
 
     @Override
     public void pumpFrame() {
-        LocalPlayer watched = Minecraft.getInstance().player;
-        if (watched == null) {
+        if (!input().worldLoaded()) {
             return;
         }
         sampleCameraFrame();
@@ -296,14 +270,17 @@ final class WorldPlayerInput implements PlayerInput {
         }
         if (progress >= 1.0F) {
             turnBy(
-                (float) Mth.wrapDegrees((sweepStartYaw + sweepDeltaYaw) - watched.getYRot()),
-                (float) ((sweepStartPitch + sweepDeltaPitch) - watched.getXRot())
+                (float) input().wrapDegrees((sweepStartYaw + sweepDeltaYaw) - input().playerYaw()),
+                (float) ((sweepStartPitch + sweepDeltaPitch) - input().playerPitch())
             );
             sweepActive = false;
         } else {
             float targetYaw = sweepStartYaw + (float) (sweepDeltaYaw * progress);
             float targetPitch = sweepStartPitch + (float) (sweepDeltaPitch * progress);
-            turnBy((float) Mth.wrapDegrees(targetYaw - watched.getYRot()), targetPitch - watched.getXRot());
+            turnBy(
+                (float) input().wrapDegrees(targetYaw - input().playerYaw()),
+                targetPitch - input().playerPitch()
+            );
         }
     }
 
@@ -329,7 +306,7 @@ final class WorldPlayerInput implements PlayerInput {
 
     @Override
     public List<CameraFrame> cameraTrace() {
-        return List.copyOf(cameraTrace);
+        return Collections.unmodifiableList(new ArrayList<>(cameraTrace));
     }
 
     @Override
@@ -342,23 +319,21 @@ final class WorldPlayerInput implements PlayerInput {
             return;
         }
         Minecraft minecraft = Minecraft.getInstance();
-        LocalPlayer player = minecraft.player;
-        if (player == null) {
+        if (!input().worldLoaded()) {
             return;
         }
         float partialTick = minecraft.getFrameTime();
-        var camera = minecraft.gameRenderer.getMainCamera();
         cameraTrace.add(
             new CameraFrame(
                 System.nanoTime(),
                 clientTick,
                 partialTick,
-                player.getYRot(),
-                player.getXRot(),
-                Mth.lerp(partialTick, player.yRotO, player.getYRot()),
-                Mth.lerp(partialTick, player.xRotO, player.getXRot()),
-                camera.getYRot(),
-                camera.getXRot()
+                input().playerYaw(),
+                input().playerPitch(),
+                input().lerp(partialTick, input().playerPrevYaw(), input().playerYaw()),
+                input().lerp(partialTick, input().playerPrevPitch(), input().playerPitch()),
+                input().cameraYaw(),
+                input().cameraPitch()
             )
         );
     }
@@ -370,22 +345,18 @@ final class WorldPlayerInput implements PlayerInput {
     }
 
     private static double turnScale() {
-        Options options = Minecraft.getInstance().options;
-        if (options.smoothCamera) {
-            throw new IllegalStateException("the cinematic camera is on; an exact scripted turn needs it off");
-        }
-        double base = options.sensitivity * 0.6 + 0.2;
+        double base = input().turnSensitivity();
         double cubed = base * base * base;
-        LocalPlayer player = Minecraft.getInstance().player;
-        if (player != null && Minecraft.getInstance().options.getCameraType().isFirstPerson() && player.isScoping()) {
+        if (input().firstPersonScoping()) {
             return cubed;
         }
         return cubed * 8.0;
     }
 
-    private static float clampPitch(LocalPlayer player, float dPitch) {
-        float wanted = Mth.clamp(player.getXRot() + dPitch, -90.0F, 90.0F);
-        return wanted - player.getXRot();
+    private static float clampPitch(float dPitch) {
+        float pitch = input().playerPitch();
+        float wanted = input().clamp(pitch + dPitch, -90.0F, 90.0F);
+        return wanted - pitch;
     }
 
     // endregion
@@ -439,22 +410,23 @@ final class WorldPlayerInput implements PlayerInput {
     public void releaseAll() {
         cancelSweep();
         List<Integer> held = new ArrayList<>();
-        for (IntIterator iterator = heldKeys.intIterator(); iterator.hasNext();) {
+        for (IntIterator iterator = heldKeys.iterator(); iterator.hasNext();) {
             held.add(iterator.nextInt());
         }
         heldKeys.clear();
-        if (Minecraft.getInstance().player != null) {
+        if (input().worldLoaded()) {
             for (int key : held) {
                 key(key, GLFW.GLFW_RELEASE, 0);
             }
         }
-        for (KeyMapping mapping : directBinds) {
-            mapping.setDown(false);
+        for (Object mapping : directBinds) {
+            input().setBindDown(mapping, false);
         }
         directBinds.clear();
         heldBinds.clear();
-        MouseHandler handler = Minecraft.getInstance().mouseHandler;
-        if (handler instanceof MouseHandlerAccessor mouse) {
+        Object handler = Minecraft.getInstance().mouseHandler;
+        if (handler instanceof MouseHandlerAccessor) {
+            MouseHandlerAccessor mouse = (MouseHandlerAccessor) handler;
             mouse.setAccumulatedDx(0.0);
             mouse.setAccumulatedDy(0.0);
         }
@@ -473,10 +445,9 @@ final class WorldPlayerInput implements PlayerInput {
             return;
         }
         PlayerEmbodiment.activate(this);
-        Options options = Minecraft.getInstance().options;
         if (smoothCameraBefore == null) {
-            smoothCameraBefore = options.smoothCamera;
-            options.smoothCamera = false;
+            smoothCameraBefore = input().smoothCamera();
+            input().setSmoothCamera(false);
         }
     }
 
@@ -486,15 +457,13 @@ final class WorldPlayerInput implements PlayerInput {
             return;
         }
         smoothCameraBefore = null;
-        Minecraft.getInstance().options.smoothCamera = before;
+        input().setSmoothCamera(before);
     }
 
-    private LocalPlayer requirePlayer() {
-        LocalPlayer player = Minecraft.getInstance().player;
-        if (player == null) {
+    private void requirePlayer() {
+        if (!input().worldLoaded()) {
             throw new IllegalStateException("the embodied player input needs a loaded world with a player");
         }
-        return player;
     }
 
     private void requireWorldLook() {
@@ -508,20 +477,24 @@ final class WorldPlayerInput implements PlayerInput {
         PlayerEmbodiment.takeLook();
     }
 
+    private static InputPlatform input() {
+        return InputPlatform.current();
+    }
+
     private static MouseHandlerAccessor mouse() {
-        MouseHandler handler = Minecraft.getInstance().mouseHandler;
-        if (!(handler instanceof MouseHandlerAccessor accessor)) {
+        Object handler = Minecraft.getInstance().mouseHandler;
+        if (!(handler instanceof MouseHandlerAccessor)) {
             throw new IllegalStateException("MouseHandlerAccessor is not applied; the harness cannot act in the world");
         }
-        return accessor;
+        return (MouseHandlerAccessor) handler;
     }
 
     private static KeyboardHandlerAccessor keyboard() {
-        KeyboardHandler handler = Minecraft.getInstance().keyboardHandler;
-        if (!(handler instanceof KeyboardHandlerAccessor accessor)) {
+        Object handler = Minecraft.getInstance().keyboardHandler;
+        if (!(handler instanceof KeyboardHandlerAccessor)) {
             throw new IllegalStateException("KeyboardHandlerAccessor is not applied; text cannot be typed");
         }
-        return accessor;
+        return (KeyboardHandlerAccessor) handler;
     }
 
     private static long window() {
