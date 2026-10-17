@@ -49,7 +49,7 @@ class StandaloneSchemaTest(unittest.TestCase):
         data["uitest"] = {"selection": "tag:smoke"}
         with self.assertRaises(EnvSchemaError) as caught:
             self.parse(data)
-        self.assertIn("env.gradle is required", str(caught.exception))
+        self.assertIn("env must declare a launch layer", str(caught.exception))
 
     def test_a_checkout_backend_uitest_still_needs_gradle(self):
         data = standalone_dict()

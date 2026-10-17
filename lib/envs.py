@@ -71,8 +71,8 @@ class GradleSpec:
     the JECh checkout under test (``./gradlew <task>``). The checkout's own run
     configuration owns the client's JDK (its toolchain) and its runtime
     classpath; the harness owns the game directory, the isolation around it and
-    the judging. The block is **required** for every env that is not declared
-    ``skip``: it is the only launch layer (see :func:`parse_env`).
+    the judging. The block is **required** for an env that declares no standalone
+    ``uitest.project`` build and no ``skip`` (see :func:`parse_env`).
 
     * ``task`` — the Gradle task to run, spelled from the build root
       (``:neoforge:runClient``), never a bare ``runClient``: the build root is the
@@ -311,17 +311,16 @@ def parse_env(data, path="<dict>"):
     standalone_uitest = uitest is not None and uitest.project is not None
     if gradle is None and not standalone_uitest and skip is None:
         problems.append(
-            "env.gradle is required: the Prism instance launcher was removed on 2026-10-14, so the "
-            "checkout's own Gradle run task is the only launch layer. Declare "
-            '{"task": ":<module>:runClient", "daemon_java": <n>} (see envs/README.md), or run the '
-            "standalone harness build by adding \"project\" to env.uitest, or declare "
-            "skip with the reason the row cannot run"
+            "env must declare a launch layer: env.gradle for a checkout run task "
+            '({"task": ":<module>:runClient", "daemon_java": <n>}), or a standalone harness '
+            "build named by env.uitest.project, or skip with the reason the row cannot run "
+            "(see envs/README.md)"
         )
     if uitest is not None and gradle is None and not standalone_uitest:
         problems.append(
-            "env.uitest requires env.gradle (or env.uitest.project for the standalone harness "
-            "build): the scenario selection travels to the run as the -PjechTest project property, "
-            "which only a Gradle launch can pass"
+            "env.uitest needs a launch layer: declare env.gradle for the checkout's own client, "
+            "or set \"project\" to run the row's own standalone harness build; the selection "
+            "travels to the run as the -PjechTest project property"
         )
     if standalone_uitest and gradle is not None:
         problems.append(

@@ -45,16 +45,16 @@ class EnvParsingTest(unittest.TestCase):
         self.assertEqual(env.gradle.daemon_java, 21)
 
     def test_every_runnable_env_declares_the_one_launch_layer(self):
-        """An env that is not skipped and names no run task is a configuration error.
+        """An env that names no launch layer at all is a configuration error.
 
-        The Prism instance launcher was removed (2026-10-14), so the checkout's own
-        Gradle run task is the only way an env can be executed at all; a row
-        without it cannot run, and saying so is better than launching nothing.
+        A row launches through its own standalone harness build or through a
+        checkout Gradle run task, or it declares ``skip``; a row with none of the
+        three cannot run, and saying so is better than launching nothing.
         """
         with self.assertRaises(EnvSchemaError) as caught:
             support.mk_env(gradle=None)
         message = str(caught.exception)
-        self.assertIn("env.gradle is required", message)
+        self.assertIn("env must declare a launch layer", message)
         self.assertIn("skip", message)
 
     def test_comment_keys_are_allowed(self):
@@ -448,10 +448,10 @@ class EnvRejectionTest(unittest.TestCase):
                     "one line without control characters")
 
     def test_uitest_without_a_gradle_block_is_rejected(self):
-        """The selection is a Gradle property: with no run task there is nowhere to put it."""
+        """The selection is a Gradle property: with no launch layer there is nowhere to put it."""
         self.reject(support.env_dict(gradle=None, skip="waiting on a launch path",
                                      uitest={"selection": "all"}),
-                    "env.uitest requires env.gradle")
+                    "env.uitest needs a launch layer")
 
     def test_uitest_report_path_must_stay_relative(self):
         self.reject(support.env_dict(checks=[{"type": "uitest_report", "value": "/tmp/report.json"}]),
@@ -522,7 +522,7 @@ class GradleBlockTest(unittest.TestCase):
         self.assertIsNone(env.gradle)
 
     def test_a_runnable_env_without_the_block_is_a_config_error(self):
-        message = self.reject(support.env_dict(gradle=None), "env.gradle is required")
+        message = self.reject(support.env_dict(gradle=None), "env must declare a launch layer")
         self.assertIn("skip", message, "the error must name the other honest state")
 
     def test_the_block_names_the_task_the_checkout_and_the_gradle_jdk(self):
@@ -689,9 +689,9 @@ class ViaTest(unittest.TestCase):
     def test_every_shipped_row_is_standalone_or_skipped(self):
         """The matrix has exactly two states left: a standalone build, or a skip.
 
-        There is no other launch layer (the Prism instance launcher was removed on
-        2026-10-14), so a row that declares neither would be an env that cannot run
-        and does not say why. Every row has moved to the standalone backend — the
+        The Prism instance launcher was removed on 2026-10-14, so a row that names
+        no launch layer at all would be an env that cannot run and does not say why.
+        Every row has moved to the standalone backend — the
         1.21.1 pair led on 2026-10-15, then both moderner pairs (1.21.10, 26.1.2),
         the 1.12.2 pair (sharing ``uitest/1.12.2-forge``), the mv fabric rows
         1.20.1 and 1.19.2, the mv forge rows 1.18.2/1.19.2/1.20.1, the mv fabric
