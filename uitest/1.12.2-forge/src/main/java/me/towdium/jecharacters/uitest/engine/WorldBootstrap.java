@@ -1,9 +1,14 @@
 package me.towdium.jecharacters.uitest.engine;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.init.Biomes;
+import net.minecraft.init.Blocks;
 import net.minecraft.world.GameType;
 import net.minecraft.world.WorldSettings;
 import net.minecraft.world.WorldType;
+import net.minecraft.world.biome.Biome;
+import net.minecraft.world.gen.FlatGeneratorInfo;
+import net.minecraft.world.gen.FlatLayerInfo;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -84,9 +89,19 @@ public final class WorldBootstrap {
     }
 
     public static WorldSettings settings() {
-        WorldSettings settings = new WorldSettings(seed, GameType.CREATIVE, true, false, WorldType.FLAT);
+        WorldSettings settings = new WorldSettings(seed, GameType.CREATIVE, false, false, WorldType.FLAT);
+        settings.setGeneratorOptions(generatorOptions());
         settings.enableCommands();
         return settings;
+    }
+
+    private static String generatorOptions() {
+        FlatGeneratorInfo info = new FlatGeneratorInfo();
+        info.setBiome(Biome.getIdForBiome(Biomes.VOID));
+        info.getFlatLayers().add(new FlatLayerInfo(3, Blocks.AIR));
+        info.getFlatLayers().add(new FlatLayerInfo(1, Blocks.STONE));
+        info.updateLayers();
+        return info.toString();
     }
 
     private static void deleteRecursively(Path root) throws IOException {
