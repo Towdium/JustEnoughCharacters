@@ -5,7 +5,6 @@ import me.towdium.jecharacters.uitest.match.MatchFilter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.resources.ResourceLocation;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.LinkedHashMap;
@@ -167,13 +166,12 @@ final class ScenarioSteps {
 
         register("give", (builder, args, context) -> {
             String item = args.string("item");
-            ResourceLocation location;
+            int count = args.integerOr("count", 1);
             try {
-                location = new ResourceLocation(item);
+                builder.giveItem(item, count);
             } catch (RuntimeException e) {
                 throw new ScenarioJsonException(context + ": '" + item + "' is not an item id", e);
             }
-            builder.giveItem(location, args.integerOr("count", 1));
         });
 
         register("run_server_command", (builder, args, context) -> builder.runCommand(args.string("text")));

@@ -125,11 +125,16 @@ public final class ServerContext {
         });
     }
 
-    public void giveItem(TestContext context, ResourceLocation item, int count) {
-        run(context, "giveItem " + item, () -> {
-            Item resolved = BuiltInRegistries.ITEM.get(item);
+    public static String canonicalItemId(String item) {
+        return new ResourceLocation(item).toString();
+    }
+
+    public void giveItem(TestContext context, String item, int count) {
+        ResourceLocation id = new ResourceLocation(item);
+        run(context, "giveItem " + id, () -> {
+            Item resolved = BuiltInRegistries.ITEM.get(id);
             if (resolved == Items.AIR) {
-                throw new IllegalStateException("unknown item " + item);
+                throw new IllegalStateException("unknown item " + id);
             }
             requirePlayer().getInventory().add(new ItemStack(resolved, count));
         });
