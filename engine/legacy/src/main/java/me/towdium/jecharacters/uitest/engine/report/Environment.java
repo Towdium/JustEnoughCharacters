@@ -5,7 +5,8 @@ import java.util.List;
 public final class Environment {
 
     private final String minecraft;
-    private final String fabric;
+    private final String loaderLabel;
+    private final String loaderVersion;
     private final String java;
     private final String os;
     private final List<String> mods;
@@ -19,7 +20,8 @@ public final class Environment {
 
     public Environment(
         String minecraft,
-        String fabric,
+        String loaderLabel,
+        String loaderVersion,
         String java,
         String os,
         List<String> mods,
@@ -29,9 +31,11 @@ public final class Environment {
         int framebufferWidth,
         int framebufferHeight,
         String inputMode,
-        boolean headless) {
+        boolean headless
+    ) {
         this.minecraft = minecraft;
-        this.fabric = fabric;
+        this.loaderLabel = loaderLabel;
+        this.loaderVersion = loaderVersion;
         this.java = java;
         this.os = os;
         this.mods = mods;
@@ -48,8 +52,12 @@ public final class Environment {
         return minecraft;
     }
 
-    public String fabric() {
-        return fabric;
+    public String loaderLabel() {
+        return loaderLabel;
+    }
+
+    public String loaderVersion() {
+        return loaderVersion;
     }
 
     public String java() {
