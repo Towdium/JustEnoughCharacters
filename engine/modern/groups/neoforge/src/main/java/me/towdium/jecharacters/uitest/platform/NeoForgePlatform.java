@@ -23,4 +23,9 @@ public final class NeoForgePlatform implements Platform {
     public List<String> modIds() {
         return ModList.get().getMods().stream().map(IModInfo::getModId).sorted().toList();
     }
+
+    @Override
+    public boolean developmentEnvironment() {
+        return NeoForgeDevelopment.isDevelopment();
+    }
 }

@@ -26,4 +26,9 @@ public final class FabricPlatform implements Platform {
                 .sorted()
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public boolean developmentEnvironment() {
+        return FabricLoader.getInstance().isDevelopmentEnvironment();
+    }
 }

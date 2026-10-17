@@ -3,10 +3,10 @@ package me.towdium.jecharacters.uitest;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import me.towdium.jecharacters.uitest.engine.UITestRunner;
+import me.towdium.jecharacters.uitest.platform.Platform;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.network.chat.Component;
-import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.client.event.RegisterClientCommandsEvent;
 
 import java.util.ArrayList;
@@ -20,7 +20,7 @@ public final class UiTestCommands {
     private UiTestCommands() {}
 
     public static void register(RegisterClientCommandsEvent event) {
-        if (FMLEnvironment.production) return;
+        if (!Platform.current().developmentEnvironment()) return;
         event.getDispatcher().register(uiTest());
     }
 

@@ -1,6 +1,7 @@
 package me.towdium.jecharacters.uitest.platform;
 
 import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.forgespi.language.IModInfo;
 
 import java.util.List;
@@ -24,5 +25,10 @@ public final class ForgePlatform implements Platform {
     public List<String> modIds() {
         return ModList.get().getMods().stream().map(IModInfo::getModId).sorted()
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public boolean developmentEnvironment() {
+        return !FMLEnvironment.production;
     }
 }

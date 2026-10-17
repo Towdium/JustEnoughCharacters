@@ -10,6 +10,8 @@ public interface Platform {
 
     List<String> modIds();
 
+    boolean developmentEnvironment();
+
     static void register(Platform platform) {
         Holder.platform = platform;
     }

@@ -2,10 +2,10 @@ package me.towdium.jecharacters.uitest.engine;
 
 import me.towdium.jecharacters.uitest.UiTestConstants;
 import me.towdium.jecharacters.uitest.api.RunConfig;
+import me.towdium.jecharacters.uitest.platform.Platform;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.RenderFrameEvent;
 import org.jspecify.annotations.Nullable;
@@ -28,7 +28,7 @@ public final class UITestBootstrap {
     @SubscribeEvent
     @SuppressWarnings("PMD.UnusedFormalParameter")
     public static void onFrameRendered(RenderFrameEvent.Post event) {
-        if (FMLEnvironment.production) return;
+        if (!Platform.current().developmentEnvironment()) return;
         UITestRunner current = runner;
         if (current == null) {
             if (!RunConfig.requested()) return;
@@ -42,7 +42,7 @@ public final class UITestBootstrap {
     @SubscribeEvent
     @SuppressWarnings("PMD.UnusedFormalParameter")
     public static void onClientTick(ClientTickEvent.Post event) {
-        if (FMLEnvironment.production) return;
+        if (!Platform.current().developmentEnvironment()) return;
         UITestRunner current = runner;
         if (current == null) return;
         current.onTick();
