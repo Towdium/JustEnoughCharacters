@@ -38,21 +38,20 @@ if (jechUiTestWindow != null) {
     }
 }
 
-def jechJarProp = providers.gradleProperty('jechJar')
-def requireJar = { name, prop ->
-    if (!prop.isPresent()) {
-        throw new GradleException(
-            "the ${name} project property is required: this build tests jars it is handed "
-                + "(jt passes it; by hand: -P${name}=/abs/path.jar)"
-        )
+def requireJar = { String name ->
+    def prop = providers.gradleProperty(name)
+    providers.provider {
+        if (!prop.isPresent()) {
+            return []
+        }
+        def file = new File(prop.get())
+        if (!file.isFile()) {
+            throw new GradleException("the ${name} project property names no file: ${file}")
+        }
+        return file
     }
-    def file = new File(prop.get())
-    if (!file.isFile()) {
-        throw new GradleException("the ${name} project property names no file: ${file}")
-    }
-    return file
 }
-def jechJarFile = requireJar('jechJar', jechJarProp)
+def jechJarFile = requireJar('jechJar')
 
 base {
     archivesName = 'jechtest-' + minecraft_version + '-fabric'
