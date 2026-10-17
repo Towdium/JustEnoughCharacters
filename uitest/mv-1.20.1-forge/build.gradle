@@ -11,8 +11,11 @@ group = 'me.towdium.jecharacters.uitest'
 
 def jechJarProp = providers.gradleProperty('jechJar')
 def jeiJarProp = providers.gradleProperty('jeiJar')
-def requireJar = { name, prop ->
+def requireJar = { name, prop, required ->
     if (!prop.isPresent()) {
+        if (!required) {
+            return null
+        }
         throw new GradleException(
             "the ${name} project property is required: this build tests jars it is handed "
                 + "(jt passes it; by hand: -P${name}=/abs/path.jar)"
@@ -24,8 +27,8 @@ def requireJar = { name, prop ->
     }
     return file
 }
-def jechJarFile = requireJar('jechJar', jechJarProp)
-def jeiJarFile = requireJar('jeiJar', jeiJarProp)
+def jechJarFile = requireJar('jechJar', jechJarProp, false)
+def jeiJarFile = requireJar('jeiJar', jeiJarProp, false)
 
 
 def jechUiTestRunDir = project.findProperty('jechRunDir')?.toString()
@@ -95,19 +98,32 @@ def stageUnderTestJar = { File jar, String name ->
     }
     return "local.under-test:${name}:${version}"
 }
-def jechUnderTest = stageUnderTestJar(jechJarFile, 'jech')
-def jeiUnderTest = stageUnderTestJar(jeiJarFile, 'jei')
+def jechUnderTest = jechJarFile == null ? null : stageUnderTestJar(jechJarFile, 'jech')
+def jeiUnderTest = jeiJarFile == null ? null : stageUnderTestJar(jeiJarFile, 'jei')
 
 repositories {
     flatDir { dir underTestFlatDir }
 }
 
 dependencies {
-    compileOnly files(jechJarFile)
-    modRuntimeOnly jechUnderTest
-    modRuntimeOnly jeiUnderTest
+    if (jechJarFile != null) {
+        compileOnly files(jechJarFile)
+    }
+    if (jechUnderTest != null) {
+        modRuntimeOnly jechUnderTest
+    }
+    if (jeiUnderTest != null) {
+        modRuntimeOnly jeiUnderTest
+    }
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
     compileOnly 'org.jspecify:jspecify:1.0.1'
+}
+
+tasks.matching { it.name == 'runClient' }.configureEach {
+    doFirst {
+        requireJar('jechJar', jechJarProp, true)
+        requireJar('jeiJar', jeiJarProp, true)
+    }
 }
 
 legacyForge {
