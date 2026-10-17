@@ -20,6 +20,7 @@ java {
     }
 }
 
+sourceSets.main.java.srcDir '../../engine/legacy/src/main/java'
 
 def jechJarProp = providers.gradleProperty('jechJar')
 def jeiJarProp = providers.gradleProperty('jeiJar')
