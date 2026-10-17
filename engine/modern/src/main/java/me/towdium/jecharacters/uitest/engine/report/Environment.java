@@ -4,7 +4,8 @@ import java.util.List;
 
 public record Environment(
     String minecraft,
-    String fabric,
+    String loaderLabel,
+    String loaderVersion,
     String java,
     String os,
     List<String> mods,

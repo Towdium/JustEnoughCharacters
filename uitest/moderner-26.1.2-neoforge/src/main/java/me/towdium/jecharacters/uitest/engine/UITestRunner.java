@@ -20,6 +20,7 @@ import me.towdium.jecharacters.uitest.engine.report.RunReport;
 import me.towdium.jecharacters.uitest.engine.report.ScenarioReport;
 import me.towdium.jecharacters.uitest.engine.report.StepReport;
 import me.towdium.jecharacters.uitest.match.MatchRecorder;
+import me.towdium.jecharacters.uitest.platform.Platform;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.AccessibilityOnboardingScreen;
@@ -27,8 +28,6 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.server.MinecraftServer;
-import net.neoforged.fml.ModList;
-import net.neoforged.neoforgespi.language.IModInfo;
 import org.jspecify.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
@@ -871,15 +870,14 @@ public final class UITestRunner {
 
     private static Environment environment(Minecraft minecraft, RunConfig config) {
         Window window = minecraft.getWindow();
-        List<String> mods = ModList.get().getMods().stream().map(IModInfo::getModId).sorted().toList();
-        String neoforge = ModList.get().getModContainerById("neoforge")
-                .map(container -> container.getModInfo().getVersion().toString()).orElse("unknown");
+        Platform platform = Platform.current();
         return new Environment(
             SharedConstants.getCurrentVersion().name(),
-            neoforge,
+            platform.loaderLabel(),
+            platform.loaderVersion(),
             System.getProperty("java.version", "unknown"),
             System.getProperty("os.name", "unknown") + " " + System.getProperty("os.version", ""),
-            mods,
+            platform.modIds(),
             config.guiScale(),
             window.getWidth(),
             window.getHeight(),

@@ -1,5 +1,7 @@
 package me.towdium.jecharacters.uitest;
 
+import me.towdium.jecharacters.uitest.platform.NeoForgePlatform;
+import me.towdium.jecharacters.uitest.platform.Platform;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.common.NeoForge;
@@ -9,6 +11,7 @@ public final class UiTest {
 
     public UiTest(Dist dist) {
         if (dist.isClient()) {
+            Platform.register(new NeoForgePlatform());
             NeoForge.EVENT_BUS.addListener(UiTestCommands::register);
         }
     }

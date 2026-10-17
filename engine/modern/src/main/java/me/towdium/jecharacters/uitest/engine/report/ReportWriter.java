@@ -2,10 +2,16 @@ package me.towdium.jecharacters.uitest.engine.report;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
@@ -22,7 +28,11 @@ public final class ReportWriter {
 
     private static final Logger log = LoggerFactory.getLogger("jechtest-uitest");
 
-    private static final Gson gson = new GsonBuilder().setPrettyPrinting().serializeNulls().create();
+    private static final Gson gson = new GsonBuilder()
+            .setPrettyPrinting()
+            .serializeNulls()
+            .registerTypeAdapter(Environment.class, new EnvironmentJson())
+            .create();
 
     private ReportWriter() {}
 
@@ -43,8 +53,9 @@ public final class ReportWriter {
         if (!report.sessionPlan().isEmpty()) {
             text.append("session plan: ").append(report.sessionPlan()).append('\n');
         }
-        text.append("environment: mc=").append(environment.minecraft()).append(" neoforge=")
-                .append(environment.neoforge()).append(" java=").append(environment.java()).append(" os=")
+        text.append("environment: mc=").append(environment.minecraft()).append(' ')
+                .append(environment.loaderLabel()).append('=').append(environment.loaderVersion())
+                .append(" java=").append(environment.java()).append(" os=")
                 .append(environment.os()).append(" guiScale=").append(environment.guiScale()).append(" window=")
                 .append(environment.windowWidth()).append('x').append(environment.windowHeight())
                 .append(" framebuffer=").append(environment.framebufferWidth()).append('x')
@@ -117,6 +128,29 @@ public final class ReportWriter {
             Files.move(temporary, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
         } catch (AtomicMoveNotSupportedException e) {
             Files.move(temporary, target, StandardCopyOption.REPLACE_EXISTING);
+        }
+    }
+
+    private static final class EnvironmentJson implements JsonSerializer<Environment> {
+
+        @Override
+        public JsonElement serialize(Environment environment, Type type, JsonSerializationContext context) {
+            JsonObject json = new JsonObject();
+            json.addProperty("minecraft", environment.minecraft());
+            json.addProperty(environment.loaderLabel(), environment.loaderVersion());
+            json.addProperty("java", environment.java());
+            json.addProperty("os", environment.os());
+            JsonArray mods = new JsonArray();
+            for (String mod : environment.mods()) mods.add(mod);
+            json.add("mods", mods);
+            json.addProperty("guiScale", environment.guiScale());
+            json.addProperty("windowWidth", environment.windowWidth());
+            json.addProperty("windowHeight", environment.windowHeight());
+            json.addProperty("framebufferWidth", environment.framebufferWidth());
+            json.addProperty("framebufferHeight", environment.framebufferHeight());
+            json.addProperty("inputMode", environment.inputMode());
+            json.addProperty("headless", environment.headless());
+            return json;
         }
     }
 }
