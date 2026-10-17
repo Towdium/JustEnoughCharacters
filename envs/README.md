@@ -17,7 +17,7 @@ ignored too. Everything else must be listed below.
   "mc": "1.21.1",
   "loader": { "type": "neoforge", "version": "21.1.215" },
   "java": { "version": 21 },
-  "gradle": { "task": ":neoforge:runClientTests", "daemon_java": 21 },
+  "uitest": { "selection": "tag:smoke,tag:jei", "project": "uitest/1.21.1-neoforge" },
   "jech": {
     "source": "local-build",
     "project": "1.21.1",
@@ -29,11 +29,10 @@ ignored too. Everything else must be listed below.
   ],
   "checks": [
     { "type": "log_contains", "value": "Registering JEI pinyin search storage", "name": "jei-storage-registered" },
+    { "type": "uitest_report", "name": "uitest-report" },
     { "type": "no_crash_reports", "name": "no-crash-reports" },
     { "type": "exit_code_zero", "name": "exit-code" }
   ],
-  "ready_when": { "value": "Sound engine started" },
-  "world": { "name": "jechworld" },
   "timeout_sec": 600
 }
 ```
@@ -53,111 +52,60 @@ ignored too. Everything else must be listed below.
 | `ready_when` | no | `{"value": "<log line>"}`, the line that marks the game as up, see below |
 | `world` | no | `{"name": "<folder>"}`, the world the client is launched into, see below |
 | `skip` | no | a reason string: the env is **not executed**, see below |
-| `gradle` | **yes, unless `skip`** | `{task, project_dir, daemon_java}` — the checkout's Gradle run task that launches the client, see below |
-| `uitest` | no | `{selection}` — run the checkout's **in-client UI test harness** with that scenario selection, and judge the run by the harness's own report, see below |
+| `gradle` | no — required only without a standalone `uitest` build | `{task, project_dir, daemon_java}` — a run task in the checkout under test that launches the client; no row declares one today, see below |
+| `uitest` | no (every row declares one) | `{selection, project}` — run the **in-client UI test harness** the `project` build carries, with that scenario selection, and judge the run by the harness's own report, see below |
 | `timeout_sec` | no | watchdog budget, default 600; the whole run is killed and the run fails with exit code 3 |
 
-### `gradle` — the launch layer
+### `gradle` — a launch layer no row uses
 
 An env with a `gradle` block is executed by running a Gradle task in the checkout
 under test (`./gradlew <task> --no-daemon -PjechRunDir=<game dir>`, plus
-`-PjechQuickPlayWorld=<world>` when the env declares a world). This is the **only**
-launch layer: the Prism instance launcher was removed on 2026-10-14, so an env
-that is not declared `skip` and names no run task is a schema error (see the
-`skip` section) rather than a run that quietly launches nothing. Resolution, the
-world seed, the pack, isolation, the watchdog, `ready_when` and the checks are all
-independent of it, and the report records the run task and checkout it used
-(`gradle.task`, `gradle.projectDir`). See [README.md](../README.md), "The `gradle`
-backend", for the full contract between the harness and a checkout.
-
-Twelve rows use it today: six in the modern checkouts, six in the older lines.
-
-* `1.21.1-{neoforge,fabric}` and `moderner-{1.21.10,26.1.2}-{neoforge,fabric}`
-  (the four moderner rows since 2026-10-14, running `:neoforge:runClient`,
-  `:fabric-legacy:runClient`, `:neoforge-unobfuscated:runClient` and
-  `:fabric-unobfuscated:runClient` in the `moderner` checkout). Their
-  `daemon_java` is `21` for the 1.21.1 pair (Gradle 8.13) and `null` for the
-  moderner rows (Gradle 9.5 runs on the machine's default JDK). Two of these six
-  do not run the plain client task: `1.21.1-neoforge` and
-  `moderner-1.21.10-neoforge` run `:neoforge:runClientTests`, the checkout's UI
-  test harness run (see `uitest` below). `moderner-1.21.10-fabric` runs the
-  harness too, but on loom's own `client` run — the only run that module has —
-  which the harness's class-path addition turns into a harness run.
-* the two `1.12.2` rows, revived 2026-10-14: `1.12.2-forge-jei-legacy` and
-  `1.12.2-forge-hei` run `runClientTests` in the `1.12.0` checkout — a bare task
-  name, because that checkout's build root *is* the module — with
-  `daemon_java: null` (its wrapper runs on the machine's default JDK, as the
-  1.12.0 build has no `daemon_java`-style restriction). Both are harness rows
-  (`uitest` below) and both carry `-PdevMod=jei|hei` in `gradle.args`; see
-  "The 1.12.2 rows and the gradle launch" for why the JEI-line mod has to be
-  staged by the checkout rather than by `jt`.
-* the four `multiple-version` fabric rows, migrated 2026-10-14:
-  `mv-1.16.5-fabric`, `mv-1.18.2-fabric`, `mv-1.19.2-fabric` and
-  `mv-1.20.1-fabric`, running `:<mc>:fabric:runClient` in that checkout. Their
-  `daemon_java` is `17`: the wrapper is Gradle 8.1.1, which cannot run on the
-  machine's default JDK. The four modules already carried the harness wiring
-  (`-PjechRunDir` / `-PjechQuickPlayWorld` into loom's default client run); what
-  the migration had to close lives in the checkout, and is written into the
-  module's own build files rather than into an env:
-
-  * **PinIn on the dev runtime classpath.** Every impl module takes
-    `:common-main` with `compileOnly`, so that module's `api PinIn` reaches the
-    compile classpath and the shadow configurations but never `runClient`, which
-    died in `JechConfig.<clinit>` with
-    `NoClassDefFoundError: me/towdium/pinin/Keyboard` on 1.18.2 and 1.19.2. The
-    root `build.gradle` now adds `runtimeOnly PinIn` to every impl module (both
-    loaders, `transitive = false`); `shadowJar` reads only `shadowCommon`, so no
-    shipped jar changes.
-  * **`mv-1.16.5-fabric`'s loader libraries.** Loom injects a
-    fabric-loader-0.10.5-era set for MC 1.16.5 while `modImplementation
-    fabric-loader` puts 0.14.9 on the run classpath, so
-    `1.16.5/fabric/build.gradle` also declares `access-widener` 2.1.0 and
-    `sponge-mixin` 0.11.4+mixin.0.8.5 as `runtimeOnly`. The lines carry the
-    measurement (`KnotClient` died with `NoClassDefFoundError` on
-    `net.fabricmc.accesswidener.AccessWidener` before any window).
-  * **`mv-1.20.1-fabric`'s fabric-api is `game-dir`, not `dev-classpath`.** Its
-    pinned api cannot be a Gradle mod dependency of that module at all — see the
-    row's note below.
-
-  The four rows' `via` split (JECh `dev-classpath` in all four, JEI `game-dir` in
-  the three that carry it, fabric-api `dev-classpath` except in `mv-1.20.1-fabric`)
-  is recorded in `selftest/test_envs.py`.
+`-PjechQuickPlayWorld=<world>` when the env declares a world). It is one of the
+two ways into the Gradle backend, and **no row uses it today**: every row names a
+standalone harness build instead (`uitest.project`, see below), and the schema
+makes the two mutually exclusive (`lib/envs.py:326`). The block is still required
+for a row that is neither `skip` nor a standalone harness row, so an env that
+names no launch layer at all is a schema error (see the `skip` section) rather
+than a run that quietly launches nothing — the Prism instance launcher, the layer
+before this one, was removed on 2026-10-14. Resolution, the world seed, the pack,
+isolation, the watchdog, `ready_when` and the checks are all
+independent of the launch layer, and the report records the run task and directory
+it used (`gradle.task`, `gradle.projectDir`). See [README.md](../README.md), "The
+`gradle` backend", for the full contract.
 
 | key | required | meaning |
 | --- | --- | --- |
 | `task` | yes | the Gradle task, spelled from the build root (`:neoforge:runClient`) |
 | `project_dir` | no | the checkout to run in, relative to `$JT_JECH_ROOT`; defaults to the env's `jech.project`, so the task always runs where the artifact under test was built |
-| `daemon_java` | no | the major version of the JDK that runs **Gradle** (its `JAVA_HOME`), e.g. `21` for a Gradle 8.13 wrapper on a Java 25 machine; absent/`null` keeps the ambient `JAVA_HOME`. This is not the client's JDK: that comes from the checkout's own toolchain |
-| `args` | no | extra arguments appended to the Gradle command line **verbatim**, after the ones `jt` spells itself (`-PjechRunDir`, `-PjechQuickPlayWorld`, `-PjechTest`). For a checkout property that varies per row and that only the row can name — today exactly one: `-PdevMod=jei\|hei`, which picks the JEI-line dev mod the `1.12.0` checkout stages. A list of plain strings; `jt` never interprets them, and they are recorded in the run report (`gradle.args`) so a reader can reproduce the exact command line |
+| `daemon_java` | no | the major version of the JDK that runs **Gradle** (its `JAVA_HOME`), e.g. `21` for a Gradle 8.13 wrapper on a Java 25 machine; absent/`null` keeps the ambient `JAVA_HOME`. This is not the client's JDK: that comes from the checkout's own toolchain. Only a `gradle` row reads this key; a standalone harness row starts its Gradle on the env's `java` version |
+| `args` | no | extra arguments appended to the Gradle command line **verbatim**, after the ones `jt` spells itself (`-PjechRunDir`, `-PjechQuickPlayWorld`, `-PjechTest`). For a checkout property that varies per row and that only the row can name — the one property it was written for is `-PdevMod=jei\|hei`, which picks the JEI-line dev mod the `1.12.0` checkout stages, and no row passes args today. A list of plain strings; `jt` never interprets them, and they are recorded in the run report (`gradle.args`) so a reader can reproduce the exact command line |
 
 `env.jech` and each `mods[]` entry take one more optional key:
 
 | key | values | meaning |
 | --- | --- | --- |
-| `via` | `game-dir` (default) / `dev-classpath` | where the artifact's jar goes. `game-dir` copies it into the game directory's `mods/` — what a launch needs when the checkout does not already carry the mod. `dev-classpath` stages nothing: the checkout's own run provides it (the module's sources registered as the mod, or a declared `localRuntime` / `modImplementation` dependency). It is still resolved, pinned and reported; staging it as well would load the same mod id twice |
+| `via` | `game-dir` (default) / `dev-classpath` | where the artifact's jar goes. `game-dir` copies it into the game directory's `mods/` — what a launch needs when the run does not already carry the mod. `dev-classpath` stages nothing: the run loads the artifact itself (a standalone harness build from the path `jt` hands it as `-PjechJar`/`-PjeiJar`, a `gradle` row from a dependency its checkout's own run declares). It is still resolved, pinned and reported; staging it as well would load the same mod id twice |
 
-A `via` that contradicts what the checkout actually provides is not detectable
-from the env file — the twelve gradle rows are the written record of the choice (see
+A `via` that contradicts what the run actually provides is not detectable
+from the env file — the rows are the written record of the choice (see
 the checks in `selftest/test_envs.py`), and a wrong one shows up as a duplicate-mod
-error in the run's log rather than as a silent pass. All four `moderner` rows are
-`dev-classpath` for every artifact, including JECh: each of that line's modules
-already declares its own runtime dependencies for JEI (both NeoForge modules,
-`localRuntime` at exactly the pinned version; `fabric-legacy`, `modRuntimeOnly`;
-`fabric-unobfuscated`, `runtimeOnly`) and for fabric-api, and the module under
-test *is* the run's own source set. The four `multiple-version` fabric rows take
-JECh `dev-classpath` for the same reason, stage JEI (the version-level build
-files hold it `compileOnly`), and split on fabric-api: `dev-classpath` in the
-three modules that declare it `modApi`, `game-dir` in `mv-1.20.1-fabric`, whose
-pinned api cannot be a Gradle mod dependency at all (see that row's note).
+error in the run's log rather than as a silent pass. **Every artifact of every row
+is `dev-classpath` today**, and for a standalone harness row that is not a choice:
+the schema rejects `game-dir` there (`lib/envs.py:332`), because the harness build
+loads every jar itself, so a staged copy would double-load. What the choice was
+originally made along — which checkout module declares JEI `localRuntime`, which
+fabric-api `modApi`, which row passes `-PdevMod` — belongs to the checkout-task
+shape the rows have left; the row notes below keep only the parts a run still
+depends on.
 
-The two `1.12.2` rows are `dev-classpath` for **both** artifacts, and the second
-half of that is not a preference: a 1.12.2 JEI/HEI jar cannot be dropped into
-`mods/` as published, because its access transformer is written in SRG member
-names and a dev client has MCP-named members, so the rules never match and JEI
-dies in its own `init` (measured — see "The 1.12.2 rows and the gradle launch").
-The jar has to come from the checkout, which stages it with the rules remapped;
-the row's `-PdevMod` names which one. Staging the pinned jar as well would load
-the same mod id twice *and* lose the remap.
+The one `via` reason that still describes a run's own behaviour is the 1.12.2
+line's: a 1.12.2 JEI/HEI jar cannot be dropped into `mods/` as published, because
+its access transformer is written in SRG member names and a dev client has
+MCP-named members, so the rules never match and JEI dies in its own `init`
+(measured — see "The 1.12.2 rows and the gradle launch"). The harness build both
+rows run stages that jar into its own game directory with the rules remapped, so
+staging the pinned jar as well would load the same mod id twice *and* lose the
+remap.
 
 `loader.type` is one of `forge`, `neoforge`, `fabric`, `quilt`.
 
@@ -175,11 +123,11 @@ the same mod id twice *and* lose the remap.
 
 The four `multiple-version` forge rows were the rows that had **no launch path**.
 They were the only rows still launched by Prism — the fabric half of the same
-checkout runs the checkout's own Gradle task — and the Prism instance launcher was
-removed on 2026-10-14, which left all four with nothing to launch them until each
-row got its own standalone harness build (`uitest/<row>`, an independent Gradle
-build in this repository — see `uitest` below). The measurement below is why they
-cannot simply move to the checkout's task; it was
+checkout runs its own standalone harness builds — and the Prism instance launcher
+was removed on 2026-10-14, which left all four with nothing to launch them until
+each row got its own standalone harness build (`uitest/<row>`, an independent
+Gradle build in this repository — see `uitest` below). The measurement below is
+why they cannot simply move to the checkout's task; it was
 taken on 2026-10-14, while the launcher still existed, by wiring the four modules
 the same way the fabric ones were (property guards in the client run,
 `targets.json` through `processResources`, JEI as a dev-only mod dependency,
@@ -251,9 +199,10 @@ stay written down. They were the last rows to leave that list: what revived them
 is the standalone harness build each row now owns (`uitest/<row>`), which closes
 both gaps the other way — the checkout's dev run is not the launch path at all,
 and JECh rides that build as one jar — so **no env carries `skip` today**. The
-recipe below is recorded so a future pass can re-apply it in one step; it was the
-route to removing those four `skip`s, needing the split package (or the broken
-dev artifact) dealt with *and* a launch layer for the row:
+recipe below is the checkout-side wiring the *other* route would have needed; it
+is recorded as the measurement's other half, and no row uses it — the harness
+builds carry their own wiring — so the split package (or the broken dev artifact)
+never had to be dealt with at all:
 
 * in each module's client run, guard the two properties this way — loom joins
   `runDir` onto the module directory with `new File(projectDir, runDir)`, so an
@@ -298,15 +247,24 @@ dev artifact) dealt with *and* a launch layer for the row:
 ### The 1.12.2 rows and the gradle launch
 
 Both `1.12.2-*` rows **run today** (revived 2026-10-14, the same day they were
-declared `skip`), through the `1.12.0` checkout's own harness run:
+declared `skip`), through the standalone harness build they share,
+`uitest/1.12.2-forge` — its own ForgeGradle build in this repository:
 
 ```
-./gradlew runClientTests --no-daemon -PjechRunDir=<game dir> \
-    -PjechTest=tag:smoke,tag:jei -PdevMod=jei   # the HEI row: tag:smoke, -PdevMod=hei
+./gradlew runClient --no-daemon -PjechRunDir=<game dir> \
+    -PjechTest=tag:smoke,tag:jei -PjechJar=<jech srg jar> -PjeiJar=<jei|hei jar>
 ```
 
-Local-network quirk (measured twice, 2026-10-14): this checkout's Gradle
-configuration stage asks mcmaven for Mojang's launcher manifest, whose cache
+The two rows run the same build and differ only in the jar `jt` hands it as
+`-PjeiJar` (the JEI-line row gets legacy JEI, the HEI row Had Enough Items). The
+build's client run carries the arm64 LWJGL 2 natives substitution the checkout
+used to provide, and stages the JEI-line jar into its own game directory with the
+access transformer remapped from SRG to MCP member names.
+
+Local-network quirk (measured twice, 2026-10-14): a Gradle invocation in this
+line's `1.12.0` checkout — the build `jt` falls back to when the row's
+`jech.path` glob finds no jar — asks mcmaven for Mojang's launcher manifest,
+whose cache
 (`~/.gradle/caches/minecraftforge/forgegradle/mavenizer/caches/launcher_manifest.json`)
 has a 1-hour TTL; when it expires and the Java-side fetch times out, every
 build dies in `configuring root project '1.12.0'` with
@@ -315,8 +273,9 @@ build dies in `configuring root project '1.12.0'` with
 hit this).
 
 Their history is worth keeping, because every step in it is a fact about this
-machine or about 1.12.2 rather than about `jt`. Measured end to end with the
-checkout's own task and no harness property in play
+machine or about 1.12.2 rather than about `jt`. It is the record of the
+checkout route the rows have left — the `1.12.0` checkout's own `runClientTests`,
+measured end to end with that task and no harness property in play
 (`Data/jech-compat/112-gradle-20261014/`, `1.12.0` checkout, client toolchain 8):
 
 * **The bare run did not even resolve.** `./gradlew runClient` in `1.12.0` dies
@@ -357,7 +316,8 @@ checkout's own task and no harness property in play
   objc-bridge — the same third-party `natives-osx-arm64` builds the retired Prism
   meta pointed at, each verified by sha1 — and substitutes `text2speech`. On any
   other host the declaration is inert, and the shipped jars are byte-identical to
-  the unpatched output.
+  the unpatched output. The harness build both rows run carries the same
+  conditional repository, which is what boots their client today.
 * **What made the same row green on the instance backend was the launcher, not
   the checkout.** The `1.12.2-forge-jei-legacy` instance ran on the *same* arm64
   JDK 8 (`instance.cfg`: `JavaPath=…/azul-1.8.0_492/…`,
@@ -368,9 +328,9 @@ checkout's own task and no harness property in play
   `org.lwjgl:2.9.4-nightly-20150209`, which declares an extra
   `natives-osx-arm64` classifier with a URL and sha1 pointing at a third-party
   build (`github.com/theofficialgman/lwjgl3-binaries-arm64`, branch
-  `lwjgl-2.9.4`) — the same substitution the checkout's conditional repository now
-  carries itself, which is why losing the launcher stopped being fatal for these
-  rows.
+  `lwjgl-2.9.4`) — the same substitution the rows' harness build now carries
+  itself (and the checkout's conditional repository too), which is why losing the
+  launcher stopped being fatal for these rows.
 * **Names were not the blocker here, though — that expectation is settled the
   other way.** `FMLDeobfTweaker.injectIntoClassLoader` registers
   `net.minecraftforge.fml.common.asm.transformers.DeobfuscationTransformer`
@@ -420,20 +380,20 @@ checkout's own task and no harness property in play
     ```
 
     **Measured through `jt`**, which is what makes it an env-file fact and not
-    only a checkout one: with the row's `mods[]` entry left at the default
+    only a build one: with the row's `mods[]` entry left at the default
     `via: game-dir`, `jt` staged the pinned jar verbatim and the run died in
-    15.9 s with no game session and no report. The checkout stages the JEI-line
-    mod itself instead — `stageUiTestDevMod` rewrites every SRG member name in
-    the jar's AT to the MCP name its own trailing comment names, failing the
-    build on a rule it cannot map — and it does so under `-PjechRunDir` as well,
-    because that is the only way a `jt`-owned run can get a remapped jar. Both
-    rows therefore declare their JEI-line mod `via: dev-classpath` and pass
-    `-PdevMod=jei|hei` in `gradle.args`. The standing AT story is unchanged:
+    15.9 s with no game session and no report. The harness build both rows run
+    stages the JEI-line jar itself instead — its `stageUiTestDevMod` rewrites
+    every SRG member name in the jar's AT to the MCP name its own trailing
+    comment names, failing the build on a rule it cannot map — which is why both
+    rows declare their JEI-line mod `via: dev-classpath` and stage nothing. The
+    standing AT story is unchanged:
     ForgeGradle 2.x collected a dependency's ATs and applied them while the
     classes were still SRG-named; ForgeGradle 7's 1.12.2 pipeline has no
     equivalent (`mcmaven --access-transformer` runs on the finished MCP-named
-    artifact, where neither spelling matches), and `stageDevMods` /
-    `stageUiTestDevMod` are what supply it for `runClient` and for the harness run.
+    artifact, where neither spelling matches), and the staging task is what
+    supplies it — `stageUiTestDevMod` in the harness build, the checkout's own
+    `stageDevMods` in its `runClient`.
 
 The revival's own measurements, all on 2026-10-14:
 
@@ -459,65 +419,69 @@ Both rows are harness rows, so they declare no `ready_when` and no `world` (see
 `uitest`), and their `lang` fixture is the 1.12.2 spelling — see "The preset
 `options.txt`", which is where a wrong language code for this line was found.
 
-### `uitest` — running the checkout's in-client UI test harness
+### `uitest` — a row's own in-client UI test harness
 
 ```json
-"uitest": { "selection": "tag:smoke,tag:jei" }
+"uitest": { "selection": "tag:smoke,tag:jei", "project": "uitest/1.21.1-neoforge" }
 ```
 
-An env with a `uitest` block runs the checkout's own **in-client UI test
-harness**: a dev-only mod that drives the real client through scripted scenarios
-(keyboard and chat input, JEI's own search bar) and writes its own verdict. The
-selection is handed to Gradle as `-PjechTest=<selection>`, the only gate on that
-wiring, so the env's `gradle.task` must be the harness's own run task
-(`:neoforge:runClientTests` in the 1.21.1 checkout), which honours `-PjechRunDir`
-exactly as `runClient` does.
+An env with a `uitest` block runs the **in-client UI test harness** that block's
+`project` carries: a dev-only mod that drives the real client through scripted
+scenarios (keyboard and chat input, JEI's own search bar) and writes its own
+verdict. Every row names such a build today — a standalone Gradle project under
+`uitest/` in this repository, whose run task the runner drives in three stages
+(config → build → test; `lib/uitest_pipeline.py`), handing it the jars under test
+as `-PjechJar`/`-PjeiJar`. The scenario selection is handed over as the project
+property `-PjechTest=<selection>`, the only gate on that wiring, and the run
+honours `-PjechRunDir` exactly as any other run of that build does.
 
 What changes for such a row:
 
 * **The client ends itself.** The harness quits the game once the selection is
   done, so the row declares **no `ready_when`**: a stopping rule would end the
-  session mid-scenario and leave the run without a report at all. This is the one
-  exception to "every executed env declares a stopping rule", and
-  `selftest/test_envs.py` checks both halves of it.
+  session mid-scenario and leave the run without a report at all.
+  `selftest/test_envs.py` checks both halves of the rule: a harness row must
+  declare none, and a row that launches a client nothing makes quit must declare
+  one.
 * **The level is the harness's own.** The harness runner creates and pins its own
   flat level and deletes the stale ones it owns, so the row declares **no
   `world`** either: a quick-play join would race the level the scenarios are
-  asserted against. (The harness run ignores `-PjechQuickPlayWorld` for the same
-  reason — see the checkout's `gradle/jech-uitest.gradle`.)
+  asserted against. No harness build reads `-PjechQuickPlayWorld` for the same
+  reason.
 * **The evidence is the report.** The harness writes `report.json`,
   `report.txt`, `junit.xml` and `screenshots/` into `<game dir>/uitest` before it
   quits, and the run is judged by that report through the `uitest_report` check.
   The log checks stay as well: they say the mod loaded, the report says the
   scenarios ran.
 * **A failing scenario is red twice over.** The harness exits non-zero when a
-  scenario failed, which fails the Gradle build through the checkout's own
+  scenario failed, which fails the Gradle build through the harness build's own
   `verifyJechUiTest`, and `uitest_report` fails on the report. The captures to
   look at are under `<game dir>/uitest/screenshots/<scenario>/`.
 
 | key | required | meaning |
 | --- | --- | --- |
 | `selection` | yes | the harness's scenario selection, passed to Gradle verbatim: `all`, a scenario name, `a,b` (terms are OR-ed), `tag:<tag>`, `group:<group>`, `mod:<mod>`, `regex:<pattern>` — the harness's own `ScenarioSelection` grammar. **Every term carries its own prefix**, because a bare term is a *name* match: `tag:smoke,tag:jei`, never `tag:smoke,jei` (which would silently run the smoke scenarios alone) |
+| `project` | no (every row names one) | the standalone harness build to run, relative to the compat-tests repository (`uitest/1.21.1-neoforge`): an independent Gradle project whose own run task launches the client. A block without it must carry a `gradle` block instead, and the two are mutually exclusive (`lib/envs.py:326`) |
 
 The selection names the scenarios the row was measured with instead of saying
 `all`, for the same reason a row's `world` is written down: a row asserts what it
-was measured with, and a scenario added later cannot silently change that.
-Five rows run the harness today — `1.21.1-neoforge` (the `1.21.1` checkout's
-neoforge module), both `moderner-1.21.10` rows (that line's `neoforge` and
-`fabric-legacy` modules), and both `1.12.2` rows (the `1.12.0` checkout, task
-`runClientTests`):
+was measured with, and a scenario added later cannot silently change that. Every
+row runs the harness today; thirteen of them run `tag:smoke,tag:jei` — the
+scenarios their own build ships, the JEI ones among them — and three run the
+smoke tag alone, each for a reason of its own:
 
 | row | selection | why not the other rows' |
 | --- | --- | --- |
-| `1.21.1-neoforge`, `moderner-1.21.10` ×2 | `tag:smoke,tag:jei` | the four scenarios of that line: `smoke` and `json-smoke` by tag, and the two JEI ones by tag |
-| `1.12.2-forge-jei-legacy` | `tag:smoke,tag:jei` | the same five scenarios the `1.12.0` checkout ships (it adds `hei-smoke`), all of which that line can run |
+| `mv-1.16.5-fabric` | `tag:smoke` | the one row with no target mod: its build carries a single scenario and no JEI reaches the run, so it claims the smoke tag alone |
+| `mv-1.16.5-forge` | `tag:smoke` | this line's JECh jar carries no JEI plugin class, and the JEI scenarios focus JEI's search field with a measured mouse click the row has not been measured with |
 | `1.12.2-forge-hei` | `tag:smoke` | HEI answers through `IAdvancedSearchRegistry`, not through the legacy suffix-tree replacement the JEI scenarios assert on; this row claims the smoke scenarios it was measured with rather than scenarios it does not exercise |
+| every other row | `tag:smoke,tag:jei` | the scenarios its own harness build ships, the JEI ones by tag among them |
 
 The scenarios themselves — and the step vocabulary a scenario is written in —
-are documented in the checkout, next to the scenarios
-(`neoforge/src/uitest/resources/uitest/scenarios/README.md` in the 1.21.1 line,
-and the KB's `03-uitest-harness.md` / `04-match-recording.md` for the `1.12.0`
-checkout's copy of the vocabulary).
+are documented next to each build's copies of them
+(`uitest/<row>/src/main/resources/uitest/scenarios/README.md`, and the KB's
+`03-uitest-harness.md` / `04-match-recording.md` for the 1.12.2 line's copy of the
+vocabulary).
 
 ### `jech` — the mod under test
 
@@ -591,7 +555,7 @@ Three rules keep the checks honest:
   ConfigManager` and never the marker — JEI 15 (1.20.1), 19 (1.21.1), 26
   (1.21.10/26.1.2) all behave this way. A row that runs the in-client harness
   gets that level without declaring `world`: the harness's runner stands up its
-  own flat level (the three harness rows do, see `uitest` above).
+  own flat level (every row does, see `uitest` above).
 
 ### `skip` — an env that is deliberately not executed
 
@@ -655,15 +619,15 @@ standalone harness build's runner creates the level the marker needs itself
 the row runs and passes today
 (`Data/jech-compat/runs/mv-1.19.2-forge-20261017-142743`).
 
-Its fabric sibling sits in the same position — MC 1.19.2 offers no command-line
-way to load a level at all (the forge sibling's harness has to create one
-in-client) — but it does not skip, because it does not have to claim a level at
-all.
-`mv-1.19.2-fabric` is a **menu-level smoke row**: it declares no `world` and no
-storage-marker check, and asserts what a client that stops at the title screen
-can show (the transformer loaded, the config was written, no crash report). Its
-env comment carries the same reasoning, and both halves are asserted in
-`selftest/test_envs.py` and `selftest/test_worlds.py`.
+Its fabric sibling sat in the same position — MC 1.19.2 offers no command-line
+way to load a level at all — but it never skipped, because it did not have to
+claim a level: it asserted what a client that stops at the title screen can show
+(the transformer loaded, the config was written, no crash report). Its own move
+to a harness build is what changed that: the harness's runner creates the level
+in-client, so `mv-1.19.2-fabric` claims the JEI storage marker today, the way its
+forge sibling does. Its env comment carries the same reasoning, and
+`selftest/test_envs.py` asserts that both rows declare neither `skip` nor
+`world`.
 
 ## Launching into a world (`world`)
 
@@ -671,11 +635,14 @@ env comment carries the same reasoning, and both halves are asserted in
 "world": { "name": "jechworld" }
 ```
 
-An env with `world` is launched into that world by its own checkout: the harness
-hands the name over as the project property `-PjechQuickPlayWorld=<name>`, and
-the checkout's client run appends `--quickPlaySingleplayer <name>` to the
+An env with `world` is launched into that world by its run: the harness hands the
+name over as the project property `-PjechQuickPlayWorld=<name>`, and a `gradle`
+row's checkout client run appends `--quickPlaySingleplayer <name>` to the
 client's program arguments. The seed for that world is staged as
-`saves/<name>/` inside the run's game directory on every run.
+`saves/<name>/` inside the run's game directory on every run. **No row declares
+`world` today**: every row is a harness row whose own runner creates the level the
+scenarios are asserted against (see `uitest`), so no run needs a world handed to
+it, and no harness build reads the property.
 
 While the instance launcher existed (until 2026-10-14) the world travelled as its
 own *join world on launch* option,
@@ -695,31 +662,23 @@ so nobody re-treads them:
   launcher already did, and a patch file has to be kept in sync per loader. Not
   used.
 
-Which rows declare it, as measured on 2026-10-14: `1.21.1-fabric`, the two
-`moderner-26.1.2` rows and `mv-1.20.1-fabric` — four of the five rows that carry
-a `world` block, the fifth being `mv-1.20.1-forge`, skipped then — all run to
-`stopReason: goal-reached` on a real join (`vfyjxf_ joined the game`, then
-JECh's `Registering JEI pinyin search storage` a second later).
-The three harness rows (`1.21.1-neoforge` and both `moderner-1.21.10` rows) left
-the list when they moved to the in-client harness (2026-10-14): the level they
-are asserted against is the one the harness's own runner creates, so those rows
-declare no `world` (see `uitest` above) — the marker still arrives, because the
-level does. The `mv-1.16.5` and `mv-1.18.2` rows
-keep no world either — their markers are emitted at startup (and the
-1.16.5/1.18.2 jars carry no JEI plugin at all), so a world would only add a level
-load to what they assert; both forge halves have left `skip` and get their level
-from their own harness build. `mv-1.19.2-forge` does not join one either — its
-harness build creates the level instead, see the `skip`
-section above — while `mv-1.19.2-fabric` is the same MC version but a gradle row
-that claims no marker, so it is a menu-level row by design: no world, no marker.
+Which rows carried it while they ran quick-play launches, as measured on
+2026-10-14: `1.21.1-fabric`, the two `moderner-26.1.2` rows and
+`mv-1.20.1-fabric` — four of the five rows that carried a `world` block, the
+fifth being `mv-1.20.1-forge`, skipped then — all ran to `stopReason:
+goal-reached` on a real join (`vfyjxf_ joined the game`, then
+JECh's `Registering JEI pinyin search storage` a second later). Every row has
+since moved to its own harness build and left the list: the level the scenarios
+are asserted against is the one the harness's own runner creates (see `uitest`
+above), so the marker still arrives — because the level does — for every row,
+including the ones no command-line join reaches (`mv-1.19.2-forge` and its fabric
+sibling, see the `skip` section above). The `mv-1.16.5` and `mv-1.18.2` rows
+never carried one: their markers are emitted at startup (and the 1.16.5/1.18.2
+jars carry no JEI plugin at all), so a world would only add a level load to what
+they assert.
 
-Every one of those four rows carries its world that same way — the harness hands it
-over as `-PjechQuickPlayWorld=<name>` and the checkout's own run configuration
-appends `--quickPlaySingleplayer <name>` to the client's arguments — and the game
-directory is the run's own `runs/<id>/game`, with the seed staged into
-`saves/<name>/` there. A harness run (`1.21.1-neoforge`'s `runClientTests`, and
-the `moderner-1.21.10` pair's harness runs) deliberately does
-not honour the property: the harness's runner does its own level management.
+The game directory is the run's own `runs/<id>/game`, with a seed staged into
+`saves/<name>/` there on every run.
 
 One caveat that cost a full watchdog on the way (recorded so the next person
 reads it as designed, not as a bug): a run whose client dies *before* the ready
@@ -778,13 +737,12 @@ run played in is replaced, never merged).
 
 ## Launching without a world
 
-An env without `world` stops at the title screen. The preset `options.txt`
-(below) is still staged, so the client reaches the menu; that is the right shape
-for envs whose markers are emitted during startup (the three `mv-*-fabric` rows
-of 1.16.5/1.18.2/1.19.2) and for the harness rows, whose level the harness
-creates itself. The two Forge halves of 1.16.5/1.18.2 were the rows still in the
-menu-level position *and* still `skip`ped; both now run their own harness build,
-which creates the level for them.
+Every env is in this position today: no row declares `world`, so no run begins by
+joining one — each row's harness build creates the level its scenarios run in and
+quits the client when they are done. The preset `options.txt` (below) is still
+staged, so the client reaches the menu before the harness drives it, and the
+markers that only appear at level load are reached inside the harness's own
+level.
 
 ## The preset `options.txt`
 
@@ -869,11 +827,13 @@ lands on the title screen, without it the onboarding screen comes first.
 
 ## When is the game ready? (`ready_when`)
 
-A client launched by a checkout's run task has no in-game runner: nothing in the
-game makes it quit,
+A client launched by a `gradle` row's checkout task has no in-game runner:
+nothing in the game makes it quit,
 so without a stopping rule a `jt run` can only end by the game being closed by
 hand or by the watchdog (exit code 3). `ready_when` gives the run a stopping
-rule.
+rule. **No env declares it today**: every row is a harness row whose own runner
+quits the client when the scenario selection is done, so every run ends at the
+game's own exit and the key is on no row's path.
 
 ```json
 "ready_when": { "value": "Sound engine started" }
@@ -887,8 +847,9 @@ rule.
   rule, so a `false` on its own does not say which half was missing. The report
   prints both halves separately: `readyLineSeen` (was the ready line in the log?)
   and `missingMarkers` (which `log_contains` values never arrived). On the
-  1.21.1 rows the ready line lands early and the JEI marker only at world load,
-  so the honest reading of a pre-`world` failure there is
+  quick-play rows that declared it, the ready line landed early and the JEI
+  marker only at world load, so the honest reading of a pre-`world` failure there
+  was
   `readyLineSeen: true, missingMarkers: ['Registering JEI pinyin search storage']`
   — the marker was the missing half, not the ready line.
 * **Choosing the line.** Pick a stable INFO line vanilla prints exactly once
@@ -899,8 +860,8 @@ rule.
   that comes *after* your markers, or accept that the run waits for the markers.
 
   For an env with `world`, keep a line that the client prints **whether or not**
-  the world joins (both 1.21.1 rows use `Sound engine started`, which lands ~4s
-  before the join). A world-only line such as
+  the world joins (the rows that used quick play ran on `Sound engine started`,
+  which lands ~4s before the join). A world-only line such as
   `Preparing start region for dimension` reads better but is a trap: if the join
   ever fails, the ready line never lands, the grace never starts, and the run
   hangs into the watchdog (exit 3) instead of failing on the marker. With a line
@@ -936,20 +897,20 @@ rule.
   FAIL. A genuinely failed launch still ends as a missing session: a launcher
   that exits with no game process behind it is reported as exactly that.
 * **Omitting it.** Without `ready_when` the run behaves as before: it waits for
-  the game to exit on its own or for the watchdog. No shipped env that stops at a
-  screen omits it: a modded client that reaches the title screen never exits on
-  its own, so an env without a stopping rule can only end in a watchdog kill
-  (exit 3) — i.e. it is a broken env, not a lenient one. Every such env file in
-  `envs/` declares `Sound engine started`, which the client prints in 1.12.2
-  through 26.1.2 alike (verified against each client jar), and which lands
-  *before* the world join so a failed join still becomes a clean
+  the game to exit on its own or for the watchdog. A row that launches a client
+  nothing makes quit must declare one: a modded client that reaches the title
+  screen never exits on its own, so such a row can only end in a watchdog kill
+  (exit 3) — i.e. it is a broken env, not a lenient one. No shipped row is in
+  that position today (see above); for one that was, `Sound engine started` is
+  the line to reach for — the client prints it in 1.12.2
+  through 26.1.2 alike (verified against each client jar), and it lands
+  *before* a world join so a failed join still becomes a clean
   `ready-timeout`.
-* **The rows that omit it, and must.** An env with a `uitest` block runs the
-  checkout's in-client harness, whose own runner quits the client when the
+* **The rows that omit it, and must.** An env with a `uitest` block runs its
+  harness build, whose own runner quits the client when the
   selection is done. A stopping rule there would end the session mid-scenario and
   leave the run with no report — so such a row declares no `ready_when`, and the
-  absence is the correct shape rather than a broken env (the three harness rows:
-  `1.21.1-neoforge`, `moderner-1.21.10-neoforge`, `moderner-1.21.10-fabric`; see
+  absence is the correct shape rather than a broken env (every row today; see
   `uitest` above and the assertion in `selftest/test_envs.py`).
 
 ## Pins
@@ -1046,40 +1007,39 @@ and says so in the report.
 | `moderner-26.1.2-fabric` | 26.1.2 / fabric 0.19.2 | 25 | `moderner` (fabric-unobfuscated) | jei 29.16.0.46, fabric-api 0.146.1+26.1.2 |
 | `1.21.1-neoforge` | 1.21.1 / neoforge 21.1.215 | 21 | `1.21.1` | jei 19.37.0.362 |
 | `1.21.1-fabric` | 1.21.1 / fabric 0.16.14 | 21 | `1.21.1` | jei 19.37.0.362, fabric-api 0.116.1+1.21.1 |
-| `mv-1.20.1-forge` | 1.20.1 / forge 1.20.1-47.0.35 | 17 | `multiple-version` | jei 15.48.0.179 — `uitest: tag:smoke,tag:jei` |
-| `mv-1.20.1-fabric` | 1.20.1 / fabric 0.16.14 (see below) | 17 | `multiple-version` (gradle) | jei 15.48.0.179, fabric-api (see below) |
-| `mv-1.19.2-forge` | 1.19.2 / forge 1.19.2-43.2.3 | 17 | `multiple-version` | jei 11.30.3.1056 — `uitest: tag:smoke,tag:jei` |
-| `mv-1.19.2-fabric` | 1.19.2 / fabric 0.16.14 (see below) | 17 | `multiple-version` (gradle) | jei 11.30.3.1056, fabric-api 0.77.0+1.19.2 |
-| `mv-1.18.2-forge` | 1.18.2 / forge 1.18.2-40.2.1 | 17 | `multiple-version` | jei 10.2.1.1005 — `uitest: tag:smoke,tag:jei` |
-| `mv-1.18.2-fabric` | 1.18.2 / fabric 0.14.9 | 17 | `multiple-version` (gradle) | jei 10.2.1.1005, fabric-api 0.67.0+1.18.2 |
-| `mv-1.16.5-forge` | 1.16.5 / forge 1.16.5-36.2.42 | 8 | `multiple-version` | jei 7.8.0.1009 (pinned by file id) — `uitest: tag:smoke` |
-| `mv-1.16.5-fabric` | 1.16.5 / fabric 0.14.9 | 8 | `multiple-version` (gradle) | fabric-api 0.42.0+1.16 (smoke) |
-| `1.12.2-forge-hei` | 1.12.2 / forge 1.12.2-14.23.5.2864 | 8 | `1.12.0` (srg jar) | had-enough-items 4.34.0 (dev-classpath) — `uitest: tag:smoke` |
-| `1.12.2-forge-jei-legacy` | 1.12.2 / forge 1.12.2-14.23.5.2864 | 8 | `1.12.0` (srg jar) | jei 4.16.1.301 (dev-classpath) — `uitest: tag:smoke,tag:jei` |
+| `mv-1.20.1-forge` | 1.20.1 / forge 1.20.1-47.0.35 | 17 | `multiple-version` | jei 15.48.0.179 |
+| `mv-1.20.1-fabric` | 1.20.1 / fabric 0.16.14 (see below) | 17 | `multiple-version` | jei 15.48.0.179, fabric-api (see below) |
+| `mv-1.19.2-forge` | 1.19.2 / forge 1.19.2-43.2.3 | 17 | `multiple-version` | jei 11.30.3.1056 |
+| `mv-1.19.2-fabric` | 1.19.2 / fabric 0.16.14 (see below) | 17 | `multiple-version` | jei 11.30.3.1056, fabric-api 0.77.0+1.19.2 |
+| `mv-1.18.2-forge` | 1.18.2 / forge 1.18.2-40.2.1 | 17 | `multiple-version` | jei 10.2.1.1005 |
+| `mv-1.18.2-fabric` | 1.18.2 / fabric 0.14.9 | 17 | `multiple-version` | jei 10.2.1.1005, fabric-api 0.67.0+1.18.2 |
+| `mv-1.16.5-forge` | 1.16.5 / forge 1.16.5-36.2.42 | 17 | `multiple-version` | jei 7.8.0.1009 (pinned by file id) |
+| `mv-1.16.5-fabric` | 1.16.5 / fabric 0.14.9 | 17 | `multiple-version` | fabric-api 0.42.0+1.16 (smoke) |
+| `1.12.2-forge-hei` | 1.12.2 / forge 1.12.2-14.23.5.2864 | 21 | `1.12.0` (srg jar) | had-enough-items 4.34.0 (dev-classpath) |
+| `1.12.2-forge-jei-legacy` | 1.12.2 / forge 1.12.2-14.23.5.2864 | 21 | `1.12.0` (srg jar) | jei 4.16.1.301 (dev-classpath) |
 
-Every row also stages the preset `options.txt`. The rows that were launched into
-a world, the rows that load their own level (`uitest`), the rows that claim no
-level at all, and the rows that were *skipped*, are called out below and in the
-table above:
+Every row also stages the preset `options.txt`. Every row is a **harness row**
+today — it declares `uitest` and no `world`, and its selection is in the `uitest`
+section above — so the shape is the same everywhere: the level the scenarios are
+asserted against is the one that row's harness runner creates, and the client
+quits itself when the selection is done. What differs is what each row claims:
 
 | env | runs? | world | why |
 | --- | --- | --- | --- |
-| `1.21.1-neoforge`, `moderner-1.21.10` ×2 | yes | none — `uitest` | these rows run the checkout's in-client harness, which stands up and pins its own flat level, and are judged by the harness's own report |
-| `1.12.2` ×2 | yes | none — `uitest` | same shape in the `1.12.0` checkout: the harness creates its own flat creative level, and the rows are judged by its report ("The 1.12.2 rows and the gradle launch") |
-| `1.21.1-fabric` | yes | `world: {name: jechworld}` | the JEI plugin marker needs a loaded level |
-| `moderner-26.1.2` ×2, `mv-1.20.1-fabric` | yes | `world: {name: jechworld}` | same marker, same level-load phase (measured 2026-10-14) |
-| `mv-1.19.2-fabric`, `mv-1.16.5-fabric`, `mv-1.18.2-fabric` | yes | none | the menu-level rows: no marker claimed at all, or one emitted at startup |
-| `mv-1.20.1-forge` | yes | none | it runs its own standalone harness build (`uitest/mv-1.20.1-forge`), which creates the level; its checkout's Forge dev run cannot host the mod under test and the instance launcher is gone (2026-10-14) |
-| `mv-1.18.2-forge`, `mv-1.16.5-forge` | yes | none | same history, same answer: the checkout's Forge dev run cannot host the mod, so each runs its own standalone harness build (`uitest/<row>`), which creates the level |
-| `mv-1.19.2-forge` | yes | none | the marker needs a loaded level, and the harness build creates one itself (`WorldOpenFlows.createFreshLevel`); quick play needs 1.20+ and was never the path (re-measured 2026-10-14) |
+| `1.21.1-neoforge`, `moderner-1.21.10` ×2 | yes | none — `uitest` | these rows run their own harness build, which stands up and pins its own flat level, and are judged by the harness's own report |
+| `1.12.2` ×2 | yes | none — `uitest` | same shape in `uitest/1.12.2-forge`: it creates its own flat creative level, and the rows are judged by its report ("The 1.12.2 rows and the gradle launch") |
+| `1.21.1-fabric`, `moderner-26.1.2` ×2, `mv-1.20.1-fabric` | yes | none — `uitest` | the JEI plugin marker needs a loaded level, and the harness's runner creates it (these rows used a quick-play join until they moved; measured 2026-10-14) |
+| `mv-1.19.2-forge` | yes | none — `uitest` | the same marker, and quick play offers no join before 1.20 (re-measured 2026-10-14); its harness build creates a level itself (`WorldOpenFlows.createFreshLevel`) |
+| `mv-1.20.1-forge` | yes | none — `uitest` | the same marker, reached from its own harness build's level; its checkout's Forge dev run cannot host the mod under test (2026-10-14) |
+| `mv-1.19.2-fabric` | yes | none — `uitest` | the same command-line gap, answered the same way: the storage marker arrives inside the harness's own level |
+| `mv-1.18.2-forge`, `mv-1.16.5-forge` | yes | none — `uitest` | no level-dependent marker: this line's JECh jar carries no JEI plugin class, so the checks are the startup and failure markers — and the checkout's Forge dev run cannot host the mod either (2026-10-14) |
+| `mv-1.16.5-fabric`, `mv-1.18.2-fabric` | yes | none — `uitest` | no level-dependent marker: startup and failure checks (1.16.5 fabric carries no target mod at all) |
 
-Every env but the five harness rows (`1.21.1-neoforge`,
-`moderner-1.21.10-neoforge`, `moderner-1.21.10-fabric`, and both `1.12.2` rows)
-also declares
-`ready_when: Sound engine started`; without it a client that reaches the title
-screen runs until the watchdog (see "Omitting it"). The harness rows omit it on
-purpose: their own runner quits the client, so a stopping rule would end the run
-mid-scenario (see `uitest`).
+No env declares `ready_when` either: every row's harness runner quits the client
+when the selection is done (see `uitest`), so no run needs a stopping rule. A
+`gradle` row that launches a client nothing makes quit would — `Sound engine
+started` is the line the quick-play rows used for it, and the rule is written out
+in "When is the game ready?" above.
 
 `mv-1.19.2-forge` was the row with no path to its marker: JEI 11.x's
 `registerAdvancedSearch` (the phase that logs JECh's storage marker) runs at
@@ -1095,9 +1055,10 @@ the matrix with its checks written down, and `skip` named exactly what was
 missing. The row has since left `skip` by the other route: its own harness build
 creates the level the marker needs (`WorldOpenFlows.createFreshLevel`, the row's
 env comment names it), so no 1.19.2-era command-line world join was needed after
-all — and none exists. `mv-1.19.2-fabric` faces the same command-line gap but is
-not in this position: it claims no marker, so there is nothing it can fail to
-reach and nothing to skip (see the `skip` section above).
+all — and none exists. `mv-1.19.2-fabric` faced the same command-line gap and
+never skipped either: before its move it claimed no level-dependent marker, and
+its harness build now creates the level the storage marker needs, so both 1.19.2
+rows reach that marker the same way (see the `skip` section above).
 
 The version strings above are not invented: they mirror each checkout's
 `gradle.properties` (`neo_version`, `forge_version`, `fabric_loader_version`,
@@ -1118,8 +1079,10 @@ run:
   checkout therefore uses loader `0.16.14`, the version the 1.21.1 fabric row
   already runs.
 * that pinned api **cannot be a Gradle mod dependency of the 1.20.1 module at
-  all**, which is why the row stages it (`via: game-dir`) instead of declaring it
-  `dev-classpath`. From 0.91.1 on, every MC 1.20.1 fabric-api is built by loom
+  all**, which is why nothing holds it as a *mod* dependency: the harness build
+  compiles against `0.91.0+1.20.1` and resolves the pinned `0.92.12+1.20.1`
+  through a plain configuration into the run's `mods/`. From 0.91.1 on, every
+  MC 1.20.1 fabric-api is built by loom
   >= 1.5 and carries `Fabric-Loom-Mixin-Remap-Type` in its manifest; the
   `multiple-version` checkout's architectury-loom 1.1 refuses that key while
   configuring the project (`This version of loom does not support the mixin remap
@@ -1130,8 +1093,8 @@ run:
   where Fabric's dev-mode remapper — loom passes `-Dfabric.remapClasspathFile` —
   turns the production jar from intermediary into the run's named namespace,
   exactly as it does for JEI. It has to be >= `0.92.2+1.20.1`: that is the same
-  pinned JEI's own floor for `fabric-api`. Verified in the row's log:
-  `Loading 61 mods` lists `fabric-api 0.92.12+1.20.1` and `fabricloader 0.16.14`.
+  pinned JEI's own floor for `fabric-api`. Verified in the row's log: the mod list
+  names `fabric-api 0.92.12+1.20.1` and `fabricloader 0.16.14`.
 
 `mv-1.19.2-fabric` needed the same kind of correction — the pinned JEI is newer
 than the versions upstream's properties name — but entirely in the checkout, and
@@ -1169,27 +1132,20 @@ has a JEI plugin and can be asserted on its registration marker.
   `log_not_contains "Can't create config file!"` and
   `file_exists config/jecharacters.json`.
 
-  Nine of the ten rows carry that set. The exception is `mv-1.19.2-fabric`, the
-  menu-level row: its jar is in this family (it has
-  `JechJeiPlugin.class`) but the row claims nothing of the storage marker, so it
-  keeps the two config checks and the failure/exit checks only (see the `skip`
-  section above).
-
-  Those nine rows load a level when they run — the two `mv` forge rows among them
-  get it from their own harness build, which creates it: `mv-1.19.2-forge`, whose
-  marker needs a level the row could not otherwise reach, and
-  `mv-1.20.1-forge` (re-measured 2026-10-14). Five
-  env files declare `world` — the quick-play rows — and four of them run; the
-  three harness rows (`1.21.1-neoforge`, `moderner-1.21.10-neoforge`,
-  `moderner-1.21.10-fabric`) get their level from the in-client harness
-  instead (see `uitest`). Those four plus the three harness rows were all
-  measured against a real run —
-  `1.21.1` ×2, `moderner-26.1.2` ×2 and `mv-1.20.1-fabric` all reach a level
-  with their marker present a second after `joined the game` (re-measured
+  All ten rows carry that set, and all ten load a level when they run: each row's
+  own harness build creates the level the marker needs (see `uitest`), including
+  the four `mv` rows of this family — `mv-1.19.2-forge`'s marker needs a level no
+  command-line join can reach, and the other three reach it from the harness's own
+  level the same way (`mv-1.19.2-fabric` was the last to claim the marker, when
+  its harness build
+  began creating the level). The rows that were measured on a quick-play join
+  before that — `1.21.1-fabric`, the two `moderner-26.1.2` rows and
+  `mv-1.20.1-fabric` — all reached a level with their marker present a second
+  after `joined the game` (re-measured
   2026-10-14). So
   the level-load claim holds for JEI 15 (1.20.1), JEI 19 (1.21.1), JEI 26
   (1.21.10) and JEI 29 (26.1.2): each of them defers `registerAdvancedSearch`
-  until a level exists. The three harness rows add `uitest_report` to this set:
+  until a level exists. Every row also adds `uitest_report` to this set:
   each row's own scenarios are the evidence, and the log checks stay as the "the
   mod loaded" half.
 * **B — no JEI plugin** (mv-1.16.5 ×2, mv-1.18.2 ×2): the failure markers only —
@@ -1279,26 +1235,26 @@ has a JEI plugin and can be asserted on its registration marker.
 2. Read the checkout's `gradle.properties` and copy the loader / api / jei
    versions from there instead of typing a remembered version.
 3. Check which family the new line belongs to (`unzip -l <jar> | grep JechJeiPlugin`).
-4. Decide what shape the row is, before writing any check: a **menu-level row**
-   that stops at the title screen, a **quick-play row** that is launched into a
-   world, or a **harness row** that runs the checkout's own in-client scenarios
-   (`uitest`).
-   The three shapes differ in exactly which of `ready_when` / `world` / `uitest`
-   the row carries, and the shipped-matrix assertions in
+4. Decide what shape the row is, before writing any check: a **harness row**
+   (`uitest` with a `project` — a standalone build under `uitest/<row>` that
+   creates its own level and quits the client; today's shape for every row), or a
+   **`gradle` row** that launches a checkout's own run task, in which case it
+   needs `ready_when` and, when a marker needs a loaded level, `world`.
+   The shipped-matrix assertions in
    `selftest/test_envs.py` exist to catch a row that picked the wrong one.
-5. Give it a `gradle` block (`{"task": ":<module>:runClient", "daemon_java": <n>}`)
-   — without one the row cannot be executed at all — and, for a menu-level or
-   quick-play row, a
+5. A harness row gives its `uitest` block a `project` naming that build — without
+   one (or without a `gradle` block) the row cannot be executed at all — and
+   takes neither `ready_when` nor `world`. A `gradle` row instead needs a
    `ready_when` line from a real run's
    `latest.log` (a first, exploratory `jt run` may end at the watchdog — that log
-   is still the evidence to read). Add `"world": {"name": "jechworld"}` when
-   a marker needs a loaded level, picking a line the client prints **whether or
+   is still the evidence to read) and, when
+   a marker needs a loaded level, `"world": {"name": "jechworld"}`, picking a line
+   the client prints **whether or
    not** the join succeeds (see "When is the game ready?"). `jt run` builds the
-   seed itself; `jt seed-world <name>` builds it ahead of time. A harness row
-   takes neither `ready_when` nor `world`: it declares `uitest` and nothing about
-   stopping. Add `"args": ["-P<property>=<value>"]` only when the row's checkout
-   needs a project property that `jt` cannot spell for it (see the `gradle` key
-   table): today that is `-PdevMod`, and a row that needs none declares none.
+   seed itself; `jt seed-world <name>` builds it ahead of time. Its `gradle.args`
+   is for a checkout project property that `jt` cannot spell for it (see the
+   `gradle` key table); the only one ever needed was `-PdevMod`, for the `1.12.0`
+   checkout's own run.
 6. If the marker is unreachable for a version-line reason, do not soften the
    check: keep the check as written, add `"skip": "<the missing capability>"`,
    and say so here. That is different from a check whose *premise* is wrong for
