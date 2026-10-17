@@ -1,23 +1,19 @@
 package me.towdium.jecharacters.uitest.input;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import me.towdium.jecharacters.mixin.uitest.KeyMappingAccessor;
 import me.towdium.jecharacters.mixin.uitest.KeyboardHandlerAccessor;
 import me.towdium.jecharacters.mixin.uitest.MouseHandlerAccessor;
 import me.towdium.jecharacters.uitest.api.CameraFrame;
 import me.towdium.jecharacters.uitest.api.PlayerInput;
+import me.towdium.jecharacters.uitest.platform.InputPlatform;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
-import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.KeyboardHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHandler;
 import net.minecraft.client.Options;
-import net.minecraft.client.input.CharacterEvent;
-import net.minecraft.client.input.KeyEvent;
-import net.minecraft.client.input.MouseButtonInfo;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.util.Mth;
 import org.jspecify.annotations.Nullable;
@@ -105,17 +101,17 @@ final class WorldPlayerInput implements PlayerInput {
             logger.warn(
                 "[uitest] bind {} carries no pressable key (bound to {}); the press cannot go "
                     + "through the real path",
-                mapping.getName(), keyOf(mapping)
+                mapping.getName(), input().keyOf(mapping)
             );
             return;
         }
-        int[] modifiers = modifierKeysOf(mapping);
+        int[] modifiers = input().modifierKeysOf(mapping);
         int mask = modifierMaskOf(modifiers);
         for (int modifier : modifiers) {
             holdKey(modifier);
         }
         try {
-            if (InputConstants.Type.MOUSE == keyOf(mapping).getType()) {
+            if (InputConstants.Type.MOUSE == input().keyOf(mapping).getType()) {
                 mouseDown(key);
                 mouseUp(key);
             } else {
@@ -135,13 +131,13 @@ final class WorldPlayerInput implements PlayerInput {
         if (key < 0) {
             logger.warn(
                 "[uitest] bind {} carries no pressable key (bound to {}); holding its own state instead",
-                mapping.getName(), keyOf(mapping)
+                mapping.getName(), input().keyOf(mapping)
             );
             directBinds.add(mapping);
             mapping.setDown(true);
             return;
         }
-        if (InputConstants.Type.MOUSE == keyOf(mapping).getType()) {
+        if (InputConstants.Type.MOUSE == input().keyOf(mapping).getType()) {
             heldBinds.put(mapping, key);
             mouseDown(key);
             return;
@@ -161,7 +157,7 @@ final class WorldPlayerInput implements PlayerInput {
         if (key == null) {
             return;
         }
-        if (InputConstants.Type.MOUSE == keyOf(mapping).getType()) {
+        if (InputConstants.Type.MOUSE == input().keyOf(mapping).getType()) {
             mouseUp(key);
         } else {
             releaseKey(key);
@@ -184,7 +180,7 @@ final class WorldPlayerInput implements PlayerInput {
         long window = window();
         text.codePoints().forEach(codePoint -> {
             if (Keys.isPrintable(codePoint)) {
-                RawInputGate.runSynthetic(() -> keyboard().invokeCharTyped(window, new CharacterEvent(codePoint)));
+                RawInputGate.runSynthetic(() -> input().typeChar(keyboard(), window, codePoint));
             }
         });
     }
@@ -195,8 +191,9 @@ final class WorldPlayerInput implements PlayerInput {
         long window = window();
         int scanCode = Keys.scanCodeOf(glfwKey);
         boolean pressed = action == GLFW.GLFW_PRESS;
-        KeyEvent event = new KeyEvent(glfwKey, scanCode, modifiers);
-        RawInputGate.runSynthetic(() -> keyboard().invokeKeyPress(window, action, event));
+        RawInputGate.runSynthetic(
+            () -> input().pressKey(keyboard(), window, glfwKey, scanCode, action, modifiers)
+        );
         if (pressed) {
             heldKeys.add(glfwKey);
             driver.markKeyHeld(glfwKey);
@@ -207,7 +204,7 @@ final class WorldPlayerInput implements PlayerInput {
     }
 
     private static int pressableKeyOf(KeyMapping mapping) {
-        InputConstants.Key key = keyOf(mapping);
+        InputConstants.Key key = input().keyOf(mapping);
         if (key.getType() == InputConstants.Type.KEYSYM && key.getValue() != InputConstants.UNKNOWN.getValue()) {
             return key.getValue();
         }
@@ -215,14 +212,6 @@ final class WorldPlayerInput implements PlayerInput {
             return key.getValue();
         }
         return -1;
-    }
-
-    private static InputConstants.Key keyOf(KeyMapping mapping) {
-        return KeyMappingHelper.getBoundKeyOf(mapping);
-    }
-
-    private static int[] modifierKeysOf(KeyMapping mapping) {
-        return new int[0];
     }
 
     private static int modifierMaskOf(int[] keys) {
@@ -250,7 +239,7 @@ final class WorldPlayerInput implements PlayerInput {
         LocalPlayer player = requirePlayer();
         requireWorldLook();
         MouseHandlerAccessor mouse = mouse();
-        int invert = Minecraft.getInstance().options.invertMouseY().get() ? -1 : 1;
+        int invert = input().invertYMouse() ? -1 : 1;
         double scale = turnScale() * entityTurnScale;
         double pitch = clampPitch(player, dPitch);
         mouse.setAccumulatedDx(mouse.getAccumulatedDx() + (dYaw / scale));
@@ -322,7 +311,7 @@ final class WorldPlayerInput implements PlayerInput {
     }
 
     private double sweepClock() {
-        return clientTick + Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(true);
+        return clientTick + input().partialTick();
     }
 
     @Override
@@ -349,8 +338,7 @@ final class WorldPlayerInput implements PlayerInput {
         if (player == null) {
             return;
         }
-        float partialTick = minecraft.getDeltaTracker().getGameTimeDeltaPartialTick(true);
-        var camera = minecraft.gameRenderer.getMainCamera();
+        float partialTick = input().partialTick();
         cameraTrace.add(
             new CameraFrame(
                 System.nanoTime(),
@@ -360,8 +348,8 @@ final class WorldPlayerInput implements PlayerInput {
                 player.getXRot(),
                 Mth.lerp(partialTick, player.yRotO, player.getYRot()),
                 Mth.lerp(partialTick, player.xRotO, player.getXRot()),
-                camera.yRot(),
-                camera.xRot()
+                input().cameraYaw(),
+                input().cameraPitch()
             )
         );
     }
@@ -373,11 +361,7 @@ final class WorldPlayerInput implements PlayerInput {
     }
 
     private static double turnScale() {
-        Options options = Minecraft.getInstance().options;
-        if (options.smoothCamera) {
-            throw new IllegalStateException("the cinematic camera is on; an exact scripted turn needs it off");
-        }
-        double base = options.sensitivity().get() * 0.6 + 0.2;
+        double base = input().turnSensitivity();
         double cubed = base * base * base;
         LocalPlayer player = Minecraft.getInstance().player;
         if (player != null && Minecraft.getInstance().options.getCameraType().isFirstPerson() && player.isScoping()) {
@@ -418,7 +402,7 @@ final class WorldPlayerInput implements PlayerInput {
         requirePlayer();
         requireWorldLook();
         long window = window();
-        RawInputGate.runSynthetic(() -> mouse().invokeOnButton(window, new MouseButtonInfo(button, 0), GLFW.GLFW_PRESS));
+        RawInputGate.runSynthetic(() -> input().pressMouse(mouse(), window, button, GLFW.GLFW_PRESS));
     }
 
     @Override
@@ -426,9 +410,7 @@ final class WorldPlayerInput implements PlayerInput {
         requirePlayer();
         requireWorldLook();
         long window = window();
-        RawInputGate.runSynthetic(
-            () -> mouse().invokeOnButton(window, new MouseButtonInfo(button, 0), GLFW.GLFW_RELEASE)
-        );
+        RawInputGate.runSynthetic(() -> input().pressMouse(mouse(), window, button, GLFW.GLFW_RELEASE));
     }
 
     @Override
@@ -513,6 +495,10 @@ final class WorldPlayerInput implements PlayerInput {
         PlayerEmbodiment.takeLook();
     }
 
+    private static InputPlatform input() {
+        return InputPlatform.current();
+    }
+
     private static MouseHandlerAccessor mouse() {
         MouseHandler handler = Minecraft.getInstance().mouseHandler;
         if (!(handler instanceof MouseHandlerAccessor accessor)) {
@@ -530,6 +516,6 @@ final class WorldPlayerInput implements PlayerInput {
     }
 
     private static long window() {
-        return Minecraft.getInstance().getWindow().handle();
+        return input().window();
     }
 }
