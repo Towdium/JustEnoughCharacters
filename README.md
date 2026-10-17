@@ -147,8 +147,8 @@ schema error rather than a run that quietly launches nothing
   is that a run's cost ends with the run.
 * **`daemon_java` is the JDK that runs Gradle** in a `gradle` row, not the
   client's: the client's JDK comes from the checkout's own toolchain. Set it only
-  when the wrapper cannot run on the machine's default JDK (Gradle 8.13 cannot
-  run on Java 25); `null`/absent keeps the ambient `JAVA_HOME`. The lookup is the
+  when the wrapper cannot run on the machine's default JDK; `null`/absent keeps
+  the ambient `JAVA_HOME`. The lookup is the
   same `/usr/libexec/java_home` one the client's per-env JDK uses, and the answer
   is verified against the JDK's own `release` file. A standalone harness row has
   no such key: its Gradle starts on the env's `java` version.
@@ -366,9 +366,8 @@ What the three client-running workflows (`1.21.1`, `moderner`,
 * Provision the JDKs the branch needs and pin `JT_JAVA_<N>_HOME`, because off
   macOS the harness resolves a per-env JDK from `JT_JAVA_<major>_HOME` and then
   `JAVA_HOME`, re-checking the answer against the JDK's own `release` file:
-  `1.21.1` → 21 (its Gradle 8.13 cannot run on 25), `moderner` → 21 (the 1.21.10
-  toolchain and the world-seed server) and then 25 (Gradle 9.5, and the 26.1.2
-  client), `multiple-version` → 17 (Gradle 8.1.1 supports neither 21 nor 25).
+  `1.21.1` → 21, `moderner` → 21 (the 1.21.10 toolchain and the world-seed
+  server) and then 25 (the 26.1.2 client), `multiple-version` → 17.
 * Cache `JT_HOME/cache`, the Gradle User Home, and — on the NeoForge branches —
   ModDevGradle's `caches/neoformruntime/intermediate_results` separately, keyed
   by the Minecraft/loader inputs rather than by the branch's sources.
