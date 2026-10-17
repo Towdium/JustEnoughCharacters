@@ -21,6 +21,8 @@ java {
 }
 
 sourceSets.main.java.srcDir '../../engine/legacy/src/main/java'
+sourceSets.main.java.srcDir '../../engine/legacy/groups/mc-1.16.5/src/main/java'
+sourceSets.main.java.srcDir '../../engine/legacy/groups/forge/src/main/java'
 
 def jechJarProp = providers.gradleProperty('jechJar')
 def jeiJarProp = providers.gradleProperty('jeiJar')
