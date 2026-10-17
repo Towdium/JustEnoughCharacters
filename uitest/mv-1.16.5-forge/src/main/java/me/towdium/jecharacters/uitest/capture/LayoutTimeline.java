@@ -52,7 +52,13 @@ public final class LayoutTimeline implements Timeline {
         object.addProperty("blob", blob);
         String line = gson.toJson(object) + System.lineSeparator();
         try {
-            Files.write(file, line.getBytes(StandardCharsets.UTF_8));
+            Files.write(
+                file,
+                line.getBytes(StandardCharsets.UTF_8),
+                StandardOpenOption.CREATE,
+                StandardOpenOption.WRITE,
+                StandardOpenOption.APPEND
+            );
         } catch (IOException e) {
             logger.warn("[uitest] timeline {} could not take a record: {}", file, e.toString());
         }
