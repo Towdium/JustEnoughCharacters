@@ -1,51 +1,44 @@
 package me.towdium.jecharacters.uitest.capture;
 
-import com.mojang.blaze3d.pipeline.RenderTarget;
-import com.mojang.blaze3d.platform.NativeImage;
-import com.mojang.blaze3d.platform.Window;
 import net.minecraft.client.Minecraft;
-import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.function.Consumer;
 
 public final class FrameCapture implements AutoCloseable {
 
     private static final int uniformSampleSteps = 32;
 
-    private final NativeImage image;
+    private final Object image;
     private final int guiWidth;
     private final int guiHeight;
 
-    private FrameCapture(NativeImage image, int guiWidth, int guiHeight) {
+    FrameCapture(Object image, int guiWidth, int guiHeight) {
         this.image = image;
         this.guiWidth = guiWidth;
         this.guiHeight = guiHeight;
     }
 
-    public static @Nullable FrameCapture grab() {
+    public static boolean request(Consumer<FrameCapture> consumer) {
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft == null) {
-            return null;
+            return false;
         }
-        RenderTarget target = minecraft.getMainRenderTarget();
-        if (target == null) {
-            return null;
-        }
-        return grab(target);
+        return CapturePlatform.current().request(
+            minecraft.getMainRenderTarget(),
+            image -> consumer.accept(
+                new FrameCapture(
+                    image,
+                    minecraft.getWindow().getGuiScaledWidth(),
+                    minecraft.getWindow().getGuiScaledHeight()
+                )
+            )
+        );
     }
 
-    public static @Nullable FrameCapture grab(RenderTarget target) {
-        NativeImage image = SurfaceCapture.grab(target);
-        if (image == null) {
-            return null;
-        }
-        Window window = Minecraft.getInstance().getWindow();
-        return new FrameCapture(image, window.getGuiScaledWidth(), window.getGuiScaledHeight());
-    }
-
-    public NativeImage image() {
+    public Object image() {
         return image;
     }
 
@@ -57,18 +50,19 @@ public final class FrameCapture implements AutoCloseable {
         return guiHeight;
     }
 
-    public static boolean isUniform(NativeImage image) {
-        int width = image.getWidth();
-        int height = image.getHeight();
+    public static boolean isUniform(Object image) {
+        CapturePlatform platform = CapturePlatform.current();
+        int width = platform.imageWidth(image);
+        int height = platform.imageHeight(image);
         if (width < 2 || height < 2) {
             return false;
         }
         int stepX = Math.max(1, width / uniformSampleSteps);
         int stepY = Math.max(1, height / uniformSampleSteps);
-        int reference = image.getPixelRGBA(0, 0);
+        int reference = platform.pixel(image, 0, 0);
         for (int y = 0; y < height; y += stepY) {
             for (int x = 0; x < width; x += stepX) {
-                if (image.getPixelRGBA(x, y) != reference) {
+                if (platform.pixel(image, x, y) != reference) {
                     return false;
                 }
             }
@@ -93,17 +87,17 @@ public final class FrameCapture implements AutoCloseable {
         return true;
     }
 
-    public static boolean write(NativeImage image, Path path) throws IOException {
+    public static boolean write(Object image, Path path) throws IOException {
         Path parent = path.getParent();
         if (parent != null) {
             Files.createDirectories(parent);
         }
-        image.writeToFile(path);
+        CapturePlatform.current().writeImage(image, path);
         return isUniform(image);
     }
 
     @Override
     public void close() {
-        image.close();
+        CapturePlatform.current().closeImage(image);
     }
 }

@@ -1,19 +1,18 @@
 package me.towdium.jecharacters.uitest.capture;
 
-import com.mojang.blaze3d.platform.NativeImage;
 import me.towdium.jecharacters.uitest.api.CapturePipeline;
 import me.towdium.jecharacters.uitest.api.CaptureSink;
 import me.towdium.jecharacters.uitest.api.Timeline;
-import org.jspecify.annotations.Nullable;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.function.Supplier;
-import java.nio.file.Paths;
 
 public final class FrameCapturePipeline implements CapturePipeline {
 
@@ -24,6 +23,8 @@ public final class FrameCapturePipeline implements CapturePipeline {
     private final Path outDir;
     private final Deque<CaptureRequest> pending = new ArrayDeque<>();
     private @Nullable CaptureSink sink;
+
+    private int inFlight;
 
     public FrameCapturePipeline() {
         this(Paths.get("jech-uitest"));
@@ -63,7 +64,7 @@ public final class FrameCapturePipeline implements CapturePipeline {
 
     @Override
     public boolean isEmpty() {
-        return pending.isEmpty();
+        return pending.isEmpty() && inFlight == 0;
     }
 
     @Override
@@ -85,43 +86,56 @@ public final class FrameCapturePipeline implements CapturePipeline {
             serviceSurface(request);
             return;
         }
-        try (FrameCapture frame = FrameCapture.grab()) {
-            if (frame == null) {
-                logger.warn("[uitest] capture {} / {} skipped: no render target", request.scenario(), request.label());
-                return;
-            }
-            write(request, frame.image());
-        } catch (IOException | RuntimeException e) {
-            logger.warn("[uitest] capture {} / {} failed: {}", request.scenario(), request.label(), e.toString());
+        if (!requestFrame(request, null)) {
+            logger.warn("[uitest] capture {} / {} skipped: no render target", request.scenario(), request.label());
         }
     }
 
     private void serviceSurface(CaptureRequest request) {
         Supplier<?> supplier = request.surface();
         Object surface = supplier == null ? null : supplier.get();
-        NativeImage image = null;
+        if (!requestFrame(request, surface)) {
+            logger.warn(
+                "[uitest] surface capture {} / {} skipped: {} has no readable surface",
+                request.scenario(),
+                request.label(),
+                surface == null ? "the supplier yielded nothing" : surface.getClass().getName()
+            );
+        }
+    }
+
+    private boolean requestFrame(CaptureRequest request, @Nullable Object surface) {
+        inFlight++;
+        boolean requested = surface == null
+                ? FrameCapture.request(frame -> delivered(request, frame.image()))
+                : SurfaceCapture.request(surface, image -> delivered(request, image));
+        if (!requested) {
+            inFlight--;
+        }
+        return requested;
+    }
+
+    private void delivered(CaptureRequest request, Object image) {
         try {
-            image = SurfaceCapture.grab(surface);
-            if (image == null) {
-                logger.warn(
-                    "[uitest] surface capture {} / {} skipped: {} has no readable surface",
-                    request.scenario(),
-                    request.label(),
-                    surface == null ? "the supplier yielded nothing" : surface.getClass().getName()
-                );
-                return;
-            }
             write(request, image);
         } catch (IOException | RuntimeException e) {
-            logger.warn("[uitest] surface capture {} / {} failed: {}", request.scenario(), request.label(), e);
+            logger.warn("[uitest] capture {} / {} failed: {}", request.scenario(), request.label(), e.toString());
         } finally {
-            if (image != null) {
-                image.close();
+            inFlight--;
+            try {
+                CapturePlatform.current().closeImage(image);
+            } catch (Exception e) {
+                logger.warn(
+                    "[uitest] capture {} / {} image could not be released",
+                    request.scenario(),
+                    request.label(),
+                    e
+                );
             }
         }
     }
 
-    private void write(CaptureRequest request, NativeImage image) throws IOException {
+    private void write(CaptureRequest request, Object image) throws IOException {
         String relative = relativePath(request);
         boolean suspect = FrameCapture.write(image, outDir.resolve(relative));
         if (suspect) {
@@ -148,9 +162,8 @@ public final class FrameCapturePipeline implements CapturePipeline {
                 return "SEQUENCE";
             case full:
                 return "FULL";
-            default:
-                throw new IllegalArgumentException("unknown kind " + kind);
         }
+        throw new IllegalStateException("unreachable capture kind " + kind);
     }
 
     private static String relativePath(CaptureRequest request) {

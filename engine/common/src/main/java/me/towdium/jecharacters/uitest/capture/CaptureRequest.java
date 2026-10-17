@@ -13,12 +13,7 @@ public final class CaptureRequest {
     @Nullable
     private final Supplier<?> surface;
 
-    public CaptureRequest(
-        Kind kind,
-        String scenario,
-        String label,
-        int stepIndex,
-        @Nullable Supplier<?> surface) {
+    public CaptureRequest(Kind kind, String scenario, String label, int stepIndex, @Nullable Supplier<?> surface) {
         this.kind = kind;
         this.scenario = scenario;
         this.label = label;
@@ -42,6 +37,7 @@ public final class CaptureRequest {
         return stepIndex;
     }
 
+    @Nullable
     public Supplier<?> surface() {
         return surface;
     }
