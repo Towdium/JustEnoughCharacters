@@ -1,18 +1,14 @@
 package me.towdium.jecharacters.uitest.input;
 
-import com.mojang.blaze3d.platform.InputConstants;
-import me.towdium.jecharacters.mixin.uitest.MouseHandlerAccessor;
 import me.towdium.jecharacters.uitest.api.InputDriver;
 import me.towdium.jecharacters.uitest.api.PlayerInput;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.MouseHandler;
-import net.minecraft.client.gui.screens.Screen;
-import org.lwjgl.glfw.GLFW;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.lwjgl.glfw.GLFW;
 
 public class SyntheticInputDriver extends InputDriver implements KeyState.Source, CursorState.Source {
 
@@ -96,51 +92,68 @@ public class SyntheticInputDriver extends InputDriver implements KeyState.Source
     }
 
     @Override
-    public void moveTo(Screen screen, float x, float y) {
+    public void moveTo(Object screen, float x, float y) {
         placeCursor(x, y);
-        screen.mouseMoved(x, y);
+        ScreenInput.current().mouseMoved(screen, x, y);
     }
 
     @Override
-    public void mouseDown(Screen screen, float x, float y, int button) {
+    public void mouseDown(Object screen, float x, float y, int button) {
         placeCursor(x, y);
-        screen.mouseClicked(x, y, button);
+        ScreenInput.current().mouseClicked(screen, x, y, button, heldModifiers());
     }
 
     @Override
-    public void mouseUp(Screen screen, float x, float y, int button) {
+    public void mouseUp(Object screen, float x, float y, int button) {
         placeCursor(x, y);
-        screen.mouseReleased(x, y, button);
+        ScreenInput.current().mouseReleased(screen, x, y, button, heldModifiers());
     }
 
     @Override
-    public void dragTo(Screen screen, float x, float y, int button, float deltaX, float deltaY) {
+    public void mouseDownThroughHandler(Object screen, float x, float y, int button) {
         placeCursor(x, y);
-        screen.mouseMoved(x, y);
-        screen.mouseDragged(x, y, button, deltaX, deltaY);
+        ScreenInput.current().clickThroughHandler(x, y, button, GLFW.GLFW_PRESS);
     }
 
     @Override
-    public void scroll(Screen screen, float x, float y, double amount) {
+    public void mouseUpThroughHandler(Object screen, float x, float y, int button) {
         placeCursor(x, y);
-        screen.mouseScrolled(x, y, amount);
+        ScreenInput.current().clickThroughHandler(x, y, button, GLFW.GLFW_RELEASE);
     }
 
     @Override
-    public void keyDown(Screen screen, int keyCode, int scanCode, int modifiers) {
+    public void dragTo(Object screen, float x, float y, int button, float deltaX, float deltaY) {
+        placeCursor(x, y);
+        ScreenInput input = ScreenInput.current();
+        input.mouseMoved(screen, x, y);
+        input.mouseDragged(screen, x, y, button, heldModifiers(), deltaX, deltaY);
+    }
+
+    @Override
+    public void scroll(Object screen, float x, float y, double amount) {
+        placeCursor(x, y);
+        ScreenInput.current().mouseScrolled(screen, x, y, amount);
+    }
+
+    @Override
+    public void keyDown(Object screen, int keyCode, int scanCode, int modifiers) {
         heldKeys.add(keyCode);
-        screen.keyPressed(keyCode, effectiveScanCode(keyCode, scanCode), modifiers | heldModifiers());
+        ScreenInput.current().keyPressed(
+            screen, keyCode, effectiveScanCode(keyCode, scanCode), modifiers | heldModifiers()
+        );
     }
 
     @Override
-    public void keyUp(Screen screen, int keyCode, int scanCode, int modifiers) {
-        screen.keyReleased(keyCode, effectiveScanCode(keyCode, scanCode), modifiers | heldModifiers());
+    public void keyUp(Object screen, int keyCode, int scanCode, int modifiers) {
+        ScreenInput.current().keyReleased(
+            screen, keyCode, effectiveScanCode(keyCode, scanCode), modifiers | heldModifiers()
+        );
         heldKeys.remove(keyCode);
     }
 
     @Override
-    public void charTyped(Screen screen, int codePoint, int modifiers) {
-        screen.charTyped((char) codePoint, modifiers);
+    public void charTyped(Object screen, int codePoint, int modifiers) {
+        ScreenInput.current().charTyped(screen, codePoint, modifiers);
     }
 
     @Override
@@ -154,9 +167,10 @@ public class SyntheticInputDriver extends InputDriver implements KeyState.Source
     }
 
     protected void refreshHover() {
-        Screen screen = Minecraft.getInstance().screen;
+        ScreenInput input = ScreenInput.current();
+        Object screen = input.currentScreen();
         if (screen != null) {
-            screen.mouseMoved(pointerX, pointerY);
+            input.mouseMoved(screen, pointerX, pointerY);
         }
     }
 
@@ -174,21 +188,13 @@ public class SyntheticInputDriver extends InputDriver implements KeyState.Source
     }
 
     protected void dropMouseGrabWithoutWarping() {
-        Minecraft minecraft = Minecraft.getInstance();
-        MouseHandler mouseHandler = minecraft.mouseHandler;
-        if (mouseHandler == null || !mouseHandler.isMouseGrabbed()) {
+        Object handler = Minecraft.getInstance().mouseHandler;
+        ScreenInput input = ScreenInput.current();
+        if (handler == null || !input.mouseGrabbed(handler)) {
             return;
         }
-        if (!(mouseHandler instanceof MouseHandlerAccessor)) {
+        if (!input.releaseMouseGrab(handler)) {
             logger.warn("[uitest] MouseHandlerAccessor is not applied; the mouse grab stays in place");
-            return;
         }
-        MouseHandlerAccessor accessor = (MouseHandlerAccessor) mouseHandler;
-        long window = minecraft.getWindow().getWindow();
-        double[] cursorXOut = new double[1];
-        double[] cursorYOut = new double[1];
-        GLFW.glfwGetCursorPos(window, cursorXOut, cursorYOut);
-        accessor.setMouseGrabbed(false);
-        InputConstants.grabOrReleaseMouse(window, GLFW.GLFW_CURSOR_NORMAL, cursorXOut[0], cursorYOut[0]);
     }
 }
