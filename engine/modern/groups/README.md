@@ -8,3 +8,11 @@ moderner-neoforge → moderner-1.21.10-neoforge, moderner-26.1.2-neoforge
 pre-26.1.2 → 1.21.1-fabric, 1.21.1-neoforge, moderner-1.21.10-fabric, moderner-1.21.10-neoforge
 fabric-pre-26.1.2 → 1.21.1-fabric, moderner-1.21.10-fabric
 neoforge-or-mc-26.1.2 → 1.21.1-neoforge, moderner-1.21.10-neoforge, moderner-26.1.2-fabric, moderner-26.1.2-neoforge
+mixin-moderner → moderner-1.21.10-fabric, moderner-1.21.10-neoforge, moderner-26.1.2-fabric, moderner-26.1.2-neoforge
+mixin-neoforge-or-mc-26.1.2 → 1.21.1-neoforge, moderner-1.21.10-neoforge, moderner-26.1.2-fabric, moderner-26.1.2-neoforge
+mixin-pre-26.1.2 → 1.21.1-fabric, 1.21.1-neoforge, moderner-1.21.10-fabric, moderner-1.21.10-neoforge
+mixin-fabric → 1.21.1-fabric, moderner-1.21.10-fabric, moderner-26.1.2-fabric
+mixin-moderner-neoforge-or-mc-26.1.2 → moderner-1.21.10-neoforge, moderner-26.1.2-fabric, moderner-26.1.2-neoforge
+mixin-fabric-pre-26.1.2 → 1.21.1-fabric, moderner-1.21.10-fabric
+mixin-mc-1.21.1 → 1.21.1-fabric, 1.21.1-neoforge
+mixin-mc-26.1.2 → moderner-26.1.2-fabric, moderner-26.1.2-neoforge
