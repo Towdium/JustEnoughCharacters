@@ -1,0 +1,27 @@
+{
+  "name": "jei-pinyin-search",
+  "group": "jei",
+  "tags": ["jei"],
+  "requiresWorld": true,
+  "scenarioTimeoutMs": 120000,
+  "steps": [
+    {"do": "log", "text": "jei-pinyin-search: open the inventory so JEI's ingredient overlay is up (the harness's throwaway level is creative, so the inventory bind opens the creative inventory)"},
+    {"do": "press_bind", "bind": "inventory"},
+    {"do": "wait_until_screen", "screen": "CreativeModeInventoryScreen"},
+    {"do": "wait_ms", "ms": 500},
+    {"do": "log", "text": "jei-pinyin-search: focus JEI's search bar. Fabric presses its key directly: JEI's own key mappings read key.keyboard.unknown at runtime on this loader (measured 2026-10-14 in both KeyMapping.ALL and Options.keyMappings, while options.txt carries the defaults), so press_bind has nothing to press, and JEI's focus key needs no modifier here either (options.txt holds a plain key.keyboard.f, with none of NeoForge's ':CONTROL' encoding)"},
+    {"do": "press_key", "key": "f"},
+    {"do": "wait_ms", "ms": 300},
+    {"do": "log", "text": "jei-pinyin-search: 1.21.11's client drops the first character typed after JEI's search bar takes focus (measured 2026-10-18: a bare 'ab' leaves 'b'), so spend that one on a throwaway and clear the bar"},
+    {"do": "type_text", "text": "x"},
+    {"do": "wait_ms", "ms": 200},
+    {"do": "press_key", "key": "backspace", "times": 24},
+    {"do": "wait_ms", "ms": 200},
+    {"do": "log", "text": "jei-pinyin-search: type the pinyin of 石头 (shi tou) one character at a time"},
+    {"do": "type_text", "text": "shitou"},
+    {"do": "assert_match_recorded", "candidate_contains": "石", "expect": true, "within_ms": 4000},
+    {"do": "screenshot", "label": "filtered"},
+    {"do": "close_screen"},
+    {"do": "wait_until_screen", "screen": null}
+  ]
+}

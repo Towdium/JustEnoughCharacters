@@ -1,0 +1,22 @@
+{
+  "name": "jei-pinyin-search",
+  "group": "jei",
+  "tags": ["jei"],
+  "requiresWorld": true,
+  "scenarioTimeoutMs": 120000,
+  "steps": [
+    {"do": "log", "text": "jei-pinyin-search: open the inventory so JEI's ingredient overlay is up (the harness's throwaway level is creative, so the inventory bind opens the creative inventory)"},
+    {"do": "press_bind", "bind": "inventory"},
+    {"do": "wait_until_screen", "screen": "CreativeModeInventoryScreen"},
+    {"do": "wait_ms", "ms": 500},
+    {"do": "log", "text": "jei-pinyin-search: focus JEI's search bar through JEI's own bind (Ctrl+F by default)"},
+    {"do": "press_bind", "bind": "key.jei.focusSearch"},
+    {"do": "wait_ms", "ms": 300},
+    {"do": "log", "text": "jei-pinyin-search: type the pinyin of 石头 (shi tou) one character at a time"},
+    {"do": "type_text", "text": "shitou"},
+    {"do": "assert_match_recorded", "candidate_contains": "石", "expect": true, "within_ms": 4000},
+    {"do": "screenshot", "label": "filtered"},
+    {"do": "close_screen"},
+    {"do": "wait_until_screen", "screen": null}
+  ]
+}

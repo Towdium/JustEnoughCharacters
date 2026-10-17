@@ -452,7 +452,7 @@ Two things to know before dispatching:
 
 ## Env matrix
 
-16 envs: every (version line, loader) pair, all tagged `smoke`. Every one of them
+18 envs: every (version line, loader) pair, all tagged `smoke`. Every one of them
 runs its own standalone harness build under `uitest/`, which the env's `uitest`
 block names. The `experimental` rows have
 doubtful upstream version pins, `legacy` marks the 1.12.2 JEI row, and any env
@@ -463,6 +463,7 @@ the check families and the resolution rules are in
 | version line | mc | neoforge | fabric | forge |
 | --- | --- | --- | --- | --- |
 | `moderner` | 1.21.10 | `21.10.64` | `0.19.2` | — |
+| `moderner` | 1.21.11 | `21.11.48` | `0.20.0` | — |
 | `moderner` | 26.1.2 | `26.1.2.59-beta` | `0.19.2` | — |
 | `1211` | 1.21.1 | `21.1.215` | `0.16.14` | — |
 | `mv` | 1.20.1 | — | `0.16.14` (see envs README) | `47.0.35` |

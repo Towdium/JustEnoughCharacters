@@ -1,0 +1,72 @@
+{
+  "_comment": "moderner line, MC 1.21.11. Loader/jei versions mirror moderner/neoforge-1.21.11/gradle.properties. Runs the standalone in-client UI test harness (uitest/moderner-1.21.11-neoforge, an independent Gradle build in this repository) through the three-stage pipeline config->build->test: jt resolves and pins, builds/reuses the JECh jar from the moderner checkout's neoforge-1.21.11 module and compiles the harness build, then launches that build's runClientTests with the jars under test as -PjechJar/-PjeiJar. The client drives its own scenarios and writes report.json, its captures and junit.xml before it quits itself. The row declares no ready_when (stopping this client early would kill it mid-scenario and leave no report), no world (the level asserted against is the one the harness's runner creates and pins itself, so the JEI plugin marker still arrives), and no gradle block (the harness build is the launch layer). jech and jei both carry via=dev-classpath: the standalone build loads every jar itself - the JECh jar and the pinned JEI jar ride the run's source-set runtime classpath (localRuntime) - so there is nothing for jt to stage, and a staged copy would double-load.",
+  "name": "moderner-1.21.11-neoforge",
+  "tags": [
+    "moderner",
+    "neoforge",
+    "smoke"
+  ],
+  "mc": "1.21.11",
+  "loader": {
+    "type": "neoforge",
+    "version": "21.11.48"
+  },
+  "java": {
+    "version": 21
+  },
+  "uitest": {
+    "selection": "tag:smoke,tag:jei",
+    "project": "uitest/moderner-1.21.11-neoforge"
+  },
+  "jech": {
+    "source": "local-build",
+    "project": "moderner",
+    "path": "neoforge-1.21.11/build/libs/jecharacters-1.21.11-neoforge-*.jar",
+    "expectModId": "jecharacters",
+    "via": "dev-classpath"
+  },
+  "mods": [
+    {
+      "name": "jei",
+      "source": "curseforge",
+      "slug": "jei",
+      "via": "dev-classpath",
+      "describe": {
+        "version": "27.48.0.106"
+      },
+      "pin": {
+        "fileId": 9144082,
+        "filename": "jei-1.21.11-neoforge-27.48.0.106.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/9144/82/jei-1.21.11-neoforge-27.48.0.106.jar",
+        "sha1": "7b4ba559af877d249153bb7fde8b5cf4d2d145ce",
+        "size": 2386340
+      }
+    }
+  ],
+  "checks": [
+    {
+      "type": "log_contains",
+      "value": "Registering JEI pinyin search storage",
+      "name": "jei-storage-registered"
+    },
+    {
+      "type": "log_not_contains",
+      "value": "Could not find targets.json. JechTransformer will not be loaded.",
+      "name": "transformer-loaded"
+    },
+    {
+      "type": "uitest_report",
+      "name": "uitest-report"
+    },
+    {
+      "type": "no_crash_reports",
+      "name": "no-crash-reports"
+    },
+    {
+      "type": "exit_code_zero",
+      "name": "exit-code"
+    }
+  ],
+  "world": null,
+  "timeout_sec": 600
+}

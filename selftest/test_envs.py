@@ -16,7 +16,7 @@ from . import support
 class EnvParsingTest(unittest.TestCase):
     def test_every_shipped_env_is_schema_valid(self):
         loaded = envs.load_all()
-        self.assertGreaterEqual(len(loaded), 16, "the documented env matrix must ship")
+        self.assertGreaterEqual(len(loaded), 18, "the documented env matrix must ship")
         names = [env.name for env in loaded]
         self.assertEqual(len(names), len(set(names)), "env names must be unique")
         self.assertNotIn("example", names, "the schema example is replaced by the real matrix")
@@ -270,6 +270,8 @@ class EnvParsingTest(unittest.TestCase):
             "1.21.1-fabric": "tag:smoke,tag:jei",
             "moderner-1.21.10-fabric": "tag:smoke,tag:jei",
             "moderner-1.21.10-neoforge": "tag:smoke,tag:jei",
+            "moderner-1.21.11-fabric": "tag:smoke,tag:jei",
+            "moderner-1.21.11-neoforge": "tag:smoke,tag:jei",
             "moderner-26.1.2-neoforge": "tag:smoke,tag:jei",
             "moderner-26.1.2-fabric": "tag:smoke,tag:jei",
             "mv-1.16.5-fabric": "tag:smoke",
@@ -288,6 +290,8 @@ class EnvParsingTest(unittest.TestCase):
             "1.21.1-fabric": "uitest/1.21.1-fabric",
             "moderner-1.21.10-neoforge": "uitest/moderner-1.21.10-neoforge",
             "moderner-1.21.10-fabric": "uitest/moderner-1.21.10-fabric",
+            "moderner-1.21.11-neoforge": "uitest/moderner-1.21.11-neoforge",
+            "moderner-1.21.11-fabric": "uitest/moderner-1.21.11-fabric",
             "moderner-26.1.2-neoforge": "uitest/moderner-26.1.2-neoforge",
             "moderner-26.1.2-fabric": "uitest/moderner-26.1.2-fabric",
             "mv-1.16.5-fabric": "uitest/mv-1.16.5-fabric",
@@ -711,6 +715,8 @@ class ViaTest(unittest.TestCase):
             "1.21.1-fabric": "uitest/1.21.1-fabric",
             "moderner-1.21.10-neoforge": "uitest/moderner-1.21.10-neoforge",
             "moderner-1.21.10-fabric": "uitest/moderner-1.21.10-fabric",
+            "moderner-1.21.11-neoforge": "uitest/moderner-1.21.11-neoforge",
+            "moderner-1.21.11-fabric": "uitest/moderner-1.21.11-fabric",
             "moderner-26.1.2-neoforge": "uitest/moderner-26.1.2-neoforge",
             "moderner-26.1.2-fabric": "uitest/moderner-26.1.2-fabric",
             "mv-1.16.5-fabric": "uitest/mv-1.16.5-fabric",
@@ -784,6 +790,8 @@ class ViaTest(unittest.TestCase):
         standalone = {
             "moderner-1.21.10-neoforge": "uitest/moderner-1.21.10-neoforge",
             "moderner-1.21.10-fabric": "uitest/moderner-1.21.10-fabric",
+            "moderner-1.21.11-neoforge": "uitest/moderner-1.21.11-neoforge",
+            "moderner-1.21.11-fabric": "uitest/moderner-1.21.11-fabric",
             "moderner-26.1.2-neoforge": "uitest/moderner-26.1.2-neoforge",
             "moderner-26.1.2-fabric": "uitest/moderner-26.1.2-fabric",
         }
@@ -792,6 +800,7 @@ class ViaTest(unittest.TestCase):
             self.assertIsNone(env.gradle, f"{name} carries its own launch layer")
             self.assertEqual(env.uitest.project, project, name)
         for name in ("moderner-1.21.10-neoforge", "moderner-1.21.10-fabric",
+                     "moderner-1.21.11-neoforge", "moderner-1.21.11-fabric",
                      "moderner-26.1.2-neoforge", "moderner-26.1.2-fabric"):
             env = loaded[name]
             self.assertEqual(env.jech.via, "dev-classpath", name)

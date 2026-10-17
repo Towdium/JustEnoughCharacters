@@ -1,0 +1,102 @@
+{
+  "_comment": "moderner line, MC 1.21.11, fabric (the moderner checkout's fabric-1.21.11 module). Loader/jei versions mirror moderner/fabric-1.21.11/gradle.properties. Runs the standalone in-client UI test harness (uitest/moderner-1.21.11-fabric, an independent loom build in this repository) through the three-stage pipeline config->build->test: jt resolves and pins, builds/reuses the JECh jar from the moderner checkout's fabric-1.21.11 module and compiles the harness build, then launches that build's runClient with the jars under test as -PjechJar/-PjeiJar. The client drives its own scenarios and writes report.json, its captures and junit.xml before it quits itself. The row declares no ready_when (stopping this client early would kill it mid-scenario and leave no report), no world (the level asserted against is the one the harness's runner creates and pins itself, so the JEI plugin marker still arrives), and no gradle block (the harness build is the launch layer). jech, jei and fabric-api all carry via=dev-classpath: the harness build stages the two jars under test into the run's mods/ folder itself and takes fabric-api as its own remapped Gradle dependency at exactly the pinned version. uitest.options pins key_key.jei.focusSearch to the plain f key: JEI 27.x registers the bind with a CONTROL_OR_COMMAND modifier, and without the Amecs mod fabric's builder turns that into an unbound (key.keyboard.unknown) mapping, so the scenarios' bare-f focus press would find nothing to press (measured 2026-10-18 in the run's own options.txt dump). The version line is 1.21.11's own dataVersion, so the legacy options fixer chain stays off and the key_ line loads cleanly (the trap lib/options.py documents).",
+  "name": "moderner-1.21.11-fabric",
+  "tags": [
+    "moderner",
+    "fabric",
+    "smoke"
+  ],
+  "mc": "1.21.11",
+  "loader": {
+    "type": "fabric",
+    "version": "0.20.0"
+  },
+  "java": {
+    "version": 21
+  },
+  "uitest": {
+    "selection": "tag:smoke,tag:jei",
+    "project": "uitest/moderner-1.21.11-fabric",
+    "options": {
+      "version": "4671",
+      "key_key.jei.focusSearch": "key.keyboard.f"
+    }
+  },
+  "jech": {
+    "source": "local-build",
+    "project": "moderner",
+    "path": "fabric-1.21.11/build/libs/jecharacters-1.21.11-fabric-*.jar",
+    "expectModId": "jecharacters",
+    "via": "dev-classpath"
+  },
+  "mods": [
+    {
+      "name": "jei",
+      "source": "curseforge",
+      "slug": "jei",
+      "via": "dev-classpath",
+      "describe": {
+        "version": "27.48.0.106"
+      },
+      "pin": {
+        "fileId": 9144081,
+        "filename": "jei-1.21.11-fabric-27.48.0.106.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/9144/81/jei-1.21.11-fabric-27.48.0.106.jar",
+        "sha1": "64d19fcf2899a3042c701ba1ca15f2a63268c262",
+        "size": 2419982
+      }
+    },
+    {
+      "name": "fabric-api",
+      "source": "curseforge",
+      "slug": "fabric-api",
+      "via": "dev-classpath",
+      "describe": {
+        "version": "0.141.6+1.21.11"
+      },
+      "pin": {
+        "fileId": 8525513,
+        "filename": "fabric-api-0.141.6+1.21.11.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/8525/513/fabric-api-0.141.6%2b1.21.11.jar",
+        "sha1": "c98467cbbaf4d197377266795ae015f4130d65b6",
+        "size": 2426039
+      }
+    }
+  ],
+  "checks": [
+    {
+      "type": "log_contains",
+      "value": "Registering JEI pinyin search storage",
+      "name": "jei-storage-registered"
+    },
+    {
+      "type": "log_not_contains",
+      "value": "Could not find targets.json. JechTransformer will not be loaded.",
+      "name": "transformer-loaded"
+    },
+    {
+      "type": "log_not_contains",
+      "value": "Can't create config file!",
+      "name": "config-writable"
+    },
+    {
+      "type": "file_exists",
+      "value": "config/jecharacters.json",
+      "name": "config-generated"
+    },
+    {
+      "type": "uitest_report",
+      "name": "uitest-report"
+    },
+    {
+      "type": "no_crash_reports",
+      "name": "no-crash-reports"
+    },
+    {
+      "type": "exit_code_zero",
+      "name": "exit-code"
+    }
+  ],
+  "world": null,
+  "timeout_sec": 600
+}

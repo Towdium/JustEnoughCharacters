@@ -594,7 +594,7 @@ they were skipped because no path booted a 1.12.2 client on this arm64 machine,
 and the checkout now boots one itself and runs the harness on it ("The 1.12.2
 rows and the gradle launch"). Their checks were never weakened while they were
 skipped, so nothing had to be restored but the launch. With the four forge rows
-back, that list is empty: `jt envs` prints no `skip:` line for any of the 16 envs,
+back, that list is empty: `jt envs` prints no `skip:` line for any of the 18 envs,
 and every row is executed when it is selected.
 
 The `mv-1.19.2-forge` skip was re-measured on
@@ -994,7 +994,7 @@ and says so in the report.
 
 ## The shipped matrix
 
-16 envs, one per (version line, loader) pair. Tags: the version line
+18 envs, one per (version line, loader) pair. Tags: the version line
 (`moderner`, `1211`, `mv`, `112`), the loader, and `smoke` on all of them;
 `experimental` marks the rows whose upstream version pins are doubtful, and
 `legacy` marks the 1.12.2 JEI row.
@@ -1003,6 +1003,8 @@ and says so in the report.
 | --- | --- | --- | --- | --- |
 | `moderner-1.21.10-neoforge` | 1.21.10 / neoforge 21.10.64 | 21 | `moderner` | jei 26.3.0.31 |
 | `moderner-1.21.10-fabric` | 1.21.10 / fabric 0.19.2 | 21 | `moderner` (fabric-legacy) | jei 26.3.0.31, fabric-api 0.138.3+1.21.10 |
+| `moderner-1.21.11-neoforge` | 1.21.11 / neoforge 21.11.48 | 21 | `moderner` (neoforge-1.21.11) | jei 27.48.0.106 |
+| `moderner-1.21.11-fabric` | 1.21.11 / fabric 0.20.0 | 21 | `moderner` (fabric-1.21.11) | jei 27.48.0.106, fabric-api 0.141.6+1.21.11 |
 | `moderner-26.1.2-neoforge` | 26.1.2 / neoforge 26.1.2.59-beta | 25 | `moderner` (neoforge-unobfuscated) | jei 29.16.0.46 |
 | `moderner-26.1.2-fabric` | 26.1.2 / fabric 0.19.2 | 25 | `moderner` (fabric-unobfuscated) | jei 29.16.0.46, fabric-api 0.146.1+26.1.2 |
 | `1.21.1-neoforge` | 1.21.1 / neoforge 21.1.215 | 21 | `1.21.1` | jei 19.37.0.362 |
@@ -1026,7 +1028,7 @@ quits itself when the selection is done. What differs is what each row claims:
 
 | env | runs? | world | why |
 | --- | --- | --- | --- |
-| `1.21.1-neoforge`, `moderner-1.21.10` ×2 | yes | none — `uitest` | these rows run their own harness build, which stands up and pins its own flat level, and are judged by the harness's own report |
+| `1.21.1-neoforge`, `moderner-1.21.10` ×2, `moderner-1.21.11` ×2 | yes | none — `uitest` | these rows run their own harness build, which stands up and pins its own flat level, and are judged by the harness's own report |
 | `1.12.2` ×2 | yes | none — `uitest` | same shape in `uitest/1.12.2-forge`: it creates its own flat creative level, and the rows are judged by its report ("The 1.12.2 rows and the gradle launch") |
 | `1.21.1-fabric`, `moderner-26.1.2` ×2, `mv-1.20.1-fabric` | yes | none — `uitest` | the JEI plugin marker needs a loaded level, and the harness's runner creates it (these rows used a quick-play join until they moved; measured 2026-10-14) |
 | `mv-1.19.2-forge` | yes | none — `uitest` | the same marker, and quick play offers no join before 1.20 (re-measured 2026-10-14); its harness build creates a level itself (`WorldOpenFlows.createFreshLevel`) |
