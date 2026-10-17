@@ -1,13 +1,14 @@
 package me.towdium.jecharacters.uitest.api;
 
+import me.towdium.jecharacters.uitest.input.Keys;
 import me.towdium.jecharacters.uitest.match.MatchFilter;
 import me.towdium.jecharacters.uitest.match.MatchRecorder;
+import me.towdium.jecharacters.uitest.platform.ClientPlatform;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
 import net.minecraft.client.gui.screens.Screen;
 import org.jspecify.annotations.Nullable;
-import org.lwjgl.glfw.GLFW;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -156,7 +157,7 @@ public final class ScenarioBuilder {
     // region screens
 
     public ScenarioBuilder openScreen(Supplier<Screen> screen) {
-        add(StepKind.openScreen, "openScreen", context -> context.minecraft().setScreen(screen.get()));
+        add(StepKind.openScreen, "openScreen", context -> ClientPlatform.current().setScreen(screen.get()));
         return this;
     }
 
@@ -170,7 +171,7 @@ public final class ScenarioBuilder {
     }
 
     public ScenarioBuilder closeScreen() {
-        add(StepKind.closeScreen, "closeScreen", context -> context.minecraft().setScreen(null));
+        add(StepKind.closeScreen, "closeScreen", context -> ClientPlatform.current().setScreen(null));
         return this;
     }
 
@@ -194,9 +195,9 @@ public final class ScenarioBuilder {
     }
 
     public ScenarioBuilder shiftClick(double x, double y) {
-        keyDown(GLFW.GLFW_KEY_LEFT_SHIFT);
+        keyDown(Keys.leftShift);
         clickAt(x, y, 0);
-        keyUp(GLFW.GLFW_KEY_LEFT_SHIFT);
+        keyUp(Keys.leftShift);
         return this;
     }
 
@@ -241,10 +242,11 @@ public final class ScenarioBuilder {
     }
 
     public ScenarioBuilder keyDown(int keyCode) {
+        int key = Keys.translate(keyCode);
         add(
             StepKind.keyDown,
-            "keyDown " + keyName(keyCode),
-            context -> context.driver().keyDown(context.screenOrThrow(), keyCode, scanCodeOf(keyCode), 0)
+            "keyDown " + keyName(key),
+            context -> context.driver().keyDown(context.screenOrThrow(), key, Keys.scanCodeOf(key), 0)
         );
         return this;
     }
@@ -252,7 +254,7 @@ public final class ScenarioBuilder {
     public ScenarioBuilder keyUp(int keyCode) {
         add(
             StepKind.keyUp,
-            "keyUp " + keyName(keyCode),
+            "keyUp " + keyName(Keys.translate(keyCode)),
             context -> releaseKey(context, keyCode)
         );
         return this;
@@ -265,9 +267,9 @@ public final class ScenarioBuilder {
     public ScenarioBuilder type(String text, int modifiers) {
         text.codePoints().forEach(codePoint -> {
             if (codePoint == '\n') {
-                key(GLFW.GLFW_KEY_ENTER, modifiers);
+                key(Keys.enter, modifiers);
             } else if (codePoint == '\t') {
-                key(GLFW.GLFW_KEY_TAB, modifiers);
+                key(Keys.tab, modifiers);
             } else {
                 add(
                     StepKind.type,
@@ -280,8 +282,8 @@ public final class ScenarioBuilder {
     }
 
     public ScenarioBuilder typeInto(String text) {
-        key(GLFW.GLFW_KEY_A, GLFW.GLFW_MOD_CONTROL);
-        key(GLFW.GLFW_KEY_BACKSPACE, 0);
+        key(Keys.a, Keys.controlMask);
+        key(Keys.backspace, 0);
         type(text);
         return this;
     }
@@ -290,13 +292,17 @@ public final class ScenarioBuilder {
 
     // region in-world player input
 
-    public ScenarioBuilder pressKey(int glfwKey) {
+    public ScenarioBuilder pressKey(int key) {
         embody();
-        add(StepKind.embodyKey, "pressKey " + keyName(glfwKey), context -> context.playerInput().pressKey(glfwKey));
+        add(
+            StepKind.embodyKey,
+            "pressKey " + keyName(Keys.translate(key)),
+            context -> context.playerInput().pressKey(Keys.translate(key))
+        );
         return this;
     }
 
-    public ScenarioBuilder pressKey(int glfwKey, int modifiers) {
+    public ScenarioBuilder pressKey(int key, int modifiers) {
         embody();
         int[] modifierKeys = modifierKeysOf(modifiers);
         for (int modifier : modifierKeys) {
@@ -304,8 +310,8 @@ public final class ScenarioBuilder {
         }
         add(
             StepKind.embodyKey,
-            "pressKey " + keyName(glfwKey) + (modifierKeys.length == 0 ? "" : " + " + modifiers),
-            context -> context.playerInput().pressKey(glfwKey, modifiers)
+            "pressKey " + keyName(Keys.translate(key)) + (modifierKeys.length == 0 ? "" : " + " + modifiers),
+            context -> context.playerInput().pressKey(Keys.translate(key), modifiers)
         );
         for (int i = modifierKeys.length - 1; i >= 0; i--) {
             releaseKey(modifierKeys[i]);
@@ -313,15 +319,23 @@ public final class ScenarioBuilder {
         return this;
     }
 
-    public ScenarioBuilder holdKey(int glfwKey) {
+    public ScenarioBuilder holdKey(int key) {
         embody();
-        add(StepKind.embodyKey, "holdKey " + keyName(glfwKey), context -> context.playerInput().holdKey(glfwKey));
+        add(
+            StepKind.embodyKey,
+            "holdKey " + keyName(Keys.translate(key)),
+            context -> context.playerInput().holdKey(Keys.translate(key))
+        );
         return this;
     }
 
-    public ScenarioBuilder releaseKey(int glfwKey) {
+    public ScenarioBuilder releaseKey(int key) {
         embody();
-        add(StepKind.embodyKey, "releaseKey " + keyName(glfwKey), context -> context.playerInput().releaseKey(glfwKey));
+        add(
+            StepKind.embodyKey,
+            "releaseKey " + keyName(Keys.translate(key)),
+            context -> context.playerInput().releaseKey(Keys.translate(key))
+        );
         return this;
     }
 
@@ -623,16 +637,17 @@ public final class ScenarioBuilder {
     }
 
     private static void releaseKey(TestContext context, int keyCode) {
+        int key = Keys.translate(keyCode);
         Screen screen = context.screen();
         if (screen != null) {
-            context.driver().keyUp(screen, keyCode, scanCodeOf(keyCode), 0);
+            context.driver().keyUp(screen, key, Keys.scanCodeOf(key), 0);
             return;
         }
         if (Minecraft.getInstance().player == null) {
-            context.log("keyUp " + keyName(keyCode) + ": no screen and no player, so nothing received it");
+            context.log("keyUp " + keyName(key) + ": no screen and no player, so nothing received it");
             return;
         }
-        context.playerInput().releaseKey(keyCode);
+        context.playerInput().releaseKey(key);
     }
 
     private static void dispatchDrag(TestContext context, float x, float y) {
@@ -645,10 +660,10 @@ public final class ScenarioBuilder {
 
     private static int[] modifierKeysOf(int modifiers) {
         List<Integer> keys = new ArrayList<>();
-        if ((modifiers & GLFW.GLFW_MOD_SHIFT) != 0) keys.add(GLFW.GLFW_KEY_LEFT_SHIFT);
-        if ((modifiers & GLFW.GLFW_MOD_CONTROL) != 0) keys.add(GLFW.GLFW_KEY_LEFT_CONTROL);
-        if ((modifiers & GLFW.GLFW_MOD_ALT) != 0) keys.add(GLFW.GLFW_KEY_LEFT_ALT);
-        if ((modifiers & GLFW.GLFW_MOD_SUPER) != 0) keys.add(GLFW.GLFW_KEY_LEFT_SUPER);
+        if ((modifiers & Keys.shiftMask) != 0) keys.add(Keys.leftShift);
+        if ((modifiers & Keys.controlMask) != 0) keys.add(Keys.leftControl);
+        if ((modifiers & Keys.altMask) != 0) keys.add(Keys.leftAlt);
+        if ((modifiers & Keys.superMask) != 0) keys.add(Keys.leftSuper);
         int[] result = new int[keys.size()];
         for (int i = 0; i < result.length; i++) {
             result[i] = keys.get(i);
@@ -656,13 +671,8 @@ public final class ScenarioBuilder {
         return result;
     }
 
-    private static int scanCodeOf(int keyCode) {
-        return GLFW.glfwGetKeyScancode(keyCode);
-    }
-
-    private static String keyName(int keyCode) {
-        String name = GLFW.glfwGetKeyName(keyCode, 0);
-        return name == null ? Integer.toString(keyCode) : name;
+    private static String keyName(int clientKey) {
+        return Keys.name(clientKey);
     }
 
     // endregion

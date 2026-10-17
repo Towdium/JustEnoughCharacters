@@ -5,6 +5,7 @@ import me.towdium.jecharacters.mixin.uitest.KeyboardHandlerAccessor;
 import me.towdium.jecharacters.mixin.uitest.MouseHandlerAccessor;
 import me.towdium.jecharacters.uitest.api.CameraFrame;
 import me.towdium.jecharacters.uitest.api.PlayerInput;
+import me.towdium.jecharacters.uitest.platform.ClientPlatform;
 import me.towdium.jecharacters.uitest.platform.InputPlatform;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
@@ -17,7 +18,6 @@ import net.minecraft.client.Options;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.util.Mth;
 import org.jspecify.annotations.Nullable;
-import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,18 +64,18 @@ final class WorldPlayerInput implements PlayerInput {
 
     @Override
     public void pressKey(int glfwKey, int modifiers) {
-        key(glfwKey, GLFW.GLFW_PRESS, modifiers);
-        key(glfwKey, GLFW.GLFW_RELEASE, modifiers);
+        key(glfwKey, Keys.press, modifiers);
+        key(glfwKey, Keys.release, modifiers);
     }
 
     @Override
     public void holdKey(int glfwKey) {
-        key(glfwKey, GLFW.GLFW_PRESS, 0);
+        key(glfwKey, Keys.press, 0);
     }
 
     @Override
     public void releaseKey(int glfwKey) {
-        key(glfwKey, GLFW.GLFW_RELEASE, 0);
+        key(glfwKey, Keys.release, 0);
     }
 
     @Override
@@ -171,7 +171,7 @@ final class WorldPlayerInput implements PlayerInput {
         ensureActive();
         long window = window();
         int scanCode = Keys.scanCodeOf(glfwKey);
-        boolean pressed = action == GLFW.GLFW_PRESS;
+        boolean pressed = action == Keys.press;
         RawInputGate.runSynthetic(
             () -> input().pressKey(keyboard(), window, glfwKey, scanCode, action, modifiers)
         );
@@ -186,10 +186,10 @@ final class WorldPlayerInput implements PlayerInput {
 
     private static int pressableKeyOf(KeyMapping mapping) {
         InputConstants.Key key = input().keyOf(mapping);
-        if (key.getType() == InputConstants.Type.KEYSYM && key.getValue() != InputConstants.UNKNOWN.getValue()) {
+        if (key.getType() == InputConstants.Type.MOUSE) {
             return key.getValue();
         }
-        if (key.getType() == InputConstants.Type.MOUSE) {
+        if (key.getName().startsWith("key.keyboard.") && key.getValue() != InputConstants.UNKNOWN.getValue()) {
             return key.getValue();
         }
         return -1;
@@ -277,14 +277,14 @@ final class WorldPlayerInput implements PlayerInput {
         requirePlayer();
         requireWorldLook();
         long window = window();
-        RawInputGate.runSynthetic(() -> input().pressMouse(mouse(), window, button, GLFW.GLFW_PRESS));
+        RawInputGate.runSynthetic(() -> input().pressMouse(mouse(), window, button, Keys.press));
     }
 
     private void mouseUp(int button) {
         requirePlayer();
         requireWorldLook();
         long window = window();
-        RawInputGate.runSynthetic(() -> input().pressMouse(mouse(), window, button, GLFW.GLFW_RELEASE));
+        RawInputGate.runSynthetic(() -> input().pressMouse(mouse(), window, button, Keys.release));
     }
 
     // endregion
@@ -299,7 +299,7 @@ final class WorldPlayerInput implements PlayerInput {
         heldKeys.clear();
         if (Minecraft.getInstance().player != null) {
             for (int key : held) {
-                key(key, GLFW.GLFW_RELEASE, 0);
+                key(key, Keys.release, 0);
             }
         }
         for (KeyMapping mapping : directBinds) {
@@ -352,10 +352,10 @@ final class WorldPlayerInput implements PlayerInput {
     }
 
     private void requireWorldLook() {
-        if (Minecraft.getInstance().screen != null) {
+        if (ClientPlatform.current().screen() != null) {
             throw new IllegalStateException(
                 "the embodied player input needs the world, but "
-                        + Minecraft.getInstance().screen.getClass().getSimpleName() + " is open"
+                        + ClientPlatform.current().screen().getClass().getSimpleName() + " is open"
             );
         }
         ensureActive();

@@ -2,10 +2,11 @@ package me.towdium.jecharacters.uitest;
 
 import me.towdium.jecharacters.uitest.api.ClientScenario;
 import me.towdium.jecharacters.uitest.api.ScenarioBuilder;
+import me.towdium.jecharacters.uitest.input.Keys;
+import me.towdium.jecharacters.uitest.platform.ClientPlatform;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.world.phys.Vec3;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.Locale;
 
@@ -44,9 +45,9 @@ public final class SmokeScenario {
                 .type("jech smoke")
                 .screenshot("chat")
                 .checkCaptured("chat")
-                .keyDown(GLFW.GLFW_KEY_ESCAPE)
-                .waitUntil("the chat screen closes", () -> Minecraft.getInstance().screen == null)
-                .check("no screen is open after escape", () -> Minecraft.getInstance().screen == null)
+                .keyDown(Keys.escape)
+                .waitUntil("the chat screen closes", () -> ClientPlatform.current().screen() == null)
+                .check("no screen is open after escape", () -> ClientPlatform.current().screen() == null)
                 // endregion
                 // region the in-world hold, asserted on the player's own position
                 .action("record the position before the walk", context -> {
@@ -75,7 +76,7 @@ public final class SmokeScenario {
                     )
                 )
                 // endregion
-                .teardown(() -> Minecraft.getInstance().setScreen(null));
+                .teardown(() -> ClientPlatform.current().setScreen(null));
     }
 
     private static double horizontal(double[] from, double[] to) {

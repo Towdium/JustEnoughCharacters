@@ -1,12 +1,11 @@
 package me.towdium.jecharacters.uitest.datadriven;
 
 import me.towdium.jecharacters.mixin.uitest.KeyMappingAccessor;
+import me.towdium.jecharacters.uitest.input.Keys;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Options;
 import net.minecraft.client.gui.screens.Screen;
-import org.lwjgl.glfw.GLFW;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -17,25 +16,11 @@ final class JsonTargets {
 
     private JsonTargets() {}
 
-    static int glfwKey(String name) {
-        String bare = name.trim();
-        if (bare.startsWith("key.keyboard.")) {
-            bare = bare.substring("key.keyboard.".length());
-        }
-        String constant = "GLFW_KEY_" + bare.toUpperCase(Locale.ROOT).replace('.', '_').replace('-', '_');
+    static int key(String name) {
         try {
-            Field field = GLFW.class.getField(constant);
-            Object value = field.get(null);
-            if (value instanceof Integer code && code != GLFW.GLFW_KEY_UNKNOWN) {
-                return code;
-            }
-            throw new ScenarioJsonException("key '" + name + "' resolves to GLFW_KEY_UNKNOWN");
-        } catch (NoSuchFieldException e) {
-            throw new ScenarioJsonException(
-                "key '" + name + "' is not a GLFW key name (expected e.g. 'f', 'escape', 'left_control')", e
-            );
-        } catch (IllegalAccessException e) {
-            throw new ScenarioJsonException("key '" + name + "' could not be read", e);
+            return Keys.key(name);
+        } catch (IllegalArgumentException e) {
+            throw new ScenarioJsonException(e.getMessage(), e);
         }
     }
 
@@ -43,10 +28,10 @@ final class JsonTargets {
         int mask = 0;
         for (String name : names) {
             mask |= switch (name.trim().toUpperCase(Locale.ROOT)) {
-                case "CTRL", "CONTROL" -> GLFW.GLFW_MOD_CONTROL;
-                case "SHIFT" -> GLFW.GLFW_MOD_SHIFT;
-                case "ALT" -> GLFW.GLFW_MOD_ALT;
-                case "SUPER", "META", "CMD", "COMMAND" -> GLFW.GLFW_MOD_SUPER;
+                case "CTRL", "CONTROL" -> Keys.controlMask;
+                case "SHIFT" -> Keys.shiftMask;
+                case "ALT" -> Keys.altMask;
+                case "SUPER", "META", "CMD", "COMMAND" -> Keys.superMask;
                 default -> throw new ScenarioJsonException(
                     "modifier '" + name + "' is not one of ctrl, shift, alt, super"
                 );

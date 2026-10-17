@@ -1,5 +1,6 @@
 package me.towdium.jecharacters.uitest.api;
 
+import me.towdium.jecharacters.uitest.platform.ClientPlatform;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import org.jspecify.annotations.Nullable;
@@ -159,11 +160,11 @@ public final class TestContext {
     }
 
     public @Nullable Screen screen() {
-        return minecraft.screen;
+        return (Screen) ClientPlatform.current().screen();
     }
 
     public Screen screenOrThrow() {
-        Screen screen = minecraft.screen;
+        Screen screen = (Screen) ClientPlatform.current().screen();
         if (screen == null) {
             throw new IllegalStateException("no screen is open");
         }

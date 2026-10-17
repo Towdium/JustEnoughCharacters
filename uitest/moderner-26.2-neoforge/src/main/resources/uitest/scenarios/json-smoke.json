@@ -1,0 +1,17 @@
+{
+  "name": "json-smoke",
+  "group": "smoke",
+  "tags": ["smoke"],
+  "requiresWorld": true,
+  "timeoutMs": 10000,
+  "steps": [
+    {"do": "log", "text": "json-smoke: the JSON layer's copy of the smoke scenario's chat half"},
+    {"do": "open_chat"},
+    {"do": "wait_until_screen", "screen": "ChatScreen"},
+    {"do": "type", "text": "jech smoke"},
+    {"do": "screenshot", "label": "chat"},
+    {"do": "key", "key": "escape"},
+    {"do": "wait_until_screen", "screen": null},
+    {"do": "log", "text": "json-smoke: the chat opened by the real chat bind, was typed into and closed"}
+  ]
+}

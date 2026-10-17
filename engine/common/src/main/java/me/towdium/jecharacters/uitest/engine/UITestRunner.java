@@ -27,7 +27,6 @@ import net.minecraft.server.MinecraftServer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jspecify.annotations.Nullable;
-import org.lwjgl.glfw.GLFW;
 
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
@@ -214,11 +213,11 @@ public final class UITestRunner {
 
     public void onFrame() {
         lastFrameAt = now();
-        if (minecraft.getOverlay() == null) {
+        if (ClientPlatform.current().overlay() == null) {
             driver.playerInput().pumpFrame();
         }
         if (inStep) return;
-        if (minecraft.getOverlay() != null) return;
+        if (ClientPlatform.current().overlay() != null) return;
         inStep = true;
         try {
             pump();
@@ -266,7 +265,7 @@ public final class UITestRunner {
 
     private void waitGameReady() {
         ClientPlatform client = ClientPlatform.current();
-        Object screen = minecraft.screen;
+        Object screen = client.screen();
         if (client.skipOnboarding(screen)) {
             return;
         }
@@ -404,7 +403,7 @@ public final class UITestRunner {
             fatal("pinning world rules failed: " + describe(failure));
             return;
         }
-        minecraft.setScreen(null);
+        ClientPlatform.current().setScreen(null);
         enter(Phase.nextScenario);
         settle(worldReadySettleMs);
     }
@@ -494,7 +493,7 @@ public final class UITestRunner {
         switch (state.step) {
             case 0: {
                 log.info("session: leaving {}", worldName);
-                minecraft.setScreen(null);
+                ClientPlatform.current().setScreen(null);
                 Object level = minecraft.level;
                 if (level != null) {
                     ClientPlatform.current().disconnectLevel(level);
@@ -534,7 +533,7 @@ public final class UITestRunner {
                     MinecraftServer server = minecraft.getSingleplayerServer();
                     if (server == null) return false;
                     serverContext = new ServerContext(server);
-                    minecraft.setScreen(null);
+                    ClientPlatform.current().setScreen(null);
                     log.info("session: rejoined {}", worldName);
                     return true;
                 }
@@ -597,11 +596,11 @@ public final class UITestRunner {
         if (minecraft.player != null) {
             minecraft.player.closeContainer();
         }
-        minecraft.setScreen(null);
+        ClientPlatform.current().setScreen(null);
         MatchRecorder.clear();
         ScenarioOptions options = queued.options();
         ClientPlatform.current().setGuiScale(options.guiScale(config.guiScale()));
-        minecraft.options.hideGui = options.hideGui();
+        ClientPlatform.current().setHideGui(options.hideGui());
         ClientPlatform.current().resizeDisplay();
 
         ScenarioBuilder builder = new ScenarioBuilder();
@@ -754,11 +753,10 @@ public final class UITestRunner {
 
     private void pinClientOptions() {
         ClientPlatform client = ClientPlatform.current();
-        long handle = client.windowHandle(minecraft.getWindow());
         if (config.headless()) {
-            GLFW.glfwHideWindow(handle);
+            client.hideWindow();
         }
-        GLFW.glfwSetWindowSize(handle, config.windowWidthOrDefault(), config.windowHeightOrDefault());
+        client.resizeWindow(config.windowWidthOrDefault(), config.windowHeightOrDefault());
         client.setGuiScale(config.guiScale());
         minecraft.options.pauseOnLostFocus = false;
         client.setRenderDistance(4);
@@ -878,8 +876,8 @@ public final class UITestRunner {
             config.guiScale(),
             client.windowWidth(minecraft.getWindow()),
             client.windowHeight(minecraft.getWindow()),
-            minecraft.getMainRenderTarget().width,
-            minecraft.getMainRenderTarget().height,
+            client.renderTargetWidth(),
+            client.renderTargetHeight(),
             config.inputMode().name().toUpperCase(Locale.ROOT),
             config.headless()
         );

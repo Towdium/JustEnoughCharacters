@@ -8,7 +8,6 @@ import it.unimi.dsi.fastutil.ints.IntSet;
 import net.minecraft.client.Minecraft;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.lwjgl.glfw.GLFW;
 
 public class SyntheticInputDriver extends InputDriver implements KeyState.Source, CursorState.Source {
 
@@ -112,13 +111,13 @@ public class SyntheticInputDriver extends InputDriver implements KeyState.Source
     @Override
     public void mouseDownThroughHandler(Object screen, float x, float y, int button) {
         placeCursor(x, y);
-        ScreenInput.current().clickThroughHandler(x, y, button, GLFW.GLFW_PRESS);
+        ScreenInput.current().clickThroughHandler(x, y, button, Keys.press);
     }
 
     @Override
     public void mouseUpThroughHandler(Object screen, float x, float y, int button) {
         placeCursor(x, y);
-        ScreenInput.current().clickThroughHandler(x, y, button, GLFW.GLFW_RELEASE);
+        ScreenInput.current().clickThroughHandler(x, y, button, Keys.release);
     }
 
     @Override

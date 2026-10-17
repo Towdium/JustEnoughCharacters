@@ -1,0 +1,229 @@
+
+plugins {
+    id 'net.fabricmc.fabric-loom' version '1.17-SNAPSHOT'
+    id 'java-library'
+    id 'idea'
+}
+
+version = mod_version
+group = 'me.towdium.jecharacters.uitest'
+
+def jechUiTestRunDir = project.findProperty('jechRunDir')?.toString()
+def jechUiTestOutDir = jechUiTestRunDir == null
+        ? new File(projectDir, 'runs/client-tests-fabric')
+        : new File(jechUiTestRunDir, 'uitest')
+def jechUiTestSelection = project.findProperty('jechTest')?.toString()
+def jechUiTestExclude = project.findProperty('jechTestExclude')?.toString() ?: ''
+def jechUiTestGuiScale = project.findProperty('jechTestGuiScale')?.toString()
+def jechUiTestWindow = project.findProperty('jechTestWindow')?.toString()
+def jechUiTestInputMode = project.findProperty('jechTestInputMode')?.toString()
+def jechUiTestWatchdogSec = project.findProperty('jechTestWatchdogSec')?.toString()
+def jechUiTestKeepOpen = project.hasProperty('jechTestKeepOpen')
+def jechUiTestHeadless = project.hasProperty('jechTestHeadless')
+
+if (jechUiTestHeadless && jechUiTestInputMode != null && jechUiTestInputMode.equalsIgnoreCase('REAL')) {
+    throw new GradleException(
+        '-PjechTestHeadless cannot be combined with -PjechTestInputMode=REAL: the real input driver '
+            + 'moves the OS cursor and needs a visible, focused window'
+    )
+}
+
+def jechUiTestWindowWidth = null
+def jechUiTestWindowHeight = null
+if (jechUiTestWindow != null) {
+    def parts = jechUiTestWindow.toLowerCase().split('x')
+    if (parts.length == 2) {
+        jechUiTestWindowWidth = parts[0].trim()
+        jechUiTestWindowHeight = parts[1].trim()
+    }
+}
+
+def requireJar = { String name ->
+    def prop = providers.gradleProperty(name)
+    providers.provider {
+        if (!prop.isPresent()) {
+            return []
+        }
+        def file = new File(prop.get())
+        if (!file.isFile()) {
+            throw new GradleException("the ${name} project property names no file: ${file}")
+        }
+        return file
+    }
+}
+def jechJarFile = requireJar('jechJar')
+def jeiJarFile = requireJar('jeiJar')
+
+base {
+    archivesName = 'jechtest-' + minecraft_version + '-fabric'
+}
+
+repositories {
+    maven { url = 'https://jitpack.io' }
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${minecraft_version}"
+    implementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
+    implementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
+
+    compileOnly files(jechJarFile)
+    runtimeOnly files(jechJarFile)
+    runtimeOnly files(jeiJarFile)
+    compileOnly "com.github.towdium:PinIn:${verpinin}"
+    compileOnly 'org.jspecify:jspecify:1.0.1'
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_25
+    targetCompatibility = JavaVersion.VERSION_25
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
+
+sourceSets.main.java.srcDir '../../engine/common/src/main/java'
+sourceSets.main.java.srcDir '../../engine/modern/src/main/java'
+sourceSets.main.java.srcDir '../../engine/modern/groups/mc-26.3/src/main/java'
+sourceSets.main.java.srcDir '../../engine/modern/groups/fabric/src/main/java'
+sourceSets.main.java.srcDir '../../engine/modern/groups/moderner/src/main/java'
+sourceSets.main.java.srcDir '../../engine/modern/groups/neoforge-or-mc-26.1.2/src/main/java'
+sourceSets.main.java.srcDir '../../engine/modern/groups/mixin-moderner/src/main/java'
+sourceSets.main.java.srcDir '../../engine/modern/groups/mixin-neoforge-or-mc-26.1.2/src/main/java'
+sourceSets.main.java.srcDir '../../engine/modern/groups/mixin-fabric/src/main/java'
+sourceSets.main.java.srcDir '../../engine/modern/groups/mixin-moderner-neoforge-or-mc-26.1.2/src/main/java'
+sourceSets.main.java.srcDir '../../engine/modern/groups/mixin-mc-26.1.2/src/main/java'
+sourceSets.main.java.srcDir '../../engine/modern/groups/mixin-mc-26.2-plus/src/main/java'
+sourceSets.main.java.srcDir '../../engine/modern/groups/mixin-mc-26.3/src/main/java'
+sourceSets.main.java.exclude 'me/towdium/jecharacters/mixin/uitest/MinecraftMixin.java'
+
+tasks.withType(JavaCompile).configureEach {
+    it.options.release = 25
+    options.encoding = 'UTF-8'
+}
+
+processResources {
+    inputs.property "version", project.version
+    filesMatching("fabric.mod.json") {
+        expand "version": project.version
+    }
+}
+
+loom {
+    runs {
+        client {
+            if (jechUiTestRunDir != null) {
+                runDir project.relativePath(new File(jechUiTestRunDir))
+            } else if (jechUiTestSelection != null) {
+                runDir project.relativePath(jechUiTestOutDir)
+            }
+            if (jechUiTestSelection != null) {
+                property 'jech.uitest.run', jechUiTestSelection
+                property 'jech.uitest.out', jechUiTestOutDir.absolutePath
+                property 'jech.uitest.exclude', jechUiTestExclude
+                if (jechUiTestGuiScale != null) property 'jech.uitest.guiScale', jechUiTestGuiScale
+                if (jechUiTestWindowWidth != null) property 'jech.uitest.windowWidth', jechUiTestWindowWidth
+                if (jechUiTestWindowHeight != null) property 'jech.uitest.windowHeight', jechUiTestWindowHeight
+                if (jechUiTestInputMode != null) property 'jech.uitest.inputMode', jechUiTestInputMode
+                if (jechUiTestWatchdogSec != null) property 'jech.uitest.watchdogSec', jechUiTestWatchdogSec
+                if (jechUiTestKeepOpen) property 'jech.uitest.keepOpen', 'true'
+            }
+            if (jechUiTestHeadless) property 'jech.uitest.headless', 'true'
+        }
+    }
+}
+
+def jechUiTestCleanReport = tasks.register('jechCleanUiTestReport', Delete) {
+    group = 'verification'
+    description = 'Deletes the previous JECh UI test run output.'
+    if (jechUiTestRunDir == null) {
+        delete providers.provider {
+            def children = jechUiTestOutDir.listFiles()
+            children == null ? [] : children.findAll { it.name != 'jech-scenarios' }
+        }
+    } else {
+        delete jechUiTestOutDir
+    }
+}
+
+def jechUiTestPresetOptions = tasks.register('jechPresetUiTestOptions') {
+    group = 'verification'
+    description = 'Writes the options.txt a bare harness run needs into the harness game directory.'
+    onlyIf { jechUiTestSelection != null && jechUiTestRunDir == null }
+    dependsOn jechUiTestCleanReport
+    def outDir = jechUiTestOutDir
+    def presetText = 'onboardAccessibility:true\nlang:zh_cn\n'
+    inputs.property('jechUiTestOptions', presetText)
+    outputs.file(new File(outDir, 'options.txt'))
+    doLast {
+        def preset = new File(outDir, 'options.txt')
+        preset.parentFile.mkdirs()
+        preset.text = presetText
+        logger.lifecycle("jechtest-uitest: preset ${preset} (${preset.text.trim().replace('\n', ', ')})")
+    }
+}
+
+def jechUiTestVerify = tasks.register('verifyJechUiTest') {
+    group = 'verification'
+    description = 'Reads the UI test report and fails the build unless every scenario passed.'
+    onlyIf { jechUiTestSelection != null }
+    doLast {
+        def report = new File(jechUiTestOutDir, 'report.json')
+        if (!report.isFile()) {
+            throw new GradleException(
+                "no UI test report at ${report} - the client crashed, never reached the runner, "
+                    + 'or -PjechTest matched no scenarios'
+            )
+        }
+        def run = new groovy.json.JsonSlurper().parse(report)
+        def totals = run.totals
+        logger.lifecycle(
+            "jechtest-uitest ${run.status}: ${totals.passed}/${totals.scenarios} scenarios passed, "
+                + "${totals.checks - totals.checksFailed}/${totals.checks} checks passed, "
+                + "${totals.captures} captures, ${run.durationMs} ms"
+        )
+        def failures = []
+        run.scenarios.each { scenario ->
+            if (scenario.status != 'PASS') {
+                failures.add("scenario ${scenario.name}: ${scenario.status}"
+                    + (scenario.message == null ? '' : " (${scenario.message})"))
+            }
+            scenario.steps.each { step ->
+                if (step.status != 'PASS') {
+                    logger.error("  step ${step.index} ${step.name}: ${step.status}"
+                        + (step.waitingFor == null ? '' : " waitingFor=${step.waitingFor}"))
+                    step.checks.each { check ->
+                        if (!check.passed) {
+                            logger.error("    check ${check.label} FAILED"
+                                + (check.detail == null ? '' : " (${check.detail})"))
+                        }
+                    }
+                    step.captures.each { capture ->
+                        logger.error("    capture ${capture.path}"
+                            + (capture.suspect ? ' SUSPECT flat colour' : ''))
+                    }
+                    if (step.error != null) {
+                        logger.error("    error ${step.error.type}: ${step.error.message}")
+                    }
+                }
+            }
+        }
+        if (!failures.isEmpty()) {
+            throw new GradleException('UI test failed:\n  ' + failures.join('\n  '))
+        }
+    }
+}
+
+tasks.configureEach { task ->
+    if (task.name != 'runClient' || jechUiTestSelection == null) return
+    task.dependsOn jechUiTestCleanReport
+    task.dependsOn jechUiTestPresetOptions
+    task.finalizedBy jechUiTestVerify
+}
+
+idea {
+    module {
+        downloadSources = true
+        downloadJavadoc = true
+    }
+}

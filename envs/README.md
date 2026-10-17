@@ -459,11 +459,12 @@ What changes for such a row:
 | --- | --- | --- |
 | `selection` | yes | the harness's scenario selection, passed to Gradle verbatim: `all`, a scenario name, `a,b` (terms are OR-ed), `tag:<tag>`, `group:<group>`, `mod:<mod>`, `regex:<pattern>` — the harness's own `ScenarioSelection` grammar. **Every term carries its own prefix**, because a bare term is a *name* match: `tag:smoke,tag:jei`, never `tag:smoke,jei` (which would silently run the smoke scenarios alone) |
 | `project` | no (every row names one) | the standalone harness build to run, relative to the compat-tests repository (`uitest/1.21.1-neoforge`): an independent Gradle project whose own run task launches the client. A block without it must carry a `gradle` block instead, and the two are mutually exclusive (`lib/envs.py:326`) |
+| `options` | no | extra `options.txt` keys the row's preset needs beyond the base two — `{"version": "4790", "key_key.jei.focusSearch": "key.keyboard.f"}` (`envs/moderner-26.1.2-fabric.json:21-24`). They are written **ahead of** the base lines, with a declared `version` first: that ordering is the only one under which a `key_*` line loads at all (see "The preset `options.txt`"). A fabric row whose scenarios press JEI's focus bind pins `key_key.jei.focusSearch`, because JEI registers that bind with a `CONTROL_OR_COMMAND` modifier and without the Amecs mod fabric's builder turns it into `key.keyboard.unknown` — a bare `f` press would have nothing to press (measured 2026-10-15 in the run's own `options.txt` dump). The schema refuses a `key_*` entry with no `version` (`lib/envs.py:585-591`) |
 
 The selection names the scenarios the row was measured with instead of saying
 `all`, for the same reason a row's `world` is written down: a row asserts what it
 was measured with, and a scenario added later cannot silently change that. Every
-row runs the harness today; thirteen of them run `tag:smoke,tag:jei` — the
+row runs the harness today; nineteen of them run `tag:smoke,tag:jei` — the
 scenarios their own build ships, the JEI ones among them — and three run the
 smoke tag alone, each for a reason of its own:
 
@@ -591,7 +592,7 @@ they were skipped because no path booted a 1.12.2 client on this arm64 machine,
 and the checkout now boots one itself and runs the harness on it ("The 1.12.2
 rows and the gradle launch"). Their checks were never weakened while they were
 skipped, so nothing had to be restored but the launch. With the four forge rows
-back, that list is empty: `jt envs` prints no `skip:` line for any of the 18 envs,
+back, that list is empty: `jt envs` prints no `skip:` line for any of the 22 envs,
 and every row is executed when it is selected.
 
 The `mv-1.19.2-forge` skip was re-measured on
@@ -991,7 +992,7 @@ and says so in the report.
 
 ## The shipped matrix
 
-18 envs, one per (version line, loader) pair. Tags: the version line
+22 envs, one per (version line, loader) pair. Tags: the version line
 (`moderner`, `1211`, `mv`, `112`), the loader, and `smoke` on all of them;
 `experimental` marks the rows whose upstream version pins are doubtful, and
 `legacy` marks the 1.12.2 JEI row.
@@ -1004,6 +1005,10 @@ and says so in the report.
 | `moderner-1.21.11-fabric` | 1.21.11 / fabric 0.20.0 | 21 | `moderner` (fabric-1.21.11) | jei 27.48.0.106, fabric-api 0.141.6+1.21.11 |
 | `moderner-26.1.2-neoforge` | 26.1.2 / neoforge 26.1.2.59-beta | 25 | `moderner` (neoforge-unobfuscated) | jei 29.16.0.46 |
 | `moderner-26.1.2-fabric` | 26.1.2 / fabric 0.19.2 | 25 | `moderner` (fabric-unobfuscated) | jei 29.16.0.46, fabric-api 0.146.1+26.1.2 |
+| `moderner-26.2-neoforge` | 26.2 / neoforge 26.2.0.93 | 25 | `moderner` (neoforge-26.2) | jei 30.42.0.237 |
+| `moderner-26.2-fabric` | 26.2 / fabric 0.20.0 | 25 | `moderner` (fabric-26.2) | jei 30.42.0.237, fabric-api 0.161.0+26.2 |
+| `moderner-26.3-neoforge` | 26.3 / neoforge 26.3.0.88 | 25 | `moderner` (neoforge-26.3) | jei 31.15.0.79 |
+| `moderner-26.3-fabric` | 26.3 / fabric 0.20.0 | 25 | `moderner` (fabric-26.3) | jei 31.15.0.79, fabric-api 0.163.0+26.3 |
 | `1.21.1-neoforge` | 1.21.1 / neoforge 21.1.215 | 21 | `1.21.1` | jei 19.37.0.362 |
 | `1.21.1-fabric` | 1.21.1 / fabric 0.16.14 | 21 | `1.21.1` | jei 19.37.0.362, fabric-api 0.116.1+1.21.1 |
 | `mv-1.20.1-forge` | 1.20.1 / forge 1.20.1-47.0.35 | 17 | `multiple-version` | jei 15.48.0.179 |
@@ -1033,6 +1038,7 @@ quits itself when the selection is done. What differs is what each row claims:
 | `mv-1.19.2-fabric` | yes | none — `uitest` | the same command-line gap, answered the same way: the storage marker arrives inside the harness's own level |
 | `mv-1.18.2-forge`, `mv-1.16.5-forge` | yes | none — `uitest` | no level-dependent marker: this line's JECh jar carries no JEI plugin class, so the checks are the startup and failure markers — and the checkout's Forge dev run cannot host the mod either (2026-10-14) |
 | `mv-1.16.5-fabric`, `mv-1.18.2-fabric` | yes | none — `uitest` | no level-dependent marker: startup and failure checks (1.16.5 fabric carries no target mod at all) |
+| `moderner-26.2` ×2, `moderner-26.3` ×2 | not yet | none — `uitest` | harness rows of the same shape, but no run of theirs has passed yet (see below) |
 
 No env declares `ready_when` either: every row's harness runner quits the client
 when the selection is done (see `uitest`), so no run needs a stopping rule. A
@@ -1058,6 +1064,28 @@ all — and none exists. `mv-1.19.2-fabric` faced the same command-line gap and
 never skipped either: before its move it claimed no level-dependent marker, and
 its harness build now creates the level the storage marker needs, so both 1.19.2
 rows reach that marker the same way (see the `skip` section above).
+
+**The four `26.2`/`26.3` rows are pinned and compile, but no run of theirs has
+passed: their runtime status is unverified, not green.** The one recorded run of
+any of them — `moderner-26.2-fabric`, 2026-10-18
+(`Data/jech-compat/runs/moderner-26.2-fabric-20261018-050127`) — FAILed with the
+client dying in the mod's own entrypoint:
+
+```
+java.lang.RuntimeException: Could not execute entrypoint stage 'client' due to errors, provided by 'jecharacters' at 'me.towdium.jecharacters.JustEnoughCharactersFabric'!
+Caused by: java.util.NoSuchElementException: No value present
+    at knot//me.towdium.jecharacters.JustEnoughCharactersFabric.<init>(JustEnoughCharactersFabric.java:16)
+```
+
+That constructor's `ServiceLoader.load(CommandRegister.class).findFirst().orElseThrow()`
+finds nothing when the jar under test carries no
+`META-INF/services/me.towdium.jecharacters.CommandRegister` entry — the gap the
+26.2/26.3 jars had, in the moderner checkout's per-line module builds and owned
+there. The four jars on disk were rebuilt after that run and now carry the entry
+and `me/towdium/jecharacters/ModernCommandRegister.class` (measured 2026-10-18,
+`unzip -l`), but no run of the four rows has been recorded since — so the matrix
+is 22 rows, not a 22-row green run, and the check families' level-load claim is
+not extended to JEI 30/31 here.
 
 The version strings above are not invented: they mirror each checkout's
 `gradle.properties` (`neo_version`, `forge_version`, `fabric_loader_version`,
@@ -1119,7 +1147,7 @@ Which family a version line belongs to is decided by the *built jar*, not by
 intuition: a line whose jar contains `me/towdium/jecharacters/JechJeiPlugin.class`
 has a JEI plugin and can be asserted on its registration marker.
 
-* **A — JEI plugin present** (moderner ×4, 1.21.1 ×2, mv-1.20.1 ×2, mv-1.19.2 ×2):
+* **A — JEI plugin present** (moderner ×10, 1.21.1 ×2, mv-1.20.1 ×2, mv-1.19.2 ×2):
   the marker set is
   `log_contains "Registering JEI pinyin search storage"`,
   `log_not_contains "Could not find targets.json. JechTransformer will not be loaded."`,
@@ -1127,8 +1155,8 @@ has a JEI plugin and can be asserted on its registration marker.
   `log_not_contains "Can't create config file!"` and
   `file_exists config/jecharacters.json`.
 
-  All ten rows carry that set, and all ten load a level when they run: each row's
-  own harness build creates the level the marker needs (see `uitest`), including
+  All sixteen rows carry that set, and each row's own harness build creates the
+  level the marker needs when it runs (see `uitest`), including
   the four `mv` rows of this family — `mv-1.19.2-forge`'s marker needs a level no
   command-line join can reach, and the other three reach it from the harness's own
   level the same way (`mv-1.19.2-fabric` was the last to claim the marker, when
@@ -1140,7 +1168,8 @@ has a JEI plugin and can be asserted on its registration marker.
   2026-10-14). So
   the level-load claim holds for JEI 15 (1.20.1), JEI 19 (1.21.1), JEI 26
   (1.21.10) and JEI 29 (26.1.2): each of them defers `registerAdvancedSearch`
-  until a level exists. Every row also adds `uitest_report` to this set:
+  until a level exists — and not yet for JEI 30 (26.2) / 31 (26.3), whose rows
+  have not run (above). Every row also adds `uitest_report` to this set:
   each row's own scenarios are the evidence, and the log checks stay as the "the
   mod loaded" half.
 * **B — no JEI plugin** (mv-1.16.5 ×2, mv-1.18.2 ×2): the failure markers only —

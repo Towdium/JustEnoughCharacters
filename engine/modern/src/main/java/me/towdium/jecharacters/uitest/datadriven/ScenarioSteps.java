@@ -1,11 +1,12 @@
 package me.towdium.jecharacters.uitest.datadriven;
 
 import me.towdium.jecharacters.uitest.api.ScenarioBuilder;
+import me.towdium.jecharacters.uitest.input.Keys;
 import me.towdium.jecharacters.uitest.match.MatchFilter;
+import me.towdium.jecharacters.uitest.platform.ClientPlatform;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.client.gui.screens.Screen;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -43,13 +44,13 @@ final class ScenarioSteps {
             }
             String name = args.stringOrNull("screen");
             if (name == null) {
-                builder.waitUntil("no screen is open", () -> Minecraft.getInstance().screen == null);
+                builder.waitUntil("no screen is open", () -> ClientPlatform.current().screen() == null);
                 return;
             }
             Class<? extends Screen> type = JsonTargets.screenClass(name);
             builder.waitUntil(
                 "the " + type.getSimpleName() + " screen is open",
-                () -> type.isInstance(Minecraft.getInstance().screen)
+                () -> type.isInstance(ClientPlatform.current().screen())
             );
             builder.checkScreen(type);
         });
@@ -58,7 +59,7 @@ final class ScenarioSteps {
             builder.pressBind(JsonTargets.bind(args.string("bind"))));
 
         register("press_key", (builder, args, context) -> {
-            int key = JsonTargets.glfwKey(args.string("key"));
+            int key = JsonTargets.key(args.string("key"));
             int mask = JsonTargets.modifierMask(args.stringsOrEmpty("modifiers"));
             for (int i = 0; i < times(args, context); i++) {
                 builder.pressKey(key, mask);
@@ -66,14 +67,14 @@ final class ScenarioSteps {
         });
 
         register("key", (builder, args, context) -> {
-            int key = JsonTargets.glfwKey(args.string("key"));
+            int key = JsonTargets.key(args.string("key"));
             int mask = JsonTargets.modifierMask(args.stringsOrEmpty("modifiers"));
             for (int i = 0; i < times(args, context); i++) {
                 builder.key(key, mask);
             }
         });
 
-        register("enter", (builder, args, context) -> builder.key(GLFW.GLFW_KEY_ENTER, 0));
+        register("enter", (builder, args, context) -> builder.key(Keys.enter, 0));
 
         register("type", (builder, args, context) -> builder.type(args.string("text")));
         register("type_text", (builder, args, context) -> builder.typeText(args.string("text")));
@@ -109,8 +110,8 @@ final class ScenarioSteps {
             builder.pressBind(options -> options.keyChat);
             builder.awaitScreen(ChatScreen.class);
             builder.type(text);
-            builder.key(GLFW.GLFW_KEY_ENTER, 0);
-            builder.waitUntil("the chat screen closes", () -> Minecraft.getInstance().screen == null);
+            builder.key(Keys.enter, 0);
+            builder.waitUntil("the chat screen closes", () -> ClientPlatform.current().screen() == null);
         });
 
         register("record_matches", (builder, args, context) -> {

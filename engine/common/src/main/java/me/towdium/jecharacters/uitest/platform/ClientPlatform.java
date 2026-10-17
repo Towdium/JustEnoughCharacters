@@ -18,6 +18,24 @@ public interface ClientPlatform {
 
     void resizeDisplay();
 
+    void hideWindow();
+
+    void resizeWindow(int width, int height);
+
+    Object mainRenderTarget();
+
+    int renderTargetWidth();
+
+    int renderTargetHeight();
+
+    Object overlay();
+
+    void setHideGui(boolean hidden);
+
+    Object screen();
+
+    void setScreen(Object screen);
+
     boolean titleScreenReady(Object screen);
 
     boolean skipOnboarding(Object screen);

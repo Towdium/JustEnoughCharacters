@@ -1,5 +1,6 @@
 package me.towdium.jecharacters.uitest.capture;
 
+import me.towdium.jecharacters.uitest.platform.ClientPlatform;
 import net.minecraft.client.Minecraft;
 
 import java.io.IOException;
@@ -27,7 +28,7 @@ public final class FrameCapture implements AutoCloseable {
             return false;
         }
         return CapturePlatform.current().request(
-            minecraft.getMainRenderTarget(),
+            ClientPlatform.current().mainRenderTarget(),
             image -> consumer.accept(
                 new FrameCapture(
                     image,

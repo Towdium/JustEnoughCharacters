@@ -1,0 +1,73 @@
+{
+  "_comment": "moderner line, MC 26.3, neoforge. jech.path points at the moderner checkout's neoforge-26.3 module built jar, and the row drives the standalone harness build uitest/moderner-26.3-neoforge (config->build->test).",
+  "name": "moderner-26.3-neoforge",
+  "tags": [
+    "moderner",
+    "neoforge",
+    "smoke",
+    "experimental"
+  ],
+  "mc": "26.3",
+  "loader": {
+    "type": "neoforge",
+    "version": "26.3.0.88"
+  },
+  "java": {
+    "version": 25
+  },
+  "uitest": {
+    "selection": "tag:smoke,tag:jei",
+    "project": "uitest/moderner-26.3-neoforge"
+  },
+  "jech": {
+    "source": "local-build",
+    "project": "moderner",
+    "path": "neoforge-26.3/build/libs/jecharacters-26.3-neoforge-*.jar",
+    "expectModId": "jecharacters",
+    "via": "dev-classpath"
+  },
+  "mods": [
+    {
+      "name": "jei",
+      "source": "curseforge",
+      "slug": "jei",
+      "via": "dev-classpath",
+      "describe": {
+        "version": "31.15.0.79"
+      },
+      "pin": {
+        "fileId": 9221721,
+        "filename": "jei-26.3-neoforge-31.15.0.79.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/9221/721/jei-26.3-neoforge-31.15.0.79.jar",
+        "sha1": "21f0843b0eaa1603441cd6209a741ee49bfe31ed",
+        "size": 2415272
+      }
+    }
+  ],
+  "checks": [
+    {
+      "type": "log_contains",
+      "value": "Registering JEI pinyin search storage",
+      "name": "jei-storage-registered"
+    },
+    {
+      "type": "log_not_contains",
+      "value": "Could not find targets.json. JechTransformer will not be loaded.",
+      "name": "transformer-loaded"
+    },
+    {
+      "type": "uitest_report",
+      "name": "uitest-report"
+    },
+    {
+      "type": "no_crash_reports",
+      "name": "no-crash-reports"
+    },
+    {
+      "type": "exit_code_zero",
+      "name": "exit-code"
+    }
+  ],
+  "world": null,
+  "timeout_sec": 600
+}

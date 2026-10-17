@@ -1,0 +1,103 @@
+{
+  "_comment": "moderner line, MC 26.3, fabric. jech.path points at the moderner checkout's fabric-26.3 module built jar, and the row drives the standalone harness build uitest/moderner-26.3-fabric (config->build->test). uitest.options pins key_key.jei.focusSearch to the plain f key (fabric builds JEI's CONTROL_OR_COMMAND bind as key.keyboard.unknown) and carries 26.3's dataVersion 5023, measured from a run, so the key_ line loads instead of the whole file being dropped.",
+  "name": "moderner-26.3-fabric",
+  "tags": [
+    "moderner",
+    "fabric",
+    "smoke",
+    "experimental"
+  ],
+  "mc": "26.3",
+  "loader": {
+    "type": "fabric",
+    "version": "0.20.0"
+  },
+  "java": {
+    "version": 25
+  },
+  "uitest": {
+    "selection": "tag:smoke,tag:jei",
+    "project": "uitest/moderner-26.3-fabric",
+    "options": {
+      "version": "5023",
+      "key_key.jei.focusSearch": "key.keyboard.f"
+    }
+  },
+  "jech": {
+    "source": "local-build",
+    "project": "moderner",
+    "path": "fabric-26.3/build/libs/jecharacters-26.3-fabric-*.jar",
+    "expectModId": "jecharacters",
+    "via": "dev-classpath"
+  },
+  "mods": [
+    {
+      "name": "jei",
+      "source": "curseforge",
+      "slug": "jei",
+      "via": "dev-classpath",
+      "describe": {
+        "version": "31.15.0.79"
+      },
+      "pin": {
+        "fileId": 9221718,
+        "filename": "jei-26.3-fabric-31.15.0.79.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/9221/718/jei-26.3-fabric-31.15.0.79.jar",
+        "sha1": "df50a4d9b698af82153f087a0e0783906046fab5",
+        "size": 2422723
+      }
+    },
+    {
+      "name": "fabric-api",
+      "source": "curseforge",
+      "slug": "fabric-api",
+      "via": "dev-classpath",
+      "describe": {
+        "version": "0.163.0+26.3"
+      },
+      "pin": {
+        "fileId": 9171660,
+        "filename": "fabric-api-0.163.0+26.3.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/9171/660/fabric-api-0.163.0%2b26.3.jar",
+        "sha1": "65ada8c72b61ffb256e956baf53df28155daa479",
+        "size": 1774707
+      }
+    }
+  ],
+  "checks": [
+    {
+      "type": "log_contains",
+      "value": "Registering JEI pinyin search storage",
+      "name": "jei-storage-registered"
+    },
+    {
+      "type": "log_not_contains",
+      "value": "Could not find targets.json. JechTransformer will not be loaded.",
+      "name": "transformer-loaded"
+    },
+    {
+      "type": "log_not_contains",
+      "value": "Can't create config file!",
+      "name": "config-writable"
+    },
+    {
+      "type": "file_exists",
+      "value": "config/jecharacters.json",
+      "name": "config-generated"
+    },
+    {
+      "type": "uitest_report",
+      "name": "uitest-report"
+    },
+    {
+      "type": "no_crash_reports",
+      "name": "no-crash-reports"
+    },
+    {
+      "type": "exit_code_zero",
+      "name": "exit-code"
+    }
+  ],
+  "world": null,
+  "timeout_sec": 600
+}
