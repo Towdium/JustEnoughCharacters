@@ -26,8 +26,11 @@ sourceSets.main.java.srcDir '../../engine/legacy/groups/forge/src/main/java'
 
 def jechJarProp = providers.gradleProperty('jechJar')
 def jeiJarProp = providers.gradleProperty('jeiJar')
-def requireJar = { name, prop ->
+def requireJar = { name, prop, required ->
     if (!prop.isPresent()) {
+        if (!required) {
+            return null
+        }
         throw new GradleException(
             "the ${name} project property is required: this build tests jars it is handed "
                 + "(jt passes it; by hand: -P${name}=/abs/path.jar)"
@@ -39,8 +42,8 @@ def requireJar = { name, prop ->
     }
     return file
 }
-def jechJarFile = requireJar('jechJar', jechJarProp)
-def jeiJarFile = requireJar('jeiJar', jeiJarProp)
+def jechJarFile = requireJar('jechJar', jechJarProp, false)
+def jeiJarFile = requireJar('jeiJar', jeiJarProp, false)
 
 def underTestFlatDir = new File(projectDir, 'build/under-test-flat')
 def stageUnderTestJar = { File jar, String name ->
@@ -56,8 +59,8 @@ def stageUnderTestJar = { File jar, String name ->
     }
     return "local.under-test:${name}:${version}"
 }
-def jechUnderTest = stageUnderTestJar(jechJarFile, 'jech')
-def jeiUnderTest = stageUnderTestJar(jeiJarFile, 'jei')
+def jechUnderTest = jechJarFile == null ? null : stageUnderTestJar(jechJarFile, 'jech')
+def jeiUnderTest = jeiJarFile == null ? null : stageUnderTestJar(jeiJarFile, 'jei')
 
 
 def jechUiTestRunDir = project.findProperty('jechRunDir')?.toString()
@@ -137,14 +140,27 @@ configurations.all {
 dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
 
-    compileOnly files(jechJarFile)
-    implementation fg.deobf(jechUnderTest)
-    implementation fg.deobf(jeiUnderTest)
+    if (jechJarFile != null) {
+        compileOnly files(jechJarFile)
+    }
+    if (jechUnderTest != null) {
+        implementation fg.deobf(jechUnderTest)
+    }
+    if (jeiUnderTest != null) {
+        implementation fg.deobf(jeiUnderTest)
+    }
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
     compileOnly 'org.jspecify:jspecify:1.0.1'
 
     lwjglModules.each { module ->
         runtimeOnly "org.lwjgl:${module}:${lwjglVersion}:natives-macos-arm64"
+    }
+}
+
+tasks.matching { it.name == 'runClient' }.configureEach {
+    doFirst {
+        requireJar('jechJar', jechJarProp, true)
+        requireJar('jeiJar', jeiJarProp, true)
     }
 }
 
