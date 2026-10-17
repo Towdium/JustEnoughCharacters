@@ -79,6 +79,8 @@ java {
     }
 }
 
+sourceSets.main.java.srcDir '../../engine/legacy/src/main/java'
+
 tasks.withType(JavaCompile).configureEach {
     it.options.release = 17
     options.encoding = 'UTF-8'
