@@ -1,5 +1,7 @@
 package me.towdium.jecharacters.uitest;
 
+import me.towdium.jecharacters.uitest.platform.ClientPlatform;
+import me.towdium.jecharacters.uitest.platform.ClientPlatformImpl;
 import me.towdium.jecharacters.uitest.platform.InputPlatform;
 import me.towdium.jecharacters.uitest.platform.NeoForgeInputPlatform;
 import me.towdium.jecharacters.uitest.platform.NeoForgePlatform;
@@ -15,6 +17,7 @@ public final class UiTest {
         if (dist.isClient()) {
             Platform.register(new NeoForgePlatform());
             InputPlatform.register(new NeoForgeInputPlatform());
+            ClientPlatform.register(new ClientPlatformImpl());
             NeoForge.EVENT_BUS.addListener(UiTestCommands::register);
         }
     }

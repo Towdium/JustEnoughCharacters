@@ -1,8 +1,8 @@
 package me.towdium.jecharacters.uitest.engine;
 
-import com.mojang.blaze3d.platform.Window;
 import me.towdium.jecharacters.uitest.ScenarioRegistry;
 import me.towdium.jecharacters.uitest.api.CapturePipeline;
+import me.towdium.jecharacters.uitest.api.CheckResult;
 import me.towdium.jecharacters.uitest.api.CaptureRef;
 import me.towdium.jecharacters.uitest.api.ErrorPolicy;
 import me.towdium.jecharacters.uitest.api.InputDriver;
@@ -20,18 +20,17 @@ import me.towdium.jecharacters.uitest.engine.report.RunReport;
 import me.towdium.jecharacters.uitest.engine.report.ScenarioReport;
 import me.towdium.jecharacters.uitest.engine.report.StepReport;
 import me.towdium.jecharacters.uitest.match.MatchRecorder;
+import me.towdium.jecharacters.uitest.platform.ClientPlatform;
 import me.towdium.jecharacters.uitest.platform.Platform;
-import net.minecraft.SharedConstants;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.TitleScreen;
-import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.server.MinecraftServer;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jspecify.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.time.Instant;
@@ -41,6 +40,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import java.util.Arrays;
+import java.util.Collections;
 
 public final class UITestRunner {
 
@@ -48,7 +49,7 @@ public final class UITestRunner {
         waitGameReady, pinOptions, createWorld, awaitWorld, pinWorld, nextScenario, runScenario, finish, exiting
     }
 
-    private static final Logger log = LoggerFactory.getLogger("jechtest-uitest");
+    private static final Logger log = LogManager.getLogger("jechtest-uitest");
 
     private static final int gameReadyBudgetMs = 180_000;
 
@@ -129,7 +130,7 @@ public final class UITestRunner {
     private UITestRunner(Minecraft minecraft, RunConfig config) {
         this.minecraft = minecraft;
         this.config = config;
-        this.runId = ProcessHandle.current().pid() + "_" + Integer.toHexString(System.identityHashCode(config));
+        this.runId = processId() + "_" + Integer.toHexString(System.identityHashCode(config));
         this.driver = HarnessFactory.driver(config.inputMode());
         this.pipeline = HarnessFactory.pipeline(config);
         this.report = new RunReport(
@@ -208,7 +209,7 @@ public final class UITestRunner {
     }
 
     public List<String> queueNames() {
-        return queue.stream().map(Queued::name).toList();
+        return queue.stream().map(Queued::name).collect(Collectors.toList());
     }
 
     public void onFrame() {
@@ -251,20 +252,25 @@ public final class UITestRunner {
             settleUntil = 0L;
         }
         switch (phase) {
-            case waitGameReady -> waitGameReady();
-            case pinOptions -> pinOptions();
-            case createWorld -> createWorld();
-            case awaitWorld -> awaitWorld();
-            case pinWorld -> pinWorld();
-            case nextScenario -> nextScenario();
-            case runScenario -> runScenario();
-            case finish -> finish();
-            case exiting -> {}
+            case waitGameReady: waitGameReady(); break;
+            case pinOptions: pinOptions(); break;
+            case createWorld: createWorld(); break;
+            case awaitWorld: awaitWorld(); break;
+            case pinWorld: pinWorld(); break;
+            case nextScenario: nextScenario(); break;
+            case runScenario: runScenario(); break;
+            case finish: finish(); break;
+            case exiting: {} break;
         }
     }
 
     private void waitGameReady() {
-        if (!(minecraft.screen instanceof TitleScreen)) {
+        ClientPlatform client = ClientPlatform.current();
+        Object screen = minecraft.screen;
+        if (client.skipOnboarding(screen)) {
+            return;
+        }
+        if (!client.titleScreenReady(screen)) {
             if (phaseElapsed() > gameReadyBudgetMs) {
                 fatal("the client never reached the title screen within " + gameReadyBudgetMs + " ms");
             }
@@ -317,14 +323,14 @@ public final class UITestRunner {
         List<Queued> fresh = new ArrayList<>();
         for (Queued queued : queue) {
             switch (queued.options().session()) {
-                case reenter -> reenter.add(queued);
-                case fresh -> fresh.add(queued);
-                default -> shared.add(queued);
+                case reenter: reenter.add(queued); break;
+                case fresh: fresh.add(queued); break;
+                default: shared.add(queued); break;
             }
         }
-        if (!shared.isEmpty()) sessionPlan.add(new SessionGroup(Session.shared, List.copyOf(shared)));
-        if (!reenter.isEmpty()) sessionPlan.add(new SessionGroup(Session.reenter, List.copyOf(reenter)));
-        for (Queued queued : fresh) sessionPlan.add(new SessionGroup(Session.fresh, List.of(queued)));
+        if (!shared.isEmpty()) sessionPlan.add(new SessionGroup(Session.shared, Collections.unmodifiableList(new ArrayList<>(shared))));
+        if (!reenter.isEmpty()) sessionPlan.add(new SessionGroup(Session.reenter, Collections.unmodifiableList(new ArrayList<>(reenter))));
+        for (Queued queued : fresh) sessionPlan.add(new SessionGroup(Session.fresh, Collections.unmodifiableList(Arrays.asList(queued))));
         int rejoins = reenter.isEmpty() ? 0 : 1;
         report.sessionPlan(
             "shared[" + shared.size() + "] -> reenter[" + reenter.size() + "] -> fresh[" + fresh.size() + "]" + " = "
@@ -438,30 +444,32 @@ public final class UITestRunner {
 
     private boolean startGroupSession(SessionGroup group) {
         boolean head = groupCursor == 0;
-        return switch (group.tier()) {
-            case shared -> true;
-            case reenter -> {
+        switch (group.tier()) {
+            case shared:
+                return true;
+            case reenter: {
                 if (head) {
-                    yield true;
+                    return true;
                 }
                 log.info("session: rejoining {} for {} scenario(s)", worldName, group.members().size());
                 reenter = new Reenter(false);
-                yield false;
+                return false;
             }
-            case fresh -> {
+            case fresh: {
                 if (head) {
-                    yield true;
+                    return true;
                 }
                 prepareFreshWorld();
                 if (minecraft.level != null) {
                     reenter = new Reenter(true);
-                    yield false;
+                    return false;
                 }
                 log.info("session: creating {} for {}", worldName, group.members().get(0).name());
                 enter(Phase.createWorld);
-                yield false;
+                return false;
             }
-        };
+        }
+        throw new IllegalStateException("unreachable session tier " + group.tier());
     }
 
     private void prepareFreshWorld() {
@@ -484,12 +492,12 @@ public final class UITestRunner {
         Reenter state = reenter;
         if (state == null) return true;
         switch (state.step) {
-            case 0 -> {
+            case 0: {
                 log.info("session: leaving {}", worldName);
                 minecraft.setScreen(null);
-                ClientLevel level = minecraft.level;
+                Object level = minecraft.level;
                 if (level != null) {
-                    level.disconnect();
+                    ClientPlatform.current().disconnectLevel(level);
                 }
                 MinecraftServer server = minecraft.getSingleplayerServer();
                 if (server != null) {
@@ -499,7 +507,7 @@ public final class UITestRunner {
                 state.startedAt = now();
                 return false;
             }
-            case 1 -> {
+            case 1: {
                 if (minecraft.level == null && minecraft.player == null && minecraft.getSingleplayerServer() == null) {
                     state.step = 2;
                     return false;
@@ -509,7 +517,7 @@ public final class UITestRunner {
                 }
                 return false;
             }
-            case 2 -> {
+            case 2: {
                 if (state.createFresh) {
                     log.info("session: creating {} (no world was up)", worldName);
                     enter(Phase.createWorld);
@@ -521,7 +529,7 @@ public final class UITestRunner {
                 state.startedAt = now();
                 return false;
             }
-            default -> {
+            default: {
                 if (minecraft.level != null && minecraft.player != null) {
                     MinecraftServer server = minecraft.getSingleplayerServer();
                     if (server == null) return false;
@@ -592,9 +600,9 @@ public final class UITestRunner {
         minecraft.setScreen(null);
         MatchRecorder.clear();
         ScenarioOptions options = queued.options();
-        minecraft.options.guiScale = options.guiScale(config.guiScale());
+        ClientPlatform.current().setGuiScale(options.guiScale(config.guiScale()));
         minecraft.options.hideGui = options.hideGui();
-        minecraft.resizeDisplay();
+        ClientPlatform.current().resizeDisplay();
 
         ScenarioBuilder builder = new ScenarioBuilder();
         try {
@@ -748,18 +756,19 @@ public final class UITestRunner {
     // region client pinning
 
     private void pinClientOptions() {
-        Window window = minecraft.getWindow();
-        long handle = window.getWindow();
+        ClientPlatform client = ClientPlatform.current();
+        long handle = client.windowHandle(minecraft.getWindow());
         if (config.headless()) {
             GLFW.glfwHideWindow(handle);
         }
         GLFW.glfwSetWindowSize(handle, config.windowWidthOrDefault(), config.windowHeightOrDefault());
-        minecraft.options.guiScale = config.guiScale();
+        client.setGuiScale(config.guiScale());
         minecraft.options.pauseOnLostFocus = false;
-        minecraft.options.renderDistance = 4;
-        minecraft.options.enableVsync = false;
+        client.setRenderDistance(4);
+        client.setVsync(false);
         minecraft.options.save();
-        minecraft.resizeDisplay();
+        client.alignJeiFocusKey();
+        client.resizeDisplay();
         log.info(
             "pinned gui scale {}, window {}x{}, headless={}",
             config.guiScale(),
@@ -815,7 +824,7 @@ public final class UITestRunner {
     private void writeHangDump(String dump) {
         try {
             Files.createDirectories(config.outDir());
-            Files.writeString(config.outDir().resolve("hang.txt"), dump, StandardCharsets.UTF_8);
+            Files.write(config.outDir().resolve("hang.txt"), dump.getBytes(StandardCharsets.UTF_8));
         } catch (IOException e) {
             log.warn("jechtest-uitest could not write the hang dump", e);
         }
@@ -860,18 +869,18 @@ public final class UITestRunner {
     }
 
     private static Environment environment(Minecraft minecraft, RunConfig config) {
-        Window window = minecraft.getWindow();
+        ClientPlatform client = ClientPlatform.current();
         Platform platform = Platform.current();
         return new Environment(
-            SharedConstants.getCurrentVersion().getName(),
+            client.minecraftVersion(),
             platform.loaderLabel(),
             platform.loaderVersion(),
             System.getProperty("java.version", "unknown"),
             System.getProperty("os.name", "unknown") + " " + System.getProperty("os.version", ""),
             platform.modIds(),
             config.guiScale(),
-            window.getWidth(),
-            window.getHeight(),
+            client.windowWidth(minecraft.getWindow()),
+            client.windowHeight(minecraft.getWindow()),
             minecraft.getMainRenderTarget().width,
             minecraft.getMainRenderTarget().height,
             config.inputMode().name().toUpperCase(Locale.ROOT),
@@ -901,9 +910,15 @@ public final class UITestRunner {
         return System.currentTimeMillis();
     }
 
+    private static String processId() {
+        String name = ManagementFactory.getRuntimeMXBean().getName();
+        int at = name.indexOf('@');
+        return at < 0 ? name : name.substring(0, at);
+    }
+
     private static int failedChecks(TestContext context) {
         int failed = 0;
-        for (var check : context.checks()) {
+        for (CheckResult check : context.checks()) {
             if (!check.passed()) failed++;
         }
         return failed;
@@ -919,7 +934,26 @@ public final class UITestRunner {
         return thrown.getClass().getSimpleName() + ": " + thrown.getMessage();
     }
 
-    private record SessionGroup(Session tier, List<Queued> members) {}
+    private static final class SessionGroup {
+
+        private final Session tier;
+        private final List<Queued> members;
+
+        private SessionGroup(Session tier, List<Queued> members) {
+            this.tier = tier;
+            this.members = members;
+        }
+
+        public Session tier() {
+            return tier;
+        }
+
+        public List<Queued> members() {
+            return members;
+        }
+
+    }
+
 
     private static final class Reenter {
 
@@ -934,14 +968,48 @@ public final class UITestRunner {
         private long startedAt = System.currentTimeMillis();
     }
 
-    private record Queued(
-        String name,
-        String group,
-        List<String> tags,
-        ScenarioOptions options,
-        boolean requiresWorld,
-        Consumer<ScenarioBuilder> define
-    ) {
+    private static final class Queued {
+
+        private final String name;
+        private final String group;
+        private final List<String> tags;
+        private final ScenarioOptions options;
+        private final boolean requiresWorld;
+        private final Consumer<ScenarioBuilder> define;
+
+        private Queued(String name, String group, List<String> tags, ScenarioOptions options, boolean requiresWorld, Consumer<ScenarioBuilder> define) {
+            this.name = name;
+            this.group = group;
+            this.tags = tags;
+            this.options = options;
+            this.requiresWorld = requiresWorld;
+            this.define = define;
+        }
+
+        public String name() {
+            return name;
+        }
+
+        public String group() {
+            return group;
+        }
+
+        public List<String> tags() {
+            return tags;
+        }
+
+        public ScenarioOptions options() {
+            return options;
+        }
+
+        public boolean requiresWorld() {
+            return requiresWorld;
+        }
+
+        public Consumer<ScenarioBuilder> define() {
+            return define;
+        }
+
 
         static Queued of(ScenarioRegistry.Entry entry) {
             return new Queued(
@@ -954,7 +1022,9 @@ public final class UITestRunner {
             );
         }
 
+    
     }
+
 
     private static final class ScenarioRun {
 

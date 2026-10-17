@@ -1,5 +1,7 @@
 package me.towdium.jecharacters.uitest;
 
+import me.towdium.jecharacters.uitest.platform.ClientPlatform;
+import me.towdium.jecharacters.uitest.platform.ClientPlatformImpl;
 import me.towdium.jecharacters.uitest.platform.FabricInputPlatform;
 import me.towdium.jecharacters.uitest.platform.FabricPlatform;
 import me.towdium.jecharacters.uitest.platform.InputPlatform;
@@ -13,6 +15,7 @@ public final class UiTest implements ClientModInitializer {
     public void onInitializeClient() {
         Platform.register(new FabricPlatform());
         InputPlatform.register(new FabricInputPlatform());
+        ClientPlatform.register(new ClientPlatformImpl());
         ClientCommandRegistrationCallback.EVENT.register(
             (dispatcher, registryAccess) -> UiTestCommands.register(dispatcher));
     }
