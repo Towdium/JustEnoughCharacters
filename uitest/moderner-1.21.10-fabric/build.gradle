@@ -84,6 +84,11 @@ java {
 }
 
 sourceSets.main.java.srcDir '../../engine/modern/src/main/java'
+sourceSets.main.java.srcDir '../../engine/modern/groups/fabric/src/main/java'
+sourceSets.main.java.srcDir '../../engine/modern/groups/moderner/src/main/java'
+sourceSets.main.java.srcDir '../../engine/modern/groups/mc-1.21.10/src/main/java'
+sourceSets.main.java.srcDir '../../engine/modern/groups/pre-26.1.2/src/main/java'
+sourceSets.main.java.srcDir '../../engine/modern/groups/fabric-pre-26.1.2/src/main/java'
 
 tasks.withType(JavaCompile).configureEach {
     it.options.release = 21

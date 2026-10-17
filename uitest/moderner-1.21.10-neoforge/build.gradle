@@ -68,6 +68,12 @@ java {
 }
 
 sourceSets.main.java.srcDir '../../engine/modern/src/main/java'
+sourceSets.main.java.srcDir '../../engine/modern/groups/moderner/src/main/java'
+sourceSets.main.java.srcDir '../../engine/modern/groups/mc-1.21.10/src/main/java'
+sourceSets.main.java.srcDir '../../engine/modern/groups/neoforge/src/main/java'
+sourceSets.main.java.srcDir '../../engine/modern/groups/moderner-neoforge/src/main/java'
+sourceSets.main.java.srcDir '../../engine/modern/groups/pre-26.1.2/src/main/java'
+sourceSets.main.java.srcDir '../../engine/modern/groups/not-fabric-pre-26.1.2/src/main/java'
 
 repositories {
     maven { url = 'https://jitpack.io' }
