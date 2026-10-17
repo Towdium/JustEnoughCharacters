@@ -1082,13 +1082,9 @@ run:
   all**, which is why nothing holds it as a *mod* dependency: the harness build
   compiles against `0.91.0+1.20.1` and resolves the pinned `0.92.12+1.20.1`
   through a plain configuration into the run's `mods/`. From 0.91.1 on, every
-  MC 1.20.1 fabric-api is built by loom
-  >= 1.5 and carries `Fabric-Loom-Mixin-Remap-Type` in its manifest; the
-  `multiple-version` checkout's architectury-loom 1.1 refuses that key while
-  configuring the project (`This version of loom does not support the mixin remap
-  type value`). Measured with each token isolated and across 0.91.1 … 0.92.12 —
-  all key-bearing, with `0.91.0+1.20.1` the newest such jar loom 1.1 accepts. The
-  module therefore holds `modCompileOnly` on `0.91.0+1.20.1` (enough for its two
+  MC 1.20.1 fabric-api is built by loom >= 1.5 and carries
+  `Fabric-Loom-Mixin-Remap-Type` in its manifest. The module therefore holds
+  `modCompileOnly` on `0.91.0+1.20.1` (enough for its two
   `fabric-command-api-v2` imports) and the run gets the real api from `mods/`,
   where Fabric's dev-mode remapper — loom passes `-Dfabric.remapClasspathFile` —
   turns the production jar from intermediary into the run's named namespace,
@@ -1107,9 +1103,9 @@ with none of that machinery:
   checkout now uses loader `0.16.14` (the loader the 1.20.1 and 1.21.1 fabric
   rows run) and api `0.77.0+1.19.2`, which is also the *last* fabric-api build
   for MC 1.19.2. That last fact is what keeps this row cheap: the api that
-  satisfies JEI's floor is still readable by the checkout's loom 1.1, so it stays
-  a plain `modApi` dependency on the run's classpath (`dev-classpath`), and the
-  row's log lists `fabric-api 0.77.0+1.19.2` and `fabricloader 0.16.14`.
+  satisfies JEI's floor stays a plain `modApi` dependency on the run's classpath
+  (`dev-classpath`), and the row's log lists `fabric-api 0.77.0+1.19.2` and
+  `fabricloader 0.16.14`.
 
 Separately, and true of every fabric row rather than of this one: the fabric
 variants' `fabric.mod.json` files declare the legacy `"fabric": "*"` dependency
