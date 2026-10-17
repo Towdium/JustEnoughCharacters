@@ -16,23 +16,24 @@ minecraft {
     mappings channel: 'snapshot', version: mapping_version
 }
 
-def jechJarProp = providers.gradleProperty('jechJar')
-def jeiJarProp = providers.gradleProperty('jeiJar')
-def requireJar = { name, prop ->
-    if (!prop.isPresent()) {
-        throw new GradleException(
-            "the ${name} project property is required: this build tests jars it is handed "
-                + "(jt passes it; by hand: -P${name}=/abs/path.jar)"
-        )
+def requireJar = { String name ->
+    def prop = providers.gradleProperty(name)
+    providers.provider {
+        if (!prop.isPresent()) {
+            throw new GradleException(
+                "the ${name} project property is required: this build tests jars it is handed "
+                    + "(jt passes it; by hand: -P${name}=/abs/path.jar)"
+            )
+        }
+        def file = new File(prop.get())
+        if (!file.isFile()) {
+            throw new GradleException("the ${name} project property names no file: ${file}")
+        }
+        return file
     }
-    def file = new File(prop.get())
-    if (!file.isFile()) {
-        throw new GradleException("the ${name} project property names no file: ${file}")
-    }
-    return file
 }
-def jechJarFile = requireJar('jechJar', jechJarProp)
-def jeiJarFile = requireJar('jeiJar', jeiJarProp)
+def jechJarFile = requireJar('jechJar')
+def jeiJarFile = requireJar('jeiJar')
 
 
 def jechUiTestRunDir = project.findProperty('jechRunDir')?.toString()
@@ -119,9 +120,8 @@ tasks.matching { it.name == 'runClient' }.configureEach { task ->
 tasks.register('stageUiTestDevMod') {
     group = 'verification'
     description = 'Stages the JEI-line jar under test into the harness game directory, its access transformer remapped from SRG to MCP member names.'
-    def src = jeiJarFile
     def target = new File(jechUiTestGameDir, 'mods')
-    inputs.file(src)
+    inputs.file(jeiJarFile)
     outputs.dir(target)
     def remap = { String text, String entryName ->
         def out = new StringBuilder()
@@ -146,6 +146,7 @@ tasks.register('stageUiTestDevMod') {
         return out.toString()
     }
     doLast {
+        def src = jeiJarFile.get()
         def dir = target
         dir.mkdirs()
         if (jechUiTestRunDir == null) {
