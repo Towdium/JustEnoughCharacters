@@ -430,7 +430,6 @@ public final class UITestRunner {
                 steps.size(),
                 StepKind.teardown,
                 "reset the screen",
-                null,
                 0,
                 0,
                 new me.towdium.jecharacters.uitest.api.StepBody() {
@@ -455,7 +454,7 @@ public final class UITestRunner {
     private void tickStep(ScenarioRun run, Step step, long now) {
         if (run.stepReport == null) {
             run.stepReport = run.scenario.addStep(new StepReport(
-                    step.index(), step.name(), step.kind().name(), roleOf(run, run.cursor), step.group()));
+                    step.index(), step.name(), step.kind().name(), roleOf(run, run.cursor)));
             run.stepStartedAt = now;
             run.attempts = 0;
             run.stepSequence = ++stepSequence;

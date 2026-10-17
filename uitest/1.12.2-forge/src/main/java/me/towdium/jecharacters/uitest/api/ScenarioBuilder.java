@@ -576,7 +576,6 @@ public final class ScenarioBuilder {
                     firstIndex + i,
                     draft.kind,
                     draft.name,
-                    null,
                     draft.settleMs,
                     draft.timeoutMs,
                     draft.body));
