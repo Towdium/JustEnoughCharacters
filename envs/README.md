@@ -1087,7 +1087,12 @@ and `me/towdium/jecharacters/ModernCommandRegister.class` (measured 2026-10-18,
 `runs/moderner-26.2-neoforge-20261018-111313`, `runs/moderner-26.3-fabric-20261018-112019`,
 `runs/moderner-26.3-neoforge-20261018-111802`, each at `4/4 scenarios` — so the matrix
 is a 22-row green run (`runs/all-20261018-114438`) and the check families'
-level-load claim extends to JEI 30/31 here.
+level-load claim extends to JEI 30/31 here. The two `26.3` rows moved to
+**`5/5 scenarios`** when `ime-preedit.json` joined them (the four `ime_*` steps and
+their JEI search-bar focus step; `4/4` was the count before it), so their harness
+line reads `5/5 scenarios, 23/23 checks, 8 captures` — `runs/moderner-26.3-fabric-20261018-134847`,
+`runs/moderner-26.3-neoforge-20261018-134929`, both inside the 22-row green re-run
+`runs/all-20261018-134221`; the two `26.2` rows are still `4/4 scenarios, 14/14 checks`.
 
 The version strings above are not invented: they mirror each checkout's
 `gradle.properties` (`neo_version`, `forge_version`, `fabric_loader_version`,
