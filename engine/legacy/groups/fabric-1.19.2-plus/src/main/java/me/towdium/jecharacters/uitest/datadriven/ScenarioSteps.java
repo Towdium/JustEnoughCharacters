@@ -148,6 +148,8 @@ final class ScenarioSteps {
             }
         });
 
+        register("click_mouse", (builder, args, context) -> clickThroughUnsupported());
+
         register("command", (builder, args, context) -> {
             String text = args.string("text");
             builder.pressBind(options -> options.keyChat);
@@ -233,6 +235,10 @@ final class ScenarioSteps {
 
     static List<String> names() {
         return List.copyOf(handlers.keySet());
+    }
+
+    private static void clickThroughUnsupported() {
+        throw new UnsupportedOperationException("this row does not click through the mouse handler");
     }
 
     private static int times(Args args, String context) {

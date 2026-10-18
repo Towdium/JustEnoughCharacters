@@ -81,6 +81,11 @@ final class ScenarioSteps {
         register("type_text", (builder, args, context) -> builder.typeText(args.string("text")));
         register("type_into", (builder, args, context) -> builder.typeInto(args.string("text")));
 
+        register("ime_compose", (builder, args, context) -> imeUnsupported());
+        register("ime_commit", (builder, args, context) -> imeUnsupported());
+        register("assert_focus_text", (builder, args, context) -> imeUnsupported());
+        register("assert_focus_preedit", (builder, args, context) -> imeUnsupported());
+
         register("click", (builder, args, context) -> {
             double x = args.number("x");
             double y = args.number("y");
@@ -111,6 +116,8 @@ final class ScenarioSteps {
                     );
             }
         });
+
+        register("click_mouse", (builder, args, context) -> clickThroughUnsupported());
 
         register("command", (builder, args, context) -> {
             String text = args.string("text");
@@ -197,6 +204,19 @@ final class ScenarioSteps {
 
     static List<String> names() {
         return Collections.unmodifiableList(new ArrayList<>(handlers.keySet()));
+    }
+
+    private static void imeUnsupported() {
+        throw new UnsupportedOperationException(
+                "this harness row cannot drive IME composition: its Minecraft 1.16.5"
+                        + " has no KeyboardHandler.textInput(long, String) / textEditing(long, PreeditEvent) pair to "
+                        + "inject a pre-edit and a commit through. The ime_compose / ime_commit / assert_focus_text / "
+                        + "assert_focus_preedit steps are wired for the MC 26.3 rows, and this row refuses the step "
+                        + "instead of skipping it");
+    }
+
+    private static void clickThroughUnsupported() {
+        throw new UnsupportedOperationException("this row does not click through the mouse handler");
     }
 
     private static int times(Args args, String context) {
