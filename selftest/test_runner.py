@@ -9,7 +9,8 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from lib import checks, instance, paths, report, runner
+from lib import checks, harness, instance, paths, report, runner
+from lib.errors import ConfigError
 
 from . import support
 
@@ -120,6 +121,77 @@ class EmptySelectionTest(unittest.TestCase):
     def test_no_env_at_all_still_fails_closed(self):
         code, _logs = self.run_selection("all", envs=[])
         self.assertEqual(code, 1)
+
+
+class HeadlessModeTest(unittest.TestCase):
+    """The hidden-window switch: it is recorded, and refused where it cannot land."""
+
+    def setUp(self):
+        self._home = support.temp_home()
+        self.home = self._home.__enter__()
+        self.addCleanup(self._home.__exit__, None, None, None)
+
+    def standalone_env(self, **overrides):
+        """A standalone harness row: no gradle block, every jar on the classpath."""
+        data = {
+            "gradle": None,
+            "uitest": {"selection": "tag:smoke", "project": "uitest/1.21.1-neoforge"},
+            "jech": {"source": "local-build", "project": "1.21.1",
+                     "path": "build/libs/jecharacters-*.jar", "expectModId": "jecharacters",
+                     "via": "dev-classpath"},
+            "mods": [{"name": "jei", "source": "curseforge", "slug": "jei",
+                      "describe": {"version": "19.37.0.362"}, "pin": None,
+                      "via": "dev-classpath"}],
+        }
+        data.update(overrides)
+        return support.mk_env(**data)
+
+    def test_a_windowed_run_records_headless_false(self):
+        entry, _code = runner.run_env(support.mk_env(skip="declared"), log=lambda *_: None)
+        self.assertIs(entry["headless"], False)
+
+    def test_a_hidden_run_is_visible_from_the_run_directory_alone(self):
+        entry, code = runner.run_env(support.mk_env(skip="declared"), headless=True,
+                                     log=lambda *_: None)
+        self.assertIs(entry["headless"], True)
+        self.assertEqual(code, 1, "the skip still decides the exit code")
+        run_dir = sorted(paths.runs_dir().iterdir())[0]
+        written = json.loads((run_dir / report.REPORT_JSON).read_text(encoding="utf-8"))
+        self.assertIs(written["envs"][0]["headless"], True)
+        meta = json.loads((run_dir / report.RUN_META).read_text(encoding="utf-8"))
+        self.assertIs(meta["headless"], True)
+
+    def test_a_row_with_no_uitest_block_is_refused_rather_than_run_with_a_window(self):
+        env = support.mk_env()
+        self.assertIsNone(env.uitest)
+        entry, code = runner.run_env(env, headless=True, log=lambda *_: None)
+        self.assertEqual(code, 2)
+        self.assertTrue(entry["configError"])
+        self.assertIs(entry["headless"], True)
+        self.assertIn("declares no uitest block", entry["notes"][0])
+
+    def test_the_real_input_driver_and_a_hidden_window_are_refused_together(self):
+        env = support.mk_env(uitest={"selection": "tag:smoke"},
+                             gradle={"task": ":neoforge:runClient", "daemon_java": 21,
+                                     "args": ["-PjechTestInputMode=REAL"]})
+        with self.assertRaises(ConfigError) as caught:
+            runner._reject_headless_that_cannot_land(env)
+        self.assertIn("needs a visible, focused window", str(caught.exception))
+
+    def test_a_row_that_can_hide_its_window_is_not_refused(self):
+        synthetic = support.mk_env(uitest={"selection": "tag:smoke"},
+                                   gradle={"task": ":neoforge:runClient", "daemon_java": 21,
+                                           "args": ["-PjechTestInputMode=SYNTHETIC"]})
+        self.assertIsNone(runner._reject_headless_that_cannot_land(synthetic))
+        self.assertIsNone(runner._reject_headless_that_cannot_land(self.standalone_env()))
+
+    def test_a_launch_without_gradle_gets_the_property_as_a_jvm_argument(self):
+        """The description and direct backends have no row build to turn it on."""
+        env = self.standalone_env()
+        hidden = harness.jvm_args(env, "/runs/rid/game", headless=True)
+        self.assertIn("-Djech.uitest.headless=true", hidden)
+        self.assertIn("-Djech.uitest.run=tag:smoke", hidden)
+        self.assertNotIn("-Djech.uitest.headless=true", harness.jvm_args(env, "/runs/rid/game"))
 
 
 class EnvReportShapeTest(unittest.TestCase):

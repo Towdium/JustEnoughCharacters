@@ -172,6 +172,12 @@ class WriteTest(unittest.TestCase):
         self.assertIn("seed=aaaaaaaaaaaaaaaa", text)
         self.assertIn("vanilla-1.21.1", text)
 
+    def test_report_text_records_the_window_mode_the_run_used(self):
+        hidden = report.render_text(make_report(entry(headless=True)))
+        self.assertIn("headless=True", hidden)
+        shown = report.render_text(make_report(entry(headless=False)))
+        self.assertIn("headless=False", shown)
+
     def test_a_skipped_env_still_gets_a_junit_testcase(self):
         """An env with no checks must not vanish from the CI report."""
         skipped = skip_entry(checks=[])
@@ -294,6 +300,14 @@ class CliTest(unittest.TestCase):
     def test_unknown_command_is_a_usage_error(self):
         with self.assertRaises(SystemExit):
             main(["nonsense"])
+
+    def test_run_accepts_the_hidden_window_switch(self):
+        """The flag is part of `jt run`; a selection matching nothing never launches."""
+        with support.temp_home():
+            code, output = self.cli(["run", "tag:nope", "--headless"])
+        self.assertEqual(code, 1)
+        self.assertIn("matched 0 of", output)
+        self.assertIn("never reported as a pass", output)
 
 
 if __name__ == "__main__":

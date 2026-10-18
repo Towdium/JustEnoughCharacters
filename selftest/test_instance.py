@@ -288,6 +288,26 @@ class GradleLaunchTest(unittest.TestCase):
         command = instance.gradle_command(self.checkout, ":neoforge:runClient", self.tmp / "game")
         self.assertNotIn(f"-P{instance.GRADLE_UITEST_PROPERTY}", " ".join(command))
 
+    def test_a_hidden_window_is_passed_as_a_valueless_project_property(self):
+        """The rows read it with hasProperty, so it travels without a value."""
+        command = instance.gradle_command(self.checkout, ":fabric:runClient", self.tmp / "game",
+                                          uitest="tag:smoke", headless=True)
+        self.assertIn(f"-P{instance.GRADLE_HEADLESS_PROPERTY}", command)
+        self.assertNotIn(f"-P{instance.GRADLE_HEADLESS_PROPERTY}=", " ".join(command))
+
+    def test_without_the_switch_no_headless_property_is_passed(self):
+        """The default launch is the windowed one it has always been."""
+        command = instance.gradle_command(self.checkout, ":fabric:runClient", self.tmp / "game",
+                                          uitest="tag:smoke")
+        self.assertNotIn(f"-P{instance.GRADLE_HEADLESS_PROPERTY}", " ".join(command))
+
+    def test_the_real_input_driver_is_recognised_in_an_argv(self):
+        self.assertTrue(instance.names_real_input_mode(["-PjechTestInputMode=REAL"]))
+        self.assertTrue(instance.names_real_input_mode(["-PjechTestInputMode= real "]))
+        self.assertFalse(instance.names_real_input_mode(["-PjechTestInputMode=SYNTHETIC"]))
+        self.assertFalse(instance.names_real_input_mode(["-PjechRunDir=/tmp/game"]))
+        self.assertFalse(instance.names_real_input_mode([]))
+
     def test_the_game_dir_is_under_the_run_directory(self):
         self.assertEqual(instance.run_game_dir(self.tmp / "runs" / "rid"),
                          self.tmp / "runs" / "rid" / "game")
@@ -319,6 +339,20 @@ class GradleLaunchTest(unittest.TestCase):
                                    log_path=self.tmp / "gradle.log", log=lambda *_: None)
         self.assertEqual(captured["kwargs"]["env"]["JAVA_HOME"], "/ambient/jdk",
                          "without daemon_java the ambient JAVA_HOME is left alone")
+
+    def test_launch_gradle_carries_the_hidden_window_switch_to_the_row_build(self):
+        captured = {}
+
+        def fake_popen(command, **kwargs):
+            captured["command"] = list(command)
+            return mock.Mock(pid=4242)
+
+        with mock.patch.object(instance.subprocess, "Popen", side_effect=fake_popen):
+            instance.launch_gradle(self.checkout, ":fabric:runClient", self.tmp / "game",
+                                   uitest="tag:smoke", headless=True,
+                                   log_path=self.tmp / "gradle.log", log=lambda *_: None)
+        self.assertIn(f"-P{instance.GRADLE_HEADLESS_PROPERTY}", captured["command"])
+        self.assertIn(f"-P{instance.GRADLE_UITEST_PROPERTY}=tag:smoke", captured["command"])
 
     def test_the_game_is_matched_on_its_working_directory(self):
         game_dir = "/runs/rid/game"

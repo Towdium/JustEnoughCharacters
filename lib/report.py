@@ -160,6 +160,7 @@ def render_text(report):
         lines.append(
             f"    packHash={str(entry.get('packHash'))[:16]} "
             f"exitCode={entry.get('exitCode')} ({entry.get('exitCodeSource')}) "
+            f"headless={bool(entry.get('headless'))} "
             f"timedOut={bool(entry.get('timedOut'))} stopReason={entry.get('stopReason') or '-'}"
         )
         if entry.get("readyWhen"):

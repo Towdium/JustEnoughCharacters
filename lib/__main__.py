@@ -73,6 +73,12 @@ def build_parser():
              "task, the default) or description (the dev client the row build describes, started "
              "by jt from a cached description)",
     )
+    running.add_argument(
+        "--headless", action="store_true",
+        help="hide the client's window, so a run cannot steal the user's focus (the row build's "
+             "-PjechTestHeadless); the harness's scenarios and screenshots are unaffected. A row "
+             "with no uitest block is refused rather than quietly run with a window",
+    )
     running.set_defaults(func=cmd_run)
 
     verifying = sub.add_parser("verify", help="read a run report and fail unless every check passed")
@@ -196,7 +202,7 @@ def cmd_resolve(args, log=print):
 def cmd_run(args, log=print):
     return runner.run_selection(args.selection, args.exclude, refresh=args.refresh, log=log,
                                 subject_spec=args.subject, subject_jar=args.subject_jar,
-                                launch_backend=args.launch_backend)
+                                launch_backend=args.launch_backend, headless=args.headless)
 
 
 def cmd_verify(args, log=print):

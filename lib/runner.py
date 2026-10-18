@@ -66,7 +66,8 @@ class RunOutcome:
 
 
 def run_selection(expression, exclude=None, *, envs=None, refresh=False, log=print,
-                  subject_spec=None, subject_jar=None, launch_backend=DEFAULT_LAUNCH_BACKEND):
+                  subject_spec=None, subject_jar=None, launch_backend=DEFAULT_LAUNCH_BACKEND,
+                  headless=False):
     """Run every env the selection matches; returns the process exit code."""
     paths.ensure_data_dirs()
     selection = Selection.parse(expression, exclude)
@@ -95,7 +96,7 @@ def run_selection(expression, exclude=None, *, envs=None, refresh=False, log=pri
     for env in matched:
         entry, code = run_env(env, refresh=refresh, log=log,
                               subject_spec=subject_spec, subject_jar=subject_jar,
-                              launch_backend=launch_backend)
+                              launch_backend=launch_backend, headless=headless)
         report["envs"].append(entry)
         results.append((entry, code))
 
@@ -107,7 +108,7 @@ def run_selection(expression, exclude=None, *, envs=None, refresh=False, log=pri
 
 
 def run_env(env, *, refresh=False, log=print, selection_label=None, subject_spec=None,
-            subject_jar=None, launch_backend=DEFAULT_LAUNCH_BACKEND):
+            subject_jar=None, launch_backend=DEFAULT_LAUNCH_BACKEND, headless=False):
     """Run one env end to end; returns ``(report entry, exit code)``."""
     if launch_backend not in LAUNCH_BACKENDS:
         raise ConfigError(
@@ -131,6 +132,7 @@ def run_env(env, *, refresh=False, log=print, selection_label=None, subject_spec
         "finishedAt": None,
         "durationMs": 0,
         "status": checks_mod.FAIL,
+        "headless": bool(headless),
         "exitCodeKind": "config",
         "exitCode": None,
         "exitCodeSource": "unknown",
@@ -171,7 +173,7 @@ def run_env(env, *, refresh=False, log=print, selection_label=None, subject_spec
         try:
             _execute(env, run_dir, entry, started_wall=started_wall, refresh=refresh, log=log,
                      subject_spec=subject_spec, subject_jar=subject_jar,
-                     launch_backend=launch_backend)
+                     launch_backend=launch_backend, headless=headless)
         except JtError as exc:
             entry[CONFIG_ERROR] = True
             entry["notes"].append(f"{type(exc).__name__}: {exc}")
@@ -243,13 +245,15 @@ def _env_report(run_id, env, entry, started_iso, duration_ms, *, selection_label
 
 
 def _execute(env, run_dir, entry, *, started_wall, refresh, log, subject_spec=None,
-             subject_jar=None, launch_backend=DEFAULT_LAUNCH_BACKEND):
+             subject_jar=None, launch_backend=DEFAULT_LAUNCH_BACKEND, headless=False):
     """Resolve the env, hand it to one launch layer, then watch and judge the run.
 
     A subject on the command line selects the direct layer; otherwise
     ``--launch-backend`` decides, and ``gradle`` is what it decides when the flag
     is absent.
     """
+    if headless:
+        _reject_headless_that_cannot_land(env)
     source = env.jech.source if env.jech is not None else "the command line"
     log(f"{uitest_pipeline.STAGE_PREFIX} config: resolving {env.name} "
         f"(jech {source}, {len(env.mods)} target mod(s), {len(env.checks)} check(s))")
@@ -261,15 +265,40 @@ def _execute(env, run_dir, entry, *, started_wall, refresh, log, subject_spec=No
 
     if subject_spec or subject_jar:
         handle = _launch_direct(env, run_dir, entry, resolved, refresh=refresh, log=log,
-                                subject_spec=subject_spec, subject_jar=subject_jar)
+                                subject_spec=subject_spec, subject_jar=subject_jar, headless=headless)
     elif launch_backend == "description":
-        handle = _launch_description(env, run_dir, entry, resolved, refresh=refresh, log=log)
+        handle = _launch_description(env, run_dir, entry, resolved, refresh=refresh, log=log,
+                                     headless=headless)
     else:
-        handle = _launch_gradle_backend(env, run_dir, entry, resolved, refresh=refresh, log=log)
+        handle = _launch_gradle_backend(env, run_dir, entry, resolved, refresh=refresh, log=log,
+                                       headless=headless)
     _watch_and_judge(env, entry, run_dir, handle, started_wall, log=log)
 
 
-def _launch_gradle_backend(env, run_dir, entry, resolved, *, refresh, log):
+def _reject_headless_that_cannot_land(env):
+    """Refuse a hidden-window run that nothing in it could hide.
+
+    The switch only reaches the client through the in-client harness (through the
+    row build's ``-PjechTestHeadless`` → ``-Djech.uitest.headless`` wiring, or
+    through the ``jech.uitest.*`` properties jt sets on a Gradle-less launch). A
+    row that declares no ``uitest`` block runs the checkout's own client, where
+    the engine is not there to hide anything: silently opening a window would be
+    a mode the run did not get, so it is a configuration error instead.
+    """
+    if env.uitest is None:
+        raise ConfigError(
+            f"{env.name}: --headless was asked for, but the row declares no uitest block, so no "
+            "harness runs in it to hide the client's window"
+        )
+    if instance.names_real_input_mode(env.gradle.args if env.gradle is not None else ()):
+        raise ConfigError(
+            f"{env.name}: --headless cannot be combined with the row's "
+            f"-P{instance.GRADLE_INPUT_MODE_PROPERTY}={instance.REAL_INPUT_MODE}: the real input "
+            "driver moves the OS cursor and needs a visible, focused window"
+        )
+
+
+def _launch_gradle_backend(env, run_dir, entry, resolved, *, refresh, log, headless=False):
     """The Gradle backends: a run task in a checkout or a standalone ``uitest`` build."""
     seed = None
     if env.world is not None:
@@ -333,7 +362,8 @@ def _launch_gradle_backend(env, run_dir, entry, resolved, *, refresh, log):
     minecraft_dir = instance.run_game_dir(run_dir)
     log(f"{env.name}: gradle run: " + " ".join(instance.gradle_command(
         checkout, run_task, minecraft_dir,
-        world=env.world.name if env.world is not None else None, uitest=uitest_selection)
+        world=env.world.name if env.world is not None else None, uitest=uitest_selection,
+        headless=headless)
         + jar_args + (list(env.gradle.args) if env.gradle is not None else [])))
     if uitest_selection is not None:
         entry["notes"].append(
@@ -364,7 +394,7 @@ def _launch_gradle_backend(env, run_dir, entry, resolved, *, refresh, log):
         extra_args = list(env.gradle.args)
     proc = instance.launch_gradle(checkout, run_task, minecraft_dir,
                                   world=env.world.name if env.world is not None else None,
-                                  uitest=uitest_selection,
+                                  uitest=uitest_selection, headless=headless,
                                   java_home=launcher_java,
                                   log_path=launcher_log, extra_args=extra_args, log=log)
     return LaunchHandle(
@@ -374,7 +404,8 @@ def _launch_gradle_backend(env, run_dir, entry, resolved, *, refresh, log):
     )
 
 
-def _launch_direct(env, run_dir, entry, resolved, *, subject_spec, subject_jar, refresh, log):
+def _launch_direct(env, run_dir, entry, resolved, *, subject_spec, subject_jar, refresh, log,
+                   headless=False):
     """Assemble a real client environment from the env's description and start it.
 
     The order is the one the design puts on paper — subject, harness, client,
@@ -454,7 +485,8 @@ def _launch_direct(env, run_dir, entry, resolved, *, subject_spec, subject_jar, 
     entry["log"] = paths.display(instance.log_path_in(minecraft_dir))
     command, _values = launch_mod.build_command(
         java=java_home / "bin" / "java", client=client, loader=loader, game_dir=minecraft_dir,
-        natives_dir=client.natives_dir, extra_jvm=harness.jvm_args(env, minecraft_dir), log=log,
+        natives_dir=client.natives_dir,
+        extra_jvm=harness.jvm_args(env, minecraft_dir, headless=headless), log=log,
     )
     entry["launch"] = {
         "backend": "direct",
@@ -481,7 +513,7 @@ def _launch_direct(env, run_dir, entry, resolved, *, subject_spec, subject_jar, 
                         pids_fn=pids, crash_before=crash_before)
 
 
-def _launch_description(env, run_dir, entry, resolved, *, refresh, log):
+def _launch_description(env, run_dir, entry, resolved, *, refresh, log, headless=False):
     """Start the dev client a Forge-family row's build describes.
 
     The build stage is the row's own Gradle build: it compiles the harness and
@@ -546,7 +578,7 @@ def _launch_description(env, run_dir, entry, resolved, *, refresh, log):
     )
 
     command = description.compose(java=java_home / "bin" / "java",
-                                  extra_jvm=harness.jvm_args(env, minecraft_dir))
+                                  extra_jvm=harness.jvm_args(env, minecraft_dir, headless=headless))
     crash_before = crash_report_snapshot(minecraft_dir)
     proc = launch_mod.launch(command, cwd=minecraft_dir, log_path=run_dir / "client.log",
                              env_extra=description.environment, log=log)

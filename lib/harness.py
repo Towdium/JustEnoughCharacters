@@ -19,8 +19,9 @@ other than the artifact the run names.
 unless ``jech.uitest.run`` is set. Under the checkout backend those properties
 came from the Gradle run wiring; with Gradle gone from the run they are JVM
 arguments this module spells, which is the whole of the harness's run-time
-configuration: the selection, and the directory its report and captures land in
-(``<game dir>/uitest``, which is where ``checks.uitest_report`` reads it).
+configuration: the selection, the directory its report and captures land in
+(``<game dir>/uitest``, which is where ``checks.uitest_report`` reads it), and
+whether the client's window is hidden.
 """
 
 from __future__ import annotations
@@ -53,23 +54,27 @@ def project_dir(env):
     return directory
 
 
-def properties(env, game_dir):
+def properties(env, game_dir, *, headless=False):
     """The ``jech.uitest.*`` properties one run sets.
 
-    Only what the env actually declares: the selection and the output directory.
-    Everything else keeps the engine's own default, so a run's configuration is
-    the row's, not this module's opinion.
+    Only what the env actually declares: the selection and the output directory,
+    plus the hidden-window switch when the run asked for one. Everything else
+    keeps the engine's own default, so a run's configuration is the row's, not
+    this module's opinion.
     """
     out_dir = Path(game_dir) / checks.UITEST_REPORT_DIR
-    return {
+    values = {
         f"{PROPERTY_PREFIX}run": env.uitest.selection,
         f"{PROPERTY_PREFIX}out": str(out_dir),
     }
+    if headless:
+        values[f"{PROPERTY_PREFIX}headless"] = "true"
+    return values
 
 
-def jvm_args(env, game_dir):
+def jvm_args(env, game_dir, *, headless=False):
     """The same properties as ``-D`` arguments, the form the client receives."""
-    return [f"-D{key}={value}" for key, value in properties(env, game_dir).items()]
+    return [f"-D{key}={value}" for key, value in properties(env, game_dir, headless=headless).items()]
 
 
 def ensure_jar(env, *, subject_jar, target_mod_jar=None, java_home=None, log=print):

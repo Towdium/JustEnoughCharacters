@@ -61,6 +61,9 @@ GRADLE_WRAPPER = "gradlew"
 GRADLE_RUN_DIR_PROPERTY = "jechRunDir"
 GRADLE_QUICK_PLAY_PROPERTY = "jechQuickPlayWorld"
 GRADLE_UITEST_PROPERTY = "jechTest"
+GRADLE_HEADLESS_PROPERTY = "jechTestHeadless"
+GRADLE_INPUT_MODE_PROPERTY = "jechTestInputMode"
+REAL_INPUT_MODE = "REAL"
 LSOF_ENV = "JT_LSOF"
 MIN_GRADLE_GAME_SEARCH_SEC = 1.0
 TERMINATION_GRACE_SEC = 6.0
@@ -526,18 +529,35 @@ def _signal(pid, signum):
 
 
 
-def gradle_command(checkout, task, game_dir, *, world=None, uitest=None, wrapper=GRADLE_WRAPPER):
+def names_real_input_mode(args):
+    """True when an argv asks for the harness's real input driver.
+
+    That driver moves the OS cursor and needs a visible, focused window, so every
+    row's build refuses to combine it with a hidden window. jt never passes an
+    input mode itself; this exists to catch one a row's ``gradle.args`` names,
+    before the row's own build fails the run with its exception.
+    """
+    prefix = f"-P{GRADLE_INPUT_MODE_PROPERTY}="
+    for arg in args:
+        if arg.startswith(prefix) and arg[len(prefix):].strip().upper() == REAL_INPUT_MODE:
+            return True
+    return False
+
+
+def gradle_command(checkout, task, game_dir, *, world=None, uitest=None, headless=False,
+                   wrapper=GRADLE_WRAPPER):
     """The ``./gradlew`` argv that runs one env's client inside its checkout.
 
     ``--no-daemon``: a resident Gradle daemon would keep a several-hundred-megabyte
     JVM alive between runs, which this machine's memory budget does not want.
 
-    The game directory, the world and the UI test selection are handed over as
-    **project properties**, not as game arguments: the checkout's own run
-    configuration is what turns them into ``gameDirectory``/``--quickPlaySingleplayer``/
-    ``-Djech.uitest.run`` for whichever loader the module uses. That is also why the
-    property names live in the checkout's build files — see the ``gradle`` section
-    of README.md.
+    The game directory, the world, the UI test selection and the hidden-window
+    switch are handed over as **project properties**, not as game arguments: the
+    checkout's own run configuration is what turns them into
+    ``gameDirectory``/``--quickPlaySingleplayer``/``-Djech.uitest.run``/
+    ``-Djech.uitest.headless`` for whichever loader the module uses. That is also
+    why the property names live in the checkout's build files — see the ``gradle``
+    section of README.md.
     """
     command = [str(Path(checkout) / wrapper), task, "--no-daemon",
                f"-P{GRADLE_RUN_DIR_PROPERTY}={game_dir}"]
@@ -545,11 +565,13 @@ def gradle_command(checkout, task, game_dir, *, world=None, uitest=None, wrapper
         command.append(f"-P{GRADLE_QUICK_PLAY_PROPERTY}={world}")
     if uitest:
         command.append(f"-P{GRADLE_UITEST_PROPERTY}={uitest}")
+    if headless:
+        command.append(f"-P{GRADLE_HEADLESS_PROPERTY}")
     return command
 
 
-def launch_gradle(checkout, task, game_dir, *, world=None, uitest=None, java_home=None, log_path,
-                  extra_args=(), log=print):
+def launch_gradle(checkout, task, game_dir, *, world=None, uitest=None, headless=False,
+                  java_home=None, log_path, extra_args=(), log=print):
     """Start the checkout's Gradle run task in the background; returns the Popen.
 
     The client's JDK is *not* chosen here — the checkout's own toolchain decides
@@ -560,7 +582,8 @@ def launch_gradle(checkout, task, game_dir, *, world=None, uitest=None, java_hom
     writes under the game directory, which the caller follows separately.
     """
     checkout = Path(checkout)
-    command = gradle_command(checkout, task, game_dir, world=world, uitest=uitest)
+    command = gradle_command(checkout, task, game_dir, world=world, uitest=uitest,
+                             headless=headless)
     command.extend(extra_args)
     Path(log_path).parent.mkdir(parents=True, exist_ok=True)
     env = dict(os.environ)
