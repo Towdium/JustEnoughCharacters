@@ -58,6 +58,26 @@ public final class ScreenInputImpl implements ScreenInput {
     }
 
     @Override
+    public void imeCompose(String preedit) {
+        ImeInjection.compose(preedit);
+    }
+
+    @Override
+    public void imeCommit(String committed) {
+        ImeInjection.commit(committed);
+    }
+
+    @Override
+    public String imeFocusedText() {
+        return ImeInjection.focusedText();
+    }
+
+    @Override
+    public boolean imeFocusedPreeditOverlay() {
+        return ImeInjection.focusedPreeditOverlay();
+    }
+
+    @Override
     public boolean mouseGrabbed(Object handler) {
         return ((MouseHandler) handler).isMouseGrabbed();
     }

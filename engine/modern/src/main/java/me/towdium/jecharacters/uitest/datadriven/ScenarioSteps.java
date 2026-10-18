@@ -80,6 +80,50 @@ final class ScenarioSteps {
         register("type_text", (builder, args, context) -> builder.typeText(args.string("text")));
         register("type_into", (builder, args, context) -> builder.typeInto(args.string("text")));
 
+        register("ime_compose", (builder, args, context) -> {
+            String preedit = args.string("text");
+            builder.action(
+                "ime compose " + preedit,
+                step -> step.driver().imeCompose(preedit)
+            );
+        });
+
+        register("ime_commit", (builder, args, context) -> {
+            String committed = args.string("text");
+            builder.action(
+                "ime commit " + committed,
+                step -> step.driver().imeCommit(committed)
+            );
+        });
+
+        register("assert_focus_text", (builder, args, context) -> {
+            if (!args.has("text")) {
+                throw new ScenarioJsonException(
+                    context + ": 'text' is required; use null to assert that the focused widget is empty"
+                );
+            }
+            String named = args.stringOrNull("text");
+            String expected = named == null ? "" : named;
+            builder.action(
+                "assertFocusText " + expected,
+                step -> step.checkEquals(
+                    "the focused widget's text", expected, step.driver().imeFocusedText()
+                )
+            );
+        });
+
+        register("assert_focus_preedit", (builder, args, context) -> {
+            boolean expect = args.bool("expect");
+            builder.action(
+                "assertFocusPreedit " + expect,
+                step -> step.check(
+                    "the focused widget carries an IME pre-edit overlay",
+                    step.driver().imeFocusedPreeditOverlay() == expect,
+                    "expected " + expect
+                )
+            );
+        });
+
         register("click", (builder, args, context) -> {
             double x = args.number("x");
             double y = args.number("y");

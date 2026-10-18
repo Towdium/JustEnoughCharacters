@@ -20,6 +20,22 @@ public interface ScreenInput {
 
     void charTyped(Object screen, int codePoint, int modifiers);
 
+    default void imeCompose(String preedit) {
+        throw ImeSupport.unsupported(ImeSupport.rowVersion());
+    }
+
+    default void imeCommit(String committed) {
+        throw ImeSupport.unsupported(ImeSupport.rowVersion());
+    }
+
+    default String imeFocusedText() {
+        throw ImeSupport.unsupported(ImeSupport.rowVersion());
+    }
+
+    default boolean imeFocusedPreeditOverlay() {
+        throw ImeSupport.unsupported(ImeSupport.rowVersion());
+    }
+
     default void clickThroughHandler(float xGui, float yGui, int button, int action) {
         throw new UnsupportedOperationException("this row does not click through the mouse handler");
     }

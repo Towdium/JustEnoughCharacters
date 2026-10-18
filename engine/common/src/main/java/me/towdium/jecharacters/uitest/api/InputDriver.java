@@ -1,5 +1,7 @@
 package me.towdium.jecharacters.uitest.api;
 
+import me.towdium.jecharacters.uitest.input.ScreenInput;
+
 public abstract class InputDriver {
 
     public static final float parked = -10_000f;
@@ -33,6 +35,22 @@ public abstract class InputDriver {
     public void keyUp(Object screen, int keyCode, int scanCode, int modifiers) {}
 
     public void charTyped(Object screen, int codePoint, int modifiers) {}
+
+    public void imeCompose(String preedit) {
+        ScreenInput.current().imeCompose(preedit);
+    }
+
+    public void imeCommit(String committed) {
+        ScreenInput.current().imeCommit(committed);
+    }
+
+    public String imeFocusedText() {
+        return ScreenInput.current().imeFocusedText();
+    }
+
+    public boolean imeFocusedPreeditOverlay() {
+        return ScreenInput.current().imeFocusedPreeditOverlay();
+    }
 
     public abstract boolean isKeyDown(int keyCode);
 
