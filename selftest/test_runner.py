@@ -146,9 +146,15 @@ class HeadlessModeTest(unittest.TestCase):
         data.update(overrides)
         return support.mk_env(**data)
 
-    def test_a_windowed_run_records_headless_false(self):
+    def test_a_run_is_headless_unless_it_is_asked_for_a_window(self):
         entry, _code = runner.run_env(support.mk_env(skip="declared"), log=lambda *_: None)
+        self.assertIs(entry["headless"], True)
+        entry, _code = runner.run_env(support.mk_env(skip="declared"), headless=False,
+                                      log=lambda *_: None)
         self.assertIs(entry["headless"], False)
+        self.assertIs(runner.DEFAULT_HEADLESS, True)
+        self.assertIs(runner.run_env.__kwdefaults__["headless"], runner.DEFAULT_HEADLESS)
+        self.assertIs(runner.run_selection.__kwdefaults__["headless"], runner.DEFAULT_HEADLESS)
 
     def test_a_hidden_run_is_visible_from_the_run_directory_alone(self):
         entry, code = runner.run_env(support.mk_env(skip="declared"), headless=True,
@@ -191,7 +197,8 @@ class HeadlessModeTest(unittest.TestCase):
         hidden = harness.jvm_args(env, "/runs/rid/game", headless=True)
         self.assertIn("-Djech.uitest.headless=true", hidden)
         self.assertIn("-Djech.uitest.run=tag:smoke", hidden)
-        self.assertNotIn("-Djech.uitest.headless=true", harness.jvm_args(env, "/runs/rid/game"))
+        windowed = harness.jvm_args(env, "/runs/rid/game", headless=False)
+        self.assertNotIn("-Djech.uitest.headless=true", windowed)
 
 
 class EnvReportShapeTest(unittest.TestCase):

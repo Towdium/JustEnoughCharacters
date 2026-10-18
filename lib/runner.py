@@ -49,6 +49,7 @@ SETTLE_GRACE_SEC = 3
 CONFIG_ERROR = "configError"
 LAUNCH_BACKENDS = ("gradle", "description")
 DEFAULT_LAUNCH_BACKEND = "gradle"
+DEFAULT_HEADLESS = True
 
 
 class RunOutcome:
@@ -67,7 +68,7 @@ class RunOutcome:
 
 def run_selection(expression, exclude=None, *, envs=None, refresh=False, log=print,
                   subject_spec=None, subject_jar=None, launch_backend=DEFAULT_LAUNCH_BACKEND,
-                  headless=False):
+                  headless=DEFAULT_HEADLESS):
     """Run every env the selection matches; returns the process exit code."""
     paths.ensure_data_dirs()
     selection = Selection.parse(expression, exclude)
@@ -108,7 +109,7 @@ def run_selection(expression, exclude=None, *, envs=None, refresh=False, log=pri
 
 
 def run_env(env, *, refresh=False, log=print, selection_label=None, subject_spec=None,
-            subject_jar=None, launch_backend=DEFAULT_LAUNCH_BACKEND, headless=False):
+            subject_jar=None, launch_backend=DEFAULT_LAUNCH_BACKEND, headless=DEFAULT_HEADLESS):
     """Run one env end to end; returns ``(report entry, exit code)``."""
     if launch_backend not in LAUNCH_BACKENDS:
         raise ConfigError(
@@ -245,7 +246,7 @@ def _env_report(run_id, env, entry, started_iso, duration_ms, *, selection_label
 
 
 def _execute(env, run_dir, entry, *, started_wall, refresh, log, subject_spec=None,
-             subject_jar=None, launch_backend=DEFAULT_LAUNCH_BACKEND, headless=False):
+             subject_jar=None, launch_backend=DEFAULT_LAUNCH_BACKEND, headless=DEFAULT_HEADLESS):
     """Resolve the env, hand it to one launch layer, then watch and judge the run.
 
     A subject on the command line selects the direct layer; otherwise
@@ -298,7 +299,8 @@ def _reject_headless_that_cannot_land(env):
         )
 
 
-def _launch_gradle_backend(env, run_dir, entry, resolved, *, refresh, log, headless=False):
+def _launch_gradle_backend(env, run_dir, entry, resolved, *, refresh, log,
+                           headless=DEFAULT_HEADLESS):
     """The Gradle backends: a run task in a checkout or a standalone ``uitest`` build."""
     seed = None
     if env.world is not None:
@@ -405,7 +407,7 @@ def _launch_gradle_backend(env, run_dir, entry, resolved, *, refresh, log, headl
 
 
 def _launch_direct(env, run_dir, entry, resolved, *, subject_spec, subject_jar, refresh, log,
-                   headless=False):
+                   headless=DEFAULT_HEADLESS):
     """Assemble a real client environment from the env's description and start it.
 
     The order is the one the design puts on paper — subject, harness, client,
@@ -513,7 +515,7 @@ def _launch_direct(env, run_dir, entry, resolved, *, subject_spec, subject_jar, 
                         pids_fn=pids, crash_before=crash_before)
 
 
-def _launch_description(env, run_dir, entry, resolved, *, refresh, log, headless=False):
+def _launch_description(env, run_dir, entry, resolved, *, refresh, log, headless=DEFAULT_HEADLESS):
     """Start the dev client a Forge-family row's build describes.
 
     The build stage is the row's own Gradle build: it compiles the harness and

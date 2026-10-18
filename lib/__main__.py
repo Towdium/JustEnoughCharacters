@@ -73,13 +73,21 @@ def build_parser():
              "task, the default) or description (the dev client the row build describes, started "
              "by jt from a cached description)",
     )
-    running.add_argument(
-        "--headless", action="store_true",
-        help="hide the client's window, so a run cannot steal the user's focus (the row build's "
-             "-PjechTestHeadless); the harness's scenarios and screenshots are unaffected. A row "
-             "with no uitest block is refused rather than quietly run with a window",
+    window = running.add_mutually_exclusive_group()
+    window.add_argument(
+        "--headless", dest="headless", action="store_true",
+        help="the default: hide the client's window, so a run cannot steal the user's focus (the "
+             "row build's -PjechTestHeadless); the harness's scenarios and screenshots are "
+             "unaffected. A row with no uitest block is refused rather than quietly run with a "
+             "window",
     )
-    running.set_defaults(func=cmd_run)
+    window.add_argument(
+        "--windowed", dest="headless", action="store_false",
+        help="the way back to a visible, focused client window: the display has to stay awake for "
+             "the whole run, and the real input driver a row asks for with "
+             "-PjechTestInputMode=REAL needs it",
+    )
+    running.set_defaults(func=cmd_run, headless=True)
 
     verifying = sub.add_parser("verify", help="read a run report and fail unless every check passed")
     verifying.add_argument("run_dir", help="a runs/<id> directory (or its report.json)")

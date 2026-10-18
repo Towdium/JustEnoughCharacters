@@ -9,9 +9,10 @@ import tempfile
 import unittest
 import xml.etree.ElementTree as ElementTree
 from pathlib import Path
+from unittest import mock
 
-from lib import checks, report
-from lib.__main__ import main
+from lib import checks, report, runner
+from lib.__main__ import build_parser, main
 from lib.errors import ReportError
 from lib.select import Selection
 
@@ -308,6 +309,33 @@ class CliTest(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("matched 0 of", output)
         self.assertIn("never reported as a pass", output)
+
+    def test_run_is_headless_unless_the_windowed_switch_says_otherwise(self):
+        parser = build_parser()
+        self.assertIs(parser.parse_args(["run", "all"]).headless, True)
+        self.assertIs(parser.parse_args(["run", "all", "--headless"]).headless, True)
+        self.assertIs(parser.parse_args(["run", "all", "--windowed"]).headless, False)
+
+    def test_the_windowed_switch_and_the_hidden_window_switch_are_mutually_exclusive(self):
+        with self.assertRaises(SystemExit):
+            build_parser().parse_args(["run", "all", "--headless", "--windowed"])
+
+    def test_a_windowed_run_reaches_the_runner_as_headless_false(self):
+        seen = {}
+
+        def fake_run_selection(selection, exclude, **kwargs):
+            seen.update(kwargs)
+            seen["selection"] = selection
+            return 0
+
+        with mock.patch.object(runner, "run_selection", side_effect=fake_run_selection):
+            code, _output = self.cli(["run", "tag:nope", "--windowed"])
+        self.assertEqual(code, 0)
+        self.assertEqual(seen["selection"], "tag:nope")
+        self.assertIs(seen["headless"], False)
+        with mock.patch.object(runner, "run_selection", side_effect=fake_run_selection):
+            self.cli(["run", "tag:nope"])
+        self.assertIs(seen["headless"], True)
 
 
 if __name__ == "__main__":

@@ -295,10 +295,10 @@ class GradleLaunchTest(unittest.TestCase):
         self.assertIn(f"-P{instance.GRADLE_HEADLESS_PROPERTY}", command)
         self.assertNotIn(f"-P{instance.GRADLE_HEADLESS_PROPERTY}=", " ".join(command))
 
-    def test_without_the_switch_no_headless_property_is_passed(self):
-        """The default launch is the windowed one it has always been."""
+    def test_the_argv_builder_passes_the_property_only_when_the_run_asks_for_it(self):
+        """The run's own default is decided in lib/runner.py, not here."""
         command = instance.gradle_command(self.checkout, ":fabric:runClient", self.tmp / "game",
-                                          uitest="tag:smoke")
+                                          uitest="tag:smoke", headless=False)
         self.assertNotIn(f"-P{instance.GRADLE_HEADLESS_PROPERTY}", " ".join(command))
 
     def test_the_real_input_driver_is_recognised_in_an_argv(self):

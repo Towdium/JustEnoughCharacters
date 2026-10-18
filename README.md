@@ -205,13 +205,21 @@ schema error rather than a run that quietly launches nothing
   The failure is recognisable from the report's `exitCodeKind` (`check`, source
   `launcher`, exit code 1 with no session) plus the `EARLYDISPLAY` line in the
   game log — this is why the harness records the log next to every report.
-* **`jt run --headless` hides that window**: the runner hands the row build
-  `-PjechTestHeadless` (which becomes `-Djech.uitest.headless=true`; a
-  Gradle-less `--subject`/`--launch-backend=description` launch gets the property
-  directly), so a run cannot steal the user's focus while it works. The scenarios
-  and their screenshots are unaffected, the report records `headless` per env, and
-  a row that declares no `uitest` block is refused rather than quietly run with a
-  window.
+* **A run hides that window by default.** `jt run` — a single env and a `run all`
+  selection alike — hands the row build `-PjechTestHeadless`, which becomes
+  `-Djech.uitest.headless=true` (a Gradle-less
+  `--subject`/`--launch-backend=description` launch gets the property directly),
+  so the client hides its window as soon as it has one instead of holding the
+  user's focus for the 30-90 seconds it spends working. `--headless` says the same
+  thing explicitly. The scenarios and their screenshots are unaffected, the
+  report records `headless` per env, and a row that declares no `uitest` block is
+  refused rather than quietly run with a window.
+* **`jt run --windowed` is the way back to a visible client**, and the only way a
+  row that asks for the real input driver (a row whose `gradle.args` name
+  `-PjechTestInputMode=REAL`) can run at all: jt refuses that combination under
+  the hidden-window default, before any row build sees it. A windowed run needs
+  the display awake for its whole duration. `--windowed` and `--headless` are
+  mutually exclusive.
 
 ## The in-client UI test harness (`uitest`)
 
