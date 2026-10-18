@@ -16,7 +16,6 @@
     "uitest.KeyboardHandlerMixin",
     "uitest.MatchMixin",
     "uitest.MinecraftModifierMixin",
-    "uitest.MinecraftPumpMixin",
     "uitest.MouseHandlerAccessor",
     "uitest.MouseHandlerMixin",
     "uitest.WindowActiveMixin"

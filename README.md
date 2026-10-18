@@ -459,8 +459,8 @@ doubtful upstream version pins, `legacy` marks the 1.12.2 JEI row, and any env
 that declares `skip` is also tagged `skip`. Per-env loader/java/target versions,
 the check families and the resolution rules are in
 [envs/README.md](envs/README.md); so is the state of the four newest rows
-(`moderner-26.2` ×2, `moderner-26.3` ×2) — pinned and compiling, but with no run
-of theirs passed yet.
+(`moderner-26.2` ×2, `moderner-26.3` ×2) — pinned, compiling and green since
+2026-10-18.
 
 | version line | mc | neoforge | fabric | forge |
 | --- | --- | --- | --- | --- |
@@ -546,7 +546,9 @@ left in favour of its own harness build. Details in
 * The JDKs the envs ask for (17, 21, 25) — each env names only a major
   version, and the lookup is per-platform (see the table above); the client's own
   JDK comes from the harness build's toolchain (8 on the 1.12.2 and 1.16.5
-  lines). The world seeder
+  lines). The component source sets (`engine/common`, `engine/legacy/src`) are
+  shared by every row, so they must stay compilable at that lowest level (JDK 8).
+  The world seeder
   uses the same lookup for its dedicated server.
 * Built JECh jars for the version line under test, in their checkouts.
 * `CF_API_KEY` for CurseForge resolutions (JEI, fabric-api); Modrinth needs none.

@@ -1083,9 +1083,11 @@ finds nothing when the jar under test carries no
 26.2/26.3 jars had, in the moderner checkout's per-line module builds and owned
 there. The four jars on disk were rebuilt after that run and now carry the entry
 and `me/towdium/jecharacters/ModernCommandRegister.class` (measured 2026-10-18,
-`unzip -l`), but no run of the four rows has been recorded since — so the matrix
-is 22 rows, not a 22-row green run, and the check families' level-load claim is
-not extended to JEI 30/31 here.
+`unzip -l`), and all four rows ran green that day — `runs/moderner-26.2-fabric-20261018-054912`,
+`runs/moderner-26.2-neoforge-20261018-111313`, `runs/moderner-26.3-fabric-20261018-112019`,
+`runs/moderner-26.3-neoforge-20261018-111802`, each at `4/4 scenarios` — so the matrix
+is a 22-row green run (`runs/all-20261018-114438`) and the check families'
+level-load claim extends to JEI 30/31 here.
 
 The version strings above are not invented: they mirror each checkout's
 `gradle.properties` (`neo_version`, `forge_version`, `fabric_loader_version`,
@@ -1168,8 +1170,8 @@ has a JEI plugin and can be asserted on its registration marker.
   2026-10-14). So
   the level-load claim holds for JEI 15 (1.20.1), JEI 19 (1.21.1), JEI 26
   (1.21.10) and JEI 29 (26.1.2): each of them defers `registerAdvancedSearch`
-  until a level exists — and not yet for JEI 30 (26.2) / 31 (26.3), whose rows
-  have not run (above). Every row also adds `uitest_report` to this set:
+  until a level exists — and so do the four 26.2 / 26.3 rows, green since
+  2026-10-18 (above). Every row also adds `uitest_report` to this set:
   each row's own scenarios are the evidence, and the log checks stay as the "the
   mod loaded" half.
 * **B — no JEI plugin** (mv-1.16.5 ×2, mv-1.18.2 ×2): the failure markers only —

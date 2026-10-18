@@ -2,6 +2,7 @@ package me.towdium.jecharacters.uitest.input;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -201,59 +202,77 @@ public final class Keys {
         if (clientKey >= 30 && clientKey <= 38) {
             return clientKey + 19;
         }
-        return switch (clientKey) {
-            case 39 -> '0';
-            case 40 -> '\r';
-            case 41 -> 27;
-            case 42 -> '\b';
-            case 43 -> '\t';
-            case 44 -> ' ';
-            case 45 -> '-';
-            case 46 -> '=';
-            case 47 -> '[';
-            case 48 -> ']';
-            case 49 -> '\\';
-            case 51 -> ';';
-            case 52 -> '\'';
-            case 53 -> '`';
-            case 54 -> ',';
-            case 55 -> '.';
-            case 56 -> '/';
-            case 79 -> 0x4000004F;
-            case 80 -> 0x40000050;
-            case 81 -> 0x40000051;
-            case 82 -> 0x40000052;
-            case 88 -> 0x40000058;
-            case 103 -> 0x40000067;
-            case 224 -> 0x400000E0;
-            case 225 -> 0x400000E1;
-            case 226 -> 0x400000E2;
-            case 227 -> 0x400000E3;
-            case 228 -> 0x400000E4;
-            case 229 -> 0x400000E5;
-            case 230 -> 0x400000E6;
-            case 231 -> 0x400000E7;
-            default -> 0;
-        };
+        switch (clientKey) {
+            case 39: return '0';
+            case 40: return '\r';
+            case 41: return 27;
+            case 42: return '\b';
+            case 43: return '\t';
+            case 44: return ' ';
+            case 45: return '-';
+            case 46: return '=';
+            case 47: return '[';
+            case 48: return ']';
+            case 49: return '\\';
+            case 51: return ';';
+            case 52: return '\'';
+            case 53: return '`';
+            case 54: return ',';
+            case 55: return '.';
+            case 56: return '/';
+            case 79: return 0x4000004F;
+            case 80: return 0x40000050;
+            case 81: return 0x40000051;
+            case 82: return 0x40000052;
+            case 88: return 0x40000058;
+            case 103: return 0x40000067;
+            case 224: return 0x400000E0;
+            case 225: return 0x400000E1;
+            case 226: return 0x400000E2;
+            case 227: return 0x400000E3;
+            case 228: return 0x400000E4;
+            case 229: return 0x400000E5;
+            case 230: return 0x400000E6;
+            case 231: return 0x400000E7;
+            default: return 0;
+        }
     }
 
     public static int modifierMaskOf(int clientKey) {
         if (sdlKeys) {
-            return switch (clientKey) {
-                case 225, 229 -> shiftMask;
-                case 224, 228 -> controlMask;
-                case 226, 230 -> altMask;
-                case 227, 231 -> superMask;
-                default -> 0;
-            };
+            switch (clientKey) {
+                case 225:
+                case 229:
+                    return shiftMask;
+                case 224:
+                case 228:
+                    return controlMask;
+                case 226:
+                case 230:
+                    return altMask;
+                case 227:
+                case 231:
+                    return superMask;
+                default:
+                    return 0;
+            }
         }
-        return switch (clientKey) {
-            case leftShift, rightShift -> shiftMask;
-            case leftControl, rightControl -> controlMask;
-            case leftAlt, rightAlt -> altMask;
-            case leftSuper, rightSuper -> superMask;
-            default -> 0;
-        };
+        switch (clientKey) {
+            case leftShift:
+            case rightShift:
+                return shiftMask;
+            case leftControl:
+            case rightControl:
+                return controlMask;
+            case leftAlt:
+            case rightAlt:
+                return altMask;
+            case leftSuper:
+            case rightSuper:
+                return superMask;
+            default:
+                return 0;
+        }
     }
 
     public static int modifierBits(int mask) {
@@ -325,7 +344,7 @@ public final class Keys {
         try {
             Field field = glfw.getField(name);
             Object value = field.get(null);
-            return value instanceof Integer code ? code : null;
+            return value instanceof Integer ? (Integer) value : null;
         } catch (NoSuchFieldException | IllegalAccessException e) {
             return null;
         }
@@ -344,51 +363,51 @@ public final class Keys {
         if (literal >= kp0 && literal <= kp9) {
             return literal == kp0 ? 98 : literal - kp0 + 88;
         }
-        return switch (literal) {
-            case space -> 44;
-            case apostrophe -> 52;
-            case comma -> 54;
-            case minus -> 45;
-            case period -> 55;
-            case slash -> 56;
-            case semicolon -> 51;
-            case equals -> 46;
-            case leftBracket -> 47;
-            case backslash -> 49;
-            case rightBracket -> 48;
-            case grave -> 53;
-            case escape -> 41;
-            case enter -> 40;
-            case tab -> 43;
-            case backspace -> 42;
-            case insert -> 73;
-            case delete -> 76;
-            case right -> 79;
-            case left -> 80;
-            case down -> 81;
-            case up -> 82;
-            case pageUp -> 75;
-            case pageDown -> 78;
-            case home -> 74;
-            case end -> 77;
-            case capsLock -> 57;
-            case kpDecimal -> 99;
-            case kpDivide -> 84;
-            case kpMultiply -> 85;
-            case kpSubtract -> 86;
-            case kpEqual -> 103;
-            case kpEnter -> 88;
-            case menu -> 101;
-            case leftControl -> 224;
-            case leftShift -> 225;
-            case leftAlt -> 226;
-            case leftSuper -> 227;
-            case rightControl -> 228;
-            case rightShift -> 229;
-            case rightAlt -> 230;
-            case rightSuper -> 231;
-            default -> 0;
-        };
+        switch (literal) {
+            case space: return 44;
+            case apostrophe: return 52;
+            case comma: return 54;
+            case minus: return 45;
+            case period: return 55;
+            case slash: return 56;
+            case semicolon: return 51;
+            case equals: return 46;
+            case leftBracket: return 47;
+            case backslash: return 49;
+            case rightBracket: return 48;
+            case grave: return 53;
+            case escape: return 41;
+            case enter: return 40;
+            case tab: return 43;
+            case backspace: return 42;
+            case insert: return 73;
+            case delete: return 76;
+            case right: return 79;
+            case left: return 80;
+            case down: return 81;
+            case up: return 82;
+            case pageUp: return 75;
+            case pageDown: return 78;
+            case home: return 74;
+            case end: return 77;
+            case capsLock: return 57;
+            case kpDecimal: return 99;
+            case kpDivide: return 84;
+            case kpMultiply: return 85;
+            case kpSubtract: return 86;
+            case kpEqual: return 103;
+            case kpEnter: return 88;
+            case menu: return 101;
+            case leftControl: return 224;
+            case leftShift: return 225;
+            case leftAlt: return 226;
+            case leftSuper: return 227;
+            case rightControl: return 228;
+            case rightShift: return 229;
+            case rightAlt: return 230;
+            case rightSuper: return 231;
+            default: return 0;
+        }
     }
 
     private static String sdlName(int scancode) {
@@ -404,50 +423,50 @@ public final class Keys {
         if (scancode >= 89 && scancode <= 97) {
             return "kp_" + (scancode - 89 + 1);
         }
-        return switch (scancode) {
-            case 39 -> "0";
-            case 40 -> "enter";
-            case 41 -> "escape";
-            case 42 -> "backspace";
-            case 43 -> "tab";
-            case 44 -> "space";
-            case 45 -> "minus";
-            case 46 -> "equal";
-            case 47 -> "left_bracket";
-            case 48 -> "right_bracket";
-            case 49 -> "backslash";
-            case 51 -> "semicolon";
-            case 52 -> "apostrophe";
-            case 53 -> "grave";
-            case 54 -> "comma";
-            case 55 -> "period";
-            case 56 -> "slash";
-            case 57 -> "caps_lock";
-            case 73 -> "insert";
-            case 74 -> "home";
-            case 75 -> "page_up";
-            case 76 -> "delete";
-            case 77 -> "end";
-            case 78 -> "page_down";
-            case 79 -> "right";
-            case 80 -> "left";
-            case 81 -> "down";
-            case 82 -> "up";
-            case 88 -> "kp_enter";
-            case 98 -> "kp_0";
-            case 99 -> "kp_decimal";
-            case 101 -> "menu";
-            case 103 -> "kp_equal";
-            case 224 -> "left_control";
-            case 225 -> "left_shift";
-            case 226 -> "left_alt";
-            case 227 -> "left_super";
-            case 228 -> "right_control";
-            case 229 -> "right_shift";
-            case 230 -> "right_alt";
-            case 231 -> "right_super";
-            default -> Integer.toString(scancode);
-        };
+        switch (scancode) {
+            case 39: return "0";
+            case 40: return "enter";
+            case 41: return "escape";
+            case 42: return "backspace";
+            case 43: return "tab";
+            case 44: return "space";
+            case 45: return "minus";
+            case 46: return "equal";
+            case 47: return "left_bracket";
+            case 48: return "right_bracket";
+            case 49: return "backslash";
+            case 51: return "semicolon";
+            case 52: return "apostrophe";
+            case 53: return "grave";
+            case 54: return "comma";
+            case 55: return "period";
+            case 56: return "slash";
+            case 57: return "caps_lock";
+            case 73: return "insert";
+            case 74: return "home";
+            case 75: return "page_up";
+            case 76: return "delete";
+            case 77: return "end";
+            case 78: return "page_down";
+            case 79: return "right";
+            case 80: return "left";
+            case 81: return "down";
+            case 82: return "up";
+            case 88: return "kp_enter";
+            case 98: return "kp_0";
+            case 99: return "kp_decimal";
+            case 101: return "menu";
+            case 103: return "kp_equal";
+            case 224: return "left_control";
+            case 225: return "left_shift";
+            case 226: return "left_alt";
+            case 227: return "left_super";
+            case 228: return "right_control";
+            case 229: return "right_shift";
+            case 230: return "right_alt";
+            case 231: return "right_super";
+            default: return Integer.toString(scancode);
+        }
     }
 
     private static Map<String, Integer> namedKeys() {
@@ -506,6 +525,6 @@ public final class Keys {
         keys.put("RIGHT_ALT", rightAlt);
         keys.put("RIGHT_SUPER", rightSuper);
         keys.put("MENU", menu);
-        return Map.copyOf(keys);
+        return Collections.unmodifiableMap(keys);
     }
 }
