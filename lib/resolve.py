@@ -323,9 +323,10 @@ def download_urls(artifact):
         if candidate and candidate not in urls:
             urls.append(candidate)
     if artifact.source == "curseforge" and pin.get("fileId") and artifact.filename:
-        cdn = cfapi.cdn_url(pin["fileId"], artifact.filename)
-        if cdn not in urls:
-            urls.append(cdn)
+        for host in (cfapi.CDN_HOST, cfapi.CDN_HOST_ALT):
+            cdn = cfapi.cdn_url(pin["fileId"], artifact.filename, host=host)
+            if cdn not in urls:
+                urls.append(cdn)
     if artifact.source == "modrinth" and pin.get("versionId"):
         version_url = f"{mrapi.BASE_URL}/version/{pin['versionId']}"
         if version_url not in urls:

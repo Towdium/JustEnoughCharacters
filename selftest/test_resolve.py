@@ -295,7 +295,19 @@ class DownloadTest(unittest.TestCase):
             role="mod", name="jei", source="curseforge", filename="jei.jar",
             path=paths.mods_cache_dir() / "jei.jar", pin={"fileId": 4242, "filename": "jei.jar"})
         urls = resolve.download_urls(artifact)
-        self.assertEqual(urls, [cfapi.cdn_url(4242, "jei.jar")])
+        self.assertEqual(urls, [cfapi.cdn_url(4242, "jei.jar"),
+                                cfapi.cdn_url(4242, "jei.jar", host=cfapi.CDN_HOST_ALT)])
+
+    def test_both_cdn_hosts_are_candidates_for_a_pinned_url(self):
+        """A pinned url on one host is retried on the other: mediafilez 403s sometimes."""
+        artifact = resolve.ResolvedArtifact(
+            role="mod", name="betterstats", source="curseforge", filename="betterstats.jar",
+            path=paths.mods_cache_dir() / "betterstats.jar",
+            pin={"fileId": 6347551, "filename": "betterstats.jar",
+                 "downloadUrl": cfapi.cdn_url(6347551, "betterstats.jar", host=cfapi.CDN_HOST_ALT)})
+        urls = resolve.download_urls(artifact)
+        self.assertEqual(urls, [cfapi.cdn_url(6347551, "betterstats.jar", host=cfapi.CDN_HOST_ALT),
+                                cfapi.cdn_url(6347551, "betterstats.jar")])
 
     def test_a_modrinth_pin_without_a_url_asks_the_version_endpoint(self):
         artifact = resolve.ResolvedArtifact(

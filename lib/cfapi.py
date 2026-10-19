@@ -33,14 +33,20 @@ HASH_ALGO_MD5 = 2
 PAGE_SIZE = 50
 
 
-def cdn_url(file_id, filename):
+# Both hosts serve the same layout; a file that 403s on one downloads from the
+# other (mediafilez 403s for a handful of files, edge answered every time).
+CDN_HOST = "https://edge.forgecdn.net"
+CDN_HOST_ALT = "https://mediafilez.forgecdn.net"
+
+
+def cdn_url(file_id, filename, host=CDN_HOST):
     """The public CDN link for a file id — used when a file has no downloadUrl.
 
     CurseForge hides ``downloadUrl`` for files whose author disabled third-party
     downloads; the CDN layout is public and stable, and the harness only ever
     fetches its own pinned files.
     """
-    return f"{CDN_HOST}/files/{int(file_id) // 1000}/{int(file_id) % 1000:03d}/{filename}"
+    return f"{host}/files/{int(file_id) // 1000}/{int(file_id) % 1000:03d}/{filename}"
 
 
 class CfFile:
