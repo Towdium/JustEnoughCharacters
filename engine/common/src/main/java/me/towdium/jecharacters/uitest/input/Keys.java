@@ -2,6 +2,7 @@ package me.towdium.jecharacters.uitest.input;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Locale;
@@ -273,6 +274,24 @@ public final class Keys {
             default:
                 return 0;
         }
+    }
+
+    public static int[] modifierKeysOf(int mask) {
+        int[] keys = new int[4];
+        int count = 0;
+        if ((mask & shiftMask) != 0) {
+            keys[count++] = translate(leftShift);
+        }
+        if ((mask & controlMask) != 0) {
+            keys[count++] = translate(leftControl);
+        }
+        if ((mask & altMask) != 0) {
+            keys[count++] = translate(leftAlt);
+        }
+        if ((mask & superMask) != 0) {
+            keys[count++] = translate(leftSuper);
+        }
+        return Arrays.copyOf(keys, count);
     }
 
     public static int modifierBits(int mask) {

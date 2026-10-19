@@ -64,8 +64,18 @@ final class WorldPlayerInput implements PlayerInput {
 
     @Override
     public void pressKey(int glfwKey, int modifiers) {
-        key(glfwKey, Keys.press, modifiers);
-        key(glfwKey, Keys.release, modifiers);
+        int[] held = Keys.modifierKeysOf(modifiers);
+        for (int modifier : held) {
+            holdKey(modifier);
+        }
+        try {
+            key(glfwKey, Keys.press, modifiers);
+            key(glfwKey, Keys.release, modifiers);
+        } finally {
+            for (int i = held.length - 1; i >= 0; i--) {
+                releaseKey(held[i]);
+            }
+        }
     }
 
     @Override

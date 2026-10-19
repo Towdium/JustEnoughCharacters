@@ -7,17 +7,126 @@ import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
+import org.lwjgl.glfw.GLFW;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
 public final class FabricInputPlatform implements InputPlatform {
 
     @Override
     public InputConstants.Key keyOf(KeyMapping mapping) {
-        return KeyBindingHelper.getBoundKeyOf(mapping);
+        InputConstants.Key key = KeyBindingHelper.getBoundKeyOf(mapping);
+        if (!InputConstants.UNKNOWN.equals(key)) {
+            return key;
+        }
+        String declared = declaredBinding(mapping);
+        if (declared == null) {
+            return key;
+        }
+        InputConstants.Key fallback = InputConstants.getKey(keyPart(declared));
+        // Reading the preset is not enough: the game matches on the mapping itself, which a mapping
+        // registered after the options were built never had filled in, so put the value back.
+        mapping.setKey(fallback);
+        return fallback;
     }
 
     @Override
     public int[] modifierKeysOf(KeyMapping mapping) {
-        return new int[0];
+        int[] amecs = amecsModifiersOf(mapping);
+        if (amecs != null) {
+            return amecs;
+        }
+        String declared = declaredBinding(mapping);
+        return declared == null ? new int[0] : modifierKeysOf(modifierPart(declared));
+    }
+
+    /**
+     * A mod's binding is not always readable here: a mapping registered after the options were built
+     * never receives its `options.txt` value and stays unknown (JEI's focus key on this row), so the
+     * value the preset declares for it is the only key left to press.
+     */
+    private static String declaredBinding(KeyMapping mapping) {
+        Path options = Minecraft.getInstance().gameDirectory.toPath().resolve("options.txt");
+        if (!Files.isRegularFile(options)) {
+            return null;
+        }
+        String prefix = "key_" + mapping.getName() + ":";
+        try {
+            for (String line : Files.readAllLines(options)) {
+                if (line.startsWith(prefix)) {
+                    return line.substring(prefix.length()).trim();
+                }
+            }
+        } catch (IOException e) {
+            return null;
+        }
+        return null;
+    }
+
+    private static String keyPart(String declared) {
+        int colon = declared.indexOf(':');
+        return colon < 0 ? declared : declared.substring(0, colon);
+    }
+
+    private static String modifierPart(String declared) {
+        int colon = declared.indexOf(':');
+        return colon < 0 ? "" : declared.substring(colon + 1);
+    }
+
+    private static int[] modifierKeysOf(String declared) {
+        List<Integer> keys = new ArrayList<>(3);
+        for (String name : declared.split("[+: ]")) {
+            switch (name.trim().toLowerCase(java.util.Locale.ROOT)) {
+                case "shift" -> keys.add(GLFW.GLFW_KEY_LEFT_SHIFT);
+                case "control", "ctrl" -> keys.add(GLFW.GLFW_KEY_LEFT_CONTROL);
+                case "alt" -> keys.add(GLFW.GLFW_KEY_LEFT_ALT);
+                default -> {
+                }
+            }
+        }
+        int[] result = new int[keys.size()];
+        for (int i = 0; i < result.length; i++) {
+            result[i] = keys.get(i);
+        }
+        return result;
+    }
+
+    /**
+     * amecs (the real one and the api Too Many Shortcuts ships) binds the modifiers to the mapping and
+     * a modifier-aware match demands really holding them; none of this is visible to the vanilla key.
+     */
+    private static int[] amecsModifiersOf(KeyMapping mapping) {
+        try {
+            Class<?> utils = Class.forName("de.siphalor.amecs.api.KeyBindingUtils");
+            Object modifiers = utils.getMethod("getBoundModifiers", KeyMapping.class).invoke(null, mapping);
+            if (modifiers == null) {
+                return null;
+            }
+            List<Integer> keys = new ArrayList<>(3);
+            addModifier(keys, modifiers, "getShift", GLFW.GLFW_KEY_LEFT_SHIFT);
+            addModifier(keys, modifiers, "getControl", GLFW.GLFW_KEY_LEFT_CONTROL);
+            addModifier(keys, modifiers, "getAlt", GLFW.GLFW_KEY_LEFT_ALT);
+            int[] result = new int[keys.size()];
+            for (int i = 0; i < result.length; i++) {
+                result[i] = keys.get(i);
+            }
+            return result;
+        } catch (ReflectiveOperationException | LinkageError e) {
+            return null;
+        }
+    }
+
+    private static void addModifier(List<Integer> keys, Object modifiers, String getter, int glfwKey) {
+        try {
+            if (Boolean.TRUE.equals(modifiers.getClass().getMethod(getter).invoke(modifiers))) {
+                keys.add(glfwKey);
+            }
+        } catch (ReflectiveOperationException ignored) {
+        }
     }
 
     @Override

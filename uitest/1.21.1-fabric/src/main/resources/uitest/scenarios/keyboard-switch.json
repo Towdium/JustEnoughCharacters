@@ -9,11 +9,11 @@
     {"do": "command", "text": "/jech keyboard xiaohe"},
     {"do": "record_matches", "clear": true},
 
-    {"do": "log", "text": "keyboard-switch: open the inventory and focus JEI's search bar (the harness's level is creative, so this is the creative inventory). Fabric presses JEI's focus key directly: JEI's key mappings read key.keyboard.unknown at runtime on this loader (measured 2026-10-14), so press_bind has nothing to press, and the focus key carries no modifier here"},
+    {"do": "log", "text": "keyboard-switch: open the inventory and focus JEI's search bar (the harness's level is creative, so this is the creative inventory), through the binding: the row supplies the key from options.txt and the modifiers from amecs (or from the api Too Many Shortcuts ships)"},
     {"do": "press_bind", "bind": "inventory"},
     {"do": "wait_until_screen", "screen": "CreativeModeInventoryScreen"},
     {"do": "wait_ms", "ms": 500},
-    {"do": "press_key", "key": "f"},
+    {"do": "press_bind", "bind": "key.jei.focusSearch"},
     {"do": "wait_ms", "ms": 300},
 
     {"do": "log", "text": "keyboard-switch: the bar is JEI's own field, so clear it the way a player would"},
