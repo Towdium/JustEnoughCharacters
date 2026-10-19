@@ -17,6 +17,11 @@ beyond its mods:
 * ``overrides/saves/<name>/`` — the world seed an env is launched into, rendered
   from the cache ``jt seed-world`` maintains (see ``lib.worlds``).
 
+A third kind rides along when an env declares it: ``env.uitest.files`` writes
+game-directory files verbatim under ``overrides/``, which is how a mod whose own
+config opens a screen the headless client cannot click starts from a neutralised
+file — the job ``options.txt`` does for the onboarding page.
+
 The build directory lives under ``runs/<id>/pack`` and the zip next to it, so a
 run's exact input set survives with the report.
 """
@@ -168,7 +173,7 @@ def build_pack(env, resolved, run_dir, *, version_id=None, seed=None, log=print)
 
 
 def stage_overrides(env, pack_dir, *, seed=None, log=print):
-    """Write the non-mod overrides: ``options.txt`` and, when declared, the world.
+    """Write the non-mod overrides: ``options.txt``, ``env.uitest.files`` and, when declared, the world.
 
     Returns the pack-relative posix paths of what it staged, so the caller (and
     the report) knows exactly which extra inputs a run carried.
@@ -184,6 +189,15 @@ def stage_overrides(env, pack_dir, *, seed=None, log=print):
     described = [f"{key}={value}" for key, value, _why in options.explain(env.mc)]
     described += [f"{key}={value}" for key, value in sorted((extra_options or {}).items())]
     log(f"pack: overrides/{options.FILENAME} preset ({', '.join(described)})")
+
+    staged_files = env.uitest.files if env.uitest is not None else None
+    for relative in sorted(staged_files or {}):
+        target = overrides_dir / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        atomic_write_text(target, staged_files[relative])
+        staged.append(relative)
+    if staged_files:
+        log(f"pack: overrides/ files ({', '.join(sorted(staged_files))})")
 
     if env.world is None:
         return staged

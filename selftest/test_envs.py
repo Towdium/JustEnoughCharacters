@@ -112,6 +112,21 @@ class EnvParsingTest(unittest.TestCase):
         self.assertEqual(env.uitest.selection, "tag:smoke,jei")
         self.assertIn("tag:smoke,jei", repr(env.uitest))
 
+    def test_uitest_files_hold_game_directory_files_to_stage(self):
+        """A mod's own config, when its default opens a screen no headless client can click.
+
+        Pixelmon's ``starter-on-join`` default opens its starter screen on every
+        world join; ``Screen.isPauseScreen()`` is true for it, so the integrated
+        server only runs ``tickPaused()`` and every scenario's first step times out.
+        """
+        env = support.mk_env(gradle={"task": ":neoforge:runClientTests", "project_dir": "1.21.1"},
+                             uitest={"selection": "tag:smoke",
+                                     "files": {"config/pixelmon/config.yml":
+                                               "starter-on-join: false\n"}})
+        self.assertEqual(env.uitest.files,
+                         {"config/pixelmon/config.yml": "starter-on-join: false\n"})
+        self.assertIn("config/pixelmon/config.yml", repr(env.uitest))
+
     def test_a_uitest_report_check_takes_an_optional_relative_path(self):
         default = support.mk_env(checks=[{"type": "uitest_report"}])
         self.assertEqual(default.checks[0].type, "uitest_report")
@@ -262,12 +277,34 @@ class EnvParsingTest(unittest.TestCase):
         JechSearchStorage; its JEI bridge is the legacy ASM coremod), and the
         JEI scenarios focus JEI's search field with a measured mouse click,
         which this row has not been measured with yet.
+        The 17 ``*-mods-*`` rows joined on 2026-10-19, each on its version line's
+        own build (``uitest/1.21.1-neoforge`` / ``uitest/1.21.1-fabric``): what
+        they add is the env's other mods, which that build loads for the same
+        reason it loads the jars under test — jt hands them over as
+        ``-PjechExtraJars``, driven by a mod entry's ``tags: ["harness"]``.
         """
         expected = {
             "1.12.2-forge-hei": "tag:smoke",
             "1.12.2-forge-jei-legacy": "tag:smoke,tag:jei",
             "1.21.1-neoforge": "tag:smoke,tag:jei",
             "1.21.1-fabric": "tag:smoke,tag:jei",
+            "1.21.1-fabric-mods-01": "tag:smoke,tag:jei",
+            "1.21.1-fabric-mods-02": "tag:smoke,tag:jei",
+            "1.21.1-fabric-mods-03": "tag:smoke,tag:jei",
+            "1.21.1-fabric-mods-04": "tag:smoke,tag:jei",
+            "1.21.1-neoforge-mods-01": "tag:smoke,tag:jei",
+            "1.21.1-neoforge-mods-02": "tag:smoke,tag:jei",
+            "1.21.1-neoforge-mods-03": "tag:smoke,tag:jei",
+            "1.21.1-neoforge-mods-04": "tag:smoke,tag:jei",
+            "1.21.1-neoforge-mods-05": "tag:smoke,tag:jei",
+            "1.21.1-neoforge-mods-06": "tag:smoke,tag:jei",
+            "1.21.1-neoforge-mods-07": "tag:smoke,tag:jei",
+            "1.21.1-neoforge-mods-08": "tag:smoke,tag:jei",
+            "1.21.1-neoforge-mods-09": "tag:smoke,tag:jei",
+            "1.21.1-neoforge-mods-10": "tag:smoke,tag:jei",
+            "1.21.1-neoforge-mods-11": "tag:smoke,tag:jei",
+            "1.21.1-neoforge-mods-12": "tag:smoke,tag:jei",
+            "1.21.1-neoforge-mods-13": "tag:smoke,tag:jei",
             "moderner-1.21.10-fabric": "tag:smoke,tag:jei",
             "moderner-1.21.10-neoforge": "tag:smoke,tag:jei",
             "moderner-1.21.11-fabric": "tag:smoke,tag:jei",
@@ -292,6 +329,23 @@ class EnvParsingTest(unittest.TestCase):
             "1.12.2-forge-jei-legacy": "uitest/1.12.2-forge",
             "1.21.1-neoforge": "uitest/1.21.1-neoforge",
             "1.21.1-fabric": "uitest/1.21.1-fabric",
+            "1.21.1-fabric-mods-01": "uitest/1.21.1-fabric",
+            "1.21.1-fabric-mods-02": "uitest/1.21.1-fabric",
+            "1.21.1-fabric-mods-03": "uitest/1.21.1-fabric",
+            "1.21.1-fabric-mods-04": "uitest/1.21.1-fabric",
+            "1.21.1-neoforge-mods-01": "uitest/1.21.1-neoforge",
+            "1.21.1-neoforge-mods-02": "uitest/1.21.1-neoforge",
+            "1.21.1-neoforge-mods-03": "uitest/1.21.1-neoforge",
+            "1.21.1-neoforge-mods-04": "uitest/1.21.1-neoforge",
+            "1.21.1-neoforge-mods-05": "uitest/1.21.1-neoforge",
+            "1.21.1-neoforge-mods-06": "uitest/1.21.1-neoforge",
+            "1.21.1-neoforge-mods-07": "uitest/1.21.1-neoforge",
+            "1.21.1-neoforge-mods-08": "uitest/1.21.1-neoforge",
+            "1.21.1-neoforge-mods-09": "uitest/1.21.1-neoforge",
+            "1.21.1-neoforge-mods-10": "uitest/1.21.1-neoforge",
+            "1.21.1-neoforge-mods-11": "uitest/1.21.1-neoforge",
+            "1.21.1-neoforge-mods-12": "uitest/1.21.1-neoforge",
+            "1.21.1-neoforge-mods-13": "uitest/1.21.1-neoforge",
             "moderner-1.21.10-neoforge": "uitest/moderner-1.21.10-neoforge",
             "moderner-1.21.10-fabric": "uitest/moderner-1.21.10-fabric",
             "moderner-1.21.11-neoforge": "uitest/moderner-1.21.11-neoforge",
@@ -368,6 +422,16 @@ class EnvRejectionTest(unittest.TestCase):
 
     def test_name_must_be_filesystem_safe(self):
         self.reject(support.env_dict(name="a b/c"), "must match")
+
+    def test_uitest_files_path_must_stay_inside_the_game_directory(self):
+        self.reject(support.env_dict(uitest={"selection": "all",
+                                             "files": {"../pixelmon/config.yml": "x"}}),
+                    "env.uitest.files path", "not accepted")
+
+    def test_uitest_files_content_must_not_be_empty(self):
+        self.reject(support.env_dict(uitest={"selection": "all",
+                                             "files": {"config/pixelmon/config.yml": ""}}),
+                    "env.uitest.files['config/pixelmon/config.yml'] must be a non-empty string")
 
     def test_unknown_top_level_key(self):
         data = support.env_dict()
@@ -721,6 +785,23 @@ class ViaTest(unittest.TestCase):
             "1.12.2-forge-jei-legacy": "uitest/1.12.2-forge",
             "1.21.1-neoforge": "uitest/1.21.1-neoforge",
             "1.21.1-fabric": "uitest/1.21.1-fabric",
+            "1.21.1-fabric-mods-01": "uitest/1.21.1-fabric",
+            "1.21.1-fabric-mods-02": "uitest/1.21.1-fabric",
+            "1.21.1-fabric-mods-03": "uitest/1.21.1-fabric",
+            "1.21.1-fabric-mods-04": "uitest/1.21.1-fabric",
+            "1.21.1-neoforge-mods-01": "uitest/1.21.1-neoforge",
+            "1.21.1-neoforge-mods-02": "uitest/1.21.1-neoforge",
+            "1.21.1-neoforge-mods-03": "uitest/1.21.1-neoforge",
+            "1.21.1-neoforge-mods-04": "uitest/1.21.1-neoforge",
+            "1.21.1-neoforge-mods-05": "uitest/1.21.1-neoforge",
+            "1.21.1-neoforge-mods-06": "uitest/1.21.1-neoforge",
+            "1.21.1-neoforge-mods-07": "uitest/1.21.1-neoforge",
+            "1.21.1-neoforge-mods-08": "uitest/1.21.1-neoforge",
+            "1.21.1-neoforge-mods-09": "uitest/1.21.1-neoforge",
+            "1.21.1-neoforge-mods-10": "uitest/1.21.1-neoforge",
+            "1.21.1-neoforge-mods-11": "uitest/1.21.1-neoforge",
+            "1.21.1-neoforge-mods-12": "uitest/1.21.1-neoforge",
+            "1.21.1-neoforge-mods-13": "uitest/1.21.1-neoforge",
             "moderner-1.21.10-neoforge": "uitest/moderner-1.21.10-neoforge",
             "moderner-1.21.10-fabric": "uitest/moderner-1.21.10-fabric",
             "moderner-1.21.11-neoforge": "uitest/moderner-1.21.11-neoforge",

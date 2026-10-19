@@ -139,17 +139,27 @@ class UiTestSpec:
       is how a standalone fabric row pins a binding the pinned JEI itself does
       not provide a usable default for.
 
+    * ``files`` — extra game-directory files the row starts from, as
+      ``{"<game-dir-relative path>": "<content>"}``. The pack carries them under
+      ``overrides/`` and the isolation step writes them after it has emptied
+      ``config/``, which is where a mod's own config goes when its default opens
+      a screen the headless client cannot click — the same job ``options.txt``
+      does for the accessibility onboarding page. A path is rejected when it is
+      absolute or holds a ``.``/``..`` segment; content is rejected when empty.
+
     The evidence is read back by the ``uitest_report`` check, so an env with this
     block is judged by the harness's own verdict rather than by the log alone.
     """
 
-    def __init__(self, selection, project=None, options=None):
+    def __init__(self, selection, project=None, options=None, files=None):
         self.selection = selection
         self.project = project
         self.options = dict(options) if options else None
+        self.files = dict(files) if files else None
 
     def __repr__(self):
-        return f"UiTestSpec({self.selection!r}, project={self.project!r}, options={self.options!r})"
+        return (f"UiTestSpec({self.selection!r}, project={self.project!r}, "
+                f"options={self.options!r}, files={self.files!r})")
 
 
 class ReadyWhen:
@@ -373,6 +383,12 @@ _VERSION_RE = re.compile(r"^\d+(\.\d+)+$")
 _WORLD_NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9 ._-]*$")
 
 
+def _plain_relative_path(path):
+    if path.startswith(("/", "~")) or "\\" in path:
+        return False
+    return all(part not in ("", ".", "..") for part in path.split("/"))
+
+
 def _reject_unknown(data, allowed, context, problems):
     for key in sorted(data):
         if key in allowed:
@@ -550,7 +566,7 @@ def _parse_uitest(data, problems):
     if not isinstance(data, dict):
         problems.append('env.uitest must be an object {"selection": "tag:smoke"}')
         return None
-    _reject_unknown(data, {"selection", "project", "options"}, "env.uitest", problems)
+    _reject_unknown(data, {"selection", "project", "options", "files"}, "env.uitest", problems)
     selection = _string(data, "selection", "env.uitest", problems, required=True)
     if selection is not None and any(char in selection for char in "\n\r\t\0"):
         problems.append("env.uitest.selection must be one line without control characters "
@@ -589,9 +605,29 @@ def _parse_uitest(data, problems):
                         "version line the client's legacy options fixer NumberFormatExceptions on "
                         "the binding and drops every option, lang included (see lib/options.py)")
                     extra_options = None
+    extra_files = None
+    if "files" in data:
+        raw_files = data.get("files")
+        if not isinstance(raw_files, dict) or not raw_files:
+            problems.append(
+                'env.uitest.files must be a non-empty object {"<path>": "<content>"}')
+        else:
+            extra_files = {}
+            for path, content in raw_files.items():
+                if not isinstance(path, str) or not _plain_relative_path(path):
+                    problems.append(
+                        f"env.uitest.files path {path!r} must be a plain path relative to the game "
+                        "directory; absolute paths and '.'/'..' segments are not accepted")
+                    extra_files = None
+                    break
+                if not isinstance(content, str) or not content:
+                    problems.append(f"env.uitest.files[{path!r}] must be a non-empty string")
+                    extra_files = None
+                    break
+                extra_files[path] = content
     if selection is None:
         return None
-    return UiTestSpec(selection, project=project, options=extra_options)
+    return UiTestSpec(selection, project=project, options=extra_options, files=extra_files)
 
 
 def _parse_describe(data, context, problems):

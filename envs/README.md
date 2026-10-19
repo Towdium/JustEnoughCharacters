@@ -110,7 +110,10 @@ remap.
 `loader.type` is one of `forge`, `neoforge`, `fabric`, `quilt`.
 
 `loader.version` is the **mrpack dependency string** (`lib/pack.py` writes it into
-`modrinth.index.json` verbatim):
+`modrinth.index.json` verbatim), and it is also the loader version a standalone
+harness row actually runs: `jt` passes it as `-Pneo_version=` /
+`-Pfabric_loader_version=`, which overrides the row's own `gradle.properties`, so
+one row serves the envs that ask for different loader versions.
 
 | loader | the value | example |
 | --- | --- | --- |
@@ -459,7 +462,8 @@ What changes for such a row:
 | --- | --- | --- |
 | `selection` | yes | the harness's scenario selection, passed to Gradle verbatim: `all`, a scenario name, `a,b` (terms are OR-ed), `tag:<tag>`, `group:<group>`, `mod:<mod>`, `regex:<pattern>` — the harness's own `ScenarioSelection` grammar. **Every term carries its own prefix**, because a bare term is a *name* match: `tag:smoke,tag:jei`, never `tag:smoke,jei` (which would silently run the smoke scenarios alone) |
 | `project` | no (every row names one) | the standalone harness build to run, relative to the compat-tests repository (`uitest/1.21.1-neoforge`): an independent Gradle project whose own run task launches the client. A block without it must carry a `gradle` block instead, and the two are mutually exclusive (`lib/envs.py:326`) |
-| `options` | no | extra `options.txt` keys the row's preset needs beyond the base two — `{"version": "4790", "key_key.jei.focusSearch": "key.keyboard.f"}` (`envs/moderner-26.1.2-fabric.json:21-24`). They are written **ahead of** the base lines, with a declared `version` first: that ordering is the only one under which a `key_*` line loads at all (see "The preset `options.txt`"). A fabric row whose scenarios press JEI's focus bind pins `key_key.jei.focusSearch`, because JEI registers that bind with a `CONTROL_OR_COMMAND` modifier and without the Amecs mod fabric's builder turns it into `key.keyboard.unknown` — a bare `f` press would have nothing to press (measured 2026-10-15 in the run's own `options.txt` dump). The schema refuses a `key_*` entry with no `version` (`lib/envs.py:585-591`) |
+| `options` | no | extra `options.txt` keys the row's preset needs beyond the base two — `{"version": "4790", "key_key.jei.focusSearch": "key.keyboard.f"}` (`envs/moderner-26.1.2-fabric.json:21-24`). They are written **ahead of** the base lines, with a declared `version` first: that ordering is the only one under which a `key_*` line loads at all (see "The preset `options.txt`"). A fabric row whose scenarios press JEI's focus bind pins `key_key.jei.focusSearch`, because JEI registers that bind with a `CONTROL_OR_COMMAND` modifier and without the Amecs mod fabric's builder turns it into `key.keyboard.unknown` — a bare `f` press would have nothing to press (measured 2026-10-15 in the run's own `options.txt` dump). The schema refuses a `key_*` entry with no `version` (`lib/envs.py:601-607`) |
+| `files` | no | extra game-directory files the row starts from, `{"<game-dir-relative path>": "<content>"}` (`envs/1.21.1-neoforge-mods-10.json:21-23`). They ride in the pack under `overrides/` (`lib/pack.py:193-200`) and the isolation step writes them into the game directory after it has emptied `config/`, one `isolation: staged <path> from the pack` line each. This is where a mod's own config goes when its default opens a screen a headless client cannot click: Pixelmon's `starter-on-join` default opens `ChooseStarterScreen` on every world join, that screen inherits `Screen.isPauseScreen() == true`, so `Minecraft.pause` is set and the integrated server runs `tickPaused()` alone — no keystroke reaches the harness and no server tick advances, which is how every scenario in this run failed at its first step (measured 2026-10-19). A path must be relative and carry no `.`/`..` segment, and the content must be non-empty (`lib/envs.py:386-389, 608-630`) |
 
 The selection names the scenarios the row was measured with instead of saying
 `all`, for the same reason a row's `world` is written down: a row asserts what it
@@ -1009,8 +1013,8 @@ and says so in the report.
 | `moderner-26.2-fabric` | 26.2 / fabric 0.20.0 | 25 | `moderner` (fabric-26.2) | jei 30.42.0.237, fabric-api 0.161.0+26.2 |
 | `moderner-26.3-neoforge` | 26.3 / neoforge 26.3.0.88 | 25 | `moderner` (neoforge-26.3) | jei 31.15.0.79 |
 | `moderner-26.3-fabric` | 26.3 / fabric 0.20.0 | 25 | `moderner` (fabric-26.3) | jei 31.15.0.79, fabric-api 0.163.0+26.3 |
-| `1.21.1-neoforge` | 1.21.1 / neoforge 21.1.215 | 21 | `1.21.1` | jei 19.37.0.362 |
-| `1.21.1-fabric` | 1.21.1 / fabric 0.16.14 | 21 | `1.21.1` | jei 19.37.0.362, fabric-api 0.116.1+1.21.1 |
+| `1.21.1-neoforge` | 1.21.1 / neoforge 21.1.263 | 21 | `1.21.1` | jei 19.37.0.362 |
+| `1.21.1-fabric` | 1.21.1 / fabric 0.19.5 | 21 | `1.21.1` | jei 19.37.0.362, fabric-api 0.116.1+1.21.1 |
 | `mv-1.20.1-forge` | 1.20.1 / forge 1.20.1-47.0.35 | 17 | `multiple-version` | jei 15.48.0.179 |
 | `mv-1.20.1-fabric` | 1.20.1 / fabric 0.16.14 (see below) | 17 | `multiple-version` | jei 15.48.0.179, fabric-api (see below) |
 | `mv-1.19.2-forge` | 1.19.2 / forge 1.19.2-43.2.3 | 17 | `multiple-version` | jei 11.30.3.1056 |

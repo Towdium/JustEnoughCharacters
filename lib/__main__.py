@@ -268,7 +268,8 @@ def _env_json(env):
                   if env.world is not None else None),
         "uitest": ({"selection": env.uitest.selection,
                     **({"project": env.uitest.project} if env.uitest.project is not None else {}),
-                    **({"options": env.uitest.options} if env.uitest.options else {})}
+                    **({"options": env.uitest.options} if env.uitest.options else {}),
+                    **({"files": env.uitest.files} if env.uitest.files else {})}
                    if env.uitest is not None else None),
         "timeout_sec": env.timeout_sec,
         "file": paths.display(env.path),
