@@ -9,7 +9,7 @@
   "mc": "1.21.1",
   "loader": {
     "type": "fabric",
-    "version": "0.16.14"
+    "version": "0.19.5"
   },
   "java": {
     "version": 21

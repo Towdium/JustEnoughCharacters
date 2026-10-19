@@ -9,7 +9,7 @@
   "mc": "1.21.1",
   "loader": {
     "type": "neoforge",
-    "version": "21.1.215"
+    "version": "21.1.263"
   },
   "java": {
     "version": 21

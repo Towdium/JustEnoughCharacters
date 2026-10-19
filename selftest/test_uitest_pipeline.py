@@ -171,6 +171,136 @@ class PipelineHelpersTest(unittest.TestCase):
                 Path("/checkouts/jech.jar"), ResolvedEnv(env=None, artifacts=[artifact]))
         self.assertIn("without a jar path", str(caught.exception))
 
+    def mod_artifact(self, name, path):
+        from lib.resolve import ResolvedArtifact
+        from pathlib import Path
+
+        return ResolvedArtifact(role="mod", name=name, source="curseforge",
+                                filename=f"{name}.jar", source_path=None, path=Path(path),
+                                sha1="x", size=1, detail="", via="dev-classpath")
+
+    def env_with_mods(self, *mods, loader=None):
+        """The standalone env plus one extra mod entry per dict given."""
+        data = standalone_dict()
+        if loader:
+            data["loader"] = {"type": loader, "version": "1"}
+        for mod in mods:
+            entry = {"source": "curseforge", "slug": mod["name"],
+                     "describe": {"version": f"{mod['name']}.jar"}, "via": "dev-classpath"}
+            entry.update(mod)
+            data["mods"].append(entry)
+        return envs.parse_env(data, "<unit>")
+
+    def test_jar_arguments_carry_harness_tagged_mods_as_extra_jars(self):
+        import os
+        from lib.resolve import ResolvedEnv
+        from pathlib import Path
+
+        env = self.env_with_mods({"name": "jade", "tags": ["harness"]},
+                                 {"name": "emi", "tags": ["harness"]})
+        resolved = ResolvedEnv(env=env, artifacts=[
+            self.mod_artifact("jei", "/cache/jei.jar"),
+            self.mod_artifact("jade", "/cache/jade.jar"),
+            self.mod_artifact("emi", "/cache/emi.jar")])
+        args = uitest_pipeline.jar_arguments(Path("/checkouts/jech.jar"), resolved)
+        self.assertEqual(args[:2], ["-PjechJar=/checkouts/jech.jar", "-PjeiJar=/cache/jei.jar"])
+        self.assertEqual(args[2],
+                         "-PjechExtraJars=" + os.pathsep.join(["/cache/jade.jar", "/cache/emi.jar"]))
+
+    def test_jar_arguments_leave_the_extra_jars_out_without_the_tag(self):
+        from lib.resolve import ResolvedEnv
+        from pathlib import Path
+
+        env = self.env_with_mods({"name": "jade"})
+        resolved = ResolvedEnv(env=env, artifacts=[
+            self.mod_artifact("jei", "/cache/jei.jar"),
+            self.mod_artifact("jade", "/cache/jade.jar")])
+        args = uitest_pipeline.jar_arguments(Path("/checkouts/jech.jar"), resolved)
+        self.assertEqual(args, ["-PjechJar=/checkouts/jech.jar", "-PjeiJar=/cache/jei.jar",
+                                "-Pneo_version=21.1.215"])
+
+    def test_a_tagged_jei_stays_on_the_jei_argument_alone(self):
+        from lib.resolve import ResolvedEnv
+        from pathlib import Path
+
+        data = standalone_dict()
+        data["mods"][0]["tags"] = ["harness"]
+        resolved = ResolvedEnv(env=envs.parse_env(data, "<unit>"),
+                               artifacts=[self.mod_artifact("jei", "/cache/jei.jar")])
+        args = uitest_pipeline.jar_arguments(Path("/checkouts/jech.jar"), resolved)
+        self.assertEqual(args, ["-PjechJar=/checkouts/jech.jar", "-PjeiJar=/cache/jei.jar",
+                                "-Pneo_version=21.1.215"])
+
+    def test_the_env_loader_version_reaches_the_row_as_a_gradle_property(self):
+        from lib.resolve import ResolvedEnv
+
+        neoforge = ResolvedEnv(env=self.env("neoforge"), artifacts=[])
+        fabric = ResolvedEnv(env=self.env("fabric"), artifacts=[])
+        self.assertEqual(uitest_pipeline.loader_arguments(neoforge), ["-Pneo_version=1"])
+        self.assertEqual(uitest_pipeline.loader_arguments(fabric), ["-Pfabric_loader_version=1"])
+
+    def test_a_row_whose_loader_has_no_property_gets_no_argument(self):
+        from lib.resolve import ResolvedEnv
+
+        resolved = ResolvedEnv(env=self.env("forge"), artifacts=[])
+        self.assertEqual(uitest_pipeline.loader_arguments(resolved), [])
+
+    def library_artifact(self, filename):
+        """A resolved platform-library jar whose filename is the real one (it carries the version)."""
+        from lib.resolve import ResolvedArtifact
+        from pathlib import Path
+
+        return ResolvedArtifact(role="mod", name="fabric-api", source="curseforge",
+                                filename=filename, source_path=None, path=Path("/cache") / filename,
+                                sha1="x", size=1, detail="", via="dev-classpath")
+
+    def test_a_pinned_platform_library_becomes_the_rows_own_property(self):
+        """The fabric row pulls fabric-api itself, so the env's pin must travel as its property."""
+        import os
+        from lib.resolve import ResolvedEnv
+        from pathlib import Path
+
+        api = {"name": "fabric-api", "slug": "fabric-api", "tags": ["harness"],
+               "describe": {"version": "0.116.7+1.21.1"},
+               "pin": {"fileId": 7, "filename": "fabric-api-0.116.7+1.21.1.jar"}}
+        env = self.env_with_mods(api, loader="fabric")
+        resolved = ResolvedEnv(env=env, artifacts=[
+            self.mod_artifact("jei", "/cache/jei.jar"),
+            self.library_artifact("fabric-api-0.116.7+1.21.1.jar")])
+        self.assertEqual(uitest_pipeline.library_arguments(resolved),
+                         ["-Pfabric_version=0.116.7+1.21.1"])
+        self.assertEqual(uitest_pipeline.extra_jar_paths(resolved), [])
+        args = uitest_pipeline.jar_arguments(Path("/checkouts/jech.jar"), resolved)
+        self.assertIn("-Pfabric_version=0.116.7+1.21.1", args)
+        self.assertNotIn("-PjechExtraJars=" + os.pathsep.join(["/cache/fabric-api-0.116.7+1.21.1.jar"]),
+                         args)
+
+    def test_another_loaders_row_keeps_the_library_as_an_extra_jar(self):
+        """The neoforge row reads no fabric_version, so there the same mod stays a jar."""
+        from lib.resolve import ResolvedEnv
+        from pathlib import Path
+
+        api = {"name": "fabric-api", "slug": "fabric-api", "tags": ["harness"],
+               "describe": {"version": "0.116.7+1.21.1"},
+               "pin": {"fileId": 7, "filename": "fabric-api-0.116.7+1.21.1.jar"}}
+        env = self.env_with_mods(api)
+        resolved = ResolvedEnv(env=env, artifacts=[
+            self.library_artifact("fabric-api-0.116.7+1.21.1.jar")])
+        self.assertEqual(uitest_pipeline.library_arguments(resolved), [])
+        self.assertEqual(uitest_pipeline.extra_jar_paths(resolved),
+                         [Path("/cache/fabric-api-0.116.7+1.21.1.jar")])
+
+    def test_the_description_carries_the_version_when_the_filename_does_not(self):
+        from lib.resolve import ResolvedEnv
+
+        api = {"name": "fabric-api", "slug": "fabric-api",
+               "describe": {"version": "0.116.7+1.21.1"},
+               "pin": {"fileId": 7, "filename": "fabricapi.jar"}}
+        resolved = ResolvedEnv(env=self.env_with_mods(api, loader="fabric"), artifacts=[
+            self.library_artifact("fabricapi.jar")])
+        self.assertEqual(uitest_pipeline.library_arguments(resolved),
+                         ["-Pfabric_version=0.116.7+1.21.1"])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -58,6 +58,22 @@ def requireJar = { name, prop ->
 def jechJarFile = requireJar('jechJar', jechJarProp)
 def jeiJarFile = requireJar('jeiJar', jeiJarProp)
 
+// The env's extra jars (its "harness"-tagged mods; jt passes them as -PjechExtraJars): they are
+// staged into the run's mods/ next to the JECh and JEI jars, which is this loader's route to a
+// jar that is not built by loom. Absent property (every other env) stages nothing extra.
+def jechExtraJarsProp = project.findProperty('jechExtraJars')?.toString()
+def jechExtraJarFiles = jechExtraJarsProp == null || jechExtraJarsProp.isEmpty()
+        ? []
+        : jechExtraJarsProp.split(File.pathSeparator).collect { path ->
+            def file = new File(path)
+            if (!file.isFile()) {
+                throw new GradleException(
+                    "the jechExtraJars project property names no file: ${file}"
+                )
+            }
+            return file
+        }
+
 base {
     archivesName = 'jechtest-' + minecraft_version + '-fabric'
 }
@@ -136,11 +152,13 @@ def jechUiTestGameDir = jechUiTestRunDir == null ? jechUiTestOutDir : new File(j
 
 def stageUiTestMods = tasks.register('stageUiTestMods', Copy) {
     group = 'verification'
-    description = 'Stages the JECh and JEI jars under test into the run game directory mods/.'
+    description = 'Stages the JECh and JEI jars under test and the env\'s extra jars into the run ' +
+            'game directory mods/.'
     onlyIf { jechUiTestSelection != null }
     dependsOn tasks.named('jechCleanUiTestReport')
     from(jechJarFile)
     from(jeiJarFile)
+    from(jechExtraJarFiles)
     into new File(jechUiTestGameDir, 'mods')
 }
 

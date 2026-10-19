@@ -18,6 +18,8 @@ The jars under test are handed to the harness build as ``-PjechJar`` /
 ``-PjeiJar`` on **every** Gradle invocation, the compile included: the build's
 own script fails closed at configuration time when they are missing, which is
 what keeps a stale copy inside the build from ever being the thing under test.
+An env's other mods — the ones it tags ``harness`` — travel the same way, one
+``-PjechExtraJars`` list (see :func:`jar_arguments`).
 """
 
 from __future__ import annotations
@@ -148,20 +150,122 @@ def jar_arguments(jech_jar, resolved):
     line that does need the target mod says so in its own build
     (``requireJar('jeiJar', ...)``), so a forgotten mod entry fails in that build
     rather than silently losing the mod through this function.
+
+    ``jechExtraJars`` is the one other channel: the env's mods that carry the
+    ``harness`` tag, in env order, as a ``File.pathSeparator``-joined list of
+    absolute paths. Those mods are parsed and downloaded like any other, so
+    without this they would resolve and never load — the tag is what says "this
+    env exists to have them loaded alongside the jar under test". ``jei`` is
+    excluded (it already travels as ``jeiJar``), and an env with no tagged mod
+    gets no argument at all, so every row's command line is unchanged.
+
+    The loader version travels the same way (see :func:`loader_arguments`).
     """
-    jei = next((artifact for artifact in resolved.mods if artifact.name == JEI_MOD_NAME), None)
     arguments = [f"-PjechJar={jech_jar}"]
-    if jei is None:
-        return arguments
-    if jei.path is None:
-        raise ConfigError(
-            f"the env's {JEI_MOD_NAME!r} mod resolved without a jar path, so there is "
-            f"nothing to pass as -PjeiJar"
-        )
-    return arguments + [f"-PjeiJar={jei.path}"]
+    jei = next((artifact for artifact in resolved.mods if artifact.name == JEI_MOD_NAME), None)
+    if jei is not None:
+        if jei.path is None:
+            raise ConfigError(
+                f"the env's {JEI_MOD_NAME!r} mod resolved without a jar path, so there is "
+                f"nothing to pass as -PjeiJar"
+            )
+        arguments.append(f"-PjeiJar={jei.path}")
+    extra_jars = extra_jar_paths(resolved)
+    if extra_jars:
+        arguments.append("-PjechExtraJars=" + os.pathsep.join(str(path) for path in extra_jars))
+    arguments.extend(loader_arguments(resolved))
+    arguments.extend(library_arguments(resolved))
+    return arguments
+
+
+def library_arguments(resolved):
+    """``-P<property>=<version>`` for the platform libraries a row pulls itself.
+
+    A row takes its platform library from its own ``gradle.properties`` (the
+    1.21.1 fabric row: ``fabric_version``), so an env that pins a different one
+    would otherwise hand a second copy to the same loader — and the row's copy,
+    which the env's mods never negotiated with, is the one that loads. Passing
+    the env's pin as that same property keeps one row serving every env's
+    library version, the way :func:`loader_arguments` does for the loader.
+    """
+    env = resolved.env
+    if env is None:
+        return []
+    arguments = []
+    for mod in env.mods:
+        property_name = ROW_LIBRARY_PROPERTIES.get((env.loader.type, mod.slug))
+        if property_name is None:
+            continue
+        version = _library_version(mod, resolved)
+        if version:
+            arguments.append(f"-P{property_name}={version}")
+    return arguments
+
+
+def library_mod_slugs(loader):
+    """The library mod ids this loader's rows read from their own properties."""
+    return {mod_id for (row_loader, mod_id) in ROW_LIBRARY_PROPERTIES if row_loader == loader}
+
+
+def _library_version(mod, resolved):
+    """The version to hand the row: the pinned filename's, else the description's."""
+    artifact = next((a for a in resolved.mods if a.name == mod.name), None)
+    filename = (artifact.filename if artifact is not None else "") or ""
+    for prefix in (f"{mod.slug}-", f"{mod.name}-"):
+        if filename.startswith(prefix) and filename.endswith(".jar"):
+            return filename[len(prefix):-len(".jar")]
+    described = (mod.describe or {}).get("version") or ""
+    return "" if described.endswith(".jar") else described
+
+
+def loader_arguments(resolved):
+    """``-P<loader property>=<env.loader.version>``: the env says which loader runs.
+
+    A standalone row reads its loader version from its own ``gradle.properties``
+    (``neoForge { version = neo_version }``, ``fabric-loader:${fabric_loader_version}``),
+    and a Gradle ``-P`` overrides exactly that property — so one row serves every
+    loader version its envs ask for, which is what a matrix run in CI needs. The
+    value the row ships with stays as the fallback for a row whose envs predate
+    this. Only loaders whose row reads such a property get an argument.
+    """
+    env = resolved.env
+    if env is None:
+        return []
+    property_name = LOADER_PROPERTIES.get(env.loader.type)
+    if property_name is None:
+        return []
+    return [f"-P{property_name}={env.loader.version}"]
+
+
+def extra_jar_paths(resolved):
+    """The jars of the env's ``harness``-tagged mods, in the env's own order.
+
+    The tag lives in the mod entry's raw dict: ``ModSpec`` keeps the parsed keys
+    it needs, and ``tags`` is a harness-side concern the schema passes through
+    without interpreting (``lib/envs.py``'s ``mods[]`` unknown-key list).
+    """
+    env = resolved.env
+    if env is None:
+        return []
+    by_name = {artifact.name: artifact for artifact in resolved.mods}
+    library_slugs = library_mod_slugs(env.loader.type)
+    paths = []
+    for mod in env.mods:
+        if mod.name == JEI_MOD_NAME or mod.slug in library_slugs \
+                or HARNESS_TAG not in (mod.raw.get("tags") or []):
+            continue
+        artifact = by_name.get(mod.name)
+        if artifact is not None and artifact.path is not None:
+            paths.append(Path(artifact.path))
+    return paths
 
 
 JEI_MOD_NAME = "jei"
+HARNESS_TAG = "harness"
+# The Gradle property each standalone row reads its loader version from
+LOADER_PROPERTIES = {"neoforge": "neo_version", "fabric": "fabric_loader_version"}
+# (loader, env mod slug) -> the property a row reads that platform library from itself
+ROW_LIBRARY_PROPERTIES = {("fabric", "fabric-api"): "fabric_version"}
 
 
 def _run_gradle(directory, args, *, java_home=None, what, log=print):

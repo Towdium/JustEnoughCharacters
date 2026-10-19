@@ -29,6 +29,23 @@ def requireJar = { name, prop ->
 def jechJarFile = requireJar('jechJar', jechJarProp)
 def jeiJarFile = requireJar('jeiJar', jeiJarProp)
 
+// The env's extra jars (its "harness"-tagged mods; jt passes them as -PjechExtraJars): they ride
+// the same localRuntime configuration the JECh and JEI jars do, which is what puts a jar on this
+// run's classpath when the run is not told to load it from the game directory. Absent property
+// (every other env) contributes nothing, so their command lines and classpaths stay as they are.
+def jechExtraJarsProp = project.findProperty('jechExtraJars')?.toString()
+def jechExtraJarFiles = jechExtraJarsProp == null || jechExtraJarsProp.isEmpty()
+        ? []
+        : jechExtraJarsProp.split(File.pathSeparator).collect { path ->
+            def file = new File(path)
+            if (!file.isFile()) {
+                throw new GradleException(
+                    "the jechExtraJars project property names no file: ${file}"
+                )
+            }
+            return file
+        }
+
 
 def jechUiTestRunDir = project.findProperty('jechRunDir')?.toString()
 def jechUiTestOutDir = jechUiTestRunDir == null
@@ -92,6 +109,7 @@ dependencies {
     compileOnly files(jechJarFile)
     localRuntime files(jechJarFile)
     localRuntime files(jeiJarFile)
+    localRuntime files(jechExtraJarFiles)
     compileOnly "com.github.towdium:PinIn:${verpinin}"
     compileOnly 'org.jspecify:jspecify:1.0.1'
 }
