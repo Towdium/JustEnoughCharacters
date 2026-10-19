@@ -1,0 +1,112 @@
+{
+  "_comment": "1.21.1 neoforge 单 mod 实例：MezzConfigGUI（slug mezzconfiggui）。行沿用 envs/1.21.1-neoforge.json 的 uitest/1.21.1-neoforge，不新增 Gradle 行；jei 与平台库仍由行自己加载，这一条目标 mod 由 jt 从它的 pin 下载后交给行；依赖由 tools/mod_deps.py 补齐（补进来的同样打 harness 标签）。",
+  "name": "1.21.1-neoforge-mezzconfiggui",
+  "tags": [
+    "1211",
+    "neoforge",
+    "mods",
+    "mods-07"
+  ],
+  "mc": "1.21.1",
+  "loader": {
+    "type": "neoforge",
+    "version": "21.1.263"
+  },
+  "java": {
+    "version": 21
+  },
+  "uitest": {
+    "selection": "tag:smoke,tag:jei",
+    "project": "uitest/1.21.1-neoforge"
+  },
+  "jech": {
+    "source": "local-build",
+    "project": "1.21.1",
+    "path": "neoforge/build/libs/jecharacters-1.21.1-neoforge-*.jar",
+    "expectModId": "jecharacters",
+    "via": "dev-classpath"
+  },
+  "mods": [
+    {
+      "name": "jei",
+      "source": "curseforge",
+      "slug": "jei",
+      "via": "dev-classpath",
+      "describe": {
+        "version": "19.37.0.362"
+      },
+      "pin": {
+        "fileId": 8413371,
+        "filename": "jei-1.21.1-neoforge-19.37.0.362.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/8413/371/jei-1.21.1-neoforge-19.37.0.362.jar",
+        "sha1": "abdd62a8cee4fa4b93e8267da4a9e6a3700be842",
+        "size": 1624420
+      }
+    },
+    {
+      "name": "mezzconfiggui",
+      "source": "curseforge",
+      "slug": "mezzconfiggui",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "mezz_config_gui-1.21.1-neoforge-mc1.21.1-0.5.5.jar"
+      },
+      "pin": {
+        "fileId": 9009227,
+        "filename": "mezz_config_gui-1.21.1-neoforge-mc1.21.1-0.5.5.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/9009/227/mezz_config_gui-1.21.1-neoforge-mc1.21.1-0.5.5.jar",
+        "sha1": "1127e4ddbc466562dc06724f801e71716225dcc3",
+        "size": 741784
+      }
+    },
+    {
+      "name": "mezz_config",
+      "source": "modrinth",
+      "slug": "mezzconfig",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "mezz_config-1.21.1-neoforge-0.6.8-standalone.jar"
+      },
+      "pin": {
+        "versionId": "idpM3DKC",
+        "filename": "mezz_config-1.21.1-neoforge-0.6.8-standalone.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/7tEfOcA7/versions/idpM3DKC/mezz_config-1.21.1-neoforge-0.6.8-standalone.jar",
+        "sha1": "d99ed592d8ab7105c00444047be7d8346d694ba3",
+        "sha512": "ed5ff5acf441ae2a9d2ba7ccc59e9394f4cf1e0f14802dd2ea01e9cd60c3cd412039d12f68297b3726eef63a8a85e6f4340bd969dbd1ab7e1ddc7aef88992e6b",
+        "size": 327173
+      }
+    }
+  ],
+  "checks": [
+    {
+      "type": "log_contains",
+      "value": "Registering JEI pinyin search storage",
+      "name": "jei-storage-registered"
+    },
+    {
+      "type": "log_not_contains",
+      "value": "Could not find targets.json. JechTransformer will not be loaded.",
+      "name": "transformer-loaded"
+    },
+    {
+      "type": "uitest_report",
+      "name": "uitest-report"
+    },
+    {
+      "type": "no_crash_reports",
+      "name": "no-crash-reports"
+    },
+    {
+      "type": "exit_code_zero",
+      "name": "exit-code"
+    }
+  ],
+  "world": null,
+  "timeout_sec": 600
+}

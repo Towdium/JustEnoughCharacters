@@ -1,0 +1,113 @@
+{
+  "_comment": "1.21.1 neoforge 单 mod 实例：Easy NPC（slug easy-npc-config-ui）。行沿用 envs/1.21.1-neoforge.json 的 uitest/1.21.1-neoforge，不新增 Gradle 行；jei 与平台库仍由行自己加载，这一条目标 mod 由 jt 从它的 pin 下载后交给行；依赖由 tools/mod_deps.py 补齐（补进来的同样打 harness 标签）。",
+  "name": "1.21.1-neoforge-easy-npc-config-ui",
+  "tags": [
+    "1211",
+    "neoforge",
+    "mods",
+    "mods-08"
+  ],
+  "mc": "1.21.1",
+  "loader": {
+    "type": "neoforge",
+    "version": "21.1.263"
+  },
+  "java": {
+    "version": 21
+  },
+  "uitest": {
+    "selection": "tag:smoke,tag:jei",
+    "project": "uitest/1.21.1-neoforge"
+  },
+  "jech": {
+    "source": "local-build",
+    "project": "1.21.1",
+    "path": "neoforge/build/libs/jecharacters-1.21.1-neoforge-*.jar",
+    "expectModId": "jecharacters",
+    "via": "dev-classpath"
+  },
+  "mods": [
+    {
+      "name": "jei",
+      "source": "curseforge",
+      "slug": "jei",
+      "via": "dev-classpath",
+      "describe": {
+        "version": "19.37.0.362"
+      },
+      "pin": {
+        "fileId": 8413371,
+        "filename": "jei-1.21.1-neoforge-19.37.0.362.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/8413/371/jei-1.21.1-neoforge-19.37.0.362.jar",
+        "sha1": "abdd62a8cee4fa4b93e8267da4a9e6a3700be842",
+        "size": 1624420
+      }
+    },
+    {
+      "name": "easy-npc-config-ui",
+      "source": "modrinth",
+      "slug": "easy-npc-config-ui",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "easy_npc_config_ui-neoforge-1.21.1-7.16.0.jar"
+      },
+      "pin": {
+        "versionId": "XL6nv37h",
+        "filename": "easy_npc_config_ui-neoforge-1.21.1-7.16.0.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/uTGjf7vA/versions/XL6nv37h/easy_npc_config_ui-neoforge-1.21.1-7.16.0.jar",
+        "sha1": "f70fcd7e25f439db1973dbb8372788f41ee27202",
+        "sha512": "37e537f3e3ad7fe60f2e2cc21cff2f3452511e240b86115d9a097cb85a1ea0a3dbce0339637f546198af1b5436e629fa68a6430d8e1fdd17373b99ffa0a2dca2",
+        "size": 1207679
+      }
+    },
+    {
+      "name": "easy-npc-core",
+      "source": "modrinth",
+      "slug": "easy-npc-core",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "easy_npc-neoforge-1.21.1-7.16.0.jar"
+      },
+      "pin": {
+        "versionId": "JgVXyplm",
+        "filename": "easy_npc-neoforge-1.21.1-7.16.0.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/Epm6R3P2/versions/JgVXyplm/easy_npc-neoforge-1.21.1-7.16.0.jar",
+        "sha1": "d97559a1436fe6c7cefb5b4083547eccdac076cf",
+        "sha512": "c410a1b5459ce65701aeb12e424277d1069b8a8b0c13c5d6d556f50d705ea648169eec044cbf1adcf70904c698164ff295484af21026a484bcf4c7174736828d",
+        "size": 3256971
+      }
+    }
+  ],
+  "checks": [
+    {
+      "type": "log_contains",
+      "value": "Registering JEI pinyin search storage",
+      "name": "jei-storage-registered"
+    },
+    {
+      "type": "log_not_contains",
+      "value": "Could not find targets.json. JechTransformer will not be loaded.",
+      "name": "transformer-loaded"
+    },
+    {
+      "type": "uitest_report",
+      "name": "uitest-report"
+    },
+    {
+      "type": "no_crash_reports",
+      "name": "no-crash-reports"
+    },
+    {
+      "type": "exit_code_zero",
+      "name": "exit-code"
+    }
+  ],
+  "world": null,
+  "timeout_sec": 600
+}

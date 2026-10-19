@@ -1,0 +1,112 @@
+{
+  "_comment": "1.21.1 neoforge 单 mod 实例：Enchanting Infuser（slug enchanting-infuser）。行沿用 envs/1.21.1-neoforge.json 的 uitest/1.21.1-neoforge，不新增 Gradle 行；jei 与平台库仍由行自己加载，这一条目标 mod 由 jt 从它的 pin 下载后交给行；依赖由 tools/mod_deps.py 补齐（补进来的同样打 harness 标签）。",
+  "name": "1.21.1-neoforge-enchanting-infuser",
+  "tags": [
+    "1211",
+    "neoforge",
+    "mods",
+    "mods-11"
+  ],
+  "mc": "1.21.1",
+  "loader": {
+    "type": "neoforge",
+    "version": "21.1.263"
+  },
+  "java": {
+    "version": 21
+  },
+  "uitest": {
+    "selection": "tag:smoke,tag:jei",
+    "project": "uitest/1.21.1-neoforge"
+  },
+  "jech": {
+    "source": "local-build",
+    "project": "1.21.1",
+    "path": "neoforge/build/libs/jecharacters-1.21.1-neoforge-*.jar",
+    "expectModId": "jecharacters",
+    "via": "dev-classpath"
+  },
+  "mods": [
+    {
+      "name": "jei",
+      "source": "curseforge",
+      "slug": "jei",
+      "via": "dev-classpath",
+      "describe": {
+        "version": "19.37.0.362"
+      },
+      "pin": {
+        "fileId": 8413371,
+        "filename": "jei-1.21.1-neoforge-19.37.0.362.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/8413/371/jei-1.21.1-neoforge-19.37.0.362.jar",
+        "sha1": "abdd62a8cee4fa4b93e8267da4a9e6a3700be842",
+        "size": 1624420
+      }
+    },
+    {
+      "name": "enchanting-infuser",
+      "source": "curseforge",
+      "slug": "enchanting-infuser",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "EnchantingInfuser-v21.1.4-1.21.1-NeoForge.jar"
+      },
+      "pin": {
+        "fileId": 7844709,
+        "filename": "EnchantingInfuser-v21.1.4-1.21.1-NeoForge.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/7844/709/EnchantingInfuser-v21.1.4-1.21.1-NeoForge.jar",
+        "sha1": "62bfa1cf50abeb3034cd4477e6c995e16ab7965c",
+        "size": 200056
+      }
+    },
+    {
+      "name": "puzzleslib",
+      "source": "modrinth",
+      "slug": "puzzles-lib",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "puzzleslib-v21.1.64-mc1.21.1+neoforge.jar"
+      },
+      "pin": {
+        "versionId": "lATqZwtV",
+        "filename": "puzzleslib-v21.1.64-mc1.21.1+neoforge.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/QAGBst4M/versions/lATqZwtV/puzzleslib-v21.1.64-mc1.21.1%2Bneoforge.jar",
+        "sha1": "8562ac65d4f2a55365d4522934fb0e00cd3d3ec3",
+        "sha512": "f60ecfc9fedf9c6967891024711391abdc6ffb45c09030f221e9bf061a5a99323a612cecf19af4b0d86b7a3dd4c49f273e2a9b2d2b61bbc867f85d9f3034f5b7",
+        "size": 1451067
+      }
+    }
+  ],
+  "checks": [
+    {
+      "type": "log_contains",
+      "value": "Registering JEI pinyin search storage",
+      "name": "jei-storage-registered"
+    },
+    {
+      "type": "log_not_contains",
+      "value": "Could not find targets.json. JechTransformer will not be loaded.",
+      "name": "transformer-loaded"
+    },
+    {
+      "type": "uitest_report",
+      "name": "uitest-report"
+    },
+    {
+      "type": "no_crash_reports",
+      "name": "no-crash-reports"
+    },
+    {
+      "type": "exit_code_zero",
+      "name": "exit-code"
+    }
+  ],
+  "world": null,
+  "timeout_sec": 600
+}

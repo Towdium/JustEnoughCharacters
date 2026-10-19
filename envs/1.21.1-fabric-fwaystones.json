@@ -1,0 +1,123 @@
+{
+  "_comment": "1.21.1 fabric 单 mod 实例：Waystones（slug fwaystones）。行沿用 envs/1.21.1-fabric.json 的 uitest/1.21.1-fabric，不新增 Gradle 行；jei 与平台库仍由行自己加载，这一条目标 mod 由 jt 从它的 pin 下载后交给行；依赖由 tools/mod_deps.py 补齐（补进来的同样打 harness 标签）。",
+  "name": "1.21.1-fabric-fwaystones",
+  "tags": [
+    "1211",
+    "fabric",
+    "mods",
+    "mods-08"
+  ],
+  "mc": "1.21.1",
+  "loader": {
+    "type": "fabric",
+    "version": "0.19.5"
+  },
+  "java": {
+    "version": 21
+  },
+  "uitest": {
+    "selection": "tag:smoke,tag:jei",
+    "project": "uitest/1.21.1-fabric",
+    "options": {
+      "version": "3955",
+      "key_key.jei.focusSearch": "key.keyboard.f"
+    }
+  },
+  "jech": {
+    "source": "local-build",
+    "project": "1.21.1",
+    "path": "fabric/build/libs/jecharacters-1.21.1-fabric-*.jar",
+    "expectModId": "jecharacters",
+    "via": "dev-classpath"
+  },
+  "mods": [
+    {
+      "name": "jei",
+      "source": "curseforge",
+      "slug": "jei",
+      "via": "dev-classpath",
+      "describe": {
+        "version": "19.37.0.362"
+      },
+      "pin": {
+        "fileId": 8413369,
+        "filename": "jei-1.21.1-fabric-19.37.0.362.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/8413/369/jei-1.21.1-fabric-19.37.0.362.jar",
+        "sha1": "1765e49042f562a94acbbd146cf32259e6803c49",
+        "size": 1658611
+      }
+    },
+    {
+      "name": "fabric-api",
+      "source": "curseforge",
+      "slug": "fabric-api",
+      "via": "dev-classpath",
+      "describe": {
+        "version": "0.116.1+1.21.1"
+      },
+      "pin": {
+        "fileId": 6601153,
+        "filename": "fabric-api-0.116.1+1.21.1.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/6601/153/fabric-api-0.116.1%2b1.21.1.jar",
+        "sha1": "bd8e174dcf695c94a7d8dfc8f86b2e557bad0faa",
+        "size": 2415045
+      }
+    },
+    {
+      "name": "fwaystones",
+      "source": "modrinth",
+      "slug": "fwaystones",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "wraith-waystones-3.3.4+mc1.21.1.jar"
+      },
+      "pin": {
+        "versionId": "LUSqgrjd",
+        "filename": "wraith-waystones-3.3.4+mc1.21.1.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/sTZr7NVo/versions/LUSqgrjd/wraith-waystones-3.3.4%2Bmc1.21.1.jar",
+        "sha1": "9e9caa7187a37a76a75ee442c75ad9f3886f4e80",
+        "sha512": "6e6237b40f34f68ea68dadde0f53fdee2885a06f0935a8d928e54626b7bea43cc4972be5cc884ffe46aff469802779daff432a59b5990d7d612afcb38494987a",
+        "size": 445684
+      }
+    }
+  ],
+  "checks": [
+    {
+      "type": "log_contains",
+      "value": "Registering JEI pinyin search storage",
+      "name": "jei-storage-registered"
+    },
+    {
+      "type": "log_not_contains",
+      "value": "Could not find targets.json. JechTransformer will not be loaded.",
+      "name": "transformer-loaded"
+    },
+    {
+      "type": "log_not_contains",
+      "value": "Can't create config file!",
+      "name": "config-writable"
+    },
+    {
+      "type": "file_exists",
+      "value": "config/jecharacters.json",
+      "name": "config-generated"
+    },
+    {
+      "type": "uitest_report",
+      "name": "uitest-report"
+    },
+    {
+      "type": "no_crash_reports",
+      "name": "no-crash-reports"
+    },
+    {
+      "type": "exit_code_zero",
+      "name": "exit-code"
+    }
+  ],
+  "world": null,
+  "timeout_sec": 600
+}

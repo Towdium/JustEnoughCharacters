@@ -1,0 +1,132 @@
+{
+  "_comment": "1.21.1 neoforge 单 mod 实例：CobbleDollars（slug cobbledollars）。行沿用 envs/1.21.1-neoforge.json 的 uitest/1.21.1-neoforge，不新增 Gradle 行；jei 与平台库仍由行自己加载，这一条目标 mod 由 jt 从它的 pin 下载后交给行；依赖由 tools/mod_deps.py 补齐（补进来的同样打 harness 标签）。",
+  "name": "1.21.1-neoforge-cobbledollars",
+  "tags": [
+    "1211",
+    "neoforge",
+    "mods",
+    "mods-14"
+  ],
+  "mc": "1.21.1",
+  "loader": {
+    "type": "neoforge",
+    "version": "21.1.263"
+  },
+  "java": {
+    "version": 21
+  },
+  "uitest": {
+    "selection": "tag:smoke,tag:jei",
+    "project": "uitest/1.21.1-neoforge"
+  },
+  "jech": {
+    "source": "local-build",
+    "project": "1.21.1",
+    "path": "neoforge/build/libs/jecharacters-1.21.1-neoforge-*.jar",
+    "expectModId": "jecharacters",
+    "via": "dev-classpath"
+  },
+  "mods": [
+    {
+      "name": "jei",
+      "source": "curseforge",
+      "slug": "jei",
+      "via": "dev-classpath",
+      "describe": {
+        "version": "19.37.0.362"
+      },
+      "pin": {
+        "fileId": 8413371,
+        "filename": "jei-1.21.1-neoforge-19.37.0.362.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/8413/371/jei-1.21.1-neoforge-19.37.0.362.jar",
+        "sha1": "abdd62a8cee4fa4b93e8267da4a9e6a3700be842",
+        "size": 1624420
+      }
+    },
+    {
+      "name": "cobbledollars",
+      "source": "curseforge",
+      "slug": "cobbledollars",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "CobbleDollars-neoforge-2.0.0+Beta-6.1+1.21.1.jar"
+      },
+      "pin": {
+        "fileId": 8484919,
+        "filename": "CobbleDollars-neoforge-2.0.0+Beta-6.1+1.21.1.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/8484/919/CobbleDollars-neoforge-2.0.0%2bBeta-6.1%2b1.21.1.jar",
+        "sha1": "3d4559f77fc47d10ccac7079dbaefd1c414636c3",
+        "size": 504569
+      }
+    },
+    {
+      "name": "cobblemon",
+      "source": "modrinth",
+      "slug": "cobblemon",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "Cobblemon-neoforge-1.8.2+1.21.1.jar"
+      },
+      "pin": {
+        "versionId": "9IXh9584",
+        "filename": "Cobblemon-neoforge-1.8.2+1.21.1.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/MdwFAVRL/versions/9IXh9584/Cobblemon-neoforge-1.8.2%2B1.21.1.jar",
+        "sha1": "ca2a05e60f89fb04e85d1aee8835938bd8d382e0",
+        "sha512": "4803f81c95563c6950d0a287f5f16f04122c5bcce82e084fb032f992cecf3950496ac53bbecbcf2689dd87ff3c79afb1c734204e8b0268a25ee0b09d4a6228e6",
+        "size": 140986469
+      }
+    },
+    {
+      "name": "kotlin-for-forge",
+      "source": "modrinth",
+      "slug": "kotlin-for-forge",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "kotlinforforge-5.12.0-all.jar"
+      },
+      "pin": {
+        "versionId": "uhJhCT7X",
+        "filename": "kotlinforforge-5.12.0-all.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/ordsPcFz/versions/uhJhCT7X/kotlinforforge-5.12.0-all.jar",
+        "sha1": "d10d062caf1aad9aec82d7852f2fee1781735c1f",
+        "sha512": "b8c3942f4d33179edf3f102f3d870b99dd436f8b8236dbbd31aa51b888162c692cfd88927295f24dc8b4375232f4c6c17360c5d6c4823f93cbcd7cf4bdc8bd14",
+        "size": 7279264
+      }
+    }
+  ],
+  "checks": [
+    {
+      "type": "log_contains",
+      "value": "Registering JEI pinyin search storage",
+      "name": "jei-storage-registered"
+    },
+    {
+      "type": "log_not_contains",
+      "value": "Could not find targets.json. JechTransformer will not be loaded.",
+      "name": "transformer-loaded"
+    },
+    {
+      "type": "uitest_report",
+      "name": "uitest-report"
+    },
+    {
+      "type": "no_crash_reports",
+      "name": "no-crash-reports"
+    },
+    {
+      "type": "exit_code_zero",
+      "name": "exit-code"
+    }
+  ],
+  "world": null,
+  "timeout_sec": 600
+}

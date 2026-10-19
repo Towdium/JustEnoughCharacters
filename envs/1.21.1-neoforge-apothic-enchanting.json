@@ -1,0 +1,133 @@
+{
+  "_comment": "1.21.1 neoforge 单 mod 实例：Apothic Enchanting（slug apothic-enchanting）。行沿用 envs/1.21.1-neoforge.json 的 uitest/1.21.1-neoforge，不新增 Gradle 行；jei 与平台库仍由行自己加载，这一条目标 mod 由 jt 从它的 pin 下载后交给行；依赖由 tools/mod_deps.py 补齐（补进来的同样打 harness 标签）。",
+  "name": "1.21.1-neoforge-apothic-enchanting",
+  "tags": [
+    "1211",
+    "neoforge",
+    "mods",
+    "mods-02"
+  ],
+  "mc": "1.21.1",
+  "loader": {
+    "type": "neoforge",
+    "version": "21.1.263"
+  },
+  "java": {
+    "version": 21
+  },
+  "uitest": {
+    "selection": "tag:smoke,tag:jei",
+    "project": "uitest/1.21.1-neoforge"
+  },
+  "jech": {
+    "source": "local-build",
+    "project": "1.21.1",
+    "path": "neoforge/build/libs/jecharacters-1.21.1-neoforge-*.jar",
+    "expectModId": "jecharacters",
+    "via": "dev-classpath"
+  },
+  "mods": [
+    {
+      "name": "jei",
+      "source": "curseforge",
+      "slug": "jei",
+      "via": "dev-classpath",
+      "describe": {
+        "version": "19.37.0.362"
+      },
+      "pin": {
+        "fileId": 8413371,
+        "filename": "jei-1.21.1-neoforge-19.37.0.362.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/8413/371/jei-1.21.1-neoforge-19.37.0.362.jar",
+        "sha1": "abdd62a8cee4fa4b93e8267da4a9e6a3700be842",
+        "size": 1624420
+      }
+    },
+    {
+      "name": "apothic-enchanting",
+      "source": "modrinth",
+      "slug": "apothic-enchanting",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "ApothicEnchanting-1.21.1-1.6.4.jar"
+      },
+      "pin": {
+        "versionId": "JAQJkLJ1",
+        "filename": "ApothicEnchanting-1.21.1-1.6.4.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/pL8MtgqY/versions/JAQJkLJ1/ApothicEnchanting-1.21.1-1.6.4.jar",
+        "sha1": "d88e75b60e97dae8054ee10f3a92aa2bb812b8b9",
+        "sha512": "b560ed61810030472c42fa39e6199b1db07c19baba8f78d98b44ab3e1d00a1bebff5f69942bd076fea9754f63940df920cfb19906073b77bcc459bb8d88575de",
+        "size": 5422885
+      }
+    },
+    {
+      "name": "apothic-attributes",
+      "source": "modrinth",
+      "slug": "apothic-attributes",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "ApothicAttributes-1.21.1-2.11.0.jar"
+      },
+      "pin": {
+        "versionId": "64fZbLnj",
+        "filename": "ApothicAttributes-1.21.1-2.11.0.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/DGaH8Rh0/versions/64fZbLnj/ApothicAttributes-1.21.1-2.11.0.jar",
+        "sha1": "7ff0e452e10cb582c188626a413037e63db9ca04",
+        "sha512": "568580e68016161151fc0254fb0da949b42cf285fa2bf7c3aec1cd320405c430483e9eb990aaddef537bfac4aa4beb21db82fbff9249131e05b15063b6839611",
+        "size": 319609
+      }
+    },
+    {
+      "name": "placebo",
+      "source": "modrinth",
+      "slug": "placebo",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "Placebo-1.21.1-9.9.4.jar"
+      },
+      "pin": {
+        "versionId": "B5zbSVlT",
+        "filename": "Placebo-1.21.1-9.9.4.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/tCkE8p2N/versions/B5zbSVlT/Placebo-1.21.1-9.9.4.jar",
+        "sha1": "007d52a42020a331d5272495f6d676e0ad1a2c13",
+        "sha512": "4f3a9c5974132f3638c262c56b0c2886df2bc58027c961aa11d06d0ae2e608b63f24f949b2f8c240989e2a1bfe303fd237c5f2d49269453ad6c2ff1f85f2c648",
+        "size": 326063
+      }
+    }
+  ],
+  "checks": [
+    {
+      "type": "log_contains",
+      "value": "Registering JEI pinyin search storage",
+      "name": "jei-storage-registered"
+    },
+    {
+      "type": "log_not_contains",
+      "value": "Could not find targets.json. JechTransformer will not be loaded.",
+      "name": "transformer-loaded"
+    },
+    {
+      "type": "uitest_report",
+      "name": "uitest-report"
+    },
+    {
+      "type": "no_crash_reports",
+      "name": "no-crash-reports"
+    },
+    {
+      "type": "exit_code_zero",
+      "name": "exit-code"
+    }
+  ],
+  "world": null,
+  "timeout_sec": 600
+}

@@ -1,0 +1,96 @@
+{
+  "_comment": "1.21.1 neoforge 单 mod 实例：Pixelmon（slug pixelmon）。行沿用 envs/1.21.1-neoforge.json 的 uitest/1.21.1-neoforge，不新增 Gradle 行；jei 与平台库仍由行自己加载，这一条目标 mod 由 jt 从它的 pin 下载后交给行；依赖由 tools/mod_deps.py 补齐（补进来的同样打 harness 标签）。",
+  "name": "1.21.1-neoforge-pixelmon",
+  "tags": [
+    "1211",
+    "neoforge",
+    "mods",
+    "mods-01"
+  ],
+  "mc": "1.21.1",
+  "loader": {
+    "type": "neoforge",
+    "version": "21.1.263"
+  },
+  "java": {
+    "version": 21
+  },
+  "uitest": {
+    "selection": "tag:smoke,tag:jei",
+    "project": "uitest/1.21.1-neoforge",
+    "files": {
+      "config/pixelmon/config.yml": "starter-on-join: false\n"
+    }
+  },
+  "jech": {
+    "source": "local-build",
+    "project": "1.21.1",
+    "path": "neoforge/build/libs/jecharacters-1.21.1-neoforge-*.jar",
+    "expectModId": "jecharacters",
+    "via": "dev-classpath"
+  },
+  "mods": [
+    {
+      "name": "jei",
+      "source": "curseforge",
+      "slug": "jei",
+      "via": "dev-classpath",
+      "describe": {
+        "version": "19.37.0.362"
+      },
+      "pin": {
+        "fileId": 8413371,
+        "filename": "jei-1.21.1-neoforge-19.37.0.362.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/8413/371/jei-1.21.1-neoforge-19.37.0.362.jar",
+        "sha1": "abdd62a8cee4fa4b93e8267da4a9e6a3700be842",
+        "size": 1624420
+      }
+    },
+    {
+      "name": "pixelmon",
+      "source": "modrinth",
+      "slug": "pixelmon",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "Pixelmon-1.21.1-9.4.1-universal.jar"
+      },
+      "pin": {
+        "versionId": "tY57GRtu",
+        "filename": "Pixelmon-1.21.1-9.4.1-universal.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/59ZceYlU/versions/tY57GRtu/Pixelmon-1.21.1-9.4.1-universal.jar",
+        "sha1": "21ee5b13cfb5e387069dfc9d9f3772125471a820",
+        "sha512": "c7e53630100857e3b3d48d2abe4b19658d8649c50d4ea8e04ce43dee3ec850a2e5bb8a06f75c2728cbd08d7cc8c0d2188730b40ef46341f924416197d1546bba",
+        "size": 400171869
+      }
+    }
+  ],
+  "checks": [
+    {
+      "type": "log_contains",
+      "value": "Registering JEI pinyin search storage",
+      "name": "jei-storage-registered"
+    },
+    {
+      "type": "log_not_contains",
+      "value": "Could not find targets.json. JechTransformer will not be loaded.",
+      "name": "transformer-loaded"
+    },
+    {
+      "type": "uitest_report",
+      "name": "uitest-report"
+    },
+    {
+      "type": "no_crash_reports",
+      "name": "no-crash-reports"
+    },
+    {
+      "type": "exit_code_zero",
+      "name": "exit-code"
+    }
+  ],
+  "world": null,
+  "timeout_sec": 600
+}

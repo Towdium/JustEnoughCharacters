@@ -1,0 +1,152 @@
+{
+  "_comment": "1.21.1 neoforge 单 mod 实例：Integrated Terminals（slug integrated-terminals）。行沿用 envs/1.21.1-neoforge.json 的 uitest/1.21.1-neoforge，不新增 Gradle 行；jei 与平台库仍由行自己加载，这一条目标 mod 由 jt 从它的 pin 下载后交给行；依赖由 tools/mod_deps.py 补齐（补进来的同样打 harness 标签）。",
+  "name": "1.21.1-neoforge-integrated-terminals",
+  "tags": [
+    "1211",
+    "neoforge",
+    "mods",
+    "mods-12"
+  ],
+  "mc": "1.21.1",
+  "loader": {
+    "type": "neoforge",
+    "version": "21.1.263"
+  },
+  "java": {
+    "version": 21
+  },
+  "uitest": {
+    "selection": "tag:smoke,tag:jei",
+    "project": "uitest/1.21.1-neoforge"
+  },
+  "jech": {
+    "source": "local-build",
+    "project": "1.21.1",
+    "path": "neoforge/build/libs/jecharacters-1.21.1-neoforge-*.jar",
+    "expectModId": "jecharacters",
+    "via": "dev-classpath"
+  },
+  "mods": [
+    {
+      "name": "jei",
+      "source": "curseforge",
+      "slug": "jei",
+      "via": "dev-classpath",
+      "describe": {
+        "version": "19.37.0.362"
+      },
+      "pin": {
+        "fileId": 8413371,
+        "filename": "jei-1.21.1-neoforge-19.37.0.362.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/8413/371/jei-1.21.1-neoforge-19.37.0.362.jar",
+        "sha1": "abdd62a8cee4fa4b93e8267da4a9e6a3700be842",
+        "size": 1624420
+      }
+    },
+    {
+      "name": "integrated-terminals",
+      "source": "modrinth",
+      "slug": "integrated-terminals",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "integratedterminals-1.21.1-neoforge-1.11.1.jar"
+      },
+      "pin": {
+        "versionId": "yU5A0JiC",
+        "filename": "integratedterminals-1.21.1-neoforge-1.11.1.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/HmLJoQ1K/versions/yU5A0JiC/integratedterminals-1.21.1-neoforge-1.11.1.jar",
+        "sha1": "58947c1c7f62c47379d8e009d17903d5b05c576b",
+        "sha512": "dc1fd9b473b4a8e765398ff56c2ad1fe0e6c9ea2ea8c121ee4422ba9f8b715e9a28ff7d6fabd8676bfb991a38ed90a024a46ea00af4f07e7ac5d018028eba671",
+        "size": 878292
+      }
+    },
+    {
+      "name": "integrated-dynamics",
+      "source": "curseforge",
+      "slug": "integrated-dynamics",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "integrateddynamics-1.21.1-neoforge-1.38.1.jar"
+      },
+      "pin": {
+        "fileId": 9219622,
+        "filename": "integrateddynamics-1.21.1-neoforge-1.38.1.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/9219/622/integrateddynamics-1.21.1-neoforge-1.38.1.jar",
+        "sha1": "be8d94d0b148c1e4cebe9f01441197563c79137d",
+        "size": 4500305
+      }
+    },
+    {
+      "name": "commoncapabilities",
+      "source": "modrinth",
+      "slug": "common-capabilities",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "commoncapabilities-1.21.1-neoforge-2.11.6.jar"
+      },
+      "pin": {
+        "versionId": "R9PufPlP",
+        "filename": "commoncapabilities-1.21.1-neoforge-2.11.6.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/oFXrCkDI/versions/R9PufPlP/commoncapabilities-1.21.1-neoforge-2.11.6.jar",
+        "sha1": "2bc5b853dda5e0fa121017dee218a9f49309c109",
+        "sha512": "c4da165077a02106b0bafb07859a8665fc1246f1ac6f4898167b83cd695dd78abf686350e5b62d102623cf48d0284e02565b6541707b5597b5405a0a38043f56",
+        "size": 283980
+      }
+    },
+    {
+      "name": "cyclops-core",
+      "source": "modrinth",
+      "slug": "cyclops-core",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "cyclopscore-1.21.1-neoforge-1.30.0.jar"
+      },
+      "pin": {
+        "versionId": "2Z0ruVBB",
+        "filename": "cyclopscore-1.21.1-neoforge-1.30.0.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/Z9DM0LJ4/versions/2Z0ruVBB/cyclopscore-1.21.1-neoforge-1.30.0.jar",
+        "sha1": "e91a27152acfaed1f6992525c16907ad354b711d",
+        "sha512": "7a3a8f3a4806045e8724c6c61a177c19530f03611bb8843533a630ed97943d66fe010285c36755135cd460899fe01a2d298223f15de9ec841ba27a2b62208d24",
+        "size": 1163177
+      }
+    }
+  ],
+  "checks": [
+    {
+      "type": "log_contains",
+      "value": "Registering JEI pinyin search storage",
+      "name": "jei-storage-registered"
+    },
+    {
+      "type": "log_not_contains",
+      "value": "Could not find targets.json. JechTransformer will not be loaded.",
+      "name": "transformer-loaded"
+    },
+    {
+      "type": "uitest_report",
+      "name": "uitest-report"
+    },
+    {
+      "type": "no_crash_reports",
+      "name": "no-crash-reports"
+    },
+    {
+      "type": "exit_code_zero",
+      "name": "exit-code"
+    }
+  ],
+  "world": null,
+  "timeout_sec": 600
+}

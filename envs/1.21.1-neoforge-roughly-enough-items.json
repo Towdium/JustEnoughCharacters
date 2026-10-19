@@ -1,0 +1,131 @@
+{
+  "_comment": "1.21.1 neoforge 单 mod 实例：REI（slug roughly-enough-items）。行沿用 envs/1.21.1-neoforge.json 的 uitest/1.21.1-neoforge，不新增 Gradle 行；jei 与平台库仍由行自己加载，这一条目标 mod 由 jt 从它的 pin 下载后交给行；依赖由 tools/mod_deps.py 补齐（补进来的同样打 harness 标签）。",
+  "name": "1.21.1-neoforge-roughly-enough-items",
+  "tags": [
+    "1211",
+    "neoforge",
+    "mods",
+    "mods-02"
+  ],
+  "mc": "1.21.1",
+  "loader": {
+    "type": "neoforge",
+    "version": "21.1.263"
+  },
+  "java": {
+    "version": 21
+  },
+  "uitest": {
+    "selection": "tag:smoke,tag:jei",
+    "project": "uitest/1.21.1-neoforge"
+  },
+  "jech": {
+    "source": "local-build",
+    "project": "1.21.1",
+    "path": "neoforge/build/libs/jecharacters-1.21.1-neoforge-*.jar",
+    "expectModId": "jecharacters",
+    "via": "dev-classpath"
+  },
+  "mods": [
+    {
+      "name": "jei",
+      "source": "curseforge",
+      "slug": "jei",
+      "via": "dev-classpath",
+      "describe": {
+        "version": "19.37.0.362"
+      },
+      "pin": {
+        "fileId": 8413371,
+        "filename": "jei-1.21.1-neoforge-19.37.0.362.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/8413/371/jei-1.21.1-neoforge-19.37.0.362.jar",
+        "sha1": "abdd62a8cee4fa4b93e8267da4a9e6a3700be842",
+        "size": 1624420
+      }
+    },
+    {
+      "name": "roughly-enough-items",
+      "source": "curseforge",
+      "slug": "roughly-enough-items",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "RoughlyEnoughItems-16.0.799-neoforge.jar"
+      },
+      "pin": {
+        "fileId": 6199140,
+        "filename": "RoughlyEnoughItems-16.0.799-neoforge.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/6199/140/RoughlyEnoughItems-16.0.799-neoforge.jar",
+        "sha1": "58e3de0cd7d559a6caf924c25992382677bc03f9",
+        "size": 2384445
+      }
+    },
+    {
+      "name": "architectury-api",
+      "source": "modrinth",
+      "slug": "architectury-api",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "architectury-13.0.11-neoforge.jar"
+      },
+      "pin": {
+        "versionId": "1IiqEQGl",
+        "filename": "architectury-13.0.11-neoforge.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/lhGA9TYQ/versions/1IiqEQGl/architectury-13.0.11-neoforge.jar",
+        "sha1": "008656a0702801174b8ec245ed7aad1921d6e9f1",
+        "sha512": "d9f7c3bb8162577dfb461ffdf04bd6a3563c7586934a0e2a744c14421beffb8286f0d88d4c758317003f20f99fe8072a39b9d675af061e036970d36db36027f0",
+        "size": 584734
+      }
+    },
+    {
+      "name": "cloth-config",
+      "source": "curseforge",
+      "slug": "cloth-config",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "cloth-config-15.0.140-neoforge.jar"
+      },
+      "pin": {
+        "fileId": 5729127,
+        "filename": "cloth-config-15.0.140-neoforge.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/5729/127/cloth-config-15.0.140-neoforge.jar",
+        "sha1": "c3e5733ba4503b102589a026000fd5ce0212f6f2",
+        "size": 1163890
+      }
+    }
+  ],
+  "checks": [
+    {
+      "type": "log_contains",
+      "value": "Registering JEI pinyin search storage",
+      "name": "jei-storage-registered"
+    },
+    {
+      "type": "log_not_contains",
+      "value": "Could not find targets.json. JechTransformer will not be loaded.",
+      "name": "transformer-loaded"
+    },
+    {
+      "type": "uitest_report",
+      "name": "uitest-report"
+    },
+    {
+      "type": "no_crash_reports",
+      "name": "no-crash-reports"
+    },
+    {
+      "type": "exit_code_zero",
+      "name": "exit-code"
+    }
+  ],
+  "world": null,
+  "timeout_sec": 600
+}

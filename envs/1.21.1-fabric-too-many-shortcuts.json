@@ -1,0 +1,143 @@
+{
+  "_comment": "1.21.1 fabric 单 mod 实例：Too Many Shortcuts（slug too-many-shortcuts）。行沿用 envs/1.21.1-fabric.json 的 uitest/1.21.1-fabric，不新增 Gradle 行；jei 与平台库仍由行自己加载，这一条目标 mod 由 jt 从它的 pin 下载后交给行；依赖由 tools/mod_deps.py 补齐（补进来的同样打 harness 标签）。",
+  "name": "1.21.1-fabric-too-many-shortcuts",
+  "tags": [
+    "1211",
+    "fabric",
+    "mods",
+    "mods-05"
+  ],
+  "mc": "1.21.1",
+  "loader": {
+    "type": "fabric",
+    "version": "0.19.5"
+  },
+  "java": {
+    "version": 21
+  },
+  "uitest": {
+    "selection": "tag:smoke,tag:jei",
+    "project": "uitest/1.21.1-fabric",
+    "options": {
+      "version": "3955",
+      "key_key.jei.focusSearch": "key.keyboard.f"
+    }
+  },
+  "jech": {
+    "source": "local-build",
+    "project": "1.21.1",
+    "path": "fabric/build/libs/jecharacters-1.21.1-fabric-*.jar",
+    "expectModId": "jecharacters",
+    "via": "dev-classpath"
+  },
+  "mods": [
+    {
+      "name": "jei",
+      "source": "curseforge",
+      "slug": "jei",
+      "via": "dev-classpath",
+      "describe": {
+        "version": "19.37.0.362"
+      },
+      "pin": {
+        "fileId": 8413369,
+        "filename": "jei-1.21.1-fabric-19.37.0.362.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/8413/369/jei-1.21.1-fabric-19.37.0.362.jar",
+        "sha1": "1765e49042f562a94acbbd146cf32259e6803c49",
+        "size": 1658611
+      }
+    },
+    {
+      "name": "fabric-api",
+      "source": "curseforge",
+      "slug": "fabric-api",
+      "via": "dev-classpath",
+      "describe": {
+        "version": "0.116.1+1.21.1"
+      },
+      "pin": {
+        "fileId": 6601153,
+        "filename": "fabric-api-0.116.1+1.21.1.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/6601/153/fabric-api-0.116.1%2b1.21.1.jar",
+        "sha1": "bd8e174dcf695c94a7d8dfc8f86b2e557bad0faa",
+        "size": 2415045
+      }
+    },
+    {
+      "name": "too-many-shortcuts",
+      "source": "modrinth",
+      "slug": "too-many-shortcuts",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "too-many-shortcuts-0.0.14.jar"
+      },
+      "pin": {
+        "versionId": "7JTRjh0r",
+        "filename": "too-many-shortcuts-0.0.14.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/LH6juGaI/versions/7JTRjh0r/too-many-shortcuts-0.0.14.jar",
+        "sha1": "a7d9a87fbd24861810ad78240d126c2f08f3bc8c",
+        "sha512": "8b9b8a360b4936e1dcb572aa056c9b8f2305861b86ac674e9264533aa3dfb7996b2c923dbecb56d5305efbcfa08984e731a96380f235a8de0f277f089b1c927c",
+        "size": 329396
+      }
+    },
+    {
+      "name": "fabric-language-kotlin",
+      "source": "modrinth",
+      "slug": "fabric-language-kotlin",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "fabric-language-kotlin-1.14.2+kotlin.2.4.21.jar"
+      },
+      "pin": {
+        "versionId": "SKW1BTL3",
+        "filename": "fabric-language-kotlin-1.14.2+kotlin.2.4.21.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/Ha28R6CL/versions/SKW1BTL3/fabric-language-kotlin-1.14.2%2Bkotlin.2.4.21.jar",
+        "sha1": "f1d4ab6ecd54d9782521333a87eb50724ecb03e0",
+        "sha512": "7fb475c4a7e7bdf8d0aca4b5798a58a354c51443d5b1fbde3e8cf34dfbf7191ef4238b5f07d08ec9490ec180b371624523326c3ad45d4ed2b2be541de9407e5d",
+        "size": 8142878
+      }
+    }
+  ],
+  "checks": [
+    {
+      "type": "log_contains",
+      "value": "Registering JEI pinyin search storage",
+      "name": "jei-storage-registered"
+    },
+    {
+      "type": "log_not_contains",
+      "value": "Could not find targets.json. JechTransformer will not be loaded.",
+      "name": "transformer-loaded"
+    },
+    {
+      "type": "log_not_contains",
+      "value": "Can't create config file!",
+      "name": "config-writable"
+    },
+    {
+      "type": "file_exists",
+      "value": "config/jecharacters.json",
+      "name": "config-generated"
+    },
+    {
+      "type": "uitest_report",
+      "name": "uitest-report"
+    },
+    {
+      "type": "no_crash_reports",
+      "name": "no-crash-reports"
+    },
+    {
+      "type": "exit_code_zero",
+      "name": "exit-code"
+    }
+  ],
+  "world": null,
+  "timeout_sec": 600
+}

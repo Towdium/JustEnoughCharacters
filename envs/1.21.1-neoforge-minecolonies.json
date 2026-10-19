@@ -1,0 +1,149 @@
+{
+  "_comment": "1.21.1 neoforge 单 mod 实例：Minecolonies（slug minecolonies）。行沿用 envs/1.21.1-neoforge.json 的 uitest/1.21.1-neoforge，不新增 Gradle 行；jei 与平台库仍由行自己加载，这一条目标 mod 由 jt 从它的 pin 下载后交给行；依赖由 tools/mod_deps.py 补齐（补进来的同样打 harness 标签）。",
+  "name": "1.21.1-neoforge-minecolonies",
+  "tags": [
+    "1211",
+    "neoforge",
+    "mods",
+    "mods-09"
+  ],
+  "mc": "1.21.1",
+  "loader": {
+    "type": "neoforge",
+    "version": "21.1.263"
+  },
+  "java": {
+    "version": 21
+  },
+  "uitest": {
+    "selection": "tag:smoke,tag:jei",
+    "project": "uitest/1.21.1-neoforge"
+  },
+  "jech": {
+    "source": "local-build",
+    "project": "1.21.1",
+    "path": "neoforge/build/libs/jecharacters-1.21.1-neoforge-*.jar",
+    "expectModId": "jecharacters",
+    "via": "dev-classpath"
+  },
+  "mods": [
+    {
+      "name": "jei",
+      "source": "curseforge",
+      "slug": "jei",
+      "via": "dev-classpath",
+      "describe": {
+        "version": "19.37.0.362"
+      },
+      "pin": {
+        "fileId": 8413371,
+        "filename": "jei-1.21.1-neoforge-19.37.0.362.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/8413/371/jei-1.21.1-neoforge-19.37.0.362.jar",
+        "sha1": "abdd62a8cee4fa4b93e8267da4a9e6a3700be842",
+        "size": 1624420
+      }
+    },
+    {
+      "name": "minecolonies",
+      "source": "curseforge",
+      "slug": "minecolonies",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "minecolonies-1.1.1403-1.21.1.jar"
+      },
+      "pin": {
+        "fileId": 9058295,
+        "filename": "minecolonies-1.1.1403-1.21.1.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/9058/295/minecolonies-1.1.1403-1.21.1.jar",
+        "sha1": "3be2b5521f45271c77671673e834c57c2296d3e4",
+        "size": 78325447
+      }
+    },
+    {
+      "name": "blockui",
+      "source": "curseforge",
+      "slug": "blockui",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "blockui-1.0.209-1.21.1.jar"
+      },
+      "pin": {
+        "fileId": 7541336,
+        "filename": "blockui-1.0.209-1.21.1.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/7541/336/blockui-1.0.209-1.21.1.jar",
+        "sha1": "01cba16a7d71521b81d791a07740464e6d70d0a6",
+        "size": 468001
+      }
+    },
+    {
+      "name": "domum_ornamentum",
+      "source": "curseforge",
+      "slug": "domum-ornamentum",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "domum-ornamentum-1.0.231-main.jar"
+      },
+      "pin": {
+        "fileId": 7789217,
+        "filename": "domum-ornamentum-1.0.231-main.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/7789/217/domum-ornamentum-1.0.231-main.jar",
+        "sha1": "a8ec9660788133676fd440ce6998d813184cd486",
+        "size": 1143596
+      }
+    },
+    {
+      "name": "structurize",
+      "source": "curseforge",
+      "slug": "structurize",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "structurize-1.0.832-1.21.1.jar"
+      },
+      "pin": {
+        "fileId": 8610535,
+        "filename": "structurize-1.0.832-1.21.1.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/8610/535/structurize-1.0.832-1.21.1.jar",
+        "sha1": "be15d6924bcca76bf5ac107e2ce5ac4d948d82e2",
+        "size": 1063849
+      }
+    }
+  ],
+  "checks": [
+    {
+      "type": "log_contains",
+      "value": "Registering JEI pinyin search storage",
+      "name": "jei-storage-registered"
+    },
+    {
+      "type": "log_not_contains",
+      "value": "Could not find targets.json. JechTransformer will not be loaded.",
+      "name": "transformer-loaded"
+    },
+    {
+      "type": "uitest_report",
+      "name": "uitest-report"
+    },
+    {
+      "type": "no_crash_reports",
+      "name": "no-crash-reports"
+    },
+    {
+      "type": "exit_code_zero",
+      "name": "exit-code"
+    }
+  ],
+  "world": null,
+  "timeout_sec": 600
+}

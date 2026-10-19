@@ -1,0 +1,130 @@
+{
+  "_comment": "1.21.1 neoforge 单 mod 实例：Alchemistry（slug alchemistry）。行沿用 envs/1.21.1-neoforge.json 的 uitest/1.21.1-neoforge，不新增 Gradle 行；jei 与平台库仍由行自己加载，这一条目标 mod 由 jt 从它的 pin 下载后交给行；依赖由 tools/mod_deps.py 补齐（补进来的同样打 harness 标签）。",
+  "name": "1.21.1-neoforge-alchemistry",
+  "tags": [
+    "1211",
+    "neoforge",
+    "mods",
+    "mods-15"
+  ],
+  "mc": "1.21.1",
+  "loader": {
+    "type": "neoforge",
+    "version": "21.1.263"
+  },
+  "java": {
+    "version": 21
+  },
+  "uitest": {
+    "selection": "tag:smoke,tag:jei",
+    "project": "uitest/1.21.1-neoforge"
+  },
+  "jech": {
+    "source": "local-build",
+    "project": "1.21.1",
+    "path": "neoforge/build/libs/jecharacters-1.21.1-neoforge-*.jar",
+    "expectModId": "jecharacters",
+    "via": "dev-classpath"
+  },
+  "mods": [
+    {
+      "name": "jei",
+      "source": "curseforge",
+      "slug": "jei",
+      "via": "dev-classpath",
+      "describe": {
+        "version": "19.37.0.362"
+      },
+      "pin": {
+        "fileId": 8413371,
+        "filename": "jei-1.21.1-neoforge-19.37.0.362.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/8413/371/jei-1.21.1-neoforge-19.37.0.362.jar",
+        "sha1": "abdd62a8cee4fa4b93e8267da4a9e6a3700be842",
+        "size": 1624420
+      }
+    },
+    {
+      "name": "alchemistry",
+      "source": "curseforge",
+      "slug": "alchemistry",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "alchemistry-1.21.1-2.4.5.jar"
+      },
+      "pin": {
+        "fileId": 8234610,
+        "filename": "alchemistry-1.21.1-2.4.5.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/8234/610/alchemistry-1.21.1-2.4.5.jar",
+        "sha1": "1d21bf0216a9993f6b50ac27dc80f8dda17976c6",
+        "size": 3724994
+      }
+    },
+    {
+      "name": "alchemylib",
+      "source": "curseforge",
+      "slug": "alchemylib",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "alchemylib-1.21.1-1.1.6.jar"
+      },
+      "pin": {
+        "fileId": 8234606,
+        "filename": "alchemylib-1.21.1-1.1.6.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/8234/606/alchemylib-1.21.1-1.1.6.jar",
+        "sha1": "adebf15c144e07bb9439eb1af2a26e469527ef2b",
+        "size": 101822
+      }
+    },
+    {
+      "name": "chemlib",
+      "source": "curseforge",
+      "slug": "chemlib",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "chemlib-1.21.1-2.1.5.jar"
+      },
+      "pin": {
+        "fileId": 8234603,
+        "filename": "chemlib-1.21.1-2.1.5.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/8234/603/chemlib-1.21.1-2.1.5.jar",
+        "sha1": "ede62468b7f85795760dac7a6a506229d2a19ffb",
+        "size": 13621035
+      }
+    }
+  ],
+  "checks": [
+    {
+      "type": "log_contains",
+      "value": "Registering JEI pinyin search storage",
+      "name": "jei-storage-registered"
+    },
+    {
+      "type": "log_not_contains",
+      "value": "Could not find targets.json. JechTransformer will not be loaded.",
+      "name": "transformer-loaded"
+    },
+    {
+      "type": "uitest_report",
+      "name": "uitest-report"
+    },
+    {
+      "type": "no_crash_reports",
+      "name": "no-crash-reports"
+    },
+    {
+      "type": "exit_code_zero",
+      "name": "exit-code"
+    }
+  ],
+  "world": null,
+  "timeout_sec": 600
+}

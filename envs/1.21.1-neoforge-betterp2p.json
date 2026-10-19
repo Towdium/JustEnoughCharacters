@@ -1,0 +1,152 @@
+{
+  "_comment": "1.21.1 neoforge 单 mod 实例：Better P2P（slug betterp2p）。行沿用 envs/1.21.1-neoforge.json 的 uitest/1.21.1-neoforge，不新增 Gradle 行；jei 与平台库仍由行自己加载，这一条目标 mod 由 jt 从它的 pin 下载后交给行；依赖由 tools/mod_deps.py 补齐（补进来的同样打 harness 标签）。",
+  "name": "1.21.1-neoforge-betterp2p",
+  "tags": [
+    "1211",
+    "neoforge",
+    "mods",
+    "mods-10"
+  ],
+  "mc": "1.21.1",
+  "loader": {
+    "type": "neoforge",
+    "version": "21.1.263"
+  },
+  "java": {
+    "version": 21
+  },
+  "uitest": {
+    "selection": "tag:smoke,tag:jei",
+    "project": "uitest/1.21.1-neoforge"
+  },
+  "jech": {
+    "source": "local-build",
+    "project": "1.21.1",
+    "path": "neoforge/build/libs/jecharacters-1.21.1-neoforge-*.jar",
+    "expectModId": "jecharacters",
+    "via": "dev-classpath"
+  },
+  "mods": [
+    {
+      "name": "jei",
+      "source": "curseforge",
+      "slug": "jei",
+      "via": "dev-classpath",
+      "describe": {
+        "version": "19.37.0.362"
+      },
+      "pin": {
+        "fileId": 8413371,
+        "filename": "jei-1.21.1-neoforge-19.37.0.362.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/8413/371/jei-1.21.1-neoforge-19.37.0.362.jar",
+        "sha1": "abdd62a8cee4fa4b93e8267da4a9e6a3700be842",
+        "size": 1624420
+      }
+    },
+    {
+      "name": "betterp2p",
+      "source": "modrinth",
+      "slug": "betterp2p",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "betterp2p-1.5.2.jar"
+      },
+      "pin": {
+        "versionId": "NdUFCPLe",
+        "filename": "betterp2p-1.5.2.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/9DDxOvTJ/versions/NdUFCPLe/betterp2p-1.5.2.jar",
+        "sha1": "1dc069cc95060900e7fca77b7c542ac0139fc992",
+        "sha512": "97d68c8119dbc1a3534fd5c2ff74428a9dde97d2ae350388b41e1cfb1fe48b95161e627635b35d732ed398513bb400a86a6bf0679e1d63d02318f65efae7c02d",
+        "size": 266425
+      }
+    },
+    {
+      "name": "applied-energistics-2",
+      "source": "curseforge",
+      "slug": "applied-energistics-2",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "appliedenergistics2-19.2.18.jar"
+      },
+      "pin": {
+        "fileId": 8992605,
+        "filename": "appliedenergistics2-19.2.18.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/8992/605/appliedenergistics2-19.2.18.jar",
+        "sha1": "bcd04bc7f181b2ffa314625f284c8eca6fee7fe4",
+        "size": 8236552
+      }
+    },
+    {
+      "name": "guideme",
+      "source": "modrinth",
+      "slug": "guideme",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "guideme-21.1.19.jar"
+      },
+      "pin": {
+        "versionId": "hFpGwC6q",
+        "filename": "guideme-21.1.19.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/Ck4E7v7R/versions/hFpGwC6q/guideme-21.1.19.jar",
+        "sha1": "e85cd4c266f974dd360c46e8dad7ecf4c7ee96c6",
+        "sha512": "4dfa132e5cfd69a86c958867067f1c5ab39bb69ae35b2a62c24bb9924e9c688f1a4930ab75d335b22378d9f98cd7fceae8d030812b8f90c9aa282de8ea129f5a",
+        "size": 9311992
+      }
+    },
+    {
+      "name": "kotlin-for-forge",
+      "source": "modrinth",
+      "slug": "kotlin-for-forge",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "kotlinforforge-5.12.0-all.jar"
+      },
+      "pin": {
+        "versionId": "uhJhCT7X",
+        "filename": "kotlinforforge-5.12.0-all.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/ordsPcFz/versions/uhJhCT7X/kotlinforforge-5.12.0-all.jar",
+        "sha1": "d10d062caf1aad9aec82d7852f2fee1781735c1f",
+        "sha512": "b8c3942f4d33179edf3f102f3d870b99dd436f8b8236dbbd31aa51b888162c692cfd88927295f24dc8b4375232f4c6c17360c5d6c4823f93cbcd7cf4bdc8bd14",
+        "size": 7279264
+      }
+    }
+  ],
+  "checks": [
+    {
+      "type": "log_contains",
+      "value": "Registering JEI pinyin search storage",
+      "name": "jei-storage-registered"
+    },
+    {
+      "type": "log_not_contains",
+      "value": "Could not find targets.json. JechTransformer will not be loaded.",
+      "name": "transformer-loaded"
+    },
+    {
+      "type": "uitest_report",
+      "name": "uitest-report"
+    },
+    {
+      "type": "no_crash_reports",
+      "name": "no-crash-reports"
+    },
+    {
+      "type": "exit_code_zero",
+      "name": "exit-code"
+    }
+  ],
+  "world": null,
+  "timeout_sec": 600
+}

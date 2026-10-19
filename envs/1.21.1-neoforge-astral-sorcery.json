@@ -1,0 +1,131 @@
+{
+  "_comment": "1.21.1 neoforge 单 mod 实例：Astral Sorcery（slug astral-sorcery）。行沿用 envs/1.21.1-neoforge.json 的 uitest/1.21.1-neoforge，不新增 Gradle 行；jei 与平台库仍由行自己加载，这一条目标 mod 由 jt 从它的 pin 下载后交给行；依赖由 tools/mod_deps.py 补齐（补进来的同样打 harness 标签）。",
+  "name": "1.21.1-neoforge-astral-sorcery",
+  "tags": [
+    "1211",
+    "neoforge",
+    "mods",
+    "mods-07"
+  ],
+  "mc": "1.21.1",
+  "loader": {
+    "type": "neoforge",
+    "version": "21.1.263"
+  },
+  "java": {
+    "version": 21
+  },
+  "uitest": {
+    "selection": "tag:smoke,tag:jei",
+    "project": "uitest/1.21.1-neoforge"
+  },
+  "jech": {
+    "source": "local-build",
+    "project": "1.21.1",
+    "path": "neoforge/build/libs/jecharacters-1.21.1-neoforge-*.jar",
+    "expectModId": "jecharacters",
+    "via": "dev-classpath"
+  },
+  "mods": [
+    {
+      "name": "jei",
+      "source": "curseforge",
+      "slug": "jei",
+      "via": "dev-classpath",
+      "describe": {
+        "version": "19.37.0.362"
+      },
+      "pin": {
+        "fileId": 8413371,
+        "filename": "jei-1.21.1-neoforge-19.37.0.362.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/8413/371/jei-1.21.1-neoforge-19.37.0.362.jar",
+        "sha1": "abdd62a8cee4fa4b93e8267da4a9e6a3700be842",
+        "size": 1624420
+      }
+    },
+    {
+      "name": "astral-sorcery",
+      "source": "curseforge",
+      "slug": "astral-sorcery",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "AstralSorcery-2.0.2.39.jar"
+      },
+      "pin": {
+        "fileId": 9148506,
+        "filename": "AstralSorcery-2.0.2.39.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/9148/506/AstralSorcery-2.0.2.39.jar",
+        "sha1": "cfe2522a3e273cdbdc3c1a000113271d8da27f81",
+        "size": 18071127
+      }
+    },
+    {
+      "name": "curios",
+      "source": "modrinth",
+      "slug": "curios",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "curios-neoforge-9.5.1+1.21.1.jar"
+      },
+      "pin": {
+        "versionId": "yohfFbgD",
+        "filename": "curios-neoforge-9.5.1+1.21.1.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/vvuO3ImH/versions/yohfFbgD/curios-neoforge-9.5.1%2B1.21.1.jar",
+        "sha1": "418fcd42e3a7844c9bdc71c9b6401fdb3894e0c4",
+        "sha512": "5981a267686b744e7e3c227f78cbcd5267c14ac6979a28e814695f4589273998563147207fef4a5cdb7cdbdc39797cd95d9e4abadb55869f18e02a38d0654ae5",
+        "size": 410690
+      }
+    },
+    {
+      "name": "observerlib",
+      "source": "curseforge",
+      "slug": "observerlib",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "observerlib-1.10.3.jar"
+      },
+      "pin": {
+        "fileId": 8726128,
+        "filename": "observerlib-1.10.3.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/8726/128/observerlib-1.10.3.jar",
+        "sha1": "f8b357513c22b62f0cdbe0259305620541a45fa2",
+        "size": 114651
+      }
+    }
+  ],
+  "checks": [
+    {
+      "type": "log_contains",
+      "value": "Registering JEI pinyin search storage",
+      "name": "jei-storage-registered"
+    },
+    {
+      "type": "log_not_contains",
+      "value": "Could not find targets.json. JechTransformer will not be loaded.",
+      "name": "transformer-loaded"
+    },
+    {
+      "type": "uitest_report",
+      "name": "uitest-report"
+    },
+    {
+      "type": "no_crash_reports",
+      "name": "no-crash-reports"
+    },
+    {
+      "type": "exit_code_zero",
+      "name": "exit-code"
+    }
+  ],
+  "world": null,
+  "timeout_sec": 600
+}

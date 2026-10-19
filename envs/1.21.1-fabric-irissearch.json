@@ -1,0 +1,163 @@
+{
+  "_comment": "1.21.1 fabric 单 mod 实例：Iris & Oculus（slug irissearch）。行沿用 envs/1.21.1-fabric.json 的 uitest/1.21.1-fabric，不新增 Gradle 行；jei 与平台库仍由行自己加载，这一条目标 mod 由 jt 从它的 pin 下载后交给行；依赖由 tools/mod_deps.py 补齐（补进来的同样打 harness 标签）。",
+  "name": "1.21.1-fabric-irissearch",
+  "tags": [
+    "1211",
+    "fabric",
+    "mods",
+    "mods-09"
+  ],
+  "mc": "1.21.1",
+  "loader": {
+    "type": "fabric",
+    "version": "0.19.5"
+  },
+  "java": {
+    "version": 21
+  },
+  "uitest": {
+    "selection": "tag:smoke,tag:jei",
+    "project": "uitest/1.21.1-fabric",
+    "options": {
+      "version": "3955",
+      "key_key.jei.focusSearch": "key.keyboard.f"
+    }
+  },
+  "jech": {
+    "source": "local-build",
+    "project": "1.21.1",
+    "path": "fabric/build/libs/jecharacters-1.21.1-fabric-*.jar",
+    "expectModId": "jecharacters",
+    "via": "dev-classpath"
+  },
+  "mods": [
+    {
+      "name": "jei",
+      "source": "curseforge",
+      "slug": "jei",
+      "via": "dev-classpath",
+      "describe": {
+        "version": "19.37.0.362"
+      },
+      "pin": {
+        "fileId": 8413369,
+        "filename": "jei-1.21.1-fabric-19.37.0.362.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/8413/369/jei-1.21.1-fabric-19.37.0.362.jar",
+        "sha1": "1765e49042f562a94acbbd146cf32259e6803c49",
+        "size": 1658611
+      }
+    },
+    {
+      "name": "fabric-api",
+      "source": "curseforge",
+      "slug": "fabric-api",
+      "via": "dev-classpath",
+      "describe": {
+        "version": "0.116.1+1.21.1"
+      },
+      "pin": {
+        "fileId": 6601153,
+        "filename": "fabric-api-0.116.1+1.21.1.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/6601/153/fabric-api-0.116.1%2b1.21.1.jar",
+        "sha1": "bd8e174dcf695c94a7d8dfc8f86b2e557bad0faa",
+        "size": 2415045
+      }
+    },
+    {
+      "name": "iris_search",
+      "source": "modrinth",
+      "slug": "irissearch",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "IrisSearch-1.8.3-fabric.jar"
+      },
+      "pin": {
+        "versionId": "L6FMDRmf",
+        "filename": "IrisSearch-1.8.3-fabric.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/bkAgg84v/versions/L6FMDRmf/IrisSearch-1.8.3-fabric.jar",
+        "sha1": "38c1ffffc6247d3de6d56ae1bc533ff3d6f6e5d1",
+        "sha512": "2d6c7a8848e8bac51b21eeff15cffb31ac4efc8717193711ec877c0467edbf56d04a471fa4be65318c6fde10bb7ded6a37249c0a2261bcfa60e4870157511aec",
+        "size": 244786
+      }
+    },
+    {
+      "name": "iris",
+      "source": "modrinth",
+      "slug": "iris",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "iris-fabric-1.8.8+mc1.21.1.jar"
+      },
+      "pin": {
+        "versionId": "zsoi0dso",
+        "filename": "iris-fabric-1.8.8+mc1.21.1.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/YL57xq9U/versions/zsoi0dso/iris-fabric-1.8.8%2Bmc1.21.1.jar",
+        "sha1": "4e0df4011503b4b36ba69877ea7247c1a47fea00",
+        "sha512": "2e6ba2ffa1e1a6799288245a7e0ac68ee8df1d41b98362189df58f535cae34fa9277801e4136633467341b7dae5be0e5c698011b480b3d91b66d3dd4f7567aa6",
+        "size": 2690177
+      }
+    },
+    {
+      "name": "sodium",
+      "source": "modrinth",
+      "slug": "sodium",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "sodium-fabric-0.6.13+mc1.21.1.jar"
+      },
+      "pin": {
+        "versionId": "u1OEbNKx",
+        "filename": "sodium-fabric-0.6.13+mc1.21.1.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/AANobbMI/versions/u1OEbNKx/sodium-fabric-0.6.13%2Bmc1.21.1.jar",
+        "sha1": "928a2598178c3a58b0638bab842f467d2e49251a",
+        "sha512": "13032e064c554fc8671573dadb07bc70e6ea2f68706c65c086c4feb1d2f664346a3414cbf9d1367b42b8d063a35e40f2f967ef9af31642e1f0093b852161fe91",
+        "size": 1297761
+      }
+    }
+  ],
+  "checks": [
+    {
+      "type": "log_contains",
+      "value": "Registering JEI pinyin search storage",
+      "name": "jei-storage-registered"
+    },
+    {
+      "type": "log_not_contains",
+      "value": "Could not find targets.json. JechTransformer will not be loaded.",
+      "name": "transformer-loaded"
+    },
+    {
+      "type": "log_not_contains",
+      "value": "Can't create config file!",
+      "name": "config-writable"
+    },
+    {
+      "type": "file_exists",
+      "value": "config/jecharacters.json",
+      "name": "config-generated"
+    },
+    {
+      "type": "uitest_report",
+      "name": "uitest-report"
+    },
+    {
+      "type": "no_crash_reports",
+      "name": "no-crash-reports"
+    },
+    {
+      "type": "exit_code_zero",
+      "name": "exit-code"
+    }
+  ],
+  "world": null,
+  "timeout_sec": 600
+}

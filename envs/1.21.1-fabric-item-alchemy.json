@@ -1,0 +1,143 @@
+{
+  "_comment": "1.21.1 fabric 单 mod 实例：Item Alchemy（slug item-alchemy）。行沿用 envs/1.21.1-fabric.json 的 uitest/1.21.1-fabric，不新增 Gradle 行；jei 与平台库仍由行自己加载，这一条目标 mod 由 jt 从它的 pin 下载后交给行；依赖由 tools/mod_deps.py 补齐（补进来的同样打 harness 标签）。",
+  "name": "1.21.1-fabric-item-alchemy",
+  "tags": [
+    "1211",
+    "fabric",
+    "mods",
+    "mods-10"
+  ],
+  "mc": "1.21.1",
+  "loader": {
+    "type": "fabric",
+    "version": "0.19.5"
+  },
+  "java": {
+    "version": 21
+  },
+  "uitest": {
+    "selection": "tag:smoke,tag:jei",
+    "project": "uitest/1.21.1-fabric",
+    "options": {
+      "version": "3955",
+      "key_key.jei.focusSearch": "key.keyboard.f"
+    }
+  },
+  "jech": {
+    "source": "local-build",
+    "project": "1.21.1",
+    "path": "fabric/build/libs/jecharacters-1.21.1-fabric-*.jar",
+    "expectModId": "jecharacters",
+    "via": "dev-classpath"
+  },
+  "mods": [
+    {
+      "name": "jei",
+      "source": "curseforge",
+      "slug": "jei",
+      "via": "dev-classpath",
+      "describe": {
+        "version": "19.37.0.362"
+      },
+      "pin": {
+        "fileId": 8413369,
+        "filename": "jei-1.21.1-fabric-19.37.0.362.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/8413/369/jei-1.21.1-fabric-19.37.0.362.jar",
+        "sha1": "1765e49042f562a94acbbd146cf32259e6803c49",
+        "size": 1658611
+      }
+    },
+    {
+      "name": "fabric-api",
+      "source": "curseforge",
+      "slug": "fabric-api",
+      "via": "dev-classpath",
+      "describe": {
+        "version": "0.116.1+1.21.1"
+      },
+      "pin": {
+        "fileId": 6601153,
+        "filename": "fabric-api-0.116.1+1.21.1.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/6601/153/fabric-api-0.116.1%2b1.21.1.jar",
+        "sha1": "bd8e174dcf695c94a7d8dfc8f86b2e557bad0faa",
+        "size": 2415045
+      }
+    },
+    {
+      "name": "item-alchemy",
+      "source": "modrinth",
+      "slug": "item-alchemy",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "itemalchemy-1.4.1.jar"
+      },
+      "pin": {
+        "versionId": "8atjJiCK",
+        "filename": "itemalchemy-1.4.1.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/cfQx2fbQ/versions/8atjJiCK/itemalchemy-1.4.1.jar",
+        "sha1": "5d699102611e6434af1d6d35984b95996c4d9849",
+        "sha512": "1cbb3efd9aac890c6a77d2458dc9bdbdf581ed1586e79a7b235cad33848555fd4ec470969461d7430869c9333c18ad6e8f5329c204437352da7a76b02bbb9237",
+        "size": 760139
+      }
+    },
+    {
+      "name": "mcpitanlibarch",
+      "source": "modrinth",
+      "slug": "mcpitanlibarch",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "mcpitanlib-4.0.9-1.21.1-fabric.jar"
+      },
+      "pin": {
+        "versionId": "Ivo3fq78",
+        "filename": "mcpitanlib-4.0.9-1.21.1-fabric.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/uNRoUnGT/versions/Ivo3fq78/mcpitanlib-4.0.9-1.21.1-fabric.jar",
+        "sha1": "e115f8300b5456d7805f343936a84fef5c0bcb6f",
+        "sha512": "b5e2922b30323c2f6c9d2f81fcf2715b340c399e878dc39cc567b11a2711d0a8771fe3be1e157d777a6e63704be2f6f19dbe711fa1c0a2133807c06234dfb079",
+        "size": 2951462
+      }
+    }
+  ],
+  "checks": [
+    {
+      "type": "log_contains",
+      "value": "Registering JEI pinyin search storage",
+      "name": "jei-storage-registered"
+    },
+    {
+      "type": "log_not_contains",
+      "value": "Could not find targets.json. JechTransformer will not be loaded.",
+      "name": "transformer-loaded"
+    },
+    {
+      "type": "log_not_contains",
+      "value": "Can't create config file!",
+      "name": "config-writable"
+    },
+    {
+      "type": "file_exists",
+      "value": "config/jecharacters.json",
+      "name": "config-generated"
+    },
+    {
+      "type": "uitest_report",
+      "name": "uitest-report"
+    },
+    {
+      "type": "no_crash_reports",
+      "name": "no-crash-reports"
+    },
+    {
+      "type": "exit_code_zero",
+      "name": "exit-code"
+    }
+  ],
+  "world": null,
+  "timeout_sec": 600
+}

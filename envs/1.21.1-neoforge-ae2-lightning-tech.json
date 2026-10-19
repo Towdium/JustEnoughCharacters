@@ -1,0 +1,152 @@
+{
+  "_comment": "1.21.1 neoforge 单 mod 实例：AE2 Lightning Tech（slug ae2-lightning-tech）。行沿用 envs/1.21.1-neoforge.json 的 uitest/1.21.1-neoforge，不新增 Gradle 行；jei 与平台库仍由行自己加载，这一条目标 mod 由 jt 从它的 pin 下载后交给行；依赖由 tools/mod_deps.py 补齐（补进来的同样打 harness 标签）。",
+  "name": "1.21.1-neoforge-ae2-lightning-tech",
+  "tags": [
+    "1211",
+    "neoforge",
+    "mods",
+    "mods-12"
+  ],
+  "mc": "1.21.1",
+  "loader": {
+    "type": "neoforge",
+    "version": "21.1.263"
+  },
+  "java": {
+    "version": 21
+  },
+  "uitest": {
+    "selection": "tag:smoke,tag:jei",
+    "project": "uitest/1.21.1-neoforge"
+  },
+  "jech": {
+    "source": "local-build",
+    "project": "1.21.1",
+    "path": "neoforge/build/libs/jecharacters-1.21.1-neoforge-*.jar",
+    "expectModId": "jecharacters",
+    "via": "dev-classpath"
+  },
+  "mods": [
+    {
+      "name": "jei",
+      "source": "curseforge",
+      "slug": "jei",
+      "via": "dev-classpath",
+      "describe": {
+        "version": "19.37.0.362"
+      },
+      "pin": {
+        "fileId": 8413371,
+        "filename": "jei-1.21.1-neoforge-19.37.0.362.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/8413/371/jei-1.21.1-neoforge-19.37.0.362.jar",
+        "sha1": "abdd62a8cee4fa4b93e8267da4a9e6a3700be842",
+        "size": 1624420
+      }
+    },
+    {
+      "name": "ae2-lightning-tech",
+      "source": "modrinth",
+      "slug": "ae2-lightning-tech",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "ae2lt-2.1.1.jar"
+      },
+      "pin": {
+        "versionId": "S2Li22o0",
+        "filename": "ae2lt-2.1.1.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/ArHeh5Fz/versions/S2Li22o0/ae2lt-2.1.1.jar",
+        "sha1": "b1f8f83f713388eb526592877bfe7681f08e2d9e",
+        "sha512": "2963783c8adf50841f244b495f485b23eaf076883c47ff3146092031a2ce21f9ccd968ad140addcd63071874601202cea78468f8ffedd5850b58b40999c058a5",
+        "size": 6307352
+      }
+    },
+    {
+      "name": "applied-energistics-2",
+      "source": "curseforge",
+      "slug": "applied-energistics-2",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "appliedenergistics2-19.2.18.jar"
+      },
+      "pin": {
+        "fileId": 8992605,
+        "filename": "appliedenergistics2-19.2.18.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/8992/605/appliedenergistics2-19.2.18.jar",
+        "sha1": "bcd04bc7f181b2ffa314625f284c8eca6fee7fe4",
+        "size": 8236552
+      }
+    },
+    {
+      "name": "guideme",
+      "source": "modrinth",
+      "slug": "guideme",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "guideme-21.1.19.jar"
+      },
+      "pin": {
+        "versionId": "hFpGwC6q",
+        "filename": "guideme-21.1.19.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/Ck4E7v7R/versions/hFpGwC6q/guideme-21.1.19.jar",
+        "sha1": "e85cd4c266f974dd360c46e8dad7ecf4c7ee96c6",
+        "sha512": "4dfa132e5cfd69a86c958867067f1c5ab39bb69ae35b2a62c24bb9924e9c688f1a4930ab75d335b22378d9f98cd7fceae8d030812b8f90c9aa282de8ea129f5a",
+        "size": 9311992
+      }
+    },
+    {
+      "name": "thunderbolt",
+      "source": "modrinth",
+      "slug": "thunderbolt-core",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "thunderbolt-2.0.1.jar"
+      },
+      "pin": {
+        "versionId": "TVoZndZv",
+        "filename": "thunderbolt-2.0.1.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/M5jhzZXH/versions/TVoZndZv/thunderbolt-2.0.1.jar",
+        "sha1": "aa191d6d1ea3464eec1858e9089f2a6b733a92c4",
+        "sha512": "a7c510765b53d5841f3f5b4e75b4e14cbaa2447afe88c3fa21286fee11c1d3bb5eca2db010d77f11c4eb689d1d6f4ab2c3ee4474e83857f3f9a15332b2a49a5b",
+        "size": 4993886
+      }
+    }
+  ],
+  "checks": [
+    {
+      "type": "log_contains",
+      "value": "Registering JEI pinyin search storage",
+      "name": "jei-storage-registered"
+    },
+    {
+      "type": "log_not_contains",
+      "value": "Could not find targets.json. JechTransformer will not be loaded.",
+      "name": "transformer-loaded"
+    },
+    {
+      "type": "uitest_report",
+      "name": "uitest-report"
+    },
+    {
+      "type": "no_crash_reports",
+      "name": "no-crash-reports"
+    },
+    {
+      "type": "exit_code_zero",
+      "name": "exit-code"
+    }
+  ],
+  "world": null,
+  "timeout_sec": 600
+}

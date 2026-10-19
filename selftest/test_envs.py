@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 import tempfile
 import unittest
 from pathlib import Path
@@ -11,6 +12,19 @@ from lib import envs, paths
 from lib.errors import EnvSchemaError
 
 from . import support
+
+# The single-mod instances (`tools/gen_envs.py`): one target mod each, named after
+# its loader and the plan row's slug, all on the same row and the same selection as
+# their line's baseline env. They are generated from the plan's roster, so the gate
+# below derives their expectation from the name instead of listing 124 of them.
+MOD_ENV_RE = re.compile(r"^1\.21\.1-(neoforge|fabric)-[a-z0-9._-]+$")
+MOD_ENV_SELECTION = "tag:smoke,tag:jei"
+
+
+def mod_env_row(name: str) -> str | None:
+    """The standalone row a single-mod env runs on, from its own name; None if not one."""
+    match = MOD_ENV_RE.match(name)
+    return f"uitest/1.21.1-{match.group(1)}" if match else None
 
 
 class EnvParsingTest(unittest.TestCase):
@@ -288,23 +302,6 @@ class EnvParsingTest(unittest.TestCase):
             "1.12.2-forge-jei-legacy": "tag:smoke,tag:jei",
             "1.21.1-neoforge": "tag:smoke,tag:jei",
             "1.21.1-fabric": "tag:smoke,tag:jei",
-            "1.21.1-fabric-mods-01": "tag:smoke,tag:jei",
-            "1.21.1-fabric-mods-02": "tag:smoke,tag:jei",
-            "1.21.1-fabric-mods-03": "tag:smoke,tag:jei",
-            "1.21.1-fabric-mods-04": "tag:smoke,tag:jei",
-            "1.21.1-neoforge-mods-01": "tag:smoke,tag:jei",
-            "1.21.1-neoforge-mods-02": "tag:smoke,tag:jei",
-            "1.21.1-neoforge-mods-03": "tag:smoke,tag:jei",
-            "1.21.1-neoforge-mods-04": "tag:smoke,tag:jei",
-            "1.21.1-neoforge-mods-05": "tag:smoke,tag:jei",
-            "1.21.1-neoforge-mods-06": "tag:smoke,tag:jei",
-            "1.21.1-neoforge-mods-07": "tag:smoke,tag:jei",
-            "1.21.1-neoforge-mods-08": "tag:smoke,tag:jei",
-            "1.21.1-neoforge-mods-09": "tag:smoke,tag:jei",
-            "1.21.1-neoforge-mods-10": "tag:smoke,tag:jei",
-            "1.21.1-neoforge-mods-11": "tag:smoke,tag:jei",
-            "1.21.1-neoforge-mods-12": "tag:smoke,tag:jei",
-            "1.21.1-neoforge-mods-13": "tag:smoke,tag:jei",
             "moderner-1.21.10-fabric": "tag:smoke,tag:jei",
             "moderner-1.21.10-neoforge": "tag:smoke,tag:jei",
             "moderner-1.21.11-fabric": "tag:smoke,tag:jei",
@@ -329,23 +326,6 @@ class EnvParsingTest(unittest.TestCase):
             "1.12.2-forge-jei-legacy": "uitest/1.12.2-forge",
             "1.21.1-neoforge": "uitest/1.21.1-neoforge",
             "1.21.1-fabric": "uitest/1.21.1-fabric",
-            "1.21.1-fabric-mods-01": "uitest/1.21.1-fabric",
-            "1.21.1-fabric-mods-02": "uitest/1.21.1-fabric",
-            "1.21.1-fabric-mods-03": "uitest/1.21.1-fabric",
-            "1.21.1-fabric-mods-04": "uitest/1.21.1-fabric",
-            "1.21.1-neoforge-mods-01": "uitest/1.21.1-neoforge",
-            "1.21.1-neoforge-mods-02": "uitest/1.21.1-neoforge",
-            "1.21.1-neoforge-mods-03": "uitest/1.21.1-neoforge",
-            "1.21.1-neoforge-mods-04": "uitest/1.21.1-neoforge",
-            "1.21.1-neoforge-mods-05": "uitest/1.21.1-neoforge",
-            "1.21.1-neoforge-mods-06": "uitest/1.21.1-neoforge",
-            "1.21.1-neoforge-mods-07": "uitest/1.21.1-neoforge",
-            "1.21.1-neoforge-mods-08": "uitest/1.21.1-neoforge",
-            "1.21.1-neoforge-mods-09": "uitest/1.21.1-neoforge",
-            "1.21.1-neoforge-mods-10": "uitest/1.21.1-neoforge",
-            "1.21.1-neoforge-mods-11": "uitest/1.21.1-neoforge",
-            "1.21.1-neoforge-mods-12": "uitest/1.21.1-neoforge",
-            "1.21.1-neoforge-mods-13": "uitest/1.21.1-neoforge",
             "moderner-1.21.10-neoforge": "uitest/moderner-1.21.10-neoforge",
             "moderner-1.21.10-fabric": "uitest/moderner-1.21.10-fabric",
             "moderner-1.21.11-neoforge": "uitest/moderner-1.21.11-neoforge",
@@ -365,6 +345,9 @@ class EnvParsingTest(unittest.TestCase):
             "mv-1.19.2-fabric": "uitest/mv-1.19.2-fabric",
             "mv-1.20.1-fabric": "uitest/mv-1.20.1-fabric",
         }
+        standalone.update({env.name: mod_env_row(env.name) for env in envs.load_all()
+                           if mod_env_row(env.name)})
+        expected.update({env.name: MOD_ENV_SELECTION for env in envs.load_all() if mod_env_row(env.name)})
         rows = {env.name: env for env in envs.load_all() if env.uitest is not None}
         self.assertEqual(sorted(rows), sorted(expected),
                          "a row that runs the in-client harness is a decision, not a default")
@@ -785,23 +768,6 @@ class ViaTest(unittest.TestCase):
             "1.12.2-forge-jei-legacy": "uitest/1.12.2-forge",
             "1.21.1-neoforge": "uitest/1.21.1-neoforge",
             "1.21.1-fabric": "uitest/1.21.1-fabric",
-            "1.21.1-fabric-mods-01": "uitest/1.21.1-fabric",
-            "1.21.1-fabric-mods-02": "uitest/1.21.1-fabric",
-            "1.21.1-fabric-mods-03": "uitest/1.21.1-fabric",
-            "1.21.1-fabric-mods-04": "uitest/1.21.1-fabric",
-            "1.21.1-neoforge-mods-01": "uitest/1.21.1-neoforge",
-            "1.21.1-neoforge-mods-02": "uitest/1.21.1-neoforge",
-            "1.21.1-neoforge-mods-03": "uitest/1.21.1-neoforge",
-            "1.21.1-neoforge-mods-04": "uitest/1.21.1-neoforge",
-            "1.21.1-neoforge-mods-05": "uitest/1.21.1-neoforge",
-            "1.21.1-neoforge-mods-06": "uitest/1.21.1-neoforge",
-            "1.21.1-neoforge-mods-07": "uitest/1.21.1-neoforge",
-            "1.21.1-neoforge-mods-08": "uitest/1.21.1-neoforge",
-            "1.21.1-neoforge-mods-09": "uitest/1.21.1-neoforge",
-            "1.21.1-neoforge-mods-10": "uitest/1.21.1-neoforge",
-            "1.21.1-neoforge-mods-11": "uitest/1.21.1-neoforge",
-            "1.21.1-neoforge-mods-12": "uitest/1.21.1-neoforge",
-            "1.21.1-neoforge-mods-13": "uitest/1.21.1-neoforge",
             "moderner-1.21.10-neoforge": "uitest/moderner-1.21.10-neoforge",
             "moderner-1.21.10-fabric": "uitest/moderner-1.21.10-fabric",
             "moderner-1.21.11-neoforge": "uitest/moderner-1.21.11-neoforge",
@@ -821,6 +787,8 @@ class ViaTest(unittest.TestCase):
             "mv-1.20.1-fabric": "uitest/mv-1.20.1-fabric",
             "mv-1.20.1-forge": "uitest/mv-1.20.1-forge",
         }
+        standalone_rows.update({env.name: mod_env_row(env.name) for env in envs.load_all()
+                                if mod_env_row(env.name)})
         self.assertFalse(gradle_rows - set(loaded), "a named gradle row does not exist")
         for env in loaded.values():
             if env.name in gradle_rows:

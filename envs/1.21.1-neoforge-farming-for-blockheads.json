@@ -1,0 +1,113 @@
+{
+  "_comment": "1.21.1 neoforge 单 mod 实例：Farming for Blockheads（slug farming-for-blockheads）。行沿用 envs/1.21.1-neoforge.json 的 uitest/1.21.1-neoforge，不新增 Gradle 行；jei 与平台库仍由行自己加载，这一条目标 mod 由 jt 从它的 pin 下载后交给行；依赖由 tools/mod_deps.py 补齐（补进来的同样打 harness 标签）。",
+  "name": "1.21.1-neoforge-farming-for-blockheads",
+  "tags": [
+    "1211",
+    "neoforge",
+    "mods",
+    "mods-14"
+  ],
+  "mc": "1.21.1",
+  "loader": {
+    "type": "neoforge",
+    "version": "21.1.263"
+  },
+  "java": {
+    "version": 21
+  },
+  "uitest": {
+    "selection": "tag:smoke,tag:jei",
+    "project": "uitest/1.21.1-neoforge"
+  },
+  "jech": {
+    "source": "local-build",
+    "project": "1.21.1",
+    "path": "neoforge/build/libs/jecharacters-1.21.1-neoforge-*.jar",
+    "expectModId": "jecharacters",
+    "via": "dev-classpath"
+  },
+  "mods": [
+    {
+      "name": "jei",
+      "source": "curseforge",
+      "slug": "jei",
+      "via": "dev-classpath",
+      "describe": {
+        "version": "19.37.0.362"
+      },
+      "pin": {
+        "fileId": 8413371,
+        "filename": "jei-1.21.1-neoforge-19.37.0.362.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/8413/371/jei-1.21.1-neoforge-19.37.0.362.jar",
+        "sha1": "abdd62a8cee4fa4b93e8267da4a9e6a3700be842",
+        "size": 1624420
+      }
+    },
+    {
+      "name": "farming-for-blockheads",
+      "source": "modrinth",
+      "slug": "farming-for-blockheads",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "farmingforblockheads-neoforge-1.21.1-21.1.14.jar"
+      },
+      "pin": {
+        "versionId": "ljWZyuzV",
+        "filename": "farmingforblockheads-neoforge-1.21.1-21.1.14.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/4WJZr8JU/versions/ljWZyuzV/farmingforblockheads-neoforge-1.21.1-21.1.14.jar",
+        "sha1": "82f5f635cc73610d34a493ec067e28cd4659cbbb",
+        "sha512": "38628c6d662081c8c21a3316e3219ac1f353f7ed8084c316c6d039e955b1631963a5b48cc255b6650aa909b280d39e4af5a21e933b4e9e69486b0ca3414dc205",
+        "size": 895570
+      }
+    },
+    {
+      "name": "balm",
+      "source": "modrinth",
+      "slug": "balm",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "balm-neoforge-1.21.1-21.0.66.jar"
+      },
+      "pin": {
+        "versionId": "CquiaiDj",
+        "filename": "balm-neoforge-1.21.1-21.0.66.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/MBAkmtvl/versions/CquiaiDj/balm-neoforge-1.21.1-21.0.66.jar",
+        "sha1": "dd3606a349f4a3c8fb5bd0ab22905675c02b0d74",
+        "sha512": "0262d51c0e931d10c3dccefb3b5426a1622edecab243d4b15dce07a23309641370184776739765067d292d808242d088c6fbf249762689824eff9ba42c2d1e63",
+        "size": 783793
+      }
+    }
+  ],
+  "checks": [
+    {
+      "type": "log_contains",
+      "value": "Registering JEI pinyin search storage",
+      "name": "jei-storage-registered"
+    },
+    {
+      "type": "log_not_contains",
+      "value": "Could not find targets.json. JechTransformer will not be loaded.",
+      "name": "transformer-loaded"
+    },
+    {
+      "type": "uitest_report",
+      "name": "uitest-report"
+    },
+    {
+      "type": "no_crash_reports",
+      "name": "no-crash-reports"
+    },
+    {
+      "type": "exit_code_zero",
+      "name": "exit-code"
+    }
+  ],
+  "world": null,
+  "timeout_sec": 600
+}

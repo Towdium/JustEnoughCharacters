@@ -1,0 +1,172 @@
+{
+  "_comment": "1.21.1 neoforge 单 mod 实例：Occultism（slug occultism）。行沿用 envs/1.21.1-neoforge.json 的 uitest/1.21.1-neoforge，不新增 Gradle 行；jei 与平台库仍由行自己加载，这一条目标 mod 由 jt 从它的 pin 下载后交给行；依赖由 tools/mod_deps.py 补齐（补进来的同样打 harness 标签）。",
+  "name": "1.21.1-neoforge-occultism",
+  "tags": [
+    "1211",
+    "neoforge",
+    "mods",
+    "mods-14"
+  ],
+  "mc": "1.21.1",
+  "loader": {
+    "type": "neoforge",
+    "version": "21.1.263"
+  },
+  "java": {
+    "version": 21
+  },
+  "uitest": {
+    "selection": "tag:smoke,tag:jei",
+    "project": "uitest/1.21.1-neoforge"
+  },
+  "jech": {
+    "source": "local-build",
+    "project": "1.21.1",
+    "path": "neoforge/build/libs/jecharacters-1.21.1-neoforge-*.jar",
+    "expectModId": "jecharacters",
+    "via": "dev-classpath"
+  },
+  "mods": [
+    {
+      "name": "jei",
+      "source": "curseforge",
+      "slug": "jei",
+      "via": "dev-classpath",
+      "describe": {
+        "version": "19.37.0.362"
+      },
+      "pin": {
+        "fileId": 8413371,
+        "filename": "jei-1.21.1-neoforge-19.37.0.362.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/8413/371/jei-1.21.1-neoforge-19.37.0.362.jar",
+        "sha1": "abdd62a8cee4fa4b93e8267da4a9e6a3700be842",
+        "size": 1624420
+      }
+    },
+    {
+      "name": "occultism",
+      "source": "curseforge",
+      "slug": "occultism",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "occultism-1.21.1-neoforge-1.224.5.jar"
+      },
+      "pin": {
+        "fileId": 9127707,
+        "filename": "occultism-1.21.1-neoforge-1.224.5.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/9127/707/occultism-1.21.1-neoforge-1.224.5.jar",
+        "sha1": "23e856a9757540169179fbc27d7fecef2a31a07b",
+        "size": 6951962
+      }
+    },
+    {
+      "name": "modonomicon",
+      "source": "modrinth",
+      "slug": "modonomicon",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "modonomicon-1.21.1-neoforge-1.120.7.jar"
+      },
+      "pin": {
+        "versionId": "fbS7CiY6",
+        "filename": "modonomicon-1.21.1-neoforge-1.120.7.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/692GClaE/versions/fbS7CiY6/modonomicon-1.21.1-neoforge-1.120.7.jar",
+        "sha1": "dc06fd2fa4d539f74fcb46be867b99b03a863962",
+        "sha512": "fdacc0d4323bfc0c3984406cdec747f5079b3cc501d82f8e398a9188e10490764d1d696547c1f16d994839d65baa320e30af639525d1dc55bd52b36dcbc0e6f0",
+        "size": 2407448
+      }
+    },
+    {
+      "name": "curios",
+      "source": "modrinth",
+      "slug": "curios",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "curios-neoforge-9.5.1+1.21.1.jar"
+      },
+      "pin": {
+        "versionId": "yohfFbgD",
+        "filename": "curios-neoforge-9.5.1+1.21.1.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/vvuO3ImH/versions/yohfFbgD/curios-neoforge-9.5.1%2B1.21.1.jar",
+        "sha1": "418fcd42e3a7844c9bdc71c9b6401fdb3894e0c4",
+        "sha512": "5981a267686b744e7e3c227f78cbcd5267c14ac6979a28e814695f4589273998563147207fef4a5cdb7cdbdc39797cd95d9e4abadb55869f18e02a38d0654ae5",
+        "size": 410690
+      }
+    },
+    {
+      "name": "geckolib",
+      "source": "modrinth",
+      "slug": "geckolib",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "geckolib-neoforge-1.21.1-4.9.3.jar"
+      },
+      "pin": {
+        "versionId": "Grwn5rUB",
+        "filename": "geckolib-neoforge-1.21.1-4.9.3.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/8BmcQJ2H/versions/Grwn5rUB/geckolib-neoforge-1.21.1-4.9.3.jar",
+        "sha1": "5cfe835472a5c5457ae9ac192d9d7b317454d5ac",
+        "sha512": "8dfa5f8c57224a5e34e5098367ea9819ca6dc9c11357cd3062c16da3455c8bd1a483098af7383debc4b9ce8e4d7ab3fdc799b415644eb829da83eb72a7335dfd",
+        "size": 634531
+      }
+    },
+    {
+      "name": "smartbrainlib",
+      "source": "modrinth",
+      "slug": "smartbrainlib",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "SmartBrainLib-neoforge-1.21.1-1.16.11.jar"
+      },
+      "pin": {
+        "versionId": "O5EpeqI3",
+        "filename": "SmartBrainLib-neoforge-1.21.1-1.16.11.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/PuyPazRT/versions/O5EpeqI3/SmartBrainLib-neoforge-1.21.1-1.16.11.jar",
+        "sha1": "0310135a01eeceefbc7f1ab017498a65f3ad6836",
+        "sha512": "bfc76f6fd8c388d01b80601ad1b826f6b3f5ec5ea915e5725af129561e6bc4a10890975e6f6d2a0348d842c13042dcf1a9d0a1574fba76bce60119bee76e2dc2",
+        "size": 391053
+      }
+    }
+  ],
+  "checks": [
+    {
+      "type": "log_contains",
+      "value": "Registering JEI pinyin search storage",
+      "name": "jei-storage-registered"
+    },
+    {
+      "type": "log_not_contains",
+      "value": "Could not find targets.json. JechTransformer will not be loaded.",
+      "name": "transformer-loaded"
+    },
+    {
+      "type": "uitest_report",
+      "name": "uitest-report"
+    },
+    {
+      "type": "no_crash_reports",
+      "name": "no-crash-reports"
+    },
+    {
+      "type": "exit_code_zero",
+      "name": "exit-code"
+    }
+  ],
+  "world": null,
+  "timeout_sec": 600
+}

@@ -1,0 +1,152 @@
+{
+  "_comment": "1.21.1 neoforge 单 mod 实例：Advanced AE（slug advancedae）。行沿用 envs/1.21.1-neoforge.json 的 uitest/1.21.1-neoforge，不新增 Gradle 行；jei 与平台库仍由行自己加载，这一条目标 mod 由 jt 从它的 pin 下载后交给行；依赖由 tools/mod_deps.py 补齐（补进来的同样打 harness 标签）。",
+  "name": "1.21.1-neoforge-advancedae",
+  "tags": [
+    "1211",
+    "neoforge",
+    "mods",
+    "mods-09"
+  ],
+  "mc": "1.21.1",
+  "loader": {
+    "type": "neoforge",
+    "version": "21.1.263"
+  },
+  "java": {
+    "version": 21
+  },
+  "uitest": {
+    "selection": "tag:smoke,tag:jei",
+    "project": "uitest/1.21.1-neoforge"
+  },
+  "jech": {
+    "source": "local-build",
+    "project": "1.21.1",
+    "path": "neoforge/build/libs/jecharacters-1.21.1-neoforge-*.jar",
+    "expectModId": "jecharacters",
+    "via": "dev-classpath"
+  },
+  "mods": [
+    {
+      "name": "jei",
+      "source": "curseforge",
+      "slug": "jei",
+      "via": "dev-classpath",
+      "describe": {
+        "version": "19.37.0.362"
+      },
+      "pin": {
+        "fileId": 8413371,
+        "filename": "jei-1.21.1-neoforge-19.37.0.362.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/8413/371/jei-1.21.1-neoforge-19.37.0.362.jar",
+        "sha1": "abdd62a8cee4fa4b93e8267da4a9e6a3700be842",
+        "size": 1624420
+      }
+    },
+    {
+      "name": "advancedae",
+      "source": "modrinth",
+      "slug": "advancedae",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "AdvancedAE-1.6.12-1.21.1.jar"
+      },
+      "pin": {
+        "versionId": "ablTMAjP",
+        "filename": "AdvancedAE-1.6.12-1.21.1.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/rxYaglEe/versions/ablTMAjP/AdvancedAE-1.6.12-1.21.1.jar",
+        "sha1": "9358ccfa5477c7ab1c5ffab6c831e105fe46ecc3",
+        "sha512": "ab61c57355649a967a0bcf6b9413cd6b62728d26e914543b3231eea33bde5571536bd589ae1ac026d46799711508c942284c3419e19ff5d5bf80f1045442f33a",
+        "size": 4791255
+      }
+    },
+    {
+      "name": "applied-energistics-2",
+      "source": "curseforge",
+      "slug": "applied-energistics-2",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "appliedenergistics2-19.2.18.jar"
+      },
+      "pin": {
+        "fileId": 8992605,
+        "filename": "appliedenergistics2-19.2.18.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/8992/605/appliedenergistics2-19.2.18.jar",
+        "sha1": "bcd04bc7f181b2ffa314625f284c8eca6fee7fe4",
+        "size": 8236552
+      }
+    },
+    {
+      "name": "geckolib",
+      "source": "modrinth",
+      "slug": "geckolib",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "geckolib-neoforge-1.21.1-4.9.3.jar"
+      },
+      "pin": {
+        "versionId": "Grwn5rUB",
+        "filename": "geckolib-neoforge-1.21.1-4.9.3.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/8BmcQJ2H/versions/Grwn5rUB/geckolib-neoforge-1.21.1-4.9.3.jar",
+        "sha1": "5cfe835472a5c5457ae9ac192d9d7b317454d5ac",
+        "sha512": "8dfa5f8c57224a5e34e5098367ea9819ca6dc9c11357cd3062c16da3455c8bd1a483098af7383debc4b9ce8e4d7ab3fdc799b415644eb829da83eb72a7335dfd",
+        "size": 634531
+      }
+    },
+    {
+      "name": "guideme",
+      "source": "modrinth",
+      "slug": "guideme",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "guideme-21.1.19.jar"
+      },
+      "pin": {
+        "versionId": "hFpGwC6q",
+        "filename": "guideme-21.1.19.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/Ck4E7v7R/versions/hFpGwC6q/guideme-21.1.19.jar",
+        "sha1": "e85cd4c266f974dd360c46e8dad7ecf4c7ee96c6",
+        "sha512": "4dfa132e5cfd69a86c958867067f1c5ab39bb69ae35b2a62c24bb9924e9c688f1a4930ab75d335b22378d9f98cd7fceae8d030812b8f90c9aa282de8ea129f5a",
+        "size": 9311992
+      }
+    }
+  ],
+  "checks": [
+    {
+      "type": "log_contains",
+      "value": "Registering JEI pinyin search storage",
+      "name": "jei-storage-registered"
+    },
+    {
+      "type": "log_not_contains",
+      "value": "Could not find targets.json. JechTransformer will not be loaded.",
+      "name": "transformer-loaded"
+    },
+    {
+      "type": "uitest_report",
+      "name": "uitest-report"
+    },
+    {
+      "type": "no_crash_reports",
+      "name": "no-crash-reports"
+    },
+    {
+      "type": "exit_code_zero",
+      "name": "exit-code"
+    }
+  ],
+  "world": null,
+  "timeout_sec": 600
+}

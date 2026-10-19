@@ -1,0 +1,190 @@
+{
+  "_comment": "1.21.1 neoforge 单 mod 实例：Ars Zero（slug ars-zero）。行沿用 envs/1.21.1-neoforge.json 的 uitest/1.21.1-neoforge，不新增 Gradle 行；jei 与平台库仍由行自己加载，这一条目标 mod 由 jt 从它的 pin 下载后交给行；依赖由 tools/mod_deps.py 补齐（补进来的同样打 harness 标签）。",
+  "name": "1.21.1-neoforge-ars-zero",
+  "tags": [
+    "1211",
+    "neoforge",
+    "mods",
+    "mods-06"
+  ],
+  "mc": "1.21.1",
+  "loader": {
+    "type": "neoforge",
+    "version": "21.1.263"
+  },
+  "java": {
+    "version": 21
+  },
+  "uitest": {
+    "selection": "tag:smoke,tag:jei",
+    "project": "uitest/1.21.1-neoforge"
+  },
+  "jech": {
+    "source": "local-build",
+    "project": "1.21.1",
+    "path": "neoforge/build/libs/jecharacters-1.21.1-neoforge-*.jar",
+    "expectModId": "jecharacters",
+    "via": "dev-classpath"
+  },
+  "mods": [
+    {
+      "name": "jei",
+      "source": "curseforge",
+      "slug": "jei",
+      "via": "dev-classpath",
+      "describe": {
+        "version": "19.37.0.362"
+      },
+      "pin": {
+        "fileId": 8413371,
+        "filename": "jei-1.21.1-neoforge-19.37.0.362.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/8413/371/jei-1.21.1-neoforge-19.37.0.362.jar",
+        "sha1": "abdd62a8cee4fa4b93e8267da4a9e6a3700be842",
+        "size": 1624420
+      }
+    },
+    {
+      "name": "ars-zero",
+      "source": "curseforge",
+      "slug": "ars-zero",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "ars_zero-1.21.1-2.0.2.jar"
+      },
+      "pin": {
+        "fileId": 8703997,
+        "filename": "ars_zero-1.21.1-2.0.2.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/8703/997/ars_zero-1.21.1-2.0.2.jar",
+        "sha1": "ac9b6e6f7a2bd403ee7cdc16023509fde7c4e1d0",
+        "size": 6774561
+      }
+    },
+    {
+      "name": "ars-nouveau",
+      "source": "curseforge",
+      "slug": "ars-nouveau",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "ars_nouveau-1.21.1-5.13.3.jar"
+      },
+      "pin": {
+        "fileId": 9052154,
+        "filename": "ars_nouveau-1.21.1-5.13.3.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/9052/154/ars_nouveau-1.21.1-5.13.3.jar",
+        "sha1": "541b3286d187deeb9a1297a509d0d3539d8af0f6",
+        "size": 19841105
+      }
+    },
+    {
+      "name": "ars_elemental",
+      "source": "curseforge",
+      "slug": "ars-elemental",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "ars_elemental-1.21.1-0.7.10.4.jar"
+      },
+      "pin": {
+        "fileId": 9057244,
+        "filename": "ars_elemental-1.21.1-0.7.10.4.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/9057/244/ars_elemental-1.21.1-0.7.10.4.jar",
+        "sha1": "562f640916aa6f5c83b3b3ee2384ca828b870e01",
+        "size": 2273778
+      }
+    },
+    {
+      "name": "curios",
+      "source": "modrinth",
+      "slug": "curios",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "curios-neoforge-9.5.1+1.21.1.jar"
+      },
+      "pin": {
+        "versionId": "yohfFbgD",
+        "filename": "curios-neoforge-9.5.1+1.21.1.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/vvuO3ImH/versions/yohfFbgD/curios-neoforge-9.5.1%2B1.21.1.jar",
+        "sha1": "418fcd42e3a7844c9bdc71c9b6401fdb3894e0c4",
+        "sha512": "5981a267686b744e7e3c227f78cbcd5267c14ac6979a28e814695f4589273998563147207fef4a5cdb7cdbdc39797cd95d9e4abadb55869f18e02a38d0654ae5",
+        "size": 410690
+      }
+    },
+    {
+      "name": "geckolib",
+      "source": "modrinth",
+      "slug": "geckolib",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "geckolib-neoforge-1.21.1-4.9.3.jar"
+      },
+      "pin": {
+        "versionId": "Grwn5rUB",
+        "filename": "geckolib-neoforge-1.21.1-4.9.3.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/8BmcQJ2H/versions/Grwn5rUB/geckolib-neoforge-1.21.1-4.9.3.jar",
+        "sha1": "5cfe835472a5c5457ae9ac192d9d7b317454d5ac",
+        "sha512": "8dfa5f8c57224a5e34e5098367ea9819ca6dc9c11357cd3062c16da3455c8bd1a483098af7383debc4b9ce8e4d7ab3fdc799b415644eb829da83eb72a7335dfd",
+        "size": 634531
+      }
+    },
+    {
+      "name": "terrablender",
+      "source": "modrinth",
+      "slug": "terrablender",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "TerraBlender-neoforge-1.21.1-4.1.0.8.jar"
+      },
+      "pin": {
+        "versionId": "6e8GCrLb",
+        "filename": "TerraBlender-neoforge-1.21.1-4.1.0.8.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/kkmrDlKT/versions/6e8GCrLb/TerraBlender-neoforge-1.21.1-4.1.0.8.jar",
+        "sha1": "744394d979b422be560babf9df7a6800ede9ac5b",
+        "sha512": "9d4b2a1be5139c0fb2fad92ed21805b17d9e83b6ea48e637e018bb14063c1823a206390755dbfe8d025c20fd62ac11cdd84db53ddb956dabaeda01bff57bac50",
+        "size": 120365
+      }
+    }
+  ],
+  "checks": [
+    {
+      "type": "log_contains",
+      "value": "Registering JEI pinyin search storage",
+      "name": "jei-storage-registered"
+    },
+    {
+      "type": "log_not_contains",
+      "value": "Could not find targets.json. JechTransformer will not be loaded.",
+      "name": "transformer-loaded"
+    },
+    {
+      "type": "uitest_report",
+      "name": "uitest-report"
+    },
+    {
+      "type": "no_crash_reports",
+      "name": "no-crash-reports"
+    },
+    {
+      "type": "exit_code_zero",
+      "name": "exit-code"
+    }
+  ],
+  "world": null,
+  "timeout_sec": 600
+}

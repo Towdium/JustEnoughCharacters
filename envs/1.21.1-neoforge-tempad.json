@@ -1,0 +1,152 @@
+{
+  "_comment": "1.21.1 neoforge 单 mod 实例：Tempad（slug tempad）。行沿用 envs/1.21.1-neoforge.json 的 uitest/1.21.1-neoforge，不新增 Gradle 行；jei 与平台库仍由行自己加载，这一条目标 mod 由 jt 从它的 pin 下载后交给行；依赖由 tools/mod_deps.py 补齐（补进来的同样打 harness 标签）。",
+  "name": "1.21.1-neoforge-tempad",
+  "tags": [
+    "1211",
+    "neoforge",
+    "mods",
+    "mods-08"
+  ],
+  "mc": "1.21.1",
+  "loader": {
+    "type": "neoforge",
+    "version": "21.1.263"
+  },
+  "java": {
+    "version": 21
+  },
+  "uitest": {
+    "selection": "tag:smoke,tag:jei",
+    "project": "uitest/1.21.1-neoforge"
+  },
+  "jech": {
+    "source": "local-build",
+    "project": "1.21.1",
+    "path": "neoforge/build/libs/jecharacters-1.21.1-neoforge-*.jar",
+    "expectModId": "jecharacters",
+    "via": "dev-classpath"
+  },
+  "mods": [
+    {
+      "name": "jei",
+      "source": "curseforge",
+      "slug": "jei",
+      "via": "dev-classpath",
+      "describe": {
+        "version": "19.37.0.362"
+      },
+      "pin": {
+        "fileId": 8413371,
+        "filename": "jei-1.21.1-neoforge-19.37.0.362.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/8413/371/jei-1.21.1-neoforge-19.37.0.362.jar",
+        "sha1": "abdd62a8cee4fa4b93e8267da4a9e6a3700be842",
+        "size": 1624420
+      }
+    },
+    {
+      "name": "tempad",
+      "source": "curseforge",
+      "slug": "tempad",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "tempad-1.21.1-3.0.4-all.jar"
+      },
+      "pin": {
+        "fileId": 6517779,
+        "filename": "tempad-1.21.1-3.0.4-all.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/6517/779/tempad-1.21.1-3.0.4-all.jar",
+        "sha1": "7a4d6837c6f7a4c9a8f4e7054952df25c148033e",
+        "size": 1696464
+      }
+    },
+    {
+      "name": "kotlin-for-forge",
+      "source": "modrinth",
+      "slug": "kotlin-for-forge",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "kotlinforforge-5.12.0-all.jar"
+      },
+      "pin": {
+        "versionId": "uhJhCT7X",
+        "filename": "kotlinforforge-5.12.0-all.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/ordsPcFz/versions/uhJhCT7X/kotlinforforge-5.12.0-all.jar",
+        "sha1": "d10d062caf1aad9aec82d7852f2fee1781735c1f",
+        "sha512": "b8c3942f4d33179edf3f102f3d870b99dd436f8b8236dbbd31aa51b888162c692cfd88927295f24dc8b4375232f4c6c17360c5d6c4823f93cbcd7cf4bdc8bd14",
+        "size": 7279264
+      }
+    },
+    {
+      "name": "resourcefulconfig",
+      "source": "modrinth",
+      "slug": "resourceful-config",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "resourcefulconfig-neoforge-1.21-3.0.11.jar"
+      },
+      "pin": {
+        "versionId": "lSbyRD6v",
+        "filename": "resourcefulconfig-neoforge-1.21-3.0.11.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/M1953qlQ/versions/lSbyRD6v/resourcefulconfig-neoforge-1.21-3.0.11.jar",
+        "sha1": "6bf2b6ea9c071c00a2abcdc552667fb6f7d21031",
+        "sha512": "8e4ccc37732b3f5190e7e98df34dbc1339fe614494fcabf1aeaeab9ad8e5993522964b51be31882000c08c48a6d0096b5458364415bb81f2b2b775a7daf2eb87",
+        "size": 341009
+      }
+    },
+    {
+      "name": "resourcefullib",
+      "source": "modrinth",
+      "slug": "resourceful-lib",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "resourcefullib-neoforge-1.21-3.0.12.jar"
+      },
+      "pin": {
+        "versionId": "x99nCLTm",
+        "filename": "resourcefullib-neoforge-1.21-3.0.12.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/G1hIVOrD/versions/x99nCLTm/resourcefullib-neoforge-1.21-3.0.12.jar",
+        "sha1": "24389c8e48ff0e8594e4686b750c494c66a5f8df",
+        "sha512": "a9d20e345faa9bcb297bd95ac9524205834804d1bb13518397dd4f7f62b352b08c3339ee7f7870d3669078ceeb33d5c31ea527aecce4b31d62ec1ff7d8b562c8",
+        "size": 484332
+      }
+    }
+  ],
+  "checks": [
+    {
+      "type": "log_contains",
+      "value": "Registering JEI pinyin search storage",
+      "name": "jei-storage-registered"
+    },
+    {
+      "type": "log_not_contains",
+      "value": "Could not find targets.json. JechTransformer will not be loaded.",
+      "name": "transformer-loaded"
+    },
+    {
+      "type": "uitest_report",
+      "name": "uitest-report"
+    },
+    {
+      "type": "no_crash_reports",
+      "name": "no-crash-reports"
+    },
+    {
+      "type": "exit_code_zero",
+      "name": "exit-code"
+    }
+  ],
+  "world": null,
+  "timeout_sec": 600
+}

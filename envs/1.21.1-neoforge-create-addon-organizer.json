@@ -1,0 +1,111 @@
+{
+  "_comment": "1.21.1 neoforge 单 mod 实例：Create: Addon Organizer（slug create-addon-organizer）。行沿用 envs/1.21.1-neoforge.json 的 uitest/1.21.1-neoforge，不新增 Gradle 行；jei 与平台库仍由行自己加载，这一条目标 mod 由 jt 从它的 pin 下载后交给行；依赖由 tools/mod_deps.py 补齐（补进来的同样打 harness 标签）。",
+  "name": "1.21.1-neoforge-create-addon-organizer",
+  "tags": [
+    "1211",
+    "neoforge",
+    "mods",
+    "mods-04"
+  ],
+  "mc": "1.21.1",
+  "loader": {
+    "type": "neoforge",
+    "version": "21.1.263"
+  },
+  "java": {
+    "version": 21
+  },
+  "uitest": {
+    "selection": "tag:smoke,tag:jei",
+    "project": "uitest/1.21.1-neoforge"
+  },
+  "jech": {
+    "source": "local-build",
+    "project": "1.21.1",
+    "path": "neoforge/build/libs/jecharacters-1.21.1-neoforge-*.jar",
+    "expectModId": "jecharacters",
+    "via": "dev-classpath"
+  },
+  "mods": [
+    {
+      "name": "jei",
+      "source": "curseforge",
+      "slug": "jei",
+      "via": "dev-classpath",
+      "describe": {
+        "version": "19.37.0.362"
+      },
+      "pin": {
+        "fileId": 8413371,
+        "filename": "jei-1.21.1-neoforge-19.37.0.362.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/8413/371/jei-1.21.1-neoforge-19.37.0.362.jar",
+        "sha1": "abdd62a8cee4fa4b93e8267da4a9e6a3700be842",
+        "size": 1624420
+      }
+    },
+    {
+      "name": "create-addon-organizer",
+      "source": "curseforge",
+      "slug": "create-addon-organizer",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "createaddonorganizer-1.5__1.21.1.jar"
+      },
+      "pin": {
+        "fileId": 8502100,
+        "filename": "createaddonorganizer-1.5__1.21.1.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/8502/100/createaddonorganizer-1.5__1.21.1.jar",
+        "sha1": "2e7f7f10c3cb5372ef6b18bf9a6e30f0a5a51f55",
+        "size": 714765
+      }
+    },
+    {
+      "name": "create",
+      "source": "curseforge",
+      "slug": "create",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "create-1.21.1-6.0.10.jar"
+      },
+      "pin": {
+        "fileId": 7963363,
+        "filename": "create-1.21.1-6.0.10.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/7963/363/create-1.21.1-6.0.10.jar",
+        "sha1": "0e97e49837bed766e6f28a4c95b04885d6acc353",
+        "size": 19123767
+      }
+    }
+  ],
+  "checks": [
+    {
+      "type": "log_contains",
+      "value": "Registering JEI pinyin search storage",
+      "name": "jei-storage-registered"
+    },
+    {
+      "type": "log_not_contains",
+      "value": "Could not find targets.json. JechTransformer will not be loaded.",
+      "name": "transformer-loaded"
+    },
+    {
+      "type": "uitest_report",
+      "name": "uitest-report"
+    },
+    {
+      "type": "no_crash_reports",
+      "name": "no-crash-reports"
+    },
+    {
+      "type": "exit_code_zero",
+      "name": "exit-code"
+    }
+  ],
+  "world": null,
+  "timeout_sec": 600
+}
