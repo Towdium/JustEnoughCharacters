@@ -402,22 +402,28 @@ today's two 1.12.2 rows are run from the workstation, through the harness build
 workflow file itself lives on that branch, outside this workspace, and was not
 touched here.
 
-Two things to know before dispatching:
+Two things to know before dispatching or pushing:
 
-* **Dispatch is manual.** There is no `push` trigger on purpose — a dispatch
-  downloads mods and launches real clients. Each workflow takes a `selection`
-  input (defaulting to that branch's own rows) and an optional `exclude`, passed
-  straight to `jt run`; a per-branch `concurrency` group serializes dispatches
-  within a branch (a second dispatch queues rather than cancelling the first).
-  The first dispatch on a fresh data root is slow — it warms the vanilla jars,
-  assets and libraries and builds the world seed — and that is not a hang.
-* **Nothing runs until the branch is pushed.** These checkouts live only locally
-  today, so GitHub has no copy of the workflow file and the Actions tab does not
-  list it. The submodule URL in `.gitmodules` is still the workstation's absolute
-  path, which a hosted runner cannot fetch, so `submodules: recursive` fails until
-  the branch is pushed with a URL the runner can reach (the fork's
-  `compat-tests` repository). That is the one thing between this chapter and a
-  dispatchable workflow.
+* **Two ways in.** A dispatch runs what its inputs ask for: the branch's own rows
+  by default, or the mod batches (`mods: true`) sharded one job per `mods-NN`
+  batch. A push that touches the matrix itself — the `compat-tests` pointer,
+  `.gitmodules`, the workflow file — runs the mod batches, because a matrix change
+  is exactly what wants a full wave; a commit to the modules under test still wants
+  a dispatch, since spending seventeen clients on every commit is the thing this
+  workflow is not for. Either way a `selection` input (default: that branch's own
+  rows) and an optional `exclude` go straight to `jt run`, and a per-branch
+  `concurrency` group serializes runs within a branch (a second one queues rather
+  than cancelling the first). The first run on a fresh data root is slow — it warms
+  the vanilla jars, assets and libraries and builds the world seed — and that is
+  not a hang.
+* **A dispatch needs the workflow on the default branch.** GitHub qualifies a
+  `workflow_dispatch` workflow by looking at the *default* branch: dispatching with
+  `--ref <branch>` then uses that branch's own copy, but while the default branch
+  has no such file the dispatch endpoint 404s and the Actions tab lists nothing,
+  however many branches carry the file. This repository's default branch is `1.18`,
+  so the `1.21.1` line reaches CI through its `push` trigger instead. The checkouts
+  are pushed and `.gitmodules` names the repository URL rather than the workstation
+  path, so a hosted runner can fetch the submodule.
 * **World seeds and CI.** No row declares `world` today, so a CI job builds no
   seed: the harness stands each row's level up in-client. The mechanism is still
   there for a `gradle` row, and a seed is built by a vanilla *dedicated server*,
