@@ -1,0 +1,309 @@
+{
+  "_comment": "1.21.1 neoforge mod-compat batch 13 of 13: Tempad, Tom's Simple Storage Mod, Touhou Little Maid, Viewboard, Wildex Bestiary, XNet, oωo. Same harness row as envs/1.21.1-neoforge.json (uitest/1.21.1-neoforge), so this file adds no Gradle row; the mods below are tagged \"harness\", so jt hands their pinned jars to that row as -PjechExtraJars and it loads them exactly as it loads jech/jei — every jar dev-classpath, because a standalone row stages nothing. Targets are authored as newest-release (describe.version \"\") and pinned by jt resolve.",
+  "name": "1.21.1-neoforge-mods-13",
+  "tags": [
+    "1211",
+    "neoforge",
+    "mods",
+    "mods-13"
+  ],
+  "mc": "1.21.1",
+  "loader": {
+    "type": "neoforge",
+    "version": "21.1.263"
+  },
+  "java": {
+    "version": 21
+  },
+  "uitest": {
+    "selection": "tag:smoke,tag:jei",
+    "project": "uitest/1.21.1-neoforge"
+  },
+  "jech": {
+    "source": "local-build",
+    "project": "1.21.1",
+    "path": "neoforge/build/libs/jecharacters-1.21.1-neoforge-*.jar",
+    "expectModId": "jecharacters",
+    "via": "dev-classpath"
+  },
+  "mods": [
+    {
+      "name": "jei",
+      "source": "curseforge",
+      "slug": "jei",
+      "via": "dev-classpath",
+      "describe": {
+        "version": "19.37.0.362"
+      },
+      "pin": {
+        "fileId": 8413371,
+        "filename": "jei-1.21.1-neoforge-19.37.0.362.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/8413/371/jei-1.21.1-neoforge-19.37.0.362.jar",
+        "sha1": "abdd62a8cee4fa4b93e8267da4a9e6a3700be842",
+        "size": 1624420
+      }
+    },
+    {
+      "name": "tempad",
+      "source": "curseforge",
+      "slug": "tempad",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "tempad-1.21.1-3.0.4-all.jar"
+      },
+      "pin": {
+        "fileId": 6517779,
+        "filename": "tempad-1.21.1-3.0.4-all.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/6517/779/tempad-1.21.1-3.0.4-all.jar",
+        "sha1": "7a4d6837c6f7a4c9a8f4e7054952df25c148033e",
+        "size": 1696464
+      }
+    },
+    {
+      "name": "toms-storage",
+      "source": "curseforge",
+      "slug": "toms-storage",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "toms_storage-1.21-2.4.2.jar"
+      },
+      "pin": {
+        "fileId": 8769956,
+        "filename": "toms_storage-1.21-2.4.2.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/8769/956/toms_storage-1.21-2.4.2.jar",
+        "sha1": "592af3bc4768c804c4929af16961ca2a1a916942",
+        "size": 856803
+      }
+    },
+    {
+      "name": "touhou-little-maid",
+      "source": "modrinth",
+      "slug": "touhou-little-maid",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "touhoulittlemaid-1.5.3-neoforge+mc1.21.1.jar"
+      },
+      "pin": {
+        "versionId": "tXG1TkGx",
+        "filename": "touhoulittlemaid-1.5.3-neoforge+mc1.21.1.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/R0bDWFAW/versions/tXG1TkGx/touhoulittlemaid-1.5.3-neoforge%2Bmc1.21.1.jar",
+        "sha1": "f96507810deaa2ffd8c3bd86a79d6ccbd56ca32e",
+        "sha512": "147bc10f5cc7159ee16c4918795155b3e52cf6bab5e09f588ed3fec14f8b47bbc512948bb8fef30346a47feba2692b6dbe20781c6cc1dc1d2c6b9377a9649bbe",
+        "size": 24408776
+      }
+    },
+    {
+      "name": "viewboard",
+      "source": "curseforge",
+      "slug": "viewboard",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "viewboard-neoforge-1.21.1-1.2.3.jar"
+      },
+      "pin": {
+        "fileId": 8356150,
+        "filename": "viewboard-neoforge-1.21.1-1.2.3.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/8356/150/viewboard-neoforge-1.21.1-1.2.3.jar",
+        "sha1": "23b738da5bcc04bf393db6f79ce0dde2cbd014cc",
+        "size": 116193
+      }
+    },
+    {
+      "name": "wildex-bestiary",
+      "source": "modrinth",
+      "slug": "wildex-bestiary",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "wildex-3.0.0.jar"
+      },
+      "pin": {
+        "versionId": "bTs8kSoW",
+        "filename": "wildex-3.0.0.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/NiLz1hiU/versions/bTs8kSoW/wildex-3.0.0.jar",
+        "sha1": "b23f7d5959f196f724c450f0ce9b3c26dd2d08a3",
+        "sha512": "522a9b5a49a702bb948bab795a375631db19bf3a4d52fef45460c7bd4b47ce7510909960db757109d87a4db7a21d7294d80e5695f1e25126b8062bbb7ab790bb",
+        "size": 980010
+      }
+    },
+    {
+      "name": "xnet",
+      "source": "curseforge",
+      "slug": "xnet",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "xnet-1.21-7.0.7.jar"
+      },
+      "pin": {
+        "fileId": 8256226,
+        "filename": "xnet-1.21-7.0.7.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/8256/226/xnet-1.21-7.0.7.jar",
+        "sha1": "3ee807801ee484ee06d53d0bdb9ed85a6f10abf5",
+        "size": 611577
+      }
+    },
+    {
+      "name": "owo-lib",
+      "source": "modrinth",
+      "slug": "owo-lib",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "owo-lib-neoforge-0.12.15.6-beta.1+1.21.jar"
+      },
+      "pin": {
+        "versionId": "wbdHEItB",
+        "filename": "owo-lib-neoforge-0.12.15.6-beta.1+1.21.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/ccKDOlHs/versions/wbdHEItB/owo-lib-neoforge-0.12.15.6-beta.1%2B1.21.jar",
+        "sha1": "3a7f843ce3a4d24f8765a74bc5dde914b316b992",
+        "sha512": "fc843ef350c4af6748d9fd6ecd3c28f96262cf46d46a8329029f49ea4f9eb87238113a8a415e8bba2c4f346c718bf450194f6f5823dfbf1ae7312529a81c3e5c",
+        "size": 1223197
+      }
+    },
+    {
+      "name": "kotlin-for-forge",
+      "source": "modrinth",
+      "slug": "kotlin-for-forge",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "kotlinforforge-5.12.0-all.jar"
+      },
+      "pin": {
+        "versionId": "uhJhCT7X",
+        "filename": "kotlinforforge-5.12.0-all.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/ordsPcFz/versions/uhJhCT7X/kotlinforforge-5.12.0-all.jar",
+        "sha1": "d10d062caf1aad9aec82d7852f2fee1781735c1f",
+        "sha512": "b8c3942f4d33179edf3f102f3d870b99dd436f8b8236dbbd31aa51b888162c692cfd88927295f24dc8b4375232f4c6c17360c5d6c4823f93cbcd7cf4bdc8bd14",
+        "size": 7279264
+      }
+    },
+    {
+      "name": "mcjtylib",
+      "source": "modrinth",
+      "slug": "mcjtylib",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "mcjtylib-1.21-9.0.21.jar"
+      },
+      "pin": {
+        "versionId": "9B2CiAN5",
+        "filename": "mcjtylib-1.21-9.0.21.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/1Zu0uTEE/versions/9B2CiAN5/mcjtylib-1.21-9.0.21.jar",
+        "sha1": "ae0cadbb2c3f4fabc955e627f8bbefa281aa5d3f",
+        "sha512": "3a349ea3718db9da87a6a8603d6beda5c132824cfeaf4dae7fbf3d463b7cab78b65f7deefd4a845bee3f7c3c60b9e062a27197fcd30d33f21cb9f0c4109d0e5c",
+        "size": 699982
+      }
+    },
+    {
+      "name": "rftools-base",
+      "source": "modrinth",
+      "slug": "rftools-base",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "rftoolsbase-1.21-6.0.11.jar"
+      },
+      "pin": {
+        "versionId": "f8Tk2cfj",
+        "filename": "rftoolsbase-1.21-6.0.11.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/hIO8IsD8/versions/f8Tk2cfj/rftoolsbase-1.21-6.0.11.jar",
+        "sha1": "9614bdc12d6c633801b254a983d30dd4cbeb5aee",
+        "sha512": "8c6f8f7dee9dd1c02651304beaab69c439f8524cdacd5776814a57c55db0713e8ae30306875a64e66253fe004bb0254e82031f51c0371e7f443400a2f26ead3f",
+        "size": 463973
+      }
+    },
+    {
+      "name": "resourcefulconfig",
+      "source": "modrinth",
+      "slug": "resourceful-config",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "resourcefulconfig-neoforge-1.21-3.0.11.jar"
+      },
+      "pin": {
+        "versionId": "lSbyRD6v",
+        "filename": "resourcefulconfig-neoforge-1.21-3.0.11.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/M1953qlQ/versions/lSbyRD6v/resourcefulconfig-neoforge-1.21-3.0.11.jar",
+        "sha1": "6bf2b6ea9c071c00a2abcdc552667fb6f7d21031",
+        "sha512": "8e4ccc37732b3f5190e7e98df34dbc1339fe614494fcabf1aeaeab9ad8e5993522964b51be31882000c08c48a6d0096b5458364415bb81f2b2b775a7daf2eb87",
+        "size": 341009
+      }
+    },
+    {
+      "name": "resourcefullib",
+      "source": "modrinth",
+      "slug": "resourceful-lib",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "resourcefullib-neoforge-1.21-3.0.12.jar"
+      },
+      "pin": {
+        "versionId": "x99nCLTm",
+        "filename": "resourcefullib-neoforge-1.21-3.0.12.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/G1hIVOrD/versions/x99nCLTm/resourcefullib-neoforge-1.21-3.0.12.jar",
+        "sha1": "24389c8e48ff0e8594e4686b750c494c66a5f8df",
+        "sha512": "a9d20e345faa9bcb297bd95ac9524205834804d1bb13518397dd4f7f62b352b08c3339ee7f7870d3669078ceeb33d5c31ea527aecce4b31d62ec1ff7d8b562c8",
+        "size": 484332
+      }
+    }
+  ],
+  "checks": [
+    {
+      "type": "log_contains",
+      "value": "Registering JEI pinyin search storage",
+      "name": "jei-storage-registered"
+    },
+    {
+      "type": "log_not_contains",
+      "value": "Could not find targets.json. JechTransformer will not be loaded.",
+      "name": "transformer-loaded"
+    },
+    {
+      "type": "uitest_report",
+      "name": "uitest-report"
+    },
+    {
+      "type": "no_crash_reports",
+      "name": "no-crash-reports"
+    },
+    {
+      "type": "exit_code_zero",
+      "name": "exit-code"
+    }
+  ],
+  "world": null,
+  "timeout_sec": 600
+}

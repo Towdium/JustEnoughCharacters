@@ -1,0 +1,422 @@
+{
+  "_comment": "1.21.1 neoforge mod-compat batch 02 of 13: Apothic Enchanting, Applied Energistics 2, Applied Pneumatics, Ars Nouveau, Ars Zero, Astral Sorcery, Backpacked, Better ModList. Same harness row as envs/1.21.1-neoforge.json (uitest/1.21.1-neoforge), so this file adds no Gradle row; the mods below are tagged \"harness\", so jt hands their pinned jars to that row as -PjechExtraJars and it loads them exactly as it loads jech/jei — every jar dev-classpath, because a standalone row stages nothing. Targets are authored as newest-release (describe.version \"\") and pinned by jt resolve.",
+  "name": "1.21.1-neoforge-mods-02",
+  "tags": [
+    "1211",
+    "neoforge",
+    "mods",
+    "mods-02"
+  ],
+  "mc": "1.21.1",
+  "loader": {
+    "type": "neoforge",
+    "version": "21.1.263"
+  },
+  "java": {
+    "version": 21
+  },
+  "uitest": {
+    "selection": "tag:smoke,tag:jei",
+    "project": "uitest/1.21.1-neoforge"
+  },
+  "jech": {
+    "source": "local-build",
+    "project": "1.21.1",
+    "path": "neoforge/build/libs/jecharacters-1.21.1-neoforge-*.jar",
+    "expectModId": "jecharacters",
+    "via": "dev-classpath"
+  },
+  "mods": [
+    {
+      "name": "jei",
+      "source": "curseforge",
+      "slug": "jei",
+      "via": "dev-classpath",
+      "describe": {
+        "version": "19.37.0.362"
+      },
+      "pin": {
+        "fileId": 8413371,
+        "filename": "jei-1.21.1-neoforge-19.37.0.362.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/8413/371/jei-1.21.1-neoforge-19.37.0.362.jar",
+        "sha1": "abdd62a8cee4fa4b93e8267da4a9e6a3700be842",
+        "size": 1624420
+      }
+    },
+    {
+      "name": "apothic-enchanting",
+      "source": "modrinth",
+      "slug": "apothic-enchanting",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "ApothicEnchanting-1.21.1-1.6.4.jar"
+      },
+      "pin": {
+        "versionId": "JAQJkLJ1",
+        "filename": "ApothicEnchanting-1.21.1-1.6.4.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/pL8MtgqY/versions/JAQJkLJ1/ApothicEnchanting-1.21.1-1.6.4.jar",
+        "sha1": "d88e75b60e97dae8054ee10f3a92aa2bb812b8b9",
+        "sha512": "b560ed61810030472c42fa39e6199b1db07c19baba8f78d98b44ab3e1d00a1bebff5f69942bd076fea9754f63940df920cfb19906073b77bcc459bb8d88575de",
+        "size": 5422885
+      }
+    },
+    {
+      "name": "applied-energistics-2",
+      "source": "curseforge",
+      "slug": "applied-energistics-2",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "appliedenergistics2-19.2.18.jar"
+      },
+      "pin": {
+        "fileId": 8992605,
+        "filename": "appliedenergistics2-19.2.18.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/8992/605/appliedenergistics2-19.2.18.jar",
+        "sha1": "bcd04bc7f181b2ffa314625f284c8eca6fee7fe4",
+        "size": 8236552
+      }
+    },
+    {
+      "name": "applied-pneumatics",
+      "source": "curseforge",
+      "slug": "applied-pneumatics",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "appliedpneumatics-1.21.1-neoforge-1.0.9.jar"
+      },
+      "pin": {
+        "fileId": 8812885,
+        "filename": "appliedpneumatics-1.21.1-neoforge-1.0.9.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/8812/885/appliedpneumatics-1.21.1-neoforge-1.0.9.jar",
+        "sha1": "44e46bc3aac260d594837d4d0fc13ac35d9ca558",
+        "size": 452207
+      }
+    },
+    {
+      "name": "ars-nouveau",
+      "source": "curseforge",
+      "slug": "ars-nouveau",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "ars_nouveau-1.21.1-5.13.3.jar"
+      },
+      "pin": {
+        "fileId": 9052154,
+        "filename": "ars_nouveau-1.21.1-5.13.3.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/9052/154/ars_nouveau-1.21.1-5.13.3.jar",
+        "sha1": "541b3286d187deeb9a1297a509d0d3539d8af0f6",
+        "size": 19841105
+      }
+    },
+    {
+      "name": "ars-zero",
+      "source": "curseforge",
+      "slug": "ars-zero",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "ars_zero-1.21.1-2.0.2.jar"
+      },
+      "pin": {
+        "fileId": 8703997,
+        "filename": "ars_zero-1.21.1-2.0.2.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/8703/997/ars_zero-1.21.1-2.0.2.jar",
+        "sha1": "ac9b6e6f7a2bd403ee7cdc16023509fde7c4e1d0",
+        "size": 6774561
+      }
+    },
+    {
+      "name": "astral-sorcery",
+      "source": "curseforge",
+      "slug": "astral-sorcery",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "AstralSorcery-2.0.2.39.jar"
+      },
+      "pin": {
+        "fileId": 9148506,
+        "filename": "AstralSorcery-2.0.2.39.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/9148/506/AstralSorcery-2.0.2.39.jar",
+        "sha1": "cfe2522a3e273cdbdc3c1a000113271d8da27f81",
+        "size": 18071127
+      }
+    },
+    {
+      "name": "backpacked",
+      "source": "curseforge",
+      "slug": "backpacked",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "backpacked-neoforge-1.21.1-3.0.5.jar"
+      },
+      "pin": {
+        "fileId": 7866688,
+        "filename": "backpacked-neoforge-1.21.1-3.0.5.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/7866/688/backpacked-neoforge-1.21.1-3.0.5.jar",
+        "sha1": "5c610383fc803d62825a2111e16ea01680bf25d9",
+        "size": 1282359
+      }
+    },
+    {
+      "name": "better-modlist-neoforge",
+      "source": "curseforge",
+      "slug": "better-modlist-neoforge",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "better_modlist-21.1.4.jar"
+      },
+      "pin": {
+        "fileId": 9069843,
+        "filename": "better_modlist-21.1.4.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/9069/843/better_modlist-21.1.4.jar",
+        "sha1": "b349117aaff317e529d2b485c5bcd5a7fd9f425b",
+        "size": 823049
+      }
+    },
+    {
+      "name": "apothic-attributes",
+      "source": "modrinth",
+      "slug": "apothic-attributes",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "ApothicAttributes-1.21.1-2.11.0.jar"
+      },
+      "pin": {
+        "versionId": "64fZbLnj",
+        "filename": "ApothicAttributes-1.21.1-2.11.0.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/DGaH8Rh0/versions/64fZbLnj/ApothicAttributes-1.21.1-2.11.0.jar",
+        "sha1": "7ff0e452e10cb582c188626a413037e63db9ca04",
+        "sha512": "568580e68016161151fc0254fb0da949b42cf285fa2bf7c3aec1cd320405c430483e9eb990aaddef537bfac4aa4beb21db82fbff9249131e05b15063b6839611",
+        "size": 319609
+      }
+    },
+    {
+      "name": "placebo",
+      "source": "modrinth",
+      "slug": "placebo",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "Placebo-1.21.1-9.9.4.jar"
+      },
+      "pin": {
+        "versionId": "B5zbSVlT",
+        "filename": "Placebo-1.21.1-9.9.4.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/tCkE8p2N/versions/B5zbSVlT/Placebo-1.21.1-9.9.4.jar",
+        "sha1": "007d52a42020a331d5272495f6d676e0ad1a2c13",
+        "sha512": "4f3a9c5974132f3638c262c56b0c2886df2bc58027c961aa11d06d0ae2e608b63f24f949b2f8c240989e2a1bfe303fd237c5f2d49269453ad6c2ff1f85f2c648",
+        "size": 326063
+      }
+    },
+    {
+      "name": "geckolib",
+      "source": "modrinth",
+      "slug": "geckolib",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "geckolib-neoforge-1.21.1-4.9.3.jar"
+      },
+      "pin": {
+        "versionId": "Grwn5rUB",
+        "filename": "geckolib-neoforge-1.21.1-4.9.3.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/8BmcQJ2H/versions/Grwn5rUB/geckolib-neoforge-1.21.1-4.9.3.jar",
+        "sha1": "5cfe835472a5c5457ae9ac192d9d7b317454d5ac",
+        "sha512": "8dfa5f8c57224a5e34e5098367ea9819ca6dc9c11357cd3062c16da3455c8bd1a483098af7383debc4b9ce8e4d7ab3fdc799b415644eb829da83eb72a7335dfd",
+        "size": 634531
+      }
+    },
+    {
+      "name": "pneumaticcraft-repressurized",
+      "source": "curseforge",
+      "slug": "pneumaticcraft-repressurized",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "pneumaticcraft-repressurized-8.2.23+mc1.21.1.jar"
+      },
+      "pin": {
+        "fileId": 8519226,
+        "filename": "pneumaticcraft-repressurized-8.2.23+mc1.21.1.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/8519/226/pneumaticcraft-repressurized-8.2.23%2bmc1.21.1.jar",
+        "sha1": "44ea59cb9ac3abfc343518e50cc19fe7200a592e",
+        "size": 11884697
+      }
+    },
+    {
+      "name": "ars_elemental",
+      "source": "curseforge",
+      "slug": "ars-elemental",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "ars_elemental-1.21.1-0.7.10.4.jar"
+      },
+      "pin": {
+        "fileId": 9057244,
+        "filename": "ars_elemental-1.21.1-0.7.10.4.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/9057/244/ars_elemental-1.21.1-0.7.10.4.jar",
+        "sha1": "562f640916aa6f5c83b3b3ee2384ca828b870e01",
+        "size": 2273778
+      }
+    },
+    {
+      "name": "curios",
+      "source": "modrinth",
+      "slug": "curios",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "curios-neoforge-9.5.1+1.21.1.jar"
+      },
+      "pin": {
+        "versionId": "yohfFbgD",
+        "filename": "curios-neoforge-9.5.1+1.21.1.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/vvuO3ImH/versions/yohfFbgD/curios-neoforge-9.5.1%2B1.21.1.jar",
+        "sha1": "418fcd42e3a7844c9bdc71c9b6401fdb3894e0c4",
+        "sha512": "5981a267686b744e7e3c227f78cbcd5267c14ac6979a28e814695f4589273998563147207fef4a5cdb7cdbdc39797cd95d9e4abadb55869f18e02a38d0654ae5",
+        "size": 410690
+      }
+    },
+    {
+      "name": "guideme",
+      "source": "modrinth",
+      "slug": "guideme",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "guideme-21.1.19.jar"
+      },
+      "pin": {
+        "versionId": "hFpGwC6q",
+        "filename": "guideme-21.1.19.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/Ck4E7v7R/versions/hFpGwC6q/guideme-21.1.19.jar",
+        "sha1": "e85cd4c266f974dd360c46e8dad7ecf4c7ee96c6",
+        "sha512": "4dfa132e5cfd69a86c958867067f1c5ab39bb69ae35b2a62c24bb9924e9c688f1a4930ab75d335b22378d9f98cd7fceae8d030812b8f90c9aa282de8ea129f5a",
+        "size": 9311992
+      }
+    },
+    {
+      "name": "observerlib",
+      "source": "curseforge",
+      "slug": "observerlib",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "observerlib-1.10.3.jar"
+      },
+      "pin": {
+        "fileId": 8726128,
+        "filename": "observerlib-1.10.3.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/8726/128/observerlib-1.10.3.jar",
+        "sha1": "f8b357513c22b62f0cdbe0259305620541a45fa2",
+        "size": 114651
+      }
+    },
+    {
+      "name": "terrablender",
+      "source": "modrinth",
+      "slug": "terrablender",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "TerraBlender-neoforge-1.21.1-4.1.0.8.jar"
+      },
+      "pin": {
+        "versionId": "6e8GCrLb",
+        "filename": "TerraBlender-neoforge-1.21.1-4.1.0.8.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/kkmrDlKT/versions/6e8GCrLb/TerraBlender-neoforge-1.21.1-4.1.0.8.jar",
+        "sha1": "744394d979b422be560babf9df7a6800ede9ac5b",
+        "sha512": "9d4b2a1be5139c0fb2fad92ed21805b17d9e83b6ea48e637e018bb14063c1823a206390755dbfe8d025c20fd62ac11cdd84db53ddb956dabaeda01bff57bac50",
+        "size": 120365
+      }
+    },
+    {
+      "name": "framework",
+      "source": "curseforge",
+      "slug": "framework",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "framework-neoforge-1.21.1-0.13.11.jar"
+      },
+      "pin": {
+        "fileId": 7530361,
+        "filename": "framework-neoforge-1.21.1-0.13.11.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/7530/361/framework-neoforge-1.21.1-0.13.11.jar",
+        "sha1": "e46eb138fbb13a12f37154fb4ec407d64b326475",
+        "size": 387334
+      }
+    }
+  ],
+  "checks": [
+    {
+      "type": "log_contains",
+      "value": "Registering JEI pinyin search storage",
+      "name": "jei-storage-registered"
+    },
+    {
+      "type": "log_not_contains",
+      "value": "Could not find targets.json. JechTransformer will not be loaded.",
+      "name": "transformer-loaded"
+    },
+    {
+      "type": "uitest_report",
+      "name": "uitest-report"
+    },
+    {
+      "type": "no_crash_reports",
+      "name": "no-crash-reports"
+    },
+    {
+      "type": "exit_code_zero",
+      "name": "exit-code"
+    }
+  ],
+  "world": null,
+  "timeout_sec": 600
+}

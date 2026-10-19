@@ -1,0 +1,443 @@
+{
+  "_comment": "1.21.1 neoforge mod-compat batch 09 of 13: Mighty Mail, Minecolonies, Modonomicon, MoreCobblemonTweaks, MrCrayfish's Furniture Mod: Refurbished, Multi Builder Tool, Nature's Compass, Occultism. Same harness row as envs/1.21.1-neoforge.json (uitest/1.21.1-neoforge), so this file adds no Gradle row; the mods below are tagged \"harness\", so jt hands their pinned jars to that row as -PjechExtraJars and it loads them exactly as it loads jech/jei — every jar dev-classpath, because a standalone row stages nothing. Targets are authored as newest-release (describe.version \"\") and pinned by jt resolve.",
+  "name": "1.21.1-neoforge-mods-09",
+  "tags": [
+    "1211",
+    "neoforge",
+    "mods",
+    "mods-09"
+  ],
+  "mc": "1.21.1",
+  "loader": {
+    "type": "neoforge",
+    "version": "21.1.263"
+  },
+  "java": {
+    "version": 21
+  },
+  "uitest": {
+    "selection": "tag:smoke,tag:jei",
+    "project": "uitest/1.21.1-neoforge"
+  },
+  "jech": {
+    "source": "local-build",
+    "project": "1.21.1",
+    "path": "neoforge/build/libs/jecharacters-1.21.1-neoforge-*.jar",
+    "expectModId": "jecharacters",
+    "via": "dev-classpath"
+  },
+  "mods": [
+    {
+      "name": "jei",
+      "source": "curseforge",
+      "slug": "jei",
+      "via": "dev-classpath",
+      "describe": {
+        "version": "19.37.0.362"
+      },
+      "pin": {
+        "fileId": 8413371,
+        "filename": "jei-1.21.1-neoforge-19.37.0.362.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/8413/371/jei-1.21.1-neoforge-19.37.0.362.jar",
+        "sha1": "abdd62a8cee4fa4b93e8267da4a9e6a3700be842",
+        "size": 1624420
+      }
+    },
+    {
+      "name": "mighty-mail",
+      "source": "curseforge",
+      "slug": "mighty-mail",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "mighty_mail-neoforge-1.21.1-1.1.4.jar"
+      },
+      "pin": {
+        "fileId": 6542124,
+        "filename": "mighty_mail-neoforge-1.21.1-1.1.4.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/6542/124/mighty_mail-neoforge-1.21.1-1.1.4.jar",
+        "sha1": "0647bf0f2d5e986dacbaa28a7799d000dd39c8d2",
+        "size": 224354
+      }
+    },
+    {
+      "name": "minecolonies",
+      "source": "curseforge",
+      "slug": "minecolonies",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "minecolonies-1.1.1403-1.21.1.jar"
+      },
+      "pin": {
+        "fileId": 9058295,
+        "filename": "minecolonies-1.1.1403-1.21.1.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/9058/295/minecolonies-1.1.1403-1.21.1.jar",
+        "sha1": "3be2b5521f45271c77671673e834c57c2296d3e4",
+        "size": 78325447
+      }
+    },
+    {
+      "name": "modonomicon",
+      "source": "modrinth",
+      "slug": "modonomicon",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "modonomicon-1.21.1-neoforge-1.120.7.jar"
+      },
+      "pin": {
+        "versionId": "fbS7CiY6",
+        "filename": "modonomicon-1.21.1-neoforge-1.120.7.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/692GClaE/versions/fbS7CiY6/modonomicon-1.21.1-neoforge-1.120.7.jar",
+        "sha1": "dc06fd2fa4d539f74fcb46be867b99b03a863962",
+        "sha512": "fdacc0d4323bfc0c3984406cdec747f5079b3cc501d82f8e398a9188e10490764d1d696547c1f16d994839d65baa320e30af639525d1dc55bd52b36dcbc0e6f0",
+        "size": 2407448
+      }
+    },
+    {
+      "name": "more-cobblemon-tweaks",
+      "source": "modrinth",
+      "slug": "more-cobblemon-tweaks",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "MoreCobblemonTweaks-neoforge-1.3.5.jar"
+      },
+      "pin": {
+        "versionId": "sNu0sTvk",
+        "filename": "MoreCobblemonTweaks-neoforge-1.3.5.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/5KWlJ2HC/versions/sNu0sTvk/MoreCobblemonTweaks-neoforge-1.3.5.jar",
+        "sha1": "c689cefa75ba7dfd4da362910997973eb3b603f1",
+        "sha512": "505ebf2a5cb29d5a6ce3c1ebbfb8e453b21bad1df667bc352d4b828e8eb3b39b6aee29fbbfdcf3b1f2834865cc91267192a87b57afc871672537e41493198381",
+        "size": 139177
+      }
+    },
+    {
+      "name": "crayfishs-furniture-mod",
+      "source": "curseforge",
+      "slug": "refurbished-furniture",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "refurbished_furniture-neoforge-1.21.1-1.0.22.jar"
+      },
+      "pin": {
+        "fileId": 7473565,
+        "filename": "refurbished_furniture-neoforge-1.21.1-1.0.22.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/7473/565/refurbished_furniture-neoforge-1.21.1-1.0.22.jar",
+        "sha1": "6c209e6b755ff26218efd55aedf2dea49183d29b",
+        "size": 7133477
+      }
+    },
+    {
+      "name": "multi-builder-tool",
+      "source": "curseforge",
+      "slug": "multi-builder-tool",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "MultiBuilderTool-1.21.1-1.1.29.jar"
+      },
+      "pin": {
+        "fileId": 8797925,
+        "filename": "MultiBuilderTool-1.21.1-1.1.29.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/8797/925/MultiBuilderTool-1.21.1-1.1.29.jar",
+        "sha1": "ee57526aae1654197cedb59cc95c813212df6d1b",
+        "size": 368928
+      }
+    },
+    {
+      "name": "natures-compass",
+      "source": "curseforge",
+      "slug": "natures-compass",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "NaturesCompass-1.21.1-3.4.0-neoforge.jar"
+      },
+      "pin": {
+        "fileId": 7892954,
+        "filename": "NaturesCompass-1.21.1-3.4.0-neoforge.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/7892/954/NaturesCompass-1.21.1-3.4.0-neoforge.jar",
+        "sha1": "e19721873bebc4dbc1674bb101af39d0ea406b95",
+        "size": 224657
+      }
+    },
+    {
+      "name": "occultism",
+      "source": "curseforge",
+      "slug": "occultism",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "occultism-1.21.1-neoforge-1.224.5.jar"
+      },
+      "pin": {
+        "fileId": 9127707,
+        "filename": "occultism-1.21.1-neoforge-1.224.5.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/9127/707/occultism-1.21.1-neoforge-1.224.5.jar",
+        "sha1": "23e856a9757540169179fbc27d7fecef2a31a07b",
+        "size": 6951962
+      }
+    },
+    {
+      "name": "cobblemon",
+      "source": "modrinth",
+      "slug": "cobblemon",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "Cobblemon-neoforge-1.8.2+1.21.1.jar"
+      },
+      "pin": {
+        "versionId": "9IXh9584",
+        "filename": "Cobblemon-neoforge-1.8.2+1.21.1.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/MdwFAVRL/versions/9IXh9584/Cobblemon-neoforge-1.8.2%2B1.21.1.jar",
+        "sha1": "ca2a05e60f89fb04e85d1aee8835938bd8d382e0",
+        "sha512": "4803f81c95563c6950d0a287f5f16f04122c5bcce82e084fb032f992cecf3950496ac53bbecbcf2689dd87ff3c79afb1c734204e8b0268a25ee0b09d4a6228e6",
+        "size": 140986469
+      }
+    },
+    {
+      "name": "cobblefurnies",
+      "source": "modrinth",
+      "slug": "cobblefurnies",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "CobbleFurnies-neoforge-1.2.jar"
+      },
+      "pin": {
+        "versionId": "Ynk3uYUi",
+        "filename": "CobbleFurnies-neoforge-1.2.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/AXY1OO9m/versions/Ynk3uYUi/CobbleFurnies-neoforge-1.2.jar",
+        "sha1": "451c445ff636c1e5821f13e3a3f40ee16ecb3342",
+        "sha512": "ada48117ce384c226a20bb261331fdca32d59f2da6466caa4f7fed8c989ea26c7a548e8227be8c130d3462d3bc31c901962889fd61c8676e016ae104ecdaf934",
+        "size": 2343464
+      }
+    },
+    {
+      "name": "architectury-api",
+      "source": "modrinth",
+      "slug": "architectury-api",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "architectury-13.0.11-neoforge.jar"
+      },
+      "pin": {
+        "versionId": "1IiqEQGl",
+        "filename": "architectury-13.0.11-neoforge.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/lhGA9TYQ/versions/1IiqEQGl/architectury-13.0.11-neoforge.jar",
+        "sha1": "008656a0702801174b8ec245ed7aad1921d6e9f1",
+        "sha512": "d9f7c3bb8162577dfb461ffdf04bd6a3563c7586934a0e2a744c14421beffb8286f0d88d4c758317003f20f99fe8072a39b9d675af061e036970d36db36027f0",
+        "size": 584734
+      }
+    },
+    {
+      "name": "geckolib",
+      "source": "modrinth",
+      "slug": "geckolib",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "geckolib-neoforge-1.21.1-4.9.3.jar"
+      },
+      "pin": {
+        "versionId": "Grwn5rUB",
+        "filename": "geckolib-neoforge-1.21.1-4.9.3.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/8BmcQJ2H/versions/Grwn5rUB/geckolib-neoforge-1.21.1-4.9.3.jar",
+        "sha1": "5cfe835472a5c5457ae9ac192d9d7b317454d5ac",
+        "sha512": "8dfa5f8c57224a5e34e5098367ea9819ca6dc9c11357cd3062c16da3455c8bd1a483098af7383debc4b9ce8e4d7ab3fdc799b415644eb829da83eb72a7335dfd",
+        "size": 634531
+      }
+    },
+    {
+      "name": "blockui",
+      "source": "curseforge",
+      "slug": "blockui",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "blockui-1.0.209-1.21.1.jar"
+      },
+      "pin": {
+        "fileId": 7541336,
+        "filename": "blockui-1.0.209-1.21.1.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/7541/336/blockui-1.0.209-1.21.1.jar",
+        "sha1": "01cba16a7d71521b81d791a07740464e6d70d0a6",
+        "size": 468001
+      }
+    },
+    {
+      "name": "curios",
+      "source": "modrinth",
+      "slug": "curios",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "curios-neoforge-9.5.1+1.21.1.jar"
+      },
+      "pin": {
+        "versionId": "yohfFbgD",
+        "filename": "curios-neoforge-9.5.1+1.21.1.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/vvuO3ImH/versions/yohfFbgD/curios-neoforge-9.5.1%2B1.21.1.jar",
+        "sha1": "418fcd42e3a7844c9bdc71c9b6401fdb3894e0c4",
+        "sha512": "5981a267686b744e7e3c227f78cbcd5267c14ac6979a28e814695f4589273998563147207fef4a5cdb7cdbdc39797cd95d9e4abadb55869f18e02a38d0654ae5",
+        "size": 410690
+      }
+    },
+    {
+      "name": "domum_ornamentum",
+      "source": "curseforge",
+      "slug": "domum-ornamentum",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "domum-ornamentum-1.0.231-main.jar"
+      },
+      "pin": {
+        "fileId": 7789217,
+        "filename": "domum-ornamentum-1.0.231-main.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/7789/217/domum-ornamentum-1.0.231-main.jar",
+        "sha1": "a8ec9660788133676fd440ce6998d813184cd486",
+        "size": 1143596
+      }
+    },
+    {
+      "name": "structurize",
+      "source": "curseforge",
+      "slug": "structurize",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "structurize-1.0.832-1.21.1.jar"
+      },
+      "pin": {
+        "fileId": 8610535,
+        "filename": "structurize-1.0.832-1.21.1.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/8610/535/structurize-1.0.832-1.21.1.jar",
+        "sha1": "be15d6924bcca76bf5ac107e2ce5ac4d948d82e2",
+        "size": 1063849
+      }
+    },
+    {
+      "name": "framework",
+      "source": "curseforge",
+      "slug": "framework",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "framework-neoforge-1.21.1-0.13.11.jar"
+      },
+      "pin": {
+        "fileId": 7530361,
+        "filename": "framework-neoforge-1.21.1-0.13.11.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/7530/361/framework-neoforge-1.21.1-0.13.11.jar",
+        "sha1": "e46eb138fbb13a12f37154fb4ec407d64b326475",
+        "size": 387334
+      }
+    },
+    {
+      "name": "smartbrainlib",
+      "source": "modrinth",
+      "slug": "smartbrainlib",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "SmartBrainLib-neoforge-1.21.1-1.16.11.jar"
+      },
+      "pin": {
+        "versionId": "O5EpeqI3",
+        "filename": "SmartBrainLib-neoforge-1.21.1-1.16.11.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/PuyPazRT/versions/O5EpeqI3/SmartBrainLib-neoforge-1.21.1-1.16.11.jar",
+        "sha1": "0310135a01eeceefbc7f1ab017498a65f3ad6836",
+        "sha512": "bfc76f6fd8c388d01b80601ad1b826f6b3f5ec5ea915e5725af129561e6bc4a10890975e6f6d2a0348d842c13042dcf1a9d0a1574fba76bce60119bee76e2dc2",
+        "size": 391053
+      }
+    },
+    {
+      "name": "kotlin-for-forge",
+      "source": "modrinth",
+      "slug": "kotlin-for-forge",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "kotlinforforge-5.12.0-all.jar"
+      },
+      "pin": {
+        "versionId": "uhJhCT7X",
+        "filename": "kotlinforforge-5.12.0-all.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/ordsPcFz/versions/uhJhCT7X/kotlinforforge-5.12.0-all.jar",
+        "sha1": "d10d062caf1aad9aec82d7852f2fee1781735c1f",
+        "sha512": "b8c3942f4d33179edf3f102f3d870b99dd436f8b8236dbbd31aa51b888162c692cfd88927295f24dc8b4375232f4c6c17360c5d6c4823f93cbcd7cf4bdc8bd14",
+        "size": 7279264
+      }
+    }
+  ],
+  "checks": [
+    {
+      "type": "log_contains",
+      "value": "Registering JEI pinyin search storage",
+      "name": "jei-storage-registered"
+    },
+    {
+      "type": "log_not_contains",
+      "value": "Could not find targets.json. JechTransformer will not be loaded.",
+      "name": "transformer-loaded"
+    },
+    {
+      "type": "uitest_report",
+      "name": "uitest-report"
+    },
+    {
+      "type": "no_crash_reports",
+      "name": "no-crash-reports"
+    },
+    {
+      "type": "exit_code_zero",
+      "name": "exit-code"
+    }
+  ],
+  "world": null,
+  "timeout_sec": 600
+}

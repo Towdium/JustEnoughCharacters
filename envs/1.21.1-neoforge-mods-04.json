@@ -1,0 +1,268 @@
+{
+  "_comment": "1.21.1 neoforge mod-compat batch 04 of 13: Create 6.0.0, Create: Addon Organizer, Create: Package Couriers family, Create: Package Couriers family, Decocraft, Easy NPC. Same harness row as envs/1.21.1-neoforge.json (uitest/1.21.1-neoforge), so this file adds no Gradle row; the mods below are tagged \"harness\", so jt hands their pinned jars to that row as -PjechExtraJars and it loads them exactly as it loads jech/jei — every jar dev-classpath, because a standalone row stages nothing. Targets are authored as newest-release (describe.version \"\") and pinned by jt resolve. Create: Apokinetics is skipped as an upstream defect: its GemCaseTileMixin injects GemCaseTile#upgradeGem with a Container parameter that only exists up to Apotheosis 8.8.0, while the pinned 8.9.0 dropped it. EMI is not in this batch: JEI and EMI both own Ctrl+F here (EMI's own config hard-codes focus-search as \"ctrl key.keyboard.f\"), EMI's keyboard mixin claims the press first and JEI's search bar never focuses, so EMI needs an env without JEI.",
+  "name": "1.21.1-neoforge-mods-04",
+  "tags": [
+    "1211",
+    "neoforge",
+    "mods",
+    "mods-04"
+  ],
+  "mc": "1.21.1",
+  "loader": {
+    "type": "neoforge",
+    "version": "21.1.263"
+  },
+  "java": {
+    "version": 21
+  },
+  "uitest": {
+    "selection": "tag:smoke,tag:jei",
+    "project": "uitest/1.21.1-neoforge"
+  },
+  "jech": {
+    "source": "local-build",
+    "project": "1.21.1",
+    "path": "neoforge/build/libs/jecharacters-1.21.1-neoforge-*.jar",
+    "expectModId": "jecharacters",
+    "via": "dev-classpath"
+  },
+  "mods": [
+    {
+      "name": "jei",
+      "source": "curseforge",
+      "slug": "jei",
+      "via": "dev-classpath",
+      "describe": {
+        "version": "19.37.0.362"
+      },
+      "pin": {
+        "fileId": 8413371,
+        "filename": "jei-1.21.1-neoforge-19.37.0.362.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/8413/371/jei-1.21.1-neoforge-19.37.0.362.jar",
+        "sha1": "abdd62a8cee4fa4b93e8267da4a9e6a3700be842",
+        "size": 1624420
+      }
+    },
+    {
+      "name": "create",
+      "source": "curseforge",
+      "slug": "create",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "create-1.21.1-6.0.10.jar"
+      },
+      "pin": {
+        "fileId": 7963363,
+        "filename": "create-1.21.1-6.0.10.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/7963/363/create-1.21.1-6.0.10.jar",
+        "sha1": "0e97e49837bed766e6f28a4c95b04885d6acc353",
+        "size": 19123767
+      }
+    },
+    {
+      "name": "create-addon-organizer",
+      "source": "curseforge",
+      "slug": "create-addon-organizer",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "createaddonorganizer-1.5__1.21.1.jar"
+      },
+      "pin": {
+        "fileId": 8502100,
+        "filename": "createaddonorganizer-1.5__1.21.1.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/8502/100/createaddonorganizer-1.5__1.21.1.jar",
+        "sha1": "2e7f7f10c3cb5372ef6b18bf9a6e30f0a5a51f55",
+        "size": 714765
+      }
+    },
+    {
+      "name": "create-more-package-couriers",
+      "source": "curseforge",
+      "slug": "create-more-package-couriers",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "cmpackagecouriers-neoforge-2.3.0.jar"
+      },
+      "pin": {
+        "fileId": 8127223,
+        "filename": "cmpackagecouriers-neoforge-2.3.0.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/8127/223/cmpackagecouriers-neoforge-2.3.0.jar",
+        "sha1": "54efc43f6a32d8063c4bdbd7af71773e6d873879",
+        "size": 284825
+      }
+    },
+    {
+      "name": "create_factory_logistics",
+      "source": "modrinth",
+      "slug": "create_factory_logistics",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "create_factory_logistics-1.21.1-1.6.1-all.jar"
+      },
+      "pin": {
+        "versionId": "6lav8Nc5",
+        "filename": "create_factory_logistics-1.21.1-1.6.1-all.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/QMGO17gm/versions/6lav8Nc5/create_factory_logistics-1.21.1-1.6.1-all.jar",
+        "sha1": "4bc1f1a2241e37152e19143f86843837827c0a7c",
+        "sha512": "c3b08e7fae0c6f47a4f576f4126b298dddf3b184a14b15c679dc8c238c9f0667bccca67a90388d28d9157216c383664baa6d9cf8213b3137093f1afb23ba19e0",
+        "size": 1303123
+      }
+    },
+    {
+      "name": "decocraft",
+      "source": "curseforge",
+      "slug": "decocraft",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "decocraft-3.0.11-1.21.1-neoforge.jar"
+      },
+      "pin": {
+        "fileId": 7899863,
+        "filename": "decocraft-3.0.11-1.21.1-neoforge.jar",
+        "downloadUrl": "https://mediafilez.forgecdn.net/files/7899/863/decocraft-3.0.11-1.21.1-neoforge.jar",
+        "sha1": "6704940aa352d1acf3cf9362e5ef8dd4e65b563c",
+        "size": 93170262
+      }
+    },
+    {
+      "name": "easy-npc-config-ui",
+      "source": "modrinth",
+      "slug": "easy-npc-config-ui",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "easy_npc_config_ui-neoforge-1.21.1-7.16.0.jar"
+      },
+      "pin": {
+        "versionId": "XL6nv37h",
+        "filename": "easy_npc_config_ui-neoforge-1.21.1-7.16.0.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/uTGjf7vA/versions/XL6nv37h/easy_npc_config_ui-neoforge-1.21.1-7.16.0.jar",
+        "sha1": "f70fcd7e25f439db1973dbb8372788f41ee27202",
+        "sha512": "37e537f3e3ad7fe60f2e2cc21cff2f3452511e240b86115d9a097cb85a1ea0a3dbce0339637f546198af1b5436e629fa68a6430d8e1fdd17373b99ffa0a2dca2",
+        "size": 1207679
+      }
+    },
+    {
+      "name": "easy-npc-core",
+      "source": "modrinth",
+      "slug": "easy-npc-core",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "easy_npc-neoforge-1.21.1-7.16.0.jar"
+      },
+      "pin": {
+        "versionId": "JgVXyplm",
+        "filename": "easy_npc-neoforge-1.21.1-7.16.0.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/Epm6R3P2/versions/JgVXyplm/easy_npc-neoforge-1.21.1-7.16.0.jar",
+        "sha1": "d97559a1436fe6c7cefb5b4083547eccdac076cf",
+        "sha512": "c410a1b5459ce65701aeb12e424277d1069b8a8b0c13c5d6d556f50d705ea648169eec044cbf1adcf70904c698164ff295484af21026a484bcf4c7174736828d",
+        "size": 3256971
+      }
+    },
+    {
+      "name": "apotheosis",
+      "source": "curseforge",
+      "slug": "apotheosis",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "Apotheosis-1.21.1-8.9.0.jar"
+      },
+      "pin": {
+        "fileId": 8993983,
+        "filename": "Apotheosis-1.21.1-8.9.0.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/8993/983/Apotheosis-1.21.1-8.9.0.jar",
+        "sha1": "2d8b59070a221bcc2e3ea08b3b48cbf034b77c71",
+        "size": 7184314
+      }
+    },
+    {
+      "name": "apothic-attributes",
+      "source": "modrinth",
+      "slug": "apothic-attributes",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "ApothicAttributes-1.21.1-2.11.0.jar"
+      },
+      "pin": {
+        "versionId": "64fZbLnj",
+        "filename": "ApothicAttributes-1.21.1-2.11.0.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/DGaH8Rh0/versions/64fZbLnj/ApothicAttributes-1.21.1-2.11.0.jar",
+        "sha1": "7ff0e452e10cb582c188626a413037e63db9ca04",
+        "sha512": "568580e68016161151fc0254fb0da949b42cf285fa2bf7c3aec1cd320405c430483e9eb990aaddef537bfac4aa4beb21db82fbff9249131e05b15063b6839611",
+        "size": 319609
+      }
+    },
+    {
+      "name": "placebo",
+      "source": "modrinth",
+      "slug": "placebo",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "Placebo-1.21.1-9.9.4.jar"
+      },
+      "pin": {
+        "versionId": "B5zbSVlT",
+        "filename": "Placebo-1.21.1-9.9.4.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/tCkE8p2N/versions/B5zbSVlT/Placebo-1.21.1-9.9.4.jar",
+        "sha1": "007d52a42020a331d5272495f6d676e0ad1a2c13",
+        "sha512": "4f3a9c5974132f3638c262c56b0c2886df2bc58027c961aa11d06d0ae2e608b63f24f949b2f8c240989e2a1bfe303fd237c5f2d49269453ad6c2ff1f85f2c648",
+        "size": 326063
+      }
+    }
+  ],
+  "checks": [
+    {
+      "type": "log_contains",
+      "value": "Registering JEI pinyin search storage",
+      "name": "jei-storage-registered"
+    },
+    {
+      "type": "log_not_contains",
+      "value": "Could not find targets.json. JechTransformer will not be loaded.",
+      "name": "transformer-loaded"
+    },
+    {
+      "type": "uitest_report",
+      "name": "uitest-report"
+    },
+    {
+      "type": "no_crash_reports",
+      "name": "no-crash-reports"
+    },
+    {
+      "type": "exit_code_zero",
+      "name": "exit-code"
+    }
+  ],
+  "world": null,
+  "timeout_sec": 600
+}

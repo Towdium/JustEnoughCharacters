@@ -1,0 +1,212 @@
+{
+  "_comment": "1.21.1 neoforge mod-compat batch 10 of 13: One Enough Lib, Pixelmon, PneumaticCraft, Portable Blueprints, Pretty Pipes, Project E, Project MMO, ProjectE. Same harness row as envs/1.21.1-neoforge.json (uitest/1.21.1-neoforge), so this file adds no Gradle row; the mods below are tagged \"harness\", so jt hands their pinned jars to that row as -PjechExtraJars and it loads them exactly as it loads jech/jei — every jar dev-classpath, because a standalone row stages nothing. Targets are authored as newest-release (describe.version \"\") and pinned by jt resolve. Pixelmon's starter-on-join default opens a pausing modal screen on every world join, which blocks every scenario's first step, so the env stages config/pixelmon/config.yml with it off.",
+  "name": "1.21.1-neoforge-mods-10",
+  "tags": [
+    "1211",
+    "neoforge",
+    "mods",
+    "mods-10"
+  ],
+  "mc": "1.21.1",
+  "loader": {
+    "type": "neoforge",
+    "version": "21.1.263"
+  },
+  "java": {
+    "version": 21
+  },
+  "uitest": {
+    "selection": "tag:smoke,tag:jei",
+    "project": "uitest/1.21.1-neoforge",
+    "files": {
+      "config/pixelmon/config.yml": "starter-on-join: false\n"
+    }
+  },
+  "jech": {
+    "source": "local-build",
+    "project": "1.21.1",
+    "path": "neoforge/build/libs/jecharacters-1.21.1-neoforge-*.jar",
+    "expectModId": "jecharacters",
+    "via": "dev-classpath"
+  },
+  "mods": [
+    {
+      "name": "jei",
+      "source": "curseforge",
+      "slug": "jei",
+      "via": "dev-classpath",
+      "describe": {
+        "version": "19.37.0.362"
+      },
+      "pin": {
+        "fileId": 8413371,
+        "filename": "jei-1.21.1-neoforge-19.37.0.362.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/8413/371/jei-1.21.1-neoforge-19.37.0.362.jar",
+        "sha1": "abdd62a8cee4fa4b93e8267da4a9e6a3700be842",
+        "size": 1624420
+      }
+    },
+    {
+      "name": "oelib",
+      "source": "curseforge",
+      "slug": "oelib",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "OELib-neoforge-1.21.1-0.2.3.jar"
+      },
+      "pin": {
+        "fileId": 7886017,
+        "filename": "OELib-neoforge-1.21.1-0.2.3.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/7886/17/OELib-neoforge-1.21.1-0.2.3.jar",
+        "sha1": "8457b2423f62c896ef8c290ab511a0a71b442750",
+        "size": 840689
+      }
+    },
+    {
+      "name": "pixelmon",
+      "source": "modrinth",
+      "slug": "pixelmon",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "Pixelmon-1.21.1-9.4.1-universal.jar"
+      },
+      "pin": {
+        "versionId": "tY57GRtu",
+        "filename": "Pixelmon-1.21.1-9.4.1-universal.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/59ZceYlU/versions/tY57GRtu/Pixelmon-1.21.1-9.4.1-universal.jar",
+        "sha1": "21ee5b13cfb5e387069dfc9d9f3772125471a820",
+        "sha512": "c7e53630100857e3b3d48d2abe4b19658d8649c50d4ea8e04ce43dee3ec850a2e5bb8a06f75c2728cbd08d7cc8c0d2188730b40ef46341f924416197d1546bba",
+        "size": 400171869
+      }
+    },
+    {
+      "name": "pneumaticcraft-repressurized",
+      "source": "curseforge",
+      "slug": "pneumaticcraft-repressurized",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "pneumaticcraft-repressurized-8.2.23+mc1.21.1.jar"
+      },
+      "pin": {
+        "fileId": 8519226,
+        "filename": "pneumaticcraft-repressurized-8.2.23+mc1.21.1.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/8519/226/pneumaticcraft-repressurized-8.2.23%2bmc1.21.1.jar",
+        "sha1": "44ea59cb9ac3abfc343518e50cc19fe7200a592e",
+        "size": 11884697
+      }
+    },
+    {
+      "name": "portable-blueprints",
+      "source": "curseforge",
+      "slug": "portable-blueprints",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "portable_blueprints-v2.0.10-mv1.21.1neoforge.jar"
+      },
+      "pin": {
+        "fileId": 7709339,
+        "filename": "portable_blueprints-v2.0.10-mv1.21.1neoforge.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/7709/339/portable_blueprints-v2.0.10-mv1.21.1neoforge.jar",
+        "sha1": "82e8bde6f714bc28687675846acb35b63d85e025",
+        "size": 973840
+      }
+    },
+    {
+      "name": "pretty-pipes",
+      "source": "modrinth",
+      "slug": "pretty-pipes",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "PrettyPipes-1.22.1-all.jar"
+      },
+      "pin": {
+        "versionId": "PJOPj4Jz",
+        "filename": "PrettyPipes-1.22.1-all.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/XExdLWCQ/versions/PJOPj4Jz/PrettyPipes-1.22.1-all.jar",
+        "sha1": "df3f098c26cc3bf4db6f44ec5ad4347cd2d4293f",
+        "sha512": "7e33dcc8cf8b969b209b2e0bc032b6a7474cef3fde54665bfac67fb27c03c326ef646956658ff5c77317ef43dcfb558779ccc9b18eb69f06b76d8d12be9f3e4b",
+        "size": 2416077
+      }
+    },
+    {
+      "name": "projecte",
+      "source": "curseforge",
+      "slug": "projecte",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "ProjectE-1.21.1-PE1.1.0.jar"
+      },
+      "pin": {
+        "fileId": 6611984,
+        "filename": "ProjectE-1.21.1-PE1.1.0.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/6611/984/ProjectE-1.21.1-PE1.1.0.jar",
+        "sha1": "24fb5997727453a15e956522761a3f586e646c2a",
+        "size": 2426228
+      }
+    },
+    {
+      "name": "project-mmo",
+      "source": "modrinth",
+      "slug": "project-mmo",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "pmmo-1.21.1-2.10.47.jar"
+      },
+      "pin": {
+        "versionId": "9lu4zNd1",
+        "filename": "pmmo-1.21.1-2.10.47.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/KFQYC1Uy/versions/9lu4zNd1/pmmo-1.21.1-2.10.47.jar",
+        "sha1": "f3ce94787a9ab22dd95f67ec7bb7c4139040465f",
+        "sha512": "c5f4c0000bcdb847b36dfe11fc48bfb17bff3696f2be7f44f03a8ed09490c3dd06864eb914321251f65a79059bac4be47a800c427e8bab5e92a949399693c067",
+        "size": 2000305
+      }
+    }
+  ],
+  "checks": [
+    {
+      "type": "log_contains",
+      "value": "Registering JEI pinyin search storage",
+      "name": "jei-storage-registered"
+    },
+    {
+      "type": "log_not_contains",
+      "value": "Could not find targets.json. JechTransformer will not be loaded.",
+      "name": "transformer-loaded"
+    },
+    {
+      "type": "uitest_report",
+      "name": "uitest-report"
+    },
+    {
+      "type": "no_crash_reports",
+      "name": "no-crash-reports"
+    },
+    {
+      "type": "exit_code_zero",
+      "name": "exit-code"
+    }
+  ],
+  "world": null,
+  "timeout_sec": 600
+}

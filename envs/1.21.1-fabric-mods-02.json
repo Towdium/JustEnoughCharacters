@@ -1,0 +1,340 @@
+{
+  "_comment": "1.21.1 fabric mod-compat batch 02 of 4: Easy Mob Spawn Control, Emotecraft, FTB Library, Iris & Oculus, Item Alchemy, Jade, MaLiLib, Mod Menu. Same harness row as envs/1.21.1-fabric.json (uitest/1.21.1-fabric), so this file adds no Gradle row; the mods below are tagged \"harness\", so jt hands their pinned jars to that row as -PjechExtraJars and it loads them exactly as it loads jech/jei — every jar dev-classpath, because a standalone row stages nothing. Targets are authored as newest-release (describe.version \"\") and pinned by jt resolve.",
+  "name": "1.21.1-fabric-mods-02",
+  "tags": [
+    "1211",
+    "fabric",
+    "mods",
+    "mods-02"
+  ],
+  "mc": "1.21.1",
+  "loader": {
+    "type": "fabric",
+    "version": "0.19.5"
+  },
+  "java": {
+    "version": 21
+  },
+  "uitest": {
+    "selection": "tag:smoke,tag:jei",
+    "project": "uitest/1.21.1-fabric",
+    "options": {
+      "version": "3955",
+      "key_key.jei.focusSearch": "key.keyboard.f"
+    }
+  },
+  "jech": {
+    "source": "local-build",
+    "project": "1.21.1",
+    "path": "fabric/build/libs/jecharacters-1.21.1-fabric-*.jar",
+    "expectModId": "jecharacters",
+    "via": "dev-classpath"
+  },
+  "mods": [
+    {
+      "name": "jei",
+      "source": "curseforge",
+      "slug": "jei",
+      "via": "dev-classpath",
+      "describe": {
+        "version": "19.37.0.362"
+      },
+      "pin": {
+        "fileId": 8413369,
+        "filename": "jei-1.21.1-fabric-19.37.0.362.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/8413/369/jei-1.21.1-fabric-19.37.0.362.jar",
+        "sha1": "1765e49042f562a94acbbd146cf32259e6803c49",
+        "size": 1658611
+      }
+    },
+    {
+      "name": "fabric-api",
+      "source": "curseforge",
+      "slug": "fabric-api",
+      "via": "dev-classpath",
+      "describe": {
+        "version": "0.116.1+1.21.1"
+      },
+      "pin": {
+        "fileId": 6601153,
+        "filename": "fabric-api-0.116.1+1.21.1.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/6601/153/fabric-api-0.116.1%2b1.21.1.jar",
+        "sha1": "bd8e174dcf695c94a7d8dfc8f86b2e557bad0faa",
+        "size": 2415045
+      }
+    },
+    {
+      "name": "easy-mob-spawn-control",
+      "source": "modrinth",
+      "slug": "easy-mob-spawn-control",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "easy_mob_spawn_control-1.6.2.jar"
+      },
+      "pin": {
+        "versionId": "O0nWFzE8",
+        "filename": "easy_mob_spawn_control-1.6.2.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/pTXV6gwq/versions/O0nWFzE8/easy_mob_spawn_control-1.6.2.jar",
+        "sha1": "7445f02f8bbd5d3eee0890e6c3b6e7b133cc1fe0",
+        "sha512": "f34e26c62316ddcf07459d689a7c9339e6422c4bd485c9a6efb8c5e823213a99d6c9cfb2dc88cce9244d53032ebb08f89de5e9bbf11d98227eeeb191cb198c91",
+        "size": 556556
+      }
+    },
+    {
+      "name": "emotecraft",
+      "source": "curseforge",
+      "slug": "emotecraft",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "emotecraft-for-MC1.21.1-2.4.12-fabric.jar"
+      },
+      "pin": {
+        "fileId": 6941988,
+        "filename": "emotecraft-for-MC1.21.1-2.4.12-fabric.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/6941/988/emotecraft-for-MC1.21.1-2.4.12-fabric.jar",
+        "sha1": "9be2a237e27f20d2d00f0036a8be53d7d66c5df5",
+        "size": 863362
+      }
+    },
+    {
+      "name": "ftb-library-fabric",
+      "source": "curseforge",
+      "slug": "ftb-library-fabric",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "ftb-library-fabric-2101.1.37.jar"
+      },
+      "pin": {
+        "fileId": 9008090,
+        "filename": "ftb-library-fabric-2101.1.37.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/9008/90/ftb-library-fabric-2101.1.37.jar",
+        "sha1": "3e7de2621365a2975bff3b3227c9027b12469dec",
+        "size": 1435726
+      }
+    },
+    {
+      "name": "iris",
+      "source": "modrinth",
+      "slug": "iris",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "iris-fabric-1.8.8+mc1.21.1.jar"
+      },
+      "pin": {
+        "versionId": "zsoi0dso",
+        "filename": "iris-fabric-1.8.8+mc1.21.1.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/YL57xq9U/versions/zsoi0dso/iris-fabric-1.8.8%2Bmc1.21.1.jar",
+        "sha1": "4e0df4011503b4b36ba69877ea7247c1a47fea00",
+        "sha512": "2e6ba2ffa1e1a6799288245a7e0ac68ee8df1d41b98362189df58f535cae34fa9277801e4136633467341b7dae5be0e5c698011b480b3d91b66d3dd4f7567aa6",
+        "size": 2690177
+      }
+    },
+    {
+      "name": "iris_search",
+      "source": "modrinth",
+      "slug": "irissearch",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "IrisSearch-1.8.3-fabric.jar"
+      },
+      "pin": {
+        "versionId": "L6FMDRmf",
+        "filename": "IrisSearch-1.8.3-fabric.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/bkAgg84v/versions/L6FMDRmf/IrisSearch-1.8.3-fabric.jar",
+        "sha1": "38c1ffffc6247d3de6d56ae1bc533ff3d6f6e5d1",
+        "sha512": "2d6c7a8848e8bac51b21eeff15cffb31ac4efc8717193711ec877c0467edbf56d04a471fa4be65318c6fde10bb7ded6a37249c0a2261bcfa60e4870157511aec",
+        "size": 244786
+      }
+    },
+    {
+      "name": "item-alchemy",
+      "source": "modrinth",
+      "slug": "item-alchemy",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "itemalchemy-1.4.1.jar"
+      },
+      "pin": {
+        "versionId": "8atjJiCK",
+        "filename": "itemalchemy-1.4.1.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/cfQx2fbQ/versions/8atjJiCK/itemalchemy-1.4.1.jar",
+        "sha1": "5d699102611e6434af1d6d35984b95996c4d9849",
+        "sha512": "1cbb3efd9aac890c6a77d2458dc9bdbdf581ed1586e79a7b235cad33848555fd4ec470969461d7430869c9333c18ad6e8f5329c204437352da7a76b02bbb9237",
+        "size": 760139
+      }
+    },
+    {
+      "name": "jade",
+      "source": "curseforge",
+      "slug": "jade",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "Jade-1.21.1-Fabric-15.10.6.jar"
+      },
+      "pin": {
+        "fileId": 8591528,
+        "filename": "Jade-1.21.1-Fabric-15.10.6.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/8591/528/Jade-1.21.1-Fabric-15.10.6.jar",
+        "sha1": "bed67c605cbc991f474b270581cfa04ed48228df",
+        "size": 740746
+      }
+    },
+    {
+      "name": "malilib",
+      "source": "modrinth",
+      "slug": "malilib",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "malilib-fabric-1.21-0.21.10.jar"
+      },
+      "pin": {
+        "versionId": "C99LEy6r",
+        "filename": "malilib-fabric-1.21-0.21.10.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/GcWjdA9I/versions/C99LEy6r/malilib-fabric-1.21-0.21.10.jar",
+        "sha1": "e2699ef71618c54fc03c6c8b28e336603596dcef",
+        "sha512": "9f70b4605ea23f8c8b519622a6cbdcac6c8934c70bab3b8ea2d5da071a37e71ff74406d2e154c5ba4ebc7772d76e97ae94f5760e71632bd8a11d23ae8ae9a111",
+        "size": 1411200
+      }
+    },
+    {
+      "name": "modmenu",
+      "source": "modrinth",
+      "slug": "modmenu",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "modmenu-11.0.5.jar"
+      },
+      "pin": {
+        "versionId": "6lgOkclV",
+        "filename": "modmenu-11.0.5.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/mOgUt4GM/versions/6lgOkclV/modmenu-11.0.5.jar",
+        "sha1": "2321d890a25b5985eba576d7cd8fe9a9c136e33d",
+        "sha512": "92e8e96267ff18d320903090f2ad9b32408a218919f5a0d578e232ad774c89d49a34a8271806652be7d6283f24e98432bc4af7f95855e78b843f9100d68696c7",
+        "size": 975846
+      }
+    },
+    {
+      "name": "sodium",
+      "source": "modrinth",
+      "slug": "sodium",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "sodium-fabric-0.6.13+mc1.21.1.jar"
+      },
+      "pin": {
+        "versionId": "u1OEbNKx",
+        "filename": "sodium-fabric-0.6.13+mc1.21.1.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/AANobbMI/versions/u1OEbNKx/sodium-fabric-0.6.13%2Bmc1.21.1.jar",
+        "sha1": "928a2598178c3a58b0638bab842f467d2e49251a",
+        "sha512": "13032e064c554fc8671573dadb07bc70e6ea2f68706c65c086c4feb1d2f664346a3414cbf9d1367b42b8d063a35e40f2f967ef9af31642e1f0093b852161fe91",
+        "size": 1297761
+      }
+    },
+    {
+      "name": "mcpitanlibarch",
+      "source": "modrinth",
+      "slug": "mcpitanlibarch",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "mcpitanlib-4.0.9-1.21.1-fabric.jar"
+      },
+      "pin": {
+        "versionId": "Ivo3fq78",
+        "filename": "mcpitanlib-4.0.9-1.21.1-fabric.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/uNRoUnGT/versions/Ivo3fq78/mcpitanlib-4.0.9-1.21.1-fabric.jar",
+        "sha1": "e115f8300b5456d7805f343936a84fef5c0bcb6f",
+        "sha512": "b5e2922b30323c2f6c9d2f81fcf2715b340c399e878dc39cc567b11a2711d0a8771fe3be1e157d777a6e63704be2f6f19dbe711fa1c0a2133807c06234dfb079",
+        "size": 2951462
+      }
+    },
+    {
+      "name": "architectury",
+      "source": "modrinth",
+      "slug": "architectury-api",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "architectury-13.0.11-fabric.jar"
+      },
+      "pin": {
+        "versionId": "Pzc2FP5K",
+        "filename": "architectury-13.0.11-fabric.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/lhGA9TYQ/versions/Pzc2FP5K/architectury-13.0.11-fabric.jar",
+        "sha1": "18200609d4c3571c4237b50884966f6fd82431ea",
+        "sha512": "53314eb34890b11ad3c06c6f3ba2d01ae1ca756235ce4f0574e4b0544952a2ab3c628c81b521653d6487d62c5dc3055e06fed6367a3a499bafad909512f0c716",
+        "size": 600921
+      }
+    }
+  ],
+  "checks": [
+    {
+      "type": "log_contains",
+      "value": "Registering JEI pinyin search storage",
+      "name": "jei-storage-registered"
+    },
+    {
+      "type": "log_not_contains",
+      "value": "Could not find targets.json. JechTransformer will not be loaded.",
+      "name": "transformer-loaded"
+    },
+    {
+      "type": "log_not_contains",
+      "value": "Can't create config file!",
+      "name": "config-writable"
+    },
+    {
+      "type": "file_exists",
+      "value": "config/jecharacters.json",
+      "name": "config-generated"
+    },
+    {
+      "type": "uitest_report",
+      "name": "uitest-report"
+    },
+    {
+      "type": "no_crash_reports",
+      "name": "no-crash-reports"
+    },
+    {
+      "type": "exit_code_zero",
+      "name": "exit-code"
+    }
+  ],
+  "world": null,
+  "timeout_sec": 600
+}

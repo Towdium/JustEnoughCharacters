@@ -1,0 +1,290 @@
+{
+  "_comment": "1.21.1 neoforge mod-compat batch 08 of 13: LambDynamicLights, Lightman's Currency, Lightman's Currency, Logistics Network, Lucid Advancements, ME Requester, Mekanism, MezzConfigGUI. Same harness row as envs/1.21.1-neoforge.json (uitest/1.21.1-neoforge), so this file adds no Gradle row; the mods below are tagged \"harness\", so jt hands their pinned jars to that row as -PjechExtraJars and it loads them exactly as it loads jech/jei — every jar dev-classpath, because a standalone row stages nothing. Targets are authored as newest-release (describe.version \"\") and pinned by jt resolve.",
+  "name": "1.21.1-neoforge-mods-08",
+  "tags": [
+    "1211",
+    "neoforge",
+    "mods",
+    "mods-08"
+  ],
+  "mc": "1.21.1",
+  "loader": {
+    "type": "neoforge",
+    "version": "21.1.263"
+  },
+  "java": {
+    "version": 21
+  },
+  "uitest": {
+    "selection": "tag:smoke,tag:jei",
+    "project": "uitest/1.21.1-neoforge"
+  },
+  "jech": {
+    "source": "local-build",
+    "project": "1.21.1",
+    "path": "neoforge/build/libs/jecharacters-1.21.1-neoforge-*.jar",
+    "expectModId": "jecharacters",
+    "via": "dev-classpath"
+  },
+  "mods": [
+    {
+      "name": "jei",
+      "source": "curseforge",
+      "slug": "jei",
+      "via": "dev-classpath",
+      "describe": {
+        "version": "19.37.0.362"
+      },
+      "pin": {
+        "fileId": 8413371,
+        "filename": "jei-1.21.1-neoforge-19.37.0.362.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/8413/371/jei-1.21.1-neoforge-19.37.0.362.jar",
+        "sha1": "abdd62a8cee4fa4b93e8267da4a9e6a3700be842",
+        "size": 1624420
+      }
+    },
+    {
+      "name": "lambdynamiclights",
+      "source": "modrinth",
+      "slug": "lambdynamiclights",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "lambdynamiclights-4.8.11+1.21.1.jar"
+      },
+      "pin": {
+        "versionId": "ksaGCvSu",
+        "filename": "lambdynamiclights-4.8.11+1.21.1.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/yBW8D80W/versions/ksaGCvSu/lambdynamiclights-4.8.11%2B1.21.1.jar",
+        "sha1": "7b5afc75a094b4e8a7118f9856eec959b10f2422",
+        "sha512": "0286076e8b2922dfbe90cd4544a0d16e6d07d7249c732a37479ea4281e9cf96c86dd2e1ce5261489bd5553ceba33044bc550a04b9eb582645eb97f15c9c6a64c",
+        "size": 2023375
+      }
+    },
+    {
+      "name": "lc-tech",
+      "source": "curseforge",
+      "slug": "lc-tech",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "lctech-1.21-0.2.2.7.jar"
+      },
+      "pin": {
+        "fileId": 7405698,
+        "filename": "lctech-1.21-0.2.2.7.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/7405/698/lctech-1.21-0.2.2.7.jar",
+        "sha1": "b722d564ded88fcaa6646950a1e3ca1fff892558",
+        "size": 521384
+      }
+    },
+    {
+      "name": "lightmans-currency",
+      "source": "modrinth",
+      "slug": "lightmans-currency",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "lightmanscurrency-1.21-2.3.0.6.jar"
+      },
+      "pin": {
+        "versionId": "XMHRtEIk",
+        "filename": "lightmanscurrency-1.21-2.3.0.6.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/wvMc8AJt/versions/XMHRtEIk/lightmanscurrency-1.21-2.3.0.6.jar",
+        "sha1": "bb16d428902b6d83c5203e9cf50984ef4b9f769a",
+        "sha512": "47ed278271e852ce76cee225b3c8dd762fce4c5a26c4351e449d5553578cd416c056627423597a9cac89228a240c2addf91748d2c5134b902d7da12e41e292a8",
+        "size": 8073221
+      }
+    },
+    {
+      "name": "logistics-network",
+      "source": "curseforge",
+      "slug": "logistics-network",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "logisticsnetworks-1.21.1-1.17.2.jar"
+      },
+      "pin": {
+        "fileId": 9086994,
+        "filename": "logisticsnetworks-1.21.1-1.17.2.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/9086/994/logisticsnetworks-1.21.1-1.17.2.jar",
+        "sha1": "c2d3860f2e84505931d4d8bac74f72f4bde0566e",
+        "size": 2169560
+      }
+    },
+    {
+      "name": "lucid-advancements",
+      "source": "modrinth",
+      "slug": "lucid-advancements",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "lucidadvancements-neoforge-1.21-1.2.21.jar"
+      },
+      "pin": {
+        "versionId": "ei0eVl2W",
+        "filename": "lucidadvancements-neoforge-1.21-1.2.21.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/VAP7xdYB/versions/ei0eVl2W/lucidadvancements-neoforge-1.21-1.2.21.jar",
+        "sha1": "799912c2e838d2650bd799917a1b938f238916cb",
+        "sha512": "969405ae8da52e21e5e1c7dbe9c8cea407c5786ca0404b2298e6032bbfdcf63b28e9dc68b955902500b28dc8c532c80d71feeb7805b0475638c12459bb90b2ad",
+        "size": 218245
+      }
+    },
+    {
+      "name": "merequester",
+      "source": "modrinth",
+      "slug": "merequester",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "merequester-neoforge-1.21.1-1.5.0.jar"
+      },
+      "pin": {
+        "versionId": "hLs5MFnR",
+        "filename": "merequester-neoforge-1.21.1-1.5.0.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/E6BFl96N/versions/hLs5MFnR/merequester-neoforge-1.21.1-1.5.0.jar",
+        "sha1": "4c651fa3934775bb4f3e2e8768d39b543f4a3cae",
+        "sha512": "59df36d4af6248a391463847f24062cb5197837df53eb53e9ba635f1e1d1045301c901103d0d336c416dbac4d0f5afc39679e678756d85cae7b61dfcf98caace",
+        "size": 186826
+      }
+    },
+    {
+      "name": "mekanism",
+      "source": "modrinth",
+      "slug": "mekanism",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "Mekanism-1.21.1-10.7.19.85.jar"
+      },
+      "pin": {
+        "versionId": "5KzzycBT",
+        "filename": "Mekanism-1.21.1-10.7.19.85.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/Ce6I4WUE/versions/5KzzycBT/Mekanism-1.21.1-10.7.19.85.jar",
+        "sha1": "b78945c40cfe7640408f3fd1e44da385a8c8b805",
+        "sha512": "66745825330a98f3e4a5ea3a44aff8b00870f715c144edc38dd2f61b4240589600b58ae89efac3b54dbb5aa430b1059dac1a28fd71cac5cc9002bbeb5ba3f22b",
+        "size": 11976009
+      }
+    },
+    {
+      "name": "mezzconfiggui",
+      "source": "curseforge",
+      "slug": "mezzconfiggui",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "mezz_config_gui-1.21.1-neoforge-mc1.21.1-0.5.5.jar"
+      },
+      "pin": {
+        "fileId": 9009227,
+        "filename": "mezz_config_gui-1.21.1-neoforge-mc1.21.1-0.5.5.jar",
+        "downloadUrl": "https://edge.forgecdn.net/files/9009/227/mezz_config_gui-1.21.1-neoforge-mc1.21.1-0.5.5.jar",
+        "sha1": "1127e4ddbc466562dc06724f801e71716225dcc3",
+        "size": 741784
+      }
+    },
+    {
+      "name": "ae2",
+      "source": "modrinth",
+      "slug": "ae2",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "appliedenergistics2-19.2.18.jar"
+      },
+      "pin": {
+        "versionId": "KDnFUmMm",
+        "filename": "appliedenergistics2-19.2.18.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/XxWD5pD3/versions/KDnFUmMm/appliedenergistics2-19.2.18.jar",
+        "sha1": "bcd04bc7f181b2ffa314625f284c8eca6fee7fe4",
+        "sha512": "39bc4cf733a4321631e2637a1a6dfd3527135fdac1b572534e6fd1f9eab7a6dd92d56c5fa066263c95149c9b20cabdd1fd3dff80bea515381b1d2d754cad26c3",
+        "size": 8236552
+      }
+    },
+    {
+      "name": "guideme",
+      "source": "modrinth",
+      "slug": "guideme",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "guideme-21.1.19.jar"
+      },
+      "pin": {
+        "versionId": "hFpGwC6q",
+        "filename": "guideme-21.1.19.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/Ck4E7v7R/versions/hFpGwC6q/guideme-21.1.19.jar",
+        "sha1": "e85cd4c266f974dd360c46e8dad7ecf4c7ee96c6",
+        "sha512": "4dfa132e5cfd69a86c958867067f1c5ab39bb69ae35b2a62c24bb9924e9c688f1a4930ab75d335b22378d9f98cd7fceae8d030812b8f90c9aa282de8ea129f5a",
+        "size": 9311992
+      }
+    },
+    {
+      "name": "mezz_config",
+      "source": "modrinth",
+      "slug": "mezzconfig",
+      "tags": [
+        "harness"
+      ],
+      "via": "dev-classpath",
+      "describe": {
+        "version": "mezz_config-1.21.1-neoforge-0.6.8-standalone.jar"
+      },
+      "pin": {
+        "versionId": "idpM3DKC",
+        "filename": "mezz_config-1.21.1-neoforge-0.6.8-standalone.jar",
+        "downloadUrl": "https://cdn.modrinth.com/data/7tEfOcA7/versions/idpM3DKC/mezz_config-1.21.1-neoforge-0.6.8-standalone.jar",
+        "sha1": "d99ed592d8ab7105c00444047be7d8346d694ba3",
+        "sha512": "ed5ff5acf441ae2a9d2ba7ccc59e9394f4cf1e0f14802dd2ea01e9cd60c3cd412039d12f68297b3726eef63a8a85e6f4340bd969dbd1ab7e1ddc7aef88992e6b",
+        "size": 327173
+      }
+    }
+  ],
+  "checks": [
+    {
+      "type": "log_contains",
+      "value": "Registering JEI pinyin search storage",
+      "name": "jei-storage-registered"
+    },
+    {
+      "type": "log_not_contains",
+      "value": "Could not find targets.json. JechTransformer will not be loaded.",
+      "name": "transformer-loaded"
+    },
+    {
+      "type": "uitest_report",
+      "name": "uitest-report"
+    },
+    {
+      "type": "no_crash_reports",
+      "name": "no-crash-reports"
+    },
+    {
+      "type": "exit_code_zero",
+      "name": "exit-code"
+    }
+  ],
+  "world": null,
+  "timeout_sec": 600
+}
