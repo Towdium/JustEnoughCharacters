@@ -277,6 +277,9 @@
   "committee.nova.mods.avaritia.client.screen.TesseractChannelScreen:lambda$appendChannels$5(Ljava/lang/String;Ljava/util/Map$Entry;)Z", # Re-Avaritia (Tesseract, verified on 1.21.1-1.4.2)
   "com.astryxion.hats.client.gui.HatScreen:lambda$updateFilteredHats$2(Ljava/lang/String;Lnet/minecraft/world/item/Item;)Z", # Hats (Classic) (Keybind H, verified on 1.20.1-1.3.0)
   "de.markusbordihn.easynpc.configui.client.screen.preset.PresetBrowserScreen:matchesFilters(Lde/markusbordihn/easynpc/configui/client/screen/preset/PresetListEntry;)Z", # Easy NPC: Config UI (Preset Browser, verified on 1.21.1-7.14.0)
+  "io.github.forgestove.mlog.client.gui.LogicMatcher:contains(Ljava/lang/String;Ljava/lang/String;)Z", # MLog (Search boxes, verified on 1.21.1)
+  "io.github.forgestove.flexconfig.foundation.ui.model.SearchIndex:search(Lio/github/forgestove/flexconfig/foundation/ui/model/RowContext;Lio/github/forgestove/flexconfig/foundation/ui/model/ConfigUiModel;Ljava/lang/String;Z)Ljava/util/List;", # FlexConfig (Config screen search, verified on 1.21.1)
+  "io.github.forgestove.flexconfig.foundation.ui.widget.UiDropdown:filtered()Ljava/util/List;", # FlexConfig (Dropdown filter, verified on 1.21.1)
 ]
 "equals": [
   "me.shedaniel.clothconfig2.gui.entries.TextFieldListEntry:isMatchDefault(Ljava/lang/String;)Z", # Cloth Config
